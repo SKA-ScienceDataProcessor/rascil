@@ -122,7 +122,7 @@ COPY ./docker/notebook.sh /usr/local/bin/
 COPY ./docker/start-dask-scheduler.sh /usr/local/bin/
 COPY ./docker/start-dask-worker.sh /usr/local/bin
 
-# We share in the arl data here
+# We share in the rascil data here
 VOLUME ["/arl/data", "/arl/tmp"]
 
 # Expose Jupyter and Bokeh ports
