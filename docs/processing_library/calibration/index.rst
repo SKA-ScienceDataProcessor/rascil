@@ -1,6 +1,6 @@
 .. _rascil_processing_library_calibration:
 
-.. py:currentmodule:: arl.processing_library_calibration
+.. py:currentmodule:: rascil.processing_library_calibration
 
 .. toctree::
    :maxdepth: 2

@@ -3,10 +3,11 @@
 
 .. toctree::
 
-Algorithm Reference Library
-###########################
+Radio Astronomy Simulation, Calibration and Imaging Library
+###########################################################
 
-The Algorithm Reference Library expresses radio interferometry calibration and imaging algorithms in python and numpy.
+The Radio Astronomy Simulation, Calibration and Imaging Library expresses radio interferometry calibration and
+imaging algorithms in python and numpy.
 The emphasis is on capturing the key algorithms and data models. The interfaces all operate with familiar data
 structures such as image, visibility table, gaintable, etc. The python source code is directly accessible from these
 documentation pages: see the source link in the top right corner.

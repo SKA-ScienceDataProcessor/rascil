@@ -1,5 +1,5 @@
 .. _rascil_wrappers:
-.. py:currentmodule:: arl.wrappers
+.. py:currentmodule:: rascil.wrappers
 
 
 ********

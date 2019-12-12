@@ -1,6 +1,6 @@
 .. _rascil_processing_library_arrays:
 
-.. py:currentmodule:: arl.processing_library.arrays
+.. py:currentmodule:: rascil.processing_library.arrays
 
 .. toctree::
    :maxdepth: 2

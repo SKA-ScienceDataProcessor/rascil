@@ -1,6 +1,6 @@
 .. _rascil_processing_library_imaging:
 
-.. py:currentmodule:: arl.processing_library.imaging
+.. py:currentmodule:: rascil.processing_library.imaging
 
 .. toctree::
    :maxdepth: 2
