@@ -9,25 +9,25 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_library.image.operations import create_image_from_array
+from rascil.processing_library.image.operations import create_image_from_array
 
-from arl.processing_components.image.deconvolution import deconvolve_cube, restore_cube
-from arl.processing_components.image.operations import export_image_to_fits
-from arl.processing_components.simulation import create_low_test_image_from_gleam
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.imaging.primary_beams import create_low_test_beam
-from arl.processing_components.visibility.base import create_visibility
-from arl.processing_components.imaging.base import predict_2d, invert_2d, create_image_from_visibility
+from rascil.processing_components.image.deconvolution import deconvolve_cube, restore_cube
+from rascil.processing_components.image.operations import export_image_to_fits
+from rascil.processing_components.simulation import create_low_test_image_from_gleam
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.imaging.primary_beams import create_low_test_beam
+from rascil.processing_components.visibility.base import create_visibility
+from rascil.processing_components.imaging.base import predict_2d, invert_2d, create_image_from_visibility
 
 log = logging.getLogger(__name__)
 
 
 class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         self.persist = False
         self.niter = 1000
         self.lowcore = create_named_configuration('LOWBD2-CORE')

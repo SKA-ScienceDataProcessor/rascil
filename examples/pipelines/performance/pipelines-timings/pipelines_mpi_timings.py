@@ -12,25 +12,25 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
-from arl.processing_library.image import create_image
-from arl.processing_library.util.sizeof import get_size
-from arl.workflows.mpi.imaging.imaging_mpi import invert_list_mpi_workflow, \
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.processing_library.image import create_image
+from rascil.processing_library.util.sizeof import get_size
+from rascil.workflows.mpi.imaging.imaging_mpi import invert_list_mpi_workflow, \
     predict_list_mpi_workflow, \
     remove_sumwt
-from arl.workflows.serial.imaging.imaging_serial import weight_list_serial_workflow, taper_list_serial_workflow
-from arl.workflows.mpi.pipelines.pipeline_mpi import ical_list_mpi_workflow
-#from arl.workflows.mpi.simulation.simulation_mpi import simulate_list_mpi_workflow, \
+from rascil.workflows.serial.imaging.imaging_serial import weight_list_serial_workflow, taper_list_serial_workflow
+from rascil.workflows.mpi.pipelines.pipeline_mpi import ical_list_mpi_workflow
+#from rascil.workflows.mpi.simulation.simulation_mpi import simulate_list_mpi_workflow, \
 #    corrupt_list_mpi_workflow
-from arl.workflows.serial.simulation.simulation_serial import simulate_list_serial_workflow, \
+from rascil.workflows.serial.simulation.simulation_serial import simulate_list_serial_workflow, \
     corrupt_list_serial_workflow
-#from arl.workflows.mpi.skymodel.skymodel_mpi import predict_skymodel_list_mpi_workflow
-from arl.workflows.serial.skymodel.skymodel_serial import predict_skymodel_list_serial_workflow
-from arl.wrappers.mpi. calibration import  create_calibration_controls
-from arl.wrappers.mpi.griddata import create_awterm_convolutionfunction, create_pswf_convolutionfunction
-from arl.wrappers.mpi.image import image_gather_channels
-from arl.wrappers.mpi.image import export_image_to_fits, qa_image
-from arl.wrappers.mpi.imaging import advise_wide_field
+#from rascil.workflows.mpi.skymodel.skymodel_mpi import predict_skymodel_list_mpi_workflow
+from rascil.workflows.serial.skymodel.skymodel_serial import predict_skymodel_list_serial_workflow
+from rascil.wrappers.mpi. calibration import  create_calibration_controls
+from rascil.wrappers.mpi.griddata import create_awterm_convolutionfunction, create_pswf_convolutionfunction
+from rascil.wrappers.mpi.image import image_gather_channels
+from rascil.wrappers.mpi.image import export_image_to_fits, qa_image
+from rascil.wrappers.mpi.imaging import advise_wide_field
 from simulation import create_low_test_skymodel_from_gleam
 from visibility import convert_blockvisibility_to_visibility
 

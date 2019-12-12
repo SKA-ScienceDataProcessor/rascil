@@ -11,23 +11,23 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
-from arl.data_models.data_model_helpers import export_gaintable_to_hdf5
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.data_models.data_model_helpers import export_gaintable_to_hdf5
 
-from arl.workflows.arlexecute.pipelines.pipeline_arlexecute import ical_list_arlexecute_workflow, \
+from rascil.workflows.arlexecute.pipelines.pipeline_arlexecute import ical_list_arlexecute_workflow, \
     continuum_imaging_list_arlexecute_workflow
-from arl.processing_components.calibration import  create_calibration_controls
-from arl.wrappers.arlexecute.execution_support import ARLExecuteBase
-from arl.wrappers.arlexecute.execution_support import get_dask_Client
-from arl.processing_components.image.operations import export_image_to_fits, qa_image, smooth_image
-from arl.processing_components.imaging.base import predict_skycomponent_visibility
-from arl.processing_components.simulation import ingest_unittest_visibility, \
+from rascil.processing_components.calibration import  create_calibration_controls
+from rascil.wrappers.arlexecute.execution_support import ARLExecuteBase
+from rascil.wrappers.arlexecute.execution_support import get_dask_Client
+from rascil.processing_components.image.operations import export_image_to_fits, qa_image, smooth_image
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.skycomponent.operations import insert_skycomponent
-from arl.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
-from arl.processing_components.simulation import simulate_gaintable
-from arl.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.skycomponent.operations import insert_skycomponent
+from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
+from rascil.processing_components.simulation import simulate_gaintable
+from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 
 log = logging.getLogger(__name__)
 
@@ -43,8 +43,8 @@ class TestPipelineGraphs(unittest.TestCase):
         global arlexecute
         arlexecute = ARLExecuteBase(use_dask=True)
         arlexecute.set_client(client, verbose=False)
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         self.persist = True
     
     def tearDown(self):

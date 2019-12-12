@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =================================================== #
-# Set of comands to Install arl and wrapper into CSD3 #
+# Set of comands to Install rascil and wrapper into CSD3 #
 # =================================================== #
 
 # Load the modules
@@ -32,7 +32,7 @@ pip install mpi4py
 
 pip install virtualenvwrapper
 
-echo 'Adding the arl and ffiwrappers path to the virtual environment'
+echo 'Adding the rascil and ffiwrappers path to the virtual environment'
 echo '(equivalent to setting up PYTHONPATH environment variable)'
 # this updates
 # _build/lib/python3.x/site-packages/_virtualenv_path_extensions.pth

@@ -12,15 +12,15 @@ from numpy.testing import assert_allclose
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-from arl.data_models.memory_data_models import Skycomponent
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.memory_data_models import Skycomponent
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.imaging.base import predict_skycomponent_visibility
-from arl.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
-from arl.processing_components.visibility.operations import append_visibility, qa_visibility, \
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
+from rascil.processing_components.visibility.operations import append_visibility, qa_visibility, \
     sum_visibility, subtract_visibility, divide_visibility
-from arl.processing_components.visibility.base import copy_visibility, create_visibility, create_blockvisibility, \
+from rascil.processing_components.visibility.base import copy_visibility, create_visibility, create_blockvisibility, \
     create_visibility_from_rows, phaserotate_visibility
 
 

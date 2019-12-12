@@ -1,4 +1,4 @@
-.. _arl_processing_library:
+.. _rascil_processing_library:
 
 .. py:currentmodule:: arl.processing_library
 

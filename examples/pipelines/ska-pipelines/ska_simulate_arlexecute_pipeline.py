@@ -1,10 +1,10 @@
 # coding: utf-8
 
 
-from arl.data_models import arl_path
+from rascil.data_models import rascil_path
 
-results_dir = arl_path('test_results')
-dask_dir = arl_path('test_results/dask-work-space')
+results_dir = rascil_path('test_results')
+dask_dir = rascil_path('test_results/dask-work-space')
 
 import numpy
 import logging
@@ -12,15 +12,15 @@ import logging
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-from arl.data_models import SkyModel, PolarisationFrame, export_skymodel_to_hdf5, export_blockvisibility_to_hdf5
+from rascil.data_models import SkyModel, PolarisationFrame, export_skymodel_to_hdf5, export_blockvisibility_to_hdf5
 
-from arl.processing_library import create_empty_image_like
+from rascil.processing_library import create_empty_image_like
 
-from arl.processing_components import create_low_test_image_from_gleam, advise_wide_field, \
+from rascil.processing_components import create_low_test_image_from_gleam, advise_wide_field, \
     convert_blockvisibility_to_visibility, convert_visibility_to_blockvisibility
-from arl.workflows import predict_list_arlexecute_workflow, simulate_list_arlexecute_workflow, \
+from rascil.workflows import predict_list_arlexecute_workflow, simulate_list_arlexecute_workflow, \
     corrupt_list_arlexecute_workflow
-from arl.wrappers.arlexecute.execution_support.arlexecute import arlexecute
+from rascil.wrappers.arlexecute.execution_support.arlexecute import arlexecute
 
 def init_logging():
     logging.basicConfig(filename='%s/ska-pipeline.log' % results_dir,
@@ -97,7 +97,7 @@ if __name__ == '__main__':
     zero_model = [arlexecute.execute(create_empty_image_like)(im) for im in dprepb_model]
     zero_model = arlexecute.compute(zero_model, sync=True)
     zero_skymodel = SkyModel(image=zero_model[0])
-    export_skymodel_to_hdf5(zero_skymodel, arl_path('%s/ska-pipeline_simulation_skymodel.hdf' % results_dir))
+    export_skymodel_to_hdf5(zero_skymodel, rascil_path('%s/ska-pipeline_simulation_skymodel.hdf' % results_dir))
     
     #    vis_list = arlexecute.scatter(vis_list)
     
@@ -114,7 +114,7 @@ if __name__ == '__main__':
     corrupted_vislist = corrupt_list_arlexecute_workflow(corrupted_vislist, phase_error=1.0, seed=180555)
     
     export_list = [arlexecute.execute(export_blockvisibility_to_hdf5)
-                   (corrupted_vislist[v], arl_path('%s/ska-pipeline_simulation_vislist_%d.hdf' % (results_dir, v)))
+                   (corrupted_vislist[v], rascil_path('%s/ska-pipeline_simulation_vislist_%d.hdf' % (results_dir, v)))
                    for v, _ in enumerate(corrupted_vislist)]
     
     print('About to run predict and corrupt to get corrupted visibility, and write files')

@@ -12,20 +12,20 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models import PolarisationFrame
+from rascil.data_models import PolarisationFrame
 
-from arl.processing_library import create_image, get_size
+from rascil.processing_library import create_image, get_size
 
-from arl.processing_components import create_awterm_convolutionfunction, create_pswf_convolutionfunction,\
+from rascil.processing_components import create_awterm_convolutionfunction, create_pswf_convolutionfunction,\
     image_gather_channels, export_image_to_fits, qa_image, advise_wide_field, create_low_test_skymodel_from_gleam, \
     convert_blockvisibility_to_visibility, create_calibration_controls
 
-from arl.workflows import invert_list_arlexecute_workflow, weight_list_arlexecute_workflow, \
+from rascil.workflows import invert_list_arlexecute_workflow, weight_list_arlexecute_workflow, \
     predict_list_arlexecute_workflow, taper_list_arlexecute_workflow, remove_sumwt,\
     ical_list_arlexecute_workflow, simulate_list_arlexecute_workflow, \
     corrupt_list_arlexecute_workflow, predict_skymodel_list_arlexecute_workflow
 
-from arl.wrappers.arlexecute.execution_support.arlexecute import arlexecute
+from rascil.wrappers.arlexecute.execution_support.arlexecute import arlexecute
 from execution_support import findNodes, get_dask_Client
 
 pp = pprint.PrettyPrinter()

@@ -1,4 +1,4 @@
-name: arl-cluster
+name: rascil-cluster
 version: 0.1.0
 description: A Helm chart for the ARL on Kubernetes
 home: https://www.skatelescope.org/

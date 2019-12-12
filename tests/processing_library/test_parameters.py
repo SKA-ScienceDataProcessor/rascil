@@ -5,7 +5,7 @@
 
 import unittest
 
-from arl.data_models.parameters import get_parameter
+from rascil.data_models.parameters import get_parameter
 
 import logging
 

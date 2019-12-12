@@ -9,23 +9,23 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.memory_data_models import SkyModel
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.memory_data_models import SkyModel
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.skycomponent.operations import create_skycomponent
-from arl.processing_components.skymodel.operations import copy_skymodel, partition_skymodel_by_flux
-from arl.processing_components.simulation import create_test_image
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility.base import create_blockvisibility
+from rascil.processing_components.skycomponent.operations import create_skycomponent
+from rascil.processing_components.skymodel.operations import copy_skymodel, partition_skymodel_by_flux
+from rascil.processing_components.simulation import create_test_image
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility.base import create_blockvisibility
 
 log = logging.getLogger(__name__)
 
 
 class TestSkyModel(unittest.TestCase):
     def setUp(self):
-        from arl.data_models.parameters import arl_path
+        from rascil.data_models.parameters import rascil_path
         self.lowcore = create_named_configuration('LOWBD2', rmax=300.0)
-        self.dir = arl_path('test_results')
+        self.dir = rascil_path('test_results')
         self.times = (numpy.pi / 12.0) * numpy.linspace(-3.0, 3.0, 7)
         self.frequency = numpy.array([1e8])
         self.channel_bandwidth = numpy.array([1e6])

@@ -19,11 +19,11 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models import SkyModel, arl_path, PolarisationFrame
+from rascil.data_models import SkyModel, rascil_path, PolarisationFrame
 
-from arl.processing_library import create_empty_image_like, copy_image
+from rascil.processing_library import create_empty_image_like, copy_image
 
-from arl.processing_components import create_gaintable_from_blockvisibility, export_image_to_fits,\
+from rascil.processing_components import create_gaintable_from_blockvisibility, export_image_to_fits,\
     remove_neighbouring_components, find_skycomponents, calculate_skymodel_equivalent_image, \
     initialize_skymodel_voronoi, convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility, import_image_from_fits, qa_image, show_image, advise_wide_field, \
@@ -32,11 +32,11 @@ from arl.processing_components import create_gaintable_from_blockvisibility, exp
     insert_skycomponent, filter_skycomponents_by_flux, create_blockvisibility, copy_visibility, \
     create_image_from_visibility
 
-from arl.workflows import invert_list_arlexecute_workflow, restore_list_arlexecute_workflow,\
+from rascil.workflows import invert_list_arlexecute_workflow, restore_list_arlexecute_workflow,\
     mpccal_skymodel_list_arlexecute_workflow, predict_skymodel_list_arlexecute_workflow,\
     weight_list_serial_workflow, taper_list_serial_workflow
 
-from arl.wrappers.arlexecute.execution_support.arlexecute import arlexecute
+from rascil.wrappers.arlexecute.execution_support.arlexecute import arlexecute
 from execution_support import get_dask_Client
 
 if __name__ == '__main__':
@@ -150,7 +150,7 @@ if __name__ == '__main__':
     all_components = sorted(all_components, key=lambda comp: numpy.max(comp.flux), reverse=True)
     print("Number of components in simulation %d" % len(all_components))
     
-    screen = import_image_from_fits(arl_path('data/models/test_mpc_screen.fits'))
+    screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
     all_gaintables = create_gaintable_from_screen(block_vis, all_components, screen)
     
     all_skymodel = [SkyModel(components=[all_components[i]], gaintable=all_gaintables[i])
@@ -180,15 +180,15 @@ if __name__ == '__main__':
         print('Iteration %d' % it)
         
         print(qa_image(res, context='%s residual image: iteration %d' % (context, it)))
-        export_image_to_fits(res, arl_path("test_results/low-sims-mpc-%s-residual_iteration%d_rmax%.1f.fits" %
-                                           (context, it, rmax)))
+        export_image_to_fits(res, rascil_path("test_results/low-sims-mpc-%s-residual_iteration%d_rmax%.1f.fits" %
+                                              (context, it, rmax)))
         show_image(res, title='%s residual image: iteration %d' % (context, it))
         plt.show(block=block_plots)
         
         combined_model = calculate_skymodel_equivalent_image(tl_list)
         print(qa_image(combined_model, context='Combined model: iteration %d' % it))
-        export_image_to_fits(combined_model, arl_path("test_results/low-sims-mpc-%s-model_iteration%d_rmax%.1f.fits" %
-                                                      (context, it, rmax)))
+        export_image_to_fits(combined_model, rascil_path("test_results/low-sims-mpc-%s-model_iteration%d_rmax%.1f.fits" %
+                                                         (context, it, rmax)))
         
         plt.clf()
         for i in range(len(tl_list)):
@@ -198,8 +198,8 @@ if __name__ == '__main__':
         plt.xlabel('Current phase')
         plt.ylabel('Update to phase')
         plt.title("%s iteration%d: Change in phase" % (context, it))
-        plt.savefig(arl_path("test_results/low-sims-mpc-%s-skymodel-phase-change_iteration%d.jpg" %
-                             (context, it)))
+        plt.savefig(rascil_path("test_results/low-sims-mpc-%s-skymodel-phase-change_iteration%d.jpg" %
+                                (context, it)))
         plt.show(block=block_plots)
         return tl_list
         
@@ -242,7 +242,7 @@ if __name__ == '__main__':
     result = arlexecute.compute(result, sync=True)
     ical_restored = result[0]
     
-    export_image_to_fits(ical_restored, arl_path('test_results/low-sims-mpc-ical-restored_%.1frmax.fits' % rmax))
+    export_image_to_fits(ical_restored, rascil_path('test_results/low-sims-mpc-ical-restored_%.1frmax.fits' % rmax))
     
     #######################################################################################################
     # Now set up the skymodels for MPCCAL. We find the brightest components in the ICAL image, remove
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     show_image(mpccal_restored, title='MPCCAL restored image', vmax=0.3, vmin=-0.03)
     show_image(mpccal_restored, title='MPCCAL restored image', components=mpccal_components, vmax=0.3, vmin=-0.03)
     plt.show(block=block_plots)
-    export_image_to_fits(mpccal_restored, arl_path('test_results/low-sims-mpc-mpccal-restored_%.1frmax.fits' % rmax))
+    export_image_to_fits(mpccal_restored, rascil_path('test_results/low-sims-mpc-mpccal-restored_%.1frmax.fits' % rmax))
     
     mpccal_fluxes = [comp.flux[0, 0] for comp in mpccal_components]
     plt.clf()
@@ -334,19 +334,19 @@ if __name__ == '__main__':
     print(qa_image(difference_image, context='MPCCAL - ICAL image'))
     show_image(difference_image, title='MPCCAL - ICAL image', components=ical_components)
     plt.show(block=block_plots)
-    export_image_to_fits(difference_image, arl_path('test_results/low-sims-mpc-mpccal-ical-restored_%.1frmax.fits' %
-                                                    rmax))
+    export_image_to_fits(difference_image, rascil_path('test_results/low-sims-mpc-mpccal-ical-restored_%.1frmax.fits' %
+                                                       rmax))
     
     newscreen = create_empty_image_like(screen)
     gaintables = [sm.gaintable for sm in mpccal_skymodel]
     newscreen, weights = grid_gaintable_to_screen(block_vis, gaintables, newscreen)
-    export_image_to_fits(newscreen, arl_path('test_results/low-sims-mpc-mpccal-screen_%.1frmax.fits' % rmax))
-    export_image_to_fits(weights, arl_path('test_results/low-sims-mpc-mpccal-screenweights_%.1frmax.fits' % rmax))
+    export_image_to_fits(newscreen, rascil_path('test_results/low-sims-mpc-mpccal-screen_%.1frmax.fits' % rmax))
+    export_image_to_fits(weights, rascil_path('test_results/low-sims-mpc-mpccal-screenweights_%.1frmax.fits' % rmax))
     print(qa_image(weights))
     print(qa_image(newscreen))
     
     plot_gaintable_on_screen(block_vis, gaintables)
-    plt.savefig(arl_path('test_results/low-sims-mpc-mpccal-screen_%.1frmax.png' % rmax))
+    plt.savefig(rascil_path('test_results/low-sims-mpc-mpccal-screen_%.1frmax.png' % rmax))
     plt.show(block=block_plots)
     
     arlexecute.close()

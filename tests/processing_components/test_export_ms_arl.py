@@ -8,9 +8,9 @@ import unittest
 import logging
 import numpy
 
-from arl.data_models.parameters import arl_path
+from rascil.data_models.parameters import rascil_path
 
-from arl.processing_components.visibility.coalesce import convert_visibility_to_blockvisibility, convert_blockvisibility_to_visibility
+from rascil.processing_components.visibility.coalesce import convert_visibility_to_blockvisibility, convert_blockvisibility_to_visibility
 
 log = logging.getLogger(__name__)
 
@@ -21,8 +21,8 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 run_ms_tests = False
 try:
     import casacore
-    from arl.processing_components.visibility.base import create_blockvisibility, create_blockvisibility_from_ms
-    from arl.processing_components.visibility.base import export_blockvisibility_to_ms
+    from rascil.processing_components.visibility.base import create_blockvisibility, create_blockvisibility_from_ms
+    from rascil.processing_components.visibility.base import export_blockvisibility_to_ms
 
     run_ms_tests = True
 except ImportError:
@@ -39,8 +39,8 @@ class export_ms_arl_test(unittest.TestCase):
         if run_ms_tests == False:
             return
 
-        msfile = arl_path("data/vis/ASKAP_example.ms")
-        msoutfile = arl_path("test_results/test_export_ms_ASKAP_output.ms")
+        msfile = rascil_path("data/vis/ASKAP_example.ms")
+        msoutfile = rascil_path("test_results/test_export_ms_ASKAP_output.ms")
 
         v = create_blockvisibility_from_ms(msfile)
         export_blockvisibility_to_ms(msoutfile, v)                # vis_by_channel.append(integrate_visibility_by_channel(v[0]))
@@ -49,20 +49,20 @@ class export_ms_arl_test(unittest.TestCase):
         if run_ms_tests == False:
             return
 
-        msoutfile = arl_path("test_results/test_export_ms_ASKAP_output.ms")
+        msoutfile = rascil_path("test_results/test_export_ms_ASKAP_output.ms")
 
         from astropy.coordinates import SkyCoord
         from astropy import units as u
 
-        from arl.processing_components.image.operations import show_image, export_image_to_fits
-        from arl.processing_components.simulation import create_named_configuration
-        from arl.processing_components.simulation import create_test_image
-        from arl.processing_components.imaging.base import create_image_from_visibility
-        from arl.processing_components.imaging.base import advise_wide_field
+        from rascil.processing_components.image.operations import show_image, export_image_to_fits
+        from rascil.processing_components.simulation import create_named_configuration
+        from rascil.processing_components.simulation import create_test_image
+        from rascil.processing_components.imaging.base import create_image_from_visibility
+        from rascil.processing_components.imaging.base import advise_wide_field
 
-        from arl.workflows.serial.imaging.imaging_serial import invert_list_serial_workflow, predict_list_serial_workflow
+        from rascil.workflows.serial.imaging.imaging_serial import invert_list_serial_workflow, predict_list_serial_workflow
 
-        from arl.data_models.polarisation import PolarisationFrame
+        from rascil.data_models.polarisation import PolarisationFrame
 
         lowr3 = create_named_configuration('LOWBD2', rmax=750.0)
 

@@ -7,15 +7,15 @@ import unittest
 import logging
 
 import numpy
-from arl.data_models.parameters import arl_path
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.parameters import rascil_path
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.visibility.base import create_blockvisibility_from_uvfits, create_visibility_from_uvfits
-from arl.processing_components.visibility.operations import integrate_visibility_by_channel
-from arl.processing_components.imaging.base import invert_2d, create_image_from_visibility
-from arl.processing_components.visibility.coalesce import convert_visibility_to_blockvisibility, \
+from rascil.processing_components.visibility.base import create_blockvisibility_from_uvfits, create_visibility_from_uvfits
+from rascil.processing_components.visibility.operations import integrate_visibility_by_channel
+from rascil.processing_components.imaging.base import invert_2d, create_image_from_visibility
+from rascil.processing_components.visibility.coalesce import convert_visibility_to_blockvisibility, \
     convert_blockvisibility_to_visibility
-from arl.processing_components.image.operations import export_image_to_fits
+from rascil.processing_components.image.operations import export_image_to_fits
 
 
 log = logging.getLogger(__name__)
@@ -28,14 +28,14 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestCreateMS(unittest.TestCase):
     
     def setUp(self):
-        self.dir = arl_path('test_results')
+        self.dir = rascil_path('test_results')
         
         self.persist = False
     
         return
     
     # def test_create_list(self):
-    #     uvfitsfile = arl_path("data/vis/xcasa.fits")
+    #     uvfitsfile = rascil_path("data/vis/xcasa.fits")
     #     self.vis = create_blockvisibility_from_uvfits(uvfitsfile)
     
     #     for v in self.vis:
@@ -44,7 +44,7 @@ class TestCreateMS(unittest.TestCase):
     
     def test_create_list_spectral(self):
         
-        uvfitsfile = arl_path("data/vis/ASKAP_example.fits")
+        uvfitsfile = rascil_path("data/vis/ASKAP_example.fits")
         
         vis_by_channel = list()
         nchan_ave = 16
@@ -61,7 +61,7 @@ class TestCreateMS(unittest.TestCase):
 
     def test_create_list_spectral_average(self):
         
-        uvfitsfile = arl_path("data/vis/ASKAP_example.fits")
+        uvfitsfile = rascil_path("data/vis/ASKAP_example.fits")
         
         vis_by_channel = list()
         nchan_ave = 16
@@ -79,7 +79,7 @@ class TestCreateMS(unittest.TestCase):
 
     def test_invert(self):
         
-        uvfitsfile = arl_path("data/vis/ASKAP_example.fits")
+        uvfitsfile = rascil_path("data/vis/ASKAP_example.fits")
         
         nchan_ave = 32
         nchan = 192
@@ -87,14 +87,14 @@ class TestCreateMS(unittest.TestCase):
             max_chan = min(nchan, schan + nchan_ave)
             bv = create_blockvisibility_from_uvfits(uvfitsfile, range(schan, max_chan))[0]
             vis = convert_blockvisibility_to_visibility(bv)
-            from arl.processing_components.visibility.operations import convert_visibility_to_stokesI
+            from rascil.processing_components.visibility.operations import convert_visibility_to_stokesI
             vis = convert_visibility_to_stokesI(vis)
             model = create_image_from_visibility(vis, npixel=256, polarisation_frame=PolarisationFrame('stokesI'))
             dirty, sumwt = invert_2d(vis, model, context='2d')
             assert (numpy.max(numpy.abs(dirty.data))) > 0.0
             assert dirty.shape == (nchan_ave, 1, 256, 256)
             import matplotlib.pyplot as plt
-            from arl.processing_components.image.operations import show_image
+            from rascil.processing_components.image.operations import show_image
             show_image(dirty)
             plt.show()
             if self.persist: export_image_to_fits(dirty, '%s/test_visibility_uvfits_dirty.fits' % self.dir)

@@ -1,4 +1,4 @@
-.. _arl_processing_library_calibration:
+.. _rascil_processing_library_calibration:
 
 .. py:currentmodule:: arl.processing_library_calibration
 
@@ -8,6 +8,6 @@
 Calibration
 ***********
 
-.. automodapi::    arl.processing_library.calibration
+.. automodapi::    rascil.processing_library.calibration
    :no-inheritance-diagram:
 

@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: notebook-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}
+  name: notebook-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: notebook-{{ template "arl-cluster.name" . }}
+    app.kubernetes.io/name: notebook-{{ template "rascil-cluster.name" . }}
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
-    helm.sh/chart: "{{ template "arl-cluster.chart" . }}"
+    helm.sh/chart: "{{ template "rascil-cluster.chart" . }}"
 spec:
   type: ClusterIP
   ports:
@@ -17,33 +17,33 @@ spec:
     targetPort: jupyter
     protocol: TCP
   selector:
-    app.kubernetes.io/name:  notebook-{{ template "arl-cluster.name" . }}
+    app.kubernetes.io/name:  notebook-{{ template "rascil-cluster.name" . }}
     app.kubernetes.io/instance: "{{ .Release.Name }}"
 
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: notebook-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}
+  name: notebook-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: notebook-{{ template "arl-cluster.name" . }}
+    app.kubernetes.io/name: notebook-{{ template "rascil-cluster.name" . }}
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
-    helm.sh/chart: "{{ template "arl-cluster.chart" . }}"
+    helm.sh/chart: "{{ template "rascil-cluster.chart" . }}"
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: notebook-{{ template "arl-cluster.name" . }}
+      app.kubernetes.io/name: notebook-{{ template "rascil-cluster.name" . }}
       app.kubernetes.io/instance: "{{ .Release.Name }}"
   replicas: 1
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: notebook-{{ template "arl-cluster.name" . }}
+        app.kubernetes.io/name: notebook-{{ template "rascil-cluster.name" . }}
         app.kubernetes.io/instance: "{{ .Release.Name }}"
         app.kubernetes.io/managed-by: "{{ .Release.Service }}"
-        helm.sh/chart: "{{ template "arl-cluster.chart" . }}"
+        helm.sh/chart: "{{ template "rascil-cluster.chart" . }}"
     spec:
       imagePullSecrets:
         - name: {{ .Values.image.pullSecret }}
@@ -53,13 +53,13 @@ spec:
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         env:
           - name: ARL_DASK_SCHEDULER
-            value: dask-scheduler-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}.{{ .Release.Namespace }}:8786
+            value: dask-scheduler-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}.{{ .Release.Namespace }}:8786
           - name: JUPYTER_PASSWORD
             value: "{{ .Values.jupyter.password }}"
           - name: NOTEBOOK_PORT
             value: "8888"
         volumeMounts:
-        - mountPath: /arl/data
+        - mountPath: /rascil/data
           name: arldata
           readOnly: false
         ports:
@@ -81,7 +81,7 @@ spec:
       #   name: arldata
       - name: arldata
         persistentVolumeClaim:
-          claimName: arldata-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}
+          claimName: arldata-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}
       # - name: arldata
       #   nfs:
       #     server: "{{ .Values.nfs.server }}"

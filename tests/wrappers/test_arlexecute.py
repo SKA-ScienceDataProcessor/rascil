@@ -8,7 +8,7 @@ import unittest
 import numpy
 
 # Import the base and then make a global version
-from arl.wrappers.arlexecute.execution_support import ARLExecuteBase
+from rascil.wrappers.arlexecute.execution_support import ARLExecuteBase
 
 log = logging.getLogger(__name__)
 

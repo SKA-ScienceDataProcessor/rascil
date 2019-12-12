@@ -10,8 +10,8 @@ import numpy
 import numpy.testing
 from astropy.coordinates import SkyCoord, EarthLocation
 
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.simulation.rfi import create_propagators, calculate_rfi_at_station, \
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.simulation.rfi import create_propagators, calculate_rfi_at_station, \
     calculate_station_correlation_rfi, simulate_DTV
 
 log = logging.getLogger(__name__)

@@ -8,10 +8,10 @@ import logging
 
 import numpy
 
-from arl.data_models.parameters import arl_path
+from rascil.data_models.parameters import rascil_path
 
-from arl.processing_components.visibility.base import create_blockvisibility_from_ms, create_visibility_from_ms
-from arl.processing_components.visibility.operations import integrate_visibility_by_channel
+from rascil.processing_components.visibility.base import create_blockvisibility_from_ms, create_visibility_from_ms
+from rascil.processing_components.visibility.operations import integrate_visibility_by_channel
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class TestCreateMS(unittest.TestCase):
         if not self.casacore_available:
             return
         
-        msfile = arl_path("data/vis/xcasa.ms")
+        msfile = rascil_path("data/vis/xcasa.ms")
         self.vis = create_blockvisibility_from_ms(msfile)
         
         for v in self.vis:
@@ -46,7 +46,7 @@ class TestCreateMS(unittest.TestCase):
         if not self.casacore_available:
             return
     
-        msfile = arl_path("data/vis/ASKAP_example.ms")
+        msfile = rascil_path("data/vis/ASKAP_example.ms")
     
         vis_by_channel = list()
         nchan_ave = 16
@@ -65,7 +65,7 @@ class TestCreateMS(unittest.TestCase):
         if not self.casacore_available:
             return
     
-        msfile = arl_path("data/vis/ASKAP_example.ms")
+        msfile = rascil_path("data/vis/ASKAP_example.ms")
     
         vis_by_channel = list()
         nchan_ave = 16
@@ -85,7 +85,7 @@ class TestCreateMS(unittest.TestCase):
         if not self.casacore_available:
             return
     
-        msfile = arl_path("data/vis/ASKAP_example.ms")
+        msfile = rascil_path("data/vis/ASKAP_example.ms")
     
         vis_by_channel = list()
         nchan_ave = 16
@@ -106,7 +106,7 @@ class TestCreateMS(unittest.TestCase):
         if not self.casacore_available:
             return
     
-        msfile = arl_path("data/vis/ASKAP_example.ms")
+        msfile = rascil_path("data/vis/ASKAP_example.ms")
     
         vis_by_channel = list()
         nchan_ave = 1
@@ -125,7 +125,7 @@ class TestCreateMS(unittest.TestCase):
         if not self.casacore_available:
             return
     
-        msfile = arl_path("data/vis/ASKAP_example.ms")
+        msfile = rascil_path("data/vis/ASKAP_example.ms")
 
         vis_by_channel = list()
         nchan_ave = 16

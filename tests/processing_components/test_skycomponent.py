@@ -9,23 +9,23 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
-from arl.processing_components.simulation import create_low_test_skycomponents_from_gleam
-from arl.processing_components.skycomponent.operations import create_skycomponent, find_separation_skycomponents, \
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.processing_components.simulation import create_low_test_skycomponents_from_gleam
+from rascil.processing_components.skycomponent.operations import create_skycomponent, find_separation_skycomponents, \
     find_skycomponent_matches, find_nearest_skycomponent, find_nearest_skycomponent_index, \
     filter_skycomponents_by_flux, select_neighbouring_components, voronoi_decomposition, \
     apply_beam_to_skycomponent, image_voronoi_iter, partition_skycomponent_neighbours, \
     remove_neighbouring_components
-from arl.processing_library.image.operations import create_image
-from arl.processing_components.imaging.primary_beams import create_low_test_beam
+from rascil.processing_library.image.operations import create_image
+from rascil.processing_components.imaging.primary_beams import create_low_test_beam
 
 log = logging.getLogger(__name__)
 
 
 class TestSkycomponent(unittest.TestCase):
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         
         self.frequency = numpy.array([1e8])
         self.channel_bandwidth = numpy.array([1e6])

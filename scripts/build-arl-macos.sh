@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # =========================================================== #
-# Set of comands to Install arl and wrapper into MacOS system #
+# Set of comands to Install rascil and wrapper into MacOS system #
 # =========================================================== #
 
 
 # ########################################################### #
-# The following changes are required to run arl and ffiwrappers in Darwin: #
+# The following changes are required to run rascil and ffiwrappers in Darwin: #
 # * Need to change Makefile to point to clang compiler and to link with python library (otherwise Python simbols like Py_Initialize are undefined)
 #   export CC=clang 
 #   export LDFLAGS="$(python3-config --ldflags) -lcfitsio"
@@ -52,7 +52,7 @@
 
 # ########################################################### #
 # This should be executed from ARLROOT                        #
-# i.e. source scripts/build-arl-linux.sh                      #
+# i.e. source scripts/build-rascil-linux.sh                      #
 # ########################################################### #
 
 # Start the building ARL through building a python virtualenvironment
@@ -71,7 +71,7 @@ pip install mpi4py
 # This should be equivalent to setting up the PYTHONPATH environemnt
 # variable. (I.e. in MacOS this needs to be done as the 
 # add2virtualenv does not seem to work 
-echo 'Adding the arl and ffiwrappers path to the virtual environment'
+echo 'Adding the rascil and ffiwrappers path to the virtual environment'
 source virtualenvwrapper.sh
 add2virtualenv $PWD
 add2virtualenv $PWD/ffiwrappers/src/

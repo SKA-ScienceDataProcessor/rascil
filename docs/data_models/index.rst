@@ -1,6 +1,6 @@
-.. _arl_data_models:
+.. _rascil_data_models:
 
-.. py:currentmodule:: arl.arl.data_models
+.. py:currentmodule:: rascil.data_models
 
 ===========
 Data models

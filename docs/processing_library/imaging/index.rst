@@ -1,4 +1,4 @@
-.. _arl_processing_library_imaging:
+.. _rascil_processing_library_imaging:
 
 .. py:currentmodule:: arl.processing_library.imaging
 
@@ -8,5 +8,5 @@
 Imaging
 *******
 
-.. automodapi::    arl.processing_library.imaging
+.. automodapi::    rascil.processing_library.imaging
    :no-inheritance-diagram:

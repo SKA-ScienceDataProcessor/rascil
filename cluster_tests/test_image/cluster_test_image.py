@@ -10,14 +10,14 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from distributed import Client
 
-from arl.data_models.polarisation import PolarisationFrame
-from arl.processing_components.imaging.base import create_image_from_visibility
-from arl.processing_components.imaging.primary_beams import create_pb
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility.base import create_blockvisibility
-from arl.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
-from arl.workflows.arlexecute.image.image_arlexecute import image_arlexecute_map_workflow
-from arl.wrappers.arlexecute.execution_support import arlexecute
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.processing_components.imaging.base import create_image_from_visibility
+from rascil.processing_components.imaging.primary_beams import create_pb
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility.base import create_blockvisibility
+from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
+from rascil.workflows.arlexecute.image.image_arlexecute import image_arlexecute_map_workflow
+from rascil.wrappers.arlexecute.execution_support import arlexecute
 
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
@@ -35,9 +35,9 @@ if __name__ == '__main__':
         client = Client()
     arlexecute.set_client(client=client)
     
-    from arl.data_models.parameters import arl_path
+    from rascil.data_models.parameters import rascil_path
     
-    dir = arl_path('test_results')
+    dir = rascil_path('test_results')
     
     frequency = numpy.linspace(1e8, 1.5e8, 3)
     channel_bandwidth = numpy.array([2.5e7, 2.5e7, 2.5e7])

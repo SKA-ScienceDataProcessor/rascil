@@ -9,9 +9,9 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.memory_data_models import BlockVisibility
+from rascil.data_models.memory_data_models import BlockVisibility
 
-from arl.workflows.serial.simulation.simulation_serial import simulate_list_serial_workflow
+from rascil.workflows.serial.simulation.simulation_serial import simulate_list_serial_workflow
 
 log = logging.getLogger(__name__)
 
@@ -19,8 +19,8 @@ log = logging.getLogger(__name__)
 class TestSimulationArlexecuteSupport(unittest.TestCase):
     def setUp(self):
     
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         
         self.frequency = numpy.linspace(1e8, 1.5e8, 3)
         self.channel_bandwidth = numpy.array([2.5e7, 2.5e7, 2.5e7])

@@ -10,16 +10,16 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_library.image.operations import create_image
-from arl.processing_components.griddata.kernels  import create_pswf_convolutionfunction, \
+from rascil.processing_library.image.operations import create_image
+from rascil.processing_components.griddata.kernels  import create_pswf_convolutionfunction, \
     create_awterm_convolutionfunction, create_box_convolutionfunction
-from arl.processing_components.griddata import convert_convolutionfunction_to_image, \
+from rascil.processing_components.griddata import convert_convolutionfunction_to_image, \
     create_convolutionfunction_from_image, apply_bounding_box_convolutionfunction, \
     calculate_bounding_box_convolutionfunction
-from arl.processing_components.image.operations import export_image_to_fits
-from arl.processing_components.imaging.primary_beams import create_pb_generic
+from rascil.processing_components.image.operations import export_image_to_fits
+from rascil.processing_components.imaging.primary_beams import create_pb_generic
 
 log = logging.getLogger(__name__)
 
@@ -27,8 +27,8 @@ log = logging.getLogger(__name__)
 class TestGridDataKernels(unittest.TestCase):
     
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         
         self.phasecentre = SkyCoord(ra=+180.0 * u.deg, dec=-60.0 * u.deg, frame='icrs', equinox='J2000')
         self.image = create_image(npixel=512, cellsize=0.0005, phasecentre=self.phasecentre,

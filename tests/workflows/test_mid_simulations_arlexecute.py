@@ -13,29 +13,29 @@ import os
 import sys
 import unittest
 
-from arl.data_models.parameters import arl_path
+from rascil.data_models.parameters import rascil_path
 
-results_dir = arl_path('test_results')
+results_dir = rascil_path('test_results')
 
 import numpy
 
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.image.operations import qa_image
-from arl.processing_components.imaging.primary_beams import create_vp
-from arl.processing_components.imaging.base import create_image_from_visibility, advise_wide_field
-from arl.processing_components.simulation.simulation_helpers import find_pb_width_null, create_simulation_components
-from arl.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
+from rascil.processing_components.image.operations import qa_image
+from rascil.processing_components.imaging.primary_beams import create_vp
+from rascil.processing_components.imaging.base import create_image_from_visibility, advise_wide_field
+from rascil.processing_components.simulation.simulation_helpers import find_pb_width_null, create_simulation_components
+from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
 
-from arl.workflows.arlexecute.imaging.imaging_arlexecute import sum_invert_results_arlexecute
-from arl.workflows.arlexecute.simulation.simulation_arlexecute import \
+from rascil.workflows.arlexecute.imaging.imaging_arlexecute import sum_invert_results_arlexecute
+from rascil.workflows.arlexecute.simulation.simulation_arlexecute import \
     calculate_residual_from_gaintables_arlexecute_workflow, create_surface_errors_gaintable_arlexecute_workflow, \
     create_pointing_errors_gaintable_arlexecute_workflow, create_standard_mid_simulation_arlexecute_workflow
 
-from arl.wrappers.arlexecute.execution_support import arlexecute
+from rascil.wrappers.arlexecute.execution_support import arlexecute
 
 import logging
 
@@ -216,7 +216,7 @@ class TestPointingSimulation(unittest.TestCase):
         
         # Control parameters
         parser.add_argument('--use_radec', type=str, default="False", help='Calculate in RADEC (false)?')
-        parser.add_argument('--shared_directory', type=str, default=arl_path('data/configurations'),
+        parser.add_argument('--shared_directory', type=str, default=rascil_path('data/configurations'),
                             help='Location of configuration files')
         
         # Dask parameters
@@ -234,9 +234,9 @@ class TestPointingSimulation(unittest.TestCase):
                             help='Multipliers for static errors')
         parser.add_argument('--dynamic_pe', type=float, default=1.0, help='Multiplier for dynamic errors')
         parser.add_argument('--pointing_file', type=str, default=None, help="Pointing file")
-        parser.add_argument('--pointing_directory', type=str, default=arl_path('data/models'),
+        parser.add_argument('--pointing_directory', type=str, default=rascil_path('data/models'),
                             help='Location of pointing files')
-        parser.add_argument('--vp_directory', type=str, default=arl_path('data/models/interpolated'),
+        parser.add_argument('--vp_directory', type=str, default=rascil_path('data/models/interpolated'),
                             help='Location of pointing files')
 
         args = parser.parse_args()
@@ -266,7 +266,7 @@ class TestPointingSimulation(unittest.TestCase):
 
     def test_gravity(self):
     
-        if os.path.isdir(arl_path('models/interpolated')):
+        if os.path.isdir(rascil_path('models/interpolated')):
             
             error_dirty, sumwt = self.simulation(self.get_args(), 'gravity')
         

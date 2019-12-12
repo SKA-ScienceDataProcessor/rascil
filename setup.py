@@ -21,16 +21,16 @@ if sys.platform == 'darwin':
 # Py_Initialize() and they do define main() ), we are just cheating to
 # re-use the setuptools build support.
 
-packages = ['arl']
+packages = ['rascil']
 package_data = [i for p in packages for i in glob.glob(p + '/*/') + glob.glob(p + '/*/*/')]
-setup(name='algorithm-reference-library',
-      version='0.9.1',
+setup(name='rascil',
+      version='0.1',
       python_requires='>=3',
-      description='Algorithm Reference Library for Radio Interferometry',
+      description='Radio Astronomy Simulation, Calibration, and Imaging Library',
       long_description=open('README.md').read(),
       author='Tim Cornwell, Peter Wortmann, Bojan Nikolic, Feng Wang, Vlad Stolyarov',
       author_email='realtimcornwell@gmail.com',
-      url='https://github.com/SKA-ScienceDataProcessor/algorithm-reference-library',
+      url='https://github.com/SKA-ScienceDataProcessor/rascil',
       license='Apache License Version 2.0',
       packages=(packages + package_data),
       test_suite="tests",

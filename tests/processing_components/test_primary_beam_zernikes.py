@@ -12,21 +12,21 @@ from astropy.coordinates import SkyCoord
 
 import matplotlib.pyplot as plt
 
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.image.operations import export_image_to_fits, show_image
-from arl.processing_components.imaging.base import create_image_from_visibility
-from arl.processing_components.imaging.primary_beams import create_pb, create_vp, create_vp_generic_numeric
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility.base import create_visibility
+from rascil.processing_components.image.operations import export_image_to_fits, show_image
+from rascil.processing_components.imaging.base import create_image_from_visibility
+from rascil.processing_components.imaging.primary_beams import create_pb, create_vp, create_vp_generic_numeric
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility.base import create_visibility
 
 log = logging.getLogger(__name__)
 
 
 class TestPrimaryBeams(unittest.TestCase):
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
     
     def createVis(self, config='MID', dec=-35.0, rmax=1e3, freq=1e9):
         self.frequency = numpy.linspace(freq, 1.5 * freq, 3)

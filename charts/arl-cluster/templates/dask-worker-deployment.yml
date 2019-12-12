@@ -2,26 +2,26 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: dask-worker-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}
+  name: dask-worker-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: dask-worker-{{ template "arl-cluster.name" . }}
+    app.kubernetes.io/name: dask-worker-{{ template "rascil-cluster.name" . }}
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
-    helm.sh/chart: "{{ template "arl-cluster.chart" . }}"
+    helm.sh/chart: "{{ template "rascil-cluster.chart" . }}"
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: dask-worker-{{ template "arl-cluster.name" . }}
+      app.kubernetes.io/name: dask-worker-{{ template "rascil-cluster.name" . }}
       app.kubernetes.io/instance: "{{ .Release.Name }}"
   replicas: {{ .Values.worker.replicaCount }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: dask-worker-{{ template "arl-cluster.name" . }}
+        app.kubernetes.io/name: dask-worker-{{ template "rascil-cluster.name" . }}
         app.kubernetes.io/instance: "{{ .Release.Name }}"
         app.kubernetes.io/managed-by: "{{ .Release.Service }}"
-        helm.sh/chart: "{{ template "arl-cluster.chart" . }}"
+        helm.sh/chart: "{{ template "rascil-cluster.chart" . }}"
     spec:
       # hostNetwork: true
       imagePullSecrets:
@@ -40,7 +40,7 @@ spec:
               fieldRef:
                 fieldPath: status.podIP
           - name: DASK_SCHEDULER
-            value: dask-scheduler-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}.{{ .Release.Namespace }}
+            value: dask-scheduler-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}.{{ .Release.Namespace }}
           - name: DASK_PORT_NANNY
             value: "8789"
           - name: DASK_PORT_WORKER
@@ -79,7 +79,7 @@ spec:
         - mountPath: /var/tmp
           name: localdir
           readOnly: false
-        - mountPath: /arl/data
+        - mountPath: /rascil/data
           name: arldata
           readOnly: false
         ports:
@@ -105,7 +105,7 @@ spec:
       #   name: arldata
       - name: arldata
         persistentVolumeClaim:
-          claimName: arldata-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}
+          claimName: arldata-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}
       # - name: arldata
       #   nfs:
       #     server: "{{ .Values.nfs.server }}"

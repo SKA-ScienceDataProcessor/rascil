@@ -9,26 +9,26 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.memory_data_models import Skycomponent
-from arl.data_models.polarisation import PolarisationFrame
-from arl.processing_components.imaging.primary_beams import create_vp_generic_numeric, create_vp
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.simulation.surface import simulate_gaintable_from_voltage_patterns
-from arl.processing_components.visibility.base import create_blockvisibility
-from arl.processing_library.image.operations import create_image
+from rascil.data_models.memory_data_models import Skycomponent
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.processing_components.imaging.primary_beams import create_vp_generic_numeric, create_vp
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.simulation.surface import simulate_gaintable_from_voltage_patterns
+from rascil.processing_components.visibility.base import create_blockvisibility
+from rascil.processing_library.image.operations import create_image
 
 log = logging.getLogger(__name__)
 
 
 class TestSurface(unittest.TestCase):
     def setUp(self):
-        from arl.data_models.parameters import arl_path
+        from rascil.data_models.parameters import rascil_path
         
         self.doplot = True
         
         self.midcore = create_named_configuration('MID', rmax=100.0)
         self.nants = len(self.midcore.names)
-        self.dir = arl_path('test_results')
+        self.dir = rascil_path('test_results')
         self.ntimes = 100
         interval = 10.0
         self.times = numpy.arange(0.0, float(self.ntimes)) * interval

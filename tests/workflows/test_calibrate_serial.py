@@ -11,14 +11,14 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
-from arl.workflows.serial.calibration.calibration_serial import calibrate_list_serial_workflow
-from arl.processing_components.calibration import  create_calibration_controls
-from arl.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
-from arl.processing_components.simulation import ingest_unittest_visibility
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.simulation import simulate_gaintable
-from arl.processing_components.visibility.base import copy_visibility
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.workflows.serial.calibration.calibration_serial import calibrate_list_serial_workflow
+from rascil.processing_components.calibration import  create_calibration_controls
+from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
+from rascil.processing_components.simulation import ingest_unittest_visibility
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.simulation import simulate_gaintable
+from rascil.processing_components.visibility.base import copy_visibility
 
 log = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestCalibrateGraphs(unittest.TestCase):
     
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         
         self.persist = False
     

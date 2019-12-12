@@ -11,19 +11,19 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.memory_data_models import Skycomponent
-from arl.data_models.polarisation import PolarisationFrame
-from arl.processing_components.image.operations import export_image_to_fits
-from arl.processing_components.imaging.base import predict_skycomponent_visibility
-from arl.processing_components.imaging.primary_beams import create_low_test_beam
-from arl.processing_components.simulation import create_test_image_from_s3, create_test_image, \
+from rascil.data_models.memory_data_models import Skycomponent
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.processing_components.image.operations import export_image_to_fits
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging.primary_beams import create_low_test_beam
+from rascil.processing_components.simulation import create_test_image_from_s3, create_test_image, \
     create_blockvisibility_iterator, create_low_test_image_from_gleam, \
     create_low_test_skycomponents_from_gleam, create_low_test_skymodel_from_gleam, \
     create_test_skycomponents_from_s3
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility.base import create_visibility, create_blockvisibility, copy_visibility
-from arl.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
-from arl.processing_components.visibility.operations import append_visibility
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility.base import create_visibility, create_blockvisibility, copy_visibility
+from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
+from rascil.processing_components.visibility.operations import append_visibility
 
 log = logging.getLogger(__name__)
 
@@ -34,8 +34,8 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 
 class TestTesting_Support(unittest.TestCase):
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         self.persist = False
         
         self.frequency = numpy.linspace(0.8e8, 1.2e8, 5)

@@ -8,7 +8,7 @@ import unittest
 import numpy
 from numpy.testing import assert_allclose
 
-from arl.processing_library.fourier_transforms.convolutional_gridding import w_beam, coordinates, \
+from rascil.processing_library.fourier_transforms.convolutional_gridding import w_beam, coordinates, \
     coordinates2, coordinateBounds
 
 

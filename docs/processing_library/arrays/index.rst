@@ -1,4 +1,4 @@
-.. _arl_processing_library_arrays:
+.. _rascil_processing_library_arrays:
 
 .. py:currentmodule:: arl.processing_library.arrays
 
@@ -8,6 +8,6 @@
 Arrays
 ******
 
-.. automodapi::    arl.processing_library.arrays
+.. automodapi::    rascil.processing_library.arrays
    :no-inheritance-diagram:
 

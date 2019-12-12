@@ -59,8 +59,8 @@
         network_mode: host
         command: "dask-worker --memory-limit 7516192768 --local-directory {{ dask_tmp }} --host {{ dask_addr }} --bokeh --bokeh-port 8788  --nprocs {{ dask_procs }} --nthreads {{ dask_threads }} --reconnect {{ dask_scheduler_addr }}:8786"
         volumes:
-         - "/home/ubuntu/arldata:/arl/data"
-         - "/tmp:/arl/tmp"
+         - "/home/ubuntu/arldata:/rascil/data"
+         - "/tmp:/rascil/tmp"
         labels:
           org.label-schema.group: dask_worker
 

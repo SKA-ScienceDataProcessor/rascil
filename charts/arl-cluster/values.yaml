@@ -1,4 +1,4 @@
-# Default values for arl-cluster.
+# Default values for rascil-cluster.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
@@ -8,7 +8,7 @@ worker:
 arldatadir: ./data
 
 image:
-  repository: arl
+  repository: rascil
   tag: ubuntu18.04
   pullPolicy: IfNotPresent
   pullSecret: gitlab-registry
@@ -40,7 +40,7 @@ resources:
 # Configure Ingress resource that allow you to access the Tango REST API
 ingress:
   enabled: true
-  hostname: arl.minikube.local
+  hostname: rascil.minikube.local
 
   # Ingress annotations
   annotations:
@@ -52,7 +52,7 @@ ingress:
   #
   tls:
     enabled: true
-    secretname: "tls-secret-arl-{{ .Release.Name }}"
+    secretname: "tls-secret-rascil-{{ .Release.Name }}"
     hostname: "{{ .Values.ingress.hostname }}"
 
 

@@ -10,11 +10,11 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.imaging.base import create_image_from_visibility
-from arl.processing_components.simulation import ingest_unittest_visibility, create_unittest_model
-from arl.processing_components.simulation import create_named_configuration
+from rascil.processing_components.imaging.base import create_image_from_visibility
+from rascil.processing_components.simulation import ingest_unittest_visibility, create_unittest_model
+from rascil.processing_components.simulation import create_named_configuration
 
 log = logging.getLogger(__name__)
 
@@ -25,8 +25,8 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 
 class TestImagingFunctions(unittest.TestCase):
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
     
     def actualSetUp(self, add_errors=False, freqwin=1, block=False, dospectral=True, dopol=False):
         

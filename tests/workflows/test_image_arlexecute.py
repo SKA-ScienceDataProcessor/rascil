@@ -10,17 +10,17 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.imaging.base import create_image_from_visibility
-from arl.processing_components.imaging.primary_beams import create_pb
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility.base import create_visibility
+from rascil.processing_components.imaging.base import create_image_from_visibility
+from rascil.processing_components.imaging.primary_beams import create_pb
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility.base import create_visibility
 
-from arl.workflows.arlexecute.image.image_arlexecute import image_arlexecute_map_workflow
-from arl.processing_components.image.operations import export_image_to_fits
-from arl.wrappers.arlexecute.execution_support import get_dask_Client
-from arl.wrappers.arlexecute.execution_support import ARLExecuteBase
+from rascil.workflows.arlexecute.image.image_arlexecute import image_arlexecute_map_workflow
+from rascil.processing_components.image.operations import export_image_to_fits
+from rascil.wrappers.arlexecute.execution_support import get_dask_Client
+from rascil.wrappers.arlexecute.execution_support import ARLExecuteBase
 
 log = logging.getLogger(__name__)
 
@@ -32,8 +32,8 @@ class TestImageGraph(unittest.TestCase):
         arlexecute = ARLExecuteBase(use_dask=True)
         arlexecute.set_client(client, verbose=False)
 
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         
         self.frequency = numpy.linspace(1e8, 1.5e8, 3)
         self.channel_bandwidth = numpy.array([2.5e7, 2.5e7, 2.5e7])

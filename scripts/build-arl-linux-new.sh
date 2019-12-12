@@ -1,13 +1,13 @@
 #!/bin/bash
 
 # =========================================================== #
-# Set of comands to Install arl and wrapper into Linux system #
+# Set of comands to Install rascil and wrapper into Linux system #
 # =========================================================== #
 
 
 # If dependency environment modules are loaded and repository is already cloned
 # this file can be sources from arlroot and should build the system 
-# i.e. algorithm-reference-library> source scripts/build-arl-linux-new.sh
+# i.e. algorithm-reference-library> source scripts/build-rascil-linux-new.sh
 
 
 # Load the dependency modules

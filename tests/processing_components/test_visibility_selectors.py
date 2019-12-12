@@ -8,9 +8,9 @@ import unittest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility import vis_select_uvrange, vis_select_wrange
-from arl.processing_components.visibility.base import create_visibility
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility import vis_select_uvrange, vis_select_wrange
+from rascil.processing_components.visibility.base import create_visibility
 
 import logging
 log = logging.getLogger(__name__)

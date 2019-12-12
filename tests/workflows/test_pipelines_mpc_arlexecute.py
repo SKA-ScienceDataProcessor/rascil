@@ -6,23 +6,23 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models import SkyModel, arl_path, PolarisationFrame
+from rascil.data_models import SkyModel, rascil_path, PolarisationFrame
 
-from arl.processing_library import create_empty_image_like
+from rascil.processing_library import create_empty_image_like
 
-from arl.processing_components import create_named_configuration, grid_gaintable_to_screen, \
+from rascil.processing_components import create_named_configuration, grid_gaintable_to_screen, \
     export_image_to_fits, remove_neighbouring_components, find_skycomponents, calculate_skymodel_equivalent_image,\
     initialize_skymodel_voronoi, convert_blockvisibility_to_visibility, convert_visibility_to_blockvisibility,\
     import_image_from_fits, create_image_from_visibility, advise_wide_field, create_low_test_beam, create_gaintable_from_screen, \
     create_low_test_skycomponents_from_gleam, apply_beam_to_skycomponent, filter_skycomponents_by_flux,\
     create_blockvisibility
 
-from arl.workflows import invert_list_arlexecute_workflow, restore_list_arlexecute_workflow, \
+from rascil.workflows import invert_list_arlexecute_workflow, restore_list_arlexecute_workflow, \
     mpccal_skymodel_list_arlexecute_workflow, predict_skymodel_list_arlexecute_workflow, \
     weight_list_serial_workflow, taper_list_serial_workflow
 
-from arl.wrappers.arlexecute.execution_support import ARLExecuteBase
-from arl.wrappers.arlexecute.execution_support import get_dask_Client
+from rascil.wrappers.arlexecute.execution_support import ARLExecuteBase
+from rascil.wrappers.arlexecute.execution_support import get_dask_Client
 
 log = logging.getLogger(__name__)
 
@@ -152,7 +152,7 @@ class TestPipelineMPC(unittest.TestCase):
         if nvoronoi is not None:
             voronoi_components = [voronoi_components[0]]
         
-        self.screen = import_image_from_fits(arl_path('data/models/test_mpc_screen.fits'))
+        self.screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
         all_gaintables = create_gaintable_from_screen(blockvis, all_components, self.screen)
         
         gleam_skymodel_noniso = [SkyModel(components=[all_components[i]], gaintable=all_gaintables[i])
@@ -227,9 +227,9 @@ class TestPipelineMPC(unittest.TestCase):
         result = restore_list_arlexecute_workflow([combined_model], psf_obs, [(residual, 0.0)])
         result = arlexecute.compute(result, sync=True)
         
-        if self.persist: export_image_to_fits(residual, arl_path('test_results/test_mpccal_ical_many_residual.fits'))
-        if self.persist: export_image_to_fits(result[0], arl_path('test_results/test_mpccal_ical_many_restored.fits'))
-        if self.persist: export_image_to_fits(combined_model, arl_path('test_results/test_mpccal_ical_many_deconvolved.fits'))
+        if self.persist: export_image_to_fits(residual, rascil_path('test_results/test_mpccal_ical_many_residual.fits'))
+        if self.persist: export_image_to_fits(result[0], rascil_path('test_results/test_mpccal_ical_many_restored.fits'))
+        if self.persist: export_image_to_fits(combined_model, rascil_path('test_results/test_mpccal_ical_many_deconvolved.fits'))
         
         recovered_mpccal_components = find_skycomponents(result[0], fwhm=2, threshold=0.32, npixels=12)
         
@@ -245,8 +245,8 @@ class TestPipelineMPC(unittest.TestCase):
         newscreen = create_empty_image_like(self.screen)
         gaintables = [th.gaintable for th in self.theta_list]
         newscreen, weights = grid_gaintable_to_screen(self.all_skymodel_noniso_blockvis, gaintables, newscreen)
-        if self.persist: export_image_to_fits(newscreen, arl_path('test_results/test_mpccal_ical_many_screen.fits'))
-        if self.persist: export_image_to_fits(weights, arl_path('test_results/test_mpccal_ical_many_screenweights.fits'))
+        if self.persist: export_image_to_fits(newscreen, rascil_path('test_results/test_mpccal_ical_many_screen.fits'))
+        if self.persist: export_image_to_fits(weights, rascil_path('test_results/test_mpccal_ical_many_screenweights.fits'))
         
         arlexecute.close()
     
@@ -281,9 +281,9 @@ class TestPipelineMPC(unittest.TestCase):
         result = restore_list_arlexecute_workflow([combined_model], psf_obs, [(residual, 0.0)])
         result = arlexecute.compute(result, sync=True)
         
-        if self.persist: export_image_to_fits(residual, arl_path('test_results/test_mpccal_ical_onesource_residual.fits'))
-        if self.persist: export_image_to_fits(result[0], arl_path('test_results/test_mpccal_ical_onesource_restored.fits'))
-        if self.persist: export_image_to_fits(combined_model, arl_path('test_results/test_mpccal_ical_onesource_deconvolved.fits'))
+        if self.persist: export_image_to_fits(residual, rascil_path('test_results/test_mpccal_ical_onesource_residual.fits'))
+        if self.persist: export_image_to_fits(result[0], rascil_path('test_results/test_mpccal_ical_onesource_restored.fits'))
+        if self.persist: export_image_to_fits(combined_model, rascil_path('test_results/test_mpccal_ical_onesource_deconvolved.fits'))
         
         recovered_mpccal_components = find_skycomponents(result[0], fwhm=2, threshold=0.32, npixels=12)
         
@@ -299,8 +299,8 @@ class TestPipelineMPC(unittest.TestCase):
         newscreen = create_empty_image_like(self.screen)
         gaintables = [th.gaintable for th in self.theta_list]
         newscreen, weights = grid_gaintable_to_screen(self.all_skymodel_noniso_blockvis, gaintables, newscreen)
-        if self.persist: export_image_to_fits(newscreen, arl_path('test_results/test_mpccal_ical_onesource_screen.fits'))
-        if self.persist: export_image_to_fits(weights, arl_path('test_results/test_mpccal_ical_onesource_screenweights.fits'))
+        if self.persist: export_image_to_fits(newscreen, rascil_path('test_results/test_mpccal_ical_onesource_screen.fits'))
+        if self.persist: export_image_to_fits(weights, rascil_path('test_results/test_mpccal_ical_onesource_screenweights.fits'))
         
         arlexecute.close()
 
@@ -335,9 +335,9 @@ class TestPipelineMPC(unittest.TestCase):
         result = restore_list_arlexecute_workflow([combined_model], psf_obs, [(residual, 0.0)])
         result = arlexecute.compute(result, sync=True)
     
-        if self.persist: export_image_to_fits(residual, arl_path('test_results/test_mpccal_residual.fits'))
-        if self.persist: export_image_to_fits(result[0], arl_path('test_results/test_mpccal_restored.fits'))
-        if self.persist: export_image_to_fits(combined_model, arl_path('test_results/test_mpccal_deconvolved.fits'))
+        if self.persist: export_image_to_fits(residual, rascil_path('test_results/test_mpccal_residual.fits'))
+        if self.persist: export_image_to_fits(result[0], rascil_path('test_results/test_mpccal_restored.fits'))
+        if self.persist: export_image_to_fits(combined_model, rascil_path('test_results/test_mpccal_deconvolved.fits'))
     
         recovered_mpccal_components = find_skycomponents(result[0], fwhm=2, threshold=0.32, npixels=12)
     
@@ -353,8 +353,8 @@ class TestPipelineMPC(unittest.TestCase):
         newscreen = create_empty_image_like(self.screen)
         gaintables = [th.gaintable for th in self.theta_list]
         newscreen, weights = grid_gaintable_to_screen(self.all_skymodel_noniso_blockvis, gaintables, newscreen)
-        if self.persist: export_image_to_fits(newscreen, arl_path('test_results/test_mpccal_screen.fits'))
-        if self.persist: export_image_to_fits(weights, arl_path('test_results/test_mpccal_screenweights.fits'))
+        if self.persist: export_image_to_fits(newscreen, rascil_path('test_results/test_mpccal_screen.fits'))
+        if self.persist: export_image_to_fits(weights, rascil_path('test_results/test_mpccal_screenweights.fits'))
     
         arlexecute.close()
 
@@ -389,9 +389,9 @@ class TestPipelineMPC(unittest.TestCase):
         result = restore_list_arlexecute_workflow([combined_model], psf_obs, [(residual, 0.0)])
         result = arlexecute.compute(result, sync=True)
     
-        if self.persist: export_image_to_fits(residual, arl_path('test_results/test_mpccal_no_edge_residual.fits'))
-        if self.persist: export_image_to_fits(result[0], arl_path('test_results/test_mpccal_no_edge_restored.fits'))
-        if self.persist: export_image_to_fits(combined_model, arl_path('test_results/test_mpccal_no_edge_deconvolved.fits'))
+        if self.persist: export_image_to_fits(residual, rascil_path('test_results/test_mpccal_no_edge_residual.fits'))
+        if self.persist: export_image_to_fits(result[0], rascil_path('test_results/test_mpccal_no_edge_restored.fits'))
+        if self.persist: export_image_to_fits(combined_model, rascil_path('test_results/test_mpccal_no_edge_deconvolved.fits'))
     
         recovered_mpccal_components = find_skycomponents(result[0], fwhm=2, threshold=0.32, npixels=12)
     
@@ -407,8 +407,8 @@ class TestPipelineMPC(unittest.TestCase):
         newscreen = create_empty_image_like(self.screen)
         gaintables = [th.gaintable for th in self.theta_list]
         newscreen, weights = grid_gaintable_to_screen(self.all_skymodel_noniso_blockvis, gaintables, newscreen)
-        if self.persist: export_image_to_fits(newscreen, arl_path('test_results/test_mpccal_no_edge_screen.fits'))
-        if self.persist: export_image_to_fits(weights, arl_path('test_results/test_mpccal_no_edge_screenweights.fits'))
+        if self.persist: export_image_to_fits(newscreen, rascil_path('test_results/test_mpccal_no_edge_screen.fits'))
+        if self.persist: export_image_to_fits(weights, rascil_path('test_results/test_mpccal_no_edge_screenweights.fits'))
     
         arlexecute.close()
 
@@ -445,9 +445,9 @@ class TestPipelineMPC(unittest.TestCase):
         result = restore_list_arlexecute_workflow([combined_model], psf_obs, [(residual, 0.0)])
         result = arlexecute.compute(result, sync=True)
     
-        if self.persist: export_image_to_fits(residual, arl_path('test_results/test_mpccal_no_edge_residual.fits'))
-        if self.persist: export_image_to_fits(result[0], arl_path('test_results/test_mpccal_no_edge_restored.fits'))
-        if self.persist: export_image_to_fits(combined_model, arl_path('test_results/test_mpccal_no_edge_deconvolved.fits'))
+        if self.persist: export_image_to_fits(residual, rascil_path('test_results/test_mpccal_no_edge_residual.fits'))
+        if self.persist: export_image_to_fits(result[0], rascil_path('test_results/test_mpccal_no_edge_restored.fits'))
+        if self.persist: export_image_to_fits(combined_model, rascil_path('test_results/test_mpccal_no_edge_deconvolved.fits'))
     
         recovered_mpccal_components = find_skycomponents(result[0], fwhm=2, threshold=0.32, npixels=12)
     
@@ -463,7 +463,7 @@ class TestPipelineMPC(unittest.TestCase):
         newscreen = create_empty_image_like(self.screen)
         gaintables = [th.gaintable for th in self.theta_list]
         newscreen, weights = grid_gaintable_to_screen(self.all_skymodel_noniso_blockvis, gaintables, newscreen)
-        if self.persist: export_image_to_fits(newscreen, arl_path('test_results/test_mpccal_no_edge_screen.fits'))
-        if self.persist: export_image_to_fits(weights, arl_path('test_results/test_mpccal_no_edge_screenweights.fits'))
+        if self.persist: export_image_to_fits(newscreen, rascil_path('test_results/test_mpccal_no_edge_screen.fits'))
+        if self.persist: export_image_to_fits(weights, rascil_path('test_results/test_mpccal_no_edge_screenweights.fits'))
     
         arlexecute.close()

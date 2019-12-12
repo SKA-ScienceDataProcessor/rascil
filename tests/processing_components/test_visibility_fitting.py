@@ -9,13 +9,13 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.memory_data_models import Skycomponent
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.memory_data_models import Skycomponent
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.imaging.base import predict_skycomponent_visibility
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility.base import create_visibility
-from arl.processing_components.visibility.visibility_fitting import fit_visibility
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility.base import create_visibility
+from rascil.processing_components.visibility.visibility_fitting import fit_visibility
 
 
 class TestVisibilityFitting(unittest.TestCase):

@@ -8,10 +8,10 @@ import unittest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.calibration.iterators import gaintable_timeslice_iter, gaintable_null_iter
-from arl.processing_components.calibration.operations import create_gaintable_from_blockvisibility
-from arl.processing_components.visibility.base import create_blockvisibility
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.calibration.iterators import gaintable_timeslice_iter, gaintable_null_iter
+from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
+from rascil.processing_components.visibility.base import create_blockvisibility
 
 import logging
 log = logging.getLogger(__name__)

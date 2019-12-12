@@ -2,13 +2,13 @@
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: arldata-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}
+  name: arldata-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: arldata-{{ template "arl-cluster.name" . }}
+    app.kubernetes.io/name: arldata-{{ template "rascil-cluster.name" . }}
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
-    helm.sh/chart: "{{ template "arl-cluster.chart" . }}"
+    helm.sh/chart: "{{ template "rascil-cluster.chart" . }}"
 spec:
   storageClassName: standard
   volumeMode: Filesystem
@@ -23,13 +23,13 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: arldata-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}
+  name: arldata-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/name: arldata-{{ template "arl-cluster.name" . }}
+    app.kubernetes.io/name: arldata-{{ template "rascil-cluster.name" . }}
     app.kubernetes.io/instance: "{{ .Release.Name }}"
     app.kubernetes.io/managed-by: "{{ .Release.Service }}"
-    helm.sh/chart: "{{ template "arl-cluster.chart" . }}"
+    helm.sh/chart: "{{ template "rascil-cluster.chart" . }}"
 spec:
   storageClassName: standard
   accessModes:
@@ -37,4 +37,4 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  volumeName: arldata-{{ template "arl-cluster.name" . }}-{{ .Release.Name }}
+  volumeName: arldata-{{ template "rascil-cluster.name" . }}-{{ .Release.Name }}

@@ -10,15 +10,15 @@ import unittest
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 
-from arl.data_models.memory_data_models import Skycomponent, GainTable
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.memory_data_models import Skycomponent, GainTable
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.calibration.operations import gaintable_summary, apply_gaintable, create_gaintable_from_blockvisibility, \
+from rascil.processing_components.calibration.operations import gaintable_summary, apply_gaintable, create_gaintable_from_blockvisibility, \
     create_gaintable_from_rows
-from arl.processing_components.simulation import simulate_gaintable
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility.base import copy_visibility, create_blockvisibility
-from arl.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.simulation import simulate_gaintable
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility.base import copy_visibility, create_blockvisibility
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 
 log = logging.getLogger(__name__)
 

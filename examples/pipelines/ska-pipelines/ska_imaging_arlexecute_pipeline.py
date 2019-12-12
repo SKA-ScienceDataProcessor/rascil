@@ -2,19 +2,19 @@
 
 # # Pipeline processing using Dask
 
-from arl.data_models.parameters import arl_path
+from rascil.data_models.parameters import rascil_path
 
-results_dir = arl_path('test_results')
-dask_dir = arl_path('test_results/dask-work-space')
+results_dir = rascil_path('test_results')
+dask_dir = rascil_path('test_results/dask-work-space')
 
-from arl.data_models import PolarisationFrame, import_blockvisibility_from_hdf5
+from rascil.data_models import PolarisationFrame, import_blockvisibility_from_hdf5
 
-from arl.processing_components import export_image_to_fits, create_image_from_visibility, \
+from rascil.processing_components import export_image_to_fits, create_image_from_visibility, \
     convert_blockvisibility_to_visibility
 
-from arl.workflows import invert_list_arlexecute_workflow
+from rascil.workflows import invert_list_arlexecute_workflow
 
-from arl.wrappers.arlexecute.execution_support.arlexecute import arlexecute
+from rascil.wrappers.arlexecute.execution_support.arlexecute import arlexecute
 
 import logging
 
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     
     # Load data from previous simulation
     block_vislist = [arlexecute.execute(import_blockvisibility_from_hdf5)
-                     (arl_path('%s/ska-pipeline_simulation_vislist_%d.hdf' % (results_dir, v)))
+                     (rascil_path('%s/ska-pipeline_simulation_vislist_%d.hdf' % (results_dir, v)))
                      for v in range(nfreqwin)]
 
     vis_list = [arlexecute.execute(convert_blockvisibility_to_visibility, nout=1)(bv) for bv in block_vislist]

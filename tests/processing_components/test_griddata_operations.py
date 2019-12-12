@@ -7,8 +7,8 @@ import unittest
 
 import numpy
 
-from arl.processing_components.griddata.operations import create_griddata_from_image, convert_griddata_to_image
-from arl.processing_components.simulation import create_test_image
+from rascil.processing_components.griddata.operations import create_griddata_from_image, convert_griddata_to_image
+from rascil.processing_components.simulation import create_test_image
 
 log = logging.getLogger(__name__)
 
@@ -16,8 +16,8 @@ log = logging.getLogger(__name__)
 class TestGridData(unittest.TestCase):
     
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         
         self.m31image = create_test_image(cellsize=0.0001)
         self.cellsize = 180.0 * 0.0001 / numpy.pi

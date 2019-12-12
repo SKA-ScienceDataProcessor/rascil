@@ -7,12 +7,12 @@ import unittest
 
 import numpy
 
-from arl.data_models.polarisation import PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame
 
-from arl.processing_components.image.operations import create_empty_image_like, export_image_to_fits
-from arl.processing_components.image.gather_scatter import image_gather_facets, image_scatter_facets, image_gather_channels, \
+from rascil.processing_components.image.operations import create_empty_image_like, export_image_to_fits
+from rascil.processing_components.image.gather_scatter import image_gather_facets, image_scatter_facets, image_gather_channels, \
     image_scatter_channels
-from arl.processing_components.simulation import create_test_image
+from rascil.processing_components.simulation import create_test_image
 
 log = logging.getLogger(__name__)
 
@@ -20,8 +20,8 @@ log = logging.getLogger(__name__)
 class TestImageGatherScatters(unittest.TestCase):
     
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         self.persist = False
 
     def test_scatter_gather_facet(self):

@@ -22,10 +22,10 @@ Getting Started
 .. toctree::
    :maxdepth: 2
 
-   ARL_quickstart
-   ARL_directory
-   ARL_api
-   ARL_otherinfo
+   RASCIL_quickstart
+   RASCIL_directory
+   RASCIL_api
+   RASCIL_otherinfo
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -4,16 +4,16 @@
 
 import numpy
 
-from arl.data_models.parameters import arl_path
+from rascil.data_models.parameters import rascil_path
 
-results_dir = arl_path('test_results')
+results_dir = rascil_path('test_results')
 
-from arl.data_models import PolarisationFrame
-from arl.processing_components import create_visibility_from_ms, create_visibility_from_rows, \
+from rascil.data_models import PolarisationFrame
+from rascil.processing_components import create_visibility_from_ms, create_visibility_from_rows, \
     append_visibility, convert_visibility_to_stokes, vis_select_uvrange, deconvolve_cube, restore_cube, \
     export_image_to_fits, qa_image, image_gather_channels, create_image_from_visibility, invert_2d
 
-from arl.workflows import invert_list_serial_workflow
+from rascil.workflows import invert_list_serial_workflow
 
 import logging
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         context = '2d'
         vis_slices = 1
 
-    input_vis = [arl_path('data/vis/sim-1.ms'), arl_path('data/vis/sim-2.ms')]
+    input_vis = [rascil_path('data/vis/sim-1.ms'), rascil_path('data/vis/sim-2.ms')]
     
     import time
     start = time.time()

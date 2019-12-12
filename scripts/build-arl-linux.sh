@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # =========================================================== #
-# Set of comands to Install arl and wrapper into Linux system #
+# Set of comands to Install rascil and wrapper into Linux system #
 # =========================================================== #
 
 # Load the dependency modules
@@ -29,7 +29,7 @@
 
 # ########################################################### #
 # This should be executed from ARLROOT                        #
-# i.e. source scripts/build-arl-linux.sh                      #
+# i.e. source scripts/build-rascil-linux.sh                      #
 # ########################################################### #
 
 # Start the building ARL through building a python virtualenvironment
@@ -41,7 +41,7 @@ pip install coverage numpy
 pip install -r requirements.txt 
 pip install virtualenvwrapper
 
-echo 'Adding the arl and ffiwrappers path to the virtual environment'
+echo 'Adding the rascil and ffiwrappers path to the virtual environment'
 echo '(equivalent to setting up PYTHONPATH environment variable)'
 # this updates _build/lib/python3.x/site-packages/_virtualenv_path_extensions.pth
 source virtualenvwrapper.sh

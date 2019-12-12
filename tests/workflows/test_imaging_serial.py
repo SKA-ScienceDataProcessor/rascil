@@ -9,19 +9,19 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
-from arl.workflows.serial.imaging.imaging_serial import zero_list_serial_workflow, \
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.workflows.serial.imaging.imaging_serial import zero_list_serial_workflow, \
     predict_list_serial_workflow, invert_list_serial_workflow, subtract_list_serial_workflow, \
     weight_list_serial_workflow, residual_list_serial_workflow
-from arl.processing_components.image.operations import export_image_to_fits, smooth_image, qa_image
-from arl.processing_components.imaging.base import predict_skycomponent_visibility
-from arl.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
+from rascil.processing_components.image.operations import export_image_to_fits, smooth_image, qa_image
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
     insert_skycomponent
-from arl.processing_components.griddata import apply_bounding_box_convolutionfunction
-from arl.processing_components.griddata.kernels import create_awterm_convolutionfunction
-from arl.processing_components.simulation import ingest_unittest_visibility, \
+from rascil.processing_components.griddata import apply_bounding_box_convolutionfunction
+from rascil.processing_components.griddata.kernels import create_awterm_convolutionfunction
+from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, insert_unittest_errors, create_unittest_components
-from arl.processing_components.simulation import create_named_configuration
+from rascil.processing_components.simulation import create_named_configuration
 
 log = logging.getLogger(__name__)
 
@@ -33,8 +33,8 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestImaging(unittest.TestCase):
     def setUp(self):
         
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         
         self.persist = False
     

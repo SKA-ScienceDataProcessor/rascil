@@ -11,9 +11,9 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from arl.data_models.polarisation import PolarisationFrame
-from arl.processing_components.simulation import create_named_configuration
-from arl.processing_components.visibility.base import create_visibility
+from rascil.data_models.polarisation import PolarisationFrame
+from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.visibility.base import create_visibility
 
 log = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 
 class TestConfigurations(unittest.TestCase):
     def setUp(self):
-        from arl.data_models.parameters import arl_path
-        self.dir = arl_path('test_results')
+        from rascil.data_models.parameters import rascil_path
+        self.dir = rascil_path('test_results')
         
         self.frequency = numpy.linspace(0.8e8, 1.2e8, 3)
         self.channel_bandwidth = numpy.array([1e7, 1e7, 1e7])
