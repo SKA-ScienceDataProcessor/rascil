@@ -1,19 +1,19 @@
 
-ARL and DASK
-************
+RASCIL and DASK
+***************
 
-ARL uses Dask for distributed processing:
+RASCIL uses Dask for distributed processing:
 
     http://dask.pydata.org/en/latest/
 
     https://github.com/dask/dask-tutorial
 
-Running ARL and Dask on a single machine is straightforward. First define a graph and then compute it either by
+Running RASCIL and Dask on a single machine is straightforward. First define a graph and then compute it either by
 calling the compute method of the graph or by passing the graph to a dask client.
 
 A typical graph will flow from a set of input visibility sets to an image or set of images. In the course
 of constructing a graph, we will need to know the data elements and the functions transforming brtween them.
-These are well-modeled in ARL.
+These are well-modeled in RASCIL.
 
 In order that Dask.delayed processing can be switched on and off, and that the same code is used for Dask and
 non-Dask processing, we have wrapped Dask.delayed in :py:mod:`wrappers.arlexecute.execution_support.arlexecute.arlexecute`.
@@ -58,8 +58,8 @@ explicitly create a client and output the URL (usually http://127.0.0.1:8787) fo
 status page is most useful. If you shrink the browser size enough laterally all of the information appears on one
 page.
 
-Using ARL and Dask
-==================
+Using RASCIL and Dask
+=====================
 
 Logging is difficult when using distributed processing. Here's a solution that works. At the beginning of your script
  or notebook, define a function to initialize the logger.::
@@ -97,8 +97,8 @@ You can tail these, etc. This may not be what you might want since it is worker-
 worker are logged to the same file.
 
 
-Using ARL and dask on Darwin
-============================
+Using RASCIL and dask on Darwin
+===============================
 
 Running on a cluster is quite a bit more complicated, mostly because of the ways that clusters are operated. Darwin
 uses SLURM for scheduling. There is python binding of DRMAA that could in principle be used to queue the processing.
@@ -129,7 +129,7 @@ If you do this, remember to start the workers as well. dask-ssh is useful for th
 get_dask_Client will look for a scheduler via the environment variable RASCIL_DASK_SCHEDULER. It that does not exist, it
  will start a Client using the default Dask approach.
 
-On darwin, each node has 16 cores, and each core has 4GB. Usually this is insufficient for ARL and so some cores must be
+On darwin, each node has 16 cores, and each core has 4GB. Usually this is insufficient for RASCIL and so some cores must be
  not used so the memory can be used by other cores. To run 7 workers and one scheduler on 4 nodes, the SLURM batch
  file should look something like::
 
@@ -145,7 +145,7 @@ On darwin, each node has 16 cores, and each core has 4GB. Usually this is insuff
 
     #! sbatch directives begin here ###############################
     #! Name of the job:
-    #SBATCH -J SDP_ARL
+    #SBATCH -J SDP_RASCIL
     #! Which project should be charged:
     #SBATCH -A SKA-SDP
     #! How many whole nodes should be allocated?
@@ -248,7 +248,7 @@ On darwin, each node has 16 cores, and each core has 4GB. Usually this is insuff
 
 In the command CMD remember to shutdown the Client so the batch script will close the background dask-ssh and then exit.
 
-Thw diagnostic pages can be tunneled. ARL emits the URL of the diagnostic page. For example::
+Thw diagnostic pages can be tunneled. RASCIL emits the URL of the diagnostic page. For example::
 
       http://10.143.1.25:8787
 

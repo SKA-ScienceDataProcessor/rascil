@@ -19,10 +19,10 @@ accessed using the very top level import::
 Functions
 =========
 
-Data containers used by ARL
----------------------------
+Data containers used by RASCIL
+------------------------------
 
-ARL holds data in python Classes. The bulk data is usually kept in a python structured array, and the meta data as
+RASCIL holds data in python Classes. The bulk data is usually kept in a python structured array, and the meta data as
 attributes.
 
 See :py:mod:`data_models.memory_data_models` for the following definitions:

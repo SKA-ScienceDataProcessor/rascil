@@ -10,7 +10,7 @@ Installation
 Installation should be straightforward. We recommend the use of virtual environment. A prepackaged python
 system such as Anaconda https://www.anaconda.com is usually best as a base.
 
-ARL requires python 3.6 or higher.
+RASCIL requires python 3.6 or higher.
 
 # Use git to make a local clone of the Github respository::
 
@@ -26,7 +26,7 @@ ARL requires python 3.6 or higher.
 
 There may be some dependencies that require either conda (or brew install on a mac).
 
-# Setup ARL::
+# Setup RASCIL::
 
    python setup.py install
 
@@ -39,7 +39,7 @@ The README.md file contains much more information about installation.
 Running notebooks
 +++++++++++++++++
 
-The best way to get familiar with ARL is via jupyter notebooks. For example::
+The best way to get familiar with RASCIL is via jupyter notebooks. For example::
 
    jupyter-notebook processing_components/notebooks/imaging.ipynb
 

@@ -14,7 +14,7 @@ checks.
 Design
 ======
 
-The ARL has been designed in line with the following principles:
+The RASCIL has been designed in line with the following principles:
 
 + Data are held in Classes.
 + The Data Classes correspond to familiar concepts in radio astronomy packages e.g. visibility, gaintable, image.
@@ -28,6 +28,6 @@ Additions and changes should adhere to these principles.
 Submitting code
 ===============
 
-ARL is hosted on the `SDP github <https://github.com/SKA-ScienceDataProcessor/algorithm-reference-library.git>`_ .
+RASCIL is hosted on the `SDP github <https://github.com/SKA-ScienceDataProcessor/rascil.git>`_ .
 
 We are open to pull requests submitted via github.

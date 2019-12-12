@@ -4,10 +4,10 @@
 The role of the Algorithm Reference Library in SDP
 **************************************************
 
-ARL was developed as part of the SKA SDP consortium work. For an overview of the SDP see the `SDP CDR
+RASCIL was developed as part of the SKA SDP consortium work. For an overview of the SDP see the `SDP CDR
 documentation <http://ska-sdp.org/publications/sdp-cdr-closeout-documentation>`_
 
-The ARL structure maps that used in the SDP processing architecture:
+The RASCIL structure maps that used in the SDP processing architecture:
 
 .. image:: ./RASCIL_Module_View.png
    :scale: 100 %

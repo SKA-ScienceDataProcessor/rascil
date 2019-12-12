@@ -1,5 +1,5 @@
 
-Documenting ARL
+Documenting RASCIL
 ***************
 
 * The primary documentation is written in `reStructuredText <http://docutils.sourceforge.net/rst.html>`_ (rst).

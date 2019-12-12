@@ -16,7 +16,7 @@ pipeline {
     agent {label 'sdp-ci-01'}
     environment {
 	MPLBACKEND='agg'
-	ARLROOT="${env.WORKSPACE}"
+	RASCILROOT="${env.WORKSPACE}"
     }
     stages {
 // We can skip checkout step if Jenkinsfile is in same repo as the source code (the checkout is configured in Jenkins server, note that we need to enable git-lfs!
@@ -58,9 +58,9 @@ pipeline {
 		'''
 	    }
 	}
-        stage('TestARL') {
+        stage('TestRASCIL') {
             steps {
-                echo 'Testing ARL..'
+                echo 'Testing RASCIL..'
 		sh '''
 		source _build/bin/activate
 		export MPLBACKEND=agg
@@ -93,13 +93,13 @@ pipeline {
 	    tokenCredentialId: 'a06474f9-0c86-4dc7-a477-42d7d1a1cc71'
         }
     	failure {
-             mail to: 'pw410@cam.ac.uk, realtimcornwell@gmail.com F.Wang@skatelescope.org',
+             mail to: 'realtimcornwell@gmail.com F.Wang@skatelescope.org',
              subject: "Failed Jenkins Pipeline: ${currentBuild.fullDisplayName} Status:${env.BUILD_STATUS} ",
              body: "Something is wrong with ${env.BUILD_URL} Status: ${env.BUILD_STATUS} "
             
     	}
     	fixed {
-             mail to: 'pw410@cam.ac.uk, realtimcornwell@gmail.com F.Wang@skatelescope.org',
+             mail to: 'realtimcornwell@gmail.com F.Wang@skatelescope.org',
              subject: "Jenkins Pipeline is back to normal: ${currentBuild.fullDisplayName} Status:${env.BUILD_STATUS}  ",
              body: "See ${env.BUILD_URL}"
 	}
@@ -112,7 +112,7 @@ pipeline {
 					makeEmptyDirs: false, 
 					noDefaultExcludes: false, 
 					patternSeparator: '[, ]+', 
-					remoteDirectory: 'algorithm-reference-library', 
+					remoteDirectory: 'rascil',
 					remoteDirectorySDF: false, 
 					removePrefix: '', 
 					sourceFiles: 'docs/build/**'), 
@@ -122,7 +122,7 @@ pipeline {
 					makeEmptyDirs: false, 
 					noDefaultExcludes: false, 
 					patternSeparator: '[, ]+', 
-					remoteDirectory: 'algorithm-reference-library', 
+					remoteDirectory: 'rascil',
 					remoteDirectorySDF: false, 
 					removePrefix: '', 
 					sourceFiles: 'coverage/**')], 
