@@ -113,7 +113,7 @@ need to be updated manually.
     - workflows contains high level workflows using the processing_components. This eventually will migrate to the EF
      but some are kept here as scripts or notebooks.
 * The tests and notebooks have been moved to be inside the appropriate directory.
-* The data definitions formerly in arl/data have been moved to a top level directory data_models. 
+* The data definitions formerly in rascil/data have been moved to a top level directory data_models. 
 * The top level Makefile has been updated
 * The docs have been updated
 * The use of the term 'graph' has been replaced in many places by 'list' to reflect the wrapping of dask in 

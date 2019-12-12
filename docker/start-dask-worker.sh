@@ -82,7 +82,7 @@ else
             "import os,math; print(int(math.ceil(float(os.environ['DASK_CPU_LIMIT']))))" \
         )
         echo "Dask Worker Threads: ${NTHREADS}"
-        # dask-worker --memory-limit 7516192768 --local-directory /arl/tmp --host ${IP} --bokeh --bokeh-port 8788  --nprocs 2 --nthreads 2 --reconnect "${DASK_SCHEDULER}"
+        # dask-worker --memory-limit 7516192768 --local-directory /rascil/tmp --host ${IP} --bokeh --bokeh-port 8788  --nprocs 2 --nthreads 2 --reconnect "${DASK_SCHEDULER}"
         dask-worker \
             --host "${DASK_HOST_NAME}" \
             --worker-port "${DASK_PORT_WORKER}" \
@@ -100,6 +100,6 @@ else
         dask-worker "$@"
         #DASK_SCHEDULER=192.168.88.202:8786
         echo "Dask Scheduler: ${DASK_SCHEDULER}"
-        # dask-worker --memory-limit 7516192768 --local-directory /arl/tmp --host ${IP} --bokeh --bokeh-port 8788  --nprocs 2 --nthreads 2 --reconnect "${DASK_SCHEDULER}"
+        # dask-worker --memory-limit 7516192768 --local-directory /rascil/tmp --host ${IP} --bokeh --bokeh-port 8788  --nprocs 2 --nthreads 2 --reconnect "${DASK_SCHEDULER}"
     fi
 fi

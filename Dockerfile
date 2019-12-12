@@ -29,8 +29,8 @@ LABEL \
 ENV LC_ALL=C.UTF-8 \
     LANG=C.UTF-8 \
     PIPENV_TIMEOUT=900 \
-    PATH=/arl/venv/bin:$PATH \
-    VIRTUAL_ENV=/arl/venv \
+    PATH=/rascil/venv/bin:$PATH \
+    VIRTUAL_ENV=/rascil/venv \
     PIPENV_VERBOSITY=-1 \
     PIPENV_NOSPIN=1 \
     HOME=/root \
@@ -94,14 +94,14 @@ RUN jupyter nbextensions_configurator enable --system
 ENV JENKINS_URL 1
 ENV PYTHONPATH /arl
 ENV ARL /arl
-ENV JUPYTER_PATH /arl/examples/arl
+ENV JUPYTER_PATH /rascil/examples/arl
 
 RUN touch "${HOME}/.bash_profile"
 
 # Bundle app source
 # COPY limited by /.dockerignore
-COPY ./docker/boot.sh ./Makefile ./setup.py /arl/
-COPY . /arl/
+COPY ./docker/boot.sh ./Makefile ./setup.py /rascil/
+COPY . /rascil/
 
 # run setup
 RUN \
@@ -109,13 +109,13 @@ RUN \
     $PYTHON setup.py build && \
     $PYTHON setup.py install && \
     cp ./build/lib.*/*.so . && \
-    cd /arl/workflows/ffiwrapped/serial && \
+    cd /rascil/workflows/ffiwrapped/serial && \
     make && \
     $PIP install mpi4py
 
 # create space for libs
-RUN mkdir -p /arl/test_data /arl/test_results && \
-    chmod 777 /arl /arl/test_data /arl/test_results
+RUN mkdir -p /rascil/test_data /rascil/test_results && \
+    chmod 777 /arl /rascil/test_data /rascil/test_results
 
 COPY --chown="1000:100" ./docker/jupyter_notebook_config.py "${HOME}/.jupyter/"
 COPY ./docker/notebook.sh /usr/local/bin/
@@ -123,7 +123,7 @@ COPY ./docker/start-dask-scheduler.sh /usr/local/bin/
 COPY ./docker/start-dask-worker.sh /usr/local/bin
 
 # We share in the rascil data here
-VOLUME ["/arl/data", "/arl/tmp"]
+VOLUME ["/rascil/data", "/rascil/tmp"]
 
 # Expose Jupyter and Bokeh ports
 EXPOSE  8888 8786 8787 8788 8789
@@ -132,4 +132,4 @@ EXPOSE  8888 8786 8787 8788 8789
 ENTRYPOINT ["tini", "--"]
 
 # Run - default is notebook
-CMD ["/arl/boot.sh"]
+CMD ["/rascil/boot.sh"]

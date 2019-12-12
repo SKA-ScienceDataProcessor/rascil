@@ -102,7 +102,7 @@ The ARL has been containerised, and requires three versions of the container to 
 * Dask Scheduler
 * 1 or more Dask workers
 
-The ARL containers also need access to the test data which is mounted into the appropriate containers at /arl/data .
+The ARL containers also need access to the test data which is mounted into the appropriate containers at /rascil/data .
 
 ```
 git lfs pull # ensure the visibility data is checked out

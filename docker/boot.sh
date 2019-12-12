@@ -7,7 +7,7 @@ IP=${IP:-0.0.0.0}
 NOTEBOOK_PORT=${NOTEBOOK_PORT:-8888}
 export JUPYTER_PASSWORD=${JUPYTER_PASSWORD:-changeme}
 jupyter notebook --allow-root --no-browser --ip=${IP} --port=${NOTEBOOK_PORT} /arl
-#jupyter lab --allow-root --no-browser --ip=${IP} --port=${PORT} "$@" /arl/examples/arl/
+#jupyter lab --allow-root --no-browser --ip=${IP} --port=${PORT} "$@" /rascil/examples/rascil/
 
 # source activate dask-distributed
 #jupyter lab --allow-root "$@"

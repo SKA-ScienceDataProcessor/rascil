@@ -29,7 +29,7 @@
 /examples/pyweave/figures
 /examples/pyweave/docset.zip
 /examples/anna/simulated_data.txt
-/examples/arl/*.png
+/examples/rascil/*.png
 /*.fits
 
 /.ipynb_checkpoints

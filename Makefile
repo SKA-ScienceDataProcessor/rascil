@@ -18,7 +18,7 @@ DOCKER_PASSWORD ?= ""
 WORKER_MEM ?= 512Mi
 WORKER_CPU ?= 500m
 WORKER_REPLICAS ?= 1
-WORKER_ARL_DATA ?= /arl/data
+WORKER_ARL_DATA ?= /rascil/data
 CURRENT_DIR = $(shell pwd)
 JUPYTER_PASSWORD ?= changeme
 SERVER_DEVICE ?= $(shell ip link | grep BROADCAST | head -1 | awk '{print $$2}' | sed 's/://')
@@ -81,12 +81,12 @@ nosetests: cleantests  ## run tests using nosetests
 
 nosetests-coverage: inplace cleantests  ## run nosetests with coverage
 	rm -rf coverage .coverage
-	ARL=$$(pwd) $(NOSETESTS) -s -v --with-coverage arl/processing_library
+	ARL=$$(pwd) $(NOSETESTS) -s -v --with-coverage rascil/processing_library
 
 trailing-spaces:
-	find arl/processing_library -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
-	find arl/processing_components -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
-	find arl/workflows -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
+	find rascil/processing_library -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
+	find rascil/processing_components -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
+	find rascil/workflows -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
 docs: inplace  ## build docs - you must have graphviz installed
 	# you must have graphviz installed
@@ -94,25 +94,25 @@ docs: inplace  ## build docs - you must have graphviz installed
 
 code-flake:
 	# flake8 ignore long lines and trailing whitespace
-	$(FLAKE) --ignore=E501,W293,F401 --builtins=ModuleNotFoundError arl/processing_library
+	$(FLAKE) --ignore=E501,W293,F401 --builtins=ModuleNotFoundError rascil/processing_library
 
 code-lint:
 	$(PYLINT) --extension-pkg-whitelist=numpy \
 	  --ignored-classes=astropy.units,astropy.constants,HDUList \
-	  -E arl/processing_library/ tests/
+	  -E rascil/processing_library/ tests/
 
 code-analysis: code-flake code-lint  ## run pylint and flake8 checks
 
 examples: inplace  ## launch examples
-	$(MAKE) -C arl/processing_library/notebooks
-	$(MAKE) -C arl/processing_components/notebooks
-	$(MAKE) -C arl/workflows/notebooks
+	$(MAKE) -C rascil/processing_library/notebooks
+	$(MAKE) -C rascil/processing_components/notebooks
+	$(MAKE) -C rascil/workflows/notebooks
 
 notebook:  ## launch local jupyter notebook server
 	DEVICE=`ip link | grep -E " ens| wlan| eth" | grep BROADCAST | tail -1 | cut -d : -f 2  | sed "s/ //"` && \
 	IP=`ip a show $${DEVICE} | grep ' inet ' | awk '{print $$2}' | sed 's/\/.*//'` && \
 	echo "Launching at IP: $${IP}" && \
-	jupyter notebook --no-browser --ip=$${IP} --port=8888 examples/arl/
+	jupyter notebook --no-browser --ip=$${IP} --port=8888 examples/rascil/
 
 docker_build:
 	$(DOCKER) build -t $(DOCKER_IMAGE) -f $(DOCKERFILE) \
@@ -136,7 +136,7 @@ docker_notebook: docker_build
 	DEVICE=`ip link | grep -E " ens| wlan| eth" | grep BROADCAST | tail -1 | cut -d : -f 2  | sed "s/ //"` && \
 	IP=`ip a show $${DEVICE} | grep ' inet ' | awk '{print $$2}' | sed 's/\/.*//'` && \
 	echo "Launching at IP: $${IP}" && \
-	$(DOCKER) run --name $(NAME)_notebook --hostname $(NAME)_notebook --volume $$(pwd)/data:/arl/data -e IP=$${IP} \
+	$(DOCKER) run --name $(NAME)_notebook --hostname $(NAME)_notebook --volume $$(pwd)/data:/rascil/data -e IP=$${IP} \
             --net=host -p 8888:8888 -p 8787:8787 -p 8788:8788 -p 8789:8789 -d $(DOCKER_IMAGE)
 	sleep 3
 	$(DOCKER) logs $(NAME)_notebook
@@ -154,13 +154,13 @@ docker_tests: cleantests docker_test_data
 	rm -f predict_facet_timeslice_graph_wprojection.png pipelines-timings_*.csv
 	CTNR=`$(DOCKER) ps -q -f name=$(NAME)_tests` && \
 	if [ -n "$${CTNR}" ]; then $(DOCKER) rm -f $(NAME)_tests; fi
-	$(DOCKER) run --rm --name $(NAME)_tests --hostname $(NAME) --volume arl-volume:/arl/data \
+	$(DOCKER) run --rm --name $(NAME)_tests --hostname $(NAME) --volume arl-volume:/rascil/data \
 		            $(DOCKER_IMAGE) /bin/sh -c "cd /arl && make $(MAKE_DBG) nosetests TESTS=\"${TESTS}\""
 
 docker_pytest: cleantests docker_test_data
 	CTNR=`$(DOCKER) ps -q -f name=$(NAME)_tests` && \
 	if [ -n "$${CTNR}" ]; then $(DOCKER) rm -f $(NAME)_tests; fi
-	$(DOCKER) run --rm --name $(NAME)_tests --hostname $(NAME) --volume $$(pwd)/data:/arl/data \
+	$(DOCKER) run --rm --name $(NAME)_tests --hostname $(NAME) --volume $$(pwd)/data:/rascil/data \
 			    $(DOCKER_IMAGE) /bin/sh -c "cd /arl && make $(MAKE_DBG) pytest"
 
 docker_lint:
