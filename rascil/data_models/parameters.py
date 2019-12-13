@@ -72,7 +72,7 @@ def rascil_path(path):
     :return: absolute path
     """
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)) + "/../../")
-    arlhome = os.getenv('ARL', project_root)
+    arlhome = os.getenv('RASCIL', project_root)
     return os.path.join(arlhome, path)
 
 
