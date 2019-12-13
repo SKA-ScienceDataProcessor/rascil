@@ -122,7 +122,7 @@ Orientation
 
 Here is a quick guide to the layout:
 
-  * `data_models`: Data models such as Image, Visibility, GainTable
+  * `rascil/data_models`: Data models such as Image, Visibility, GainTable
   * `rascil/processing_library`: Algorithm independent library code
   * `rascil/processing_components`: Processing functions used in algorithms
   * `rascil/workflows`: Serial and distributed processing workflows
@@ -137,7 +137,7 @@ Running Notebooks
 [Jupyter notebooks](http://jupyter.org/) end with `.ipynb` and can be run as follows from the
 command line:
 
-     $ jupyter-notebook workflow/notebooks/imaging_serial.ipynb
+     $ jupyter-notebook rascil/workflows/notebooks/imaging_serial.ipynb
 
 Building documentation
 ----------------------
