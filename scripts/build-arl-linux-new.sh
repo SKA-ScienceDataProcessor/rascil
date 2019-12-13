@@ -6,7 +6,7 @@
 
 
 # If dependency environment modules are loaded and repository is already cloned
-# this file can be sources from arlroot and should build the system 
+# this file can be sources from RASCIL and should build the system
 # i.e. algorithm-reference-library> source scripts/build-rascil-linux-new.sh
 
 
@@ -47,8 +47,8 @@ python setup.py install
 add2virtualenv $PWD
 add2virtualenv $PWD/ffiwrappers/src
 
-# Setup ARLROOT
-export ARLROOT=$PWD
+# Setup RASCIL
+export RASCIL=$PWD
 
 # Test it
 cd workflows/ffiwrapped/serial

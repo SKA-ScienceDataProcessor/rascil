@@ -28,7 +28,7 @@
 
 
 # ########################################################### #
-# This should be executed from ARLROOT                        #
+# This should be executed from RASCIL                        #
 # i.e. source scripts/build-rascil-linux.sh                      #
 # ########################################################### #
 
@@ -55,7 +55,7 @@ export LDFLAGS="$(python3-config --ldflags) -lcfitsio"
 python setup.py install
 
 # Test the ffiwrappers
-export ARLROOT=$PWD
+export RASCIL=$PWD
 source tests/ffiwrapped/run-tests.sh
 
 #ldd libarlffi.so 

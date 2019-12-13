@@ -41,7 +41,7 @@ module load default-impi                   # REQUIRED - loads the basic environm
 #! Set up python
 echo -e "Running python: `which python`"
 . $HOME/arlenv/bin/activate
-export PYTHONPATH=$PYTHONPATH:$ARL
+export PYTHONPATH=$PYTHONPATH:$RASCIL
 echo "PYTHONPATH is ${PYTHONPATH}"
 module load python
 echo -e "Running python: `which python`"

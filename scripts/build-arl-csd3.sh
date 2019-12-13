@@ -48,5 +48,5 @@ export LDFLAGS="$(python3-config --ldflags) -lcfitsio"
 python setup.py install
 
 # Test the ffiwrappers
-export ARLROOT=$PWD
+export RASCIL=$PWD
 

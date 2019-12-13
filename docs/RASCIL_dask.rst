@@ -108,7 +108,7 @@ After quite a bit of experimentation I decided to avoid a virtual environment be
 those on worker nodes.
 
 * PATH=~/python/bin:$PATH
-* cd $ARL; pip install --prefix=~/python -r requirements.txt
+* cd rascil_path; pip install --prefix=~/python -r requirements.txt
 * pip install --prefix=~/python paramiko
 
 Ensure that the .bashrc file has the same definition as .bash_profile. If not, ssh will give strange errors! The
@@ -181,7 +181,7 @@ On darwin, each node has 16 cores, and each core has 4GB. Usually this is insuff
     #! Set up python
     echo -e "Running python: `which python`"
     . $HOME/arlenv/bin/activate
-    export PYTHONPATH=$PYTHONPATH:$ARL
+    export PYTHONPATH=$PYTHONPATH:$RASCIL
     echo "PYTHONPATH is ${PYTHONPATH}"
     module load python
     echo -e "Running python: `which python`"

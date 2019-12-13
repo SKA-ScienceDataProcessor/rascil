@@ -42,7 +42,7 @@
 module purge                               # Removes all modules still loaded
 
 #! Set up python
-export PYTHONPATH=$PYTHONPATH:$ARL
+export PYTHONPATH=$PYTHONPATH:$RASCIL
 echo "PYTHONPATH is ${PYTHONPATH}"
 
 echo -e "Running python: `which python`"

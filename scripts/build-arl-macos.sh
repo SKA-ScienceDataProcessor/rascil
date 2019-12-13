@@ -17,12 +17,12 @@
 #    Trace/BPT trap: 5
 
 #    S: name of the library is a relative path, so modify the LD_LIBRARY_PATH does not work, solution: define a fallback path
-#    export DYLD_FALLBACK_LIBRARY_PATH=$ARLROOT
+#    export DYLD_FALLBACK_LIBRARY_PATH=rascil_pathROOT
 
 #    * arlwrap module not found and cffi module not found:
 #    problem is that when calling from C, python ignores the python virtual environment created and tries to find modules in the global python installation, by modifying the PYTHONPATH directory we can force it to look at the right place:
 
-#    export PYTHONPATH=$ARLROOT/:$ARLROOT/ffiwrappers/src/:$ARLROOT/_build/lib/python3.6/site-packages/
+#    export PYTHONPATH=rascil_pathROOT/:rascil_pathROOT/ffiwrappers/src/:rascil_pathROOT/_build/lib/python3.6/site-packages/
 # ########################################################### #
 
 
@@ -51,7 +51,7 @@
 
 
 # ########################################################### #
-# This should be executed from ARLROOT                        #
+# This should be executed from RASCIL                        #
 # i.e. source scripts/build-rascil-linux.sh                      #
 # ########################################################### #
 
@@ -75,11 +75,11 @@ echo 'Adding the rascil and ffiwrappers path to the virtual environment'
 source virtualenvwrapper.sh
 add2virtualenv $PWD
 add2virtualenv $PWD/ffiwrappers/src/
-# For MacOS PYTHONPATH needs to be set to the arlroot, and ffiwrappers plus the modules in 
+# For MacOS PYTHONPATH needs to be set to the RASCIL, and ffiwrappers plus the modules in
 # the created virtual environmet
-export ARLROOT=$PWD
+export RASCIL=$PWD
 export ARL=$PWD
-export PYTHONPATH=$ARLROOT/:$ARLROOT/ffiwrappers/src/:$ARLROOT/_build/lib/python3.6/site-packages/
+export PYTHONPATH=rascil_pathROOT/:rascil_pathROOT/ffiwrappers/src/:rascil_pathROOT/_build/lib/python3.6/site-packages/
 
 # This is required for some systems (i.e. Jenkins server or macos) others
 # detect the python libraries alone and link with correct flags without setting up
@@ -94,7 +94,7 @@ export CC=clang
 # LD_LIBRARY_FLAG does not work because the build binary points to a 
 # relative path, so we define a fallback path to look for libraries
 # if they are not found anywhere else.
-export DYLD_FALLBACK_LIBRARY_PATH=$ARLROOT
+export DYLD_FALLBACK_LIBRARY_PATH=rascil_pathROOT
 #source tests/ffiwrapped/run-tests.sh
 
 #ldd libarlffi.so 

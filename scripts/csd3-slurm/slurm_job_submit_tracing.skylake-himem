@@ -64,15 +64,15 @@ module load rhel7/default-peta4            # REQUIRED - loads the basic environm
 
 
 #! Insert additional module load commands after this line if needed:
-export ARLROOT=/home/mf582/scratch/ARL/algorithm-reference-library
-echo "source ${ARLROOT}/scripts/csd3-slurm/activate-env-csd3-profiling.sh"
-source $ARLROOT/scripts/csd3-slurm/activate-env-csd3.sh
+export RASCIL=/home/mf582/scratch/ARL/algorithm-reference-library
+echo "source ${RASCIL}/scripts/csd3-slurm/activate-env-csd3-profiling.sh"
+source rascil_pathROOT/scripts/csd3-slurm/activate-env-csd3.sh
 
 #module load intel/bundles/psxe/2017.4
 
 #! Full path to application executable: 
-tracing="$ARLROOT/workflows/mpi/tracing/trace.sh"
-application="$ARLROOT/workflows/mpi/imaging-pipelines-mpi.py"
+tracing="rascil_pathROOT/workflows/mpi/tracing/trace.sh"
+application="rascil_pathROOT/workflows/mpi/imaging-pipelines-mpi.py"
 
 #! Run options for the application:
 options="--nfreqwin=21"
@@ -80,7 +80,7 @@ options="--nfreqwin=21"
 #! Work directory (i.e. where the job will run):
 workdir="$SLURM_SUBMIT_DIR"  # The value of SLURM_SUBMIT_DIR sets workdir to the directory
                              # in which sbatch is run.
-#workdir="$ARLROOT/workflows/mpi"
+#workdir="rascil_pathROOT/workflows/mpi"
 
 #! Are you using OpenMP (NB this is unrelated to OpenMPI)? If so increase this
 #! safe value to no more than 32:

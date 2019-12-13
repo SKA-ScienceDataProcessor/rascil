@@ -43,7 +43,7 @@ module purge                               # Removes all modules still loaded
 
 #! Set up python
 . $HOME/arlenv/bin/activate
-export PYTHONPATH=$PYTHONPATH:$ARL
+export PYTHONPATH=$PYTHONPATH:$RASCIL
 echo "PYTHONPATH is ${PYTHONPATH}"
 
 echo -e "Running python: `which python`"

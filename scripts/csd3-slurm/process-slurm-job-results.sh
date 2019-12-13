@@ -1,7 +1,7 @@
 #! /bin/bash
 # skylake nodes have 6GB per CPU and 12 cores per node
 # skylake-himem have 12GB per CPU and 32 CPUs per node
-# Script should be run from $ARLROOT/scripts/csd3-slurm
+# Script should be run from rascil_pathROOT/scripts/csd3-slurm
 
 #TEMPLATE=slurm_submit.peta4-skylake.template
 #OUTPUT=slurm_job.peta4

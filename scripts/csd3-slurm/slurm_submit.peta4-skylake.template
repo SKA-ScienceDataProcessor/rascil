@@ -62,16 +62,16 @@ mpi_tasks_per_node=$(echo "$SLURM_TASKS_PER_NODE" | sed -e  's/^\([0-9][0-9]*\).
 module purge                               # Removes all modules still loaded
 module load rhel7/default-peta4            # REQUIRED - loads the basic environment
 
-export ARLROOT=/home/mf582/scratch/ARL/algorithm-reference-library
+export RASCIL=/home/mf582/scratch/ARL/algorithm-reference-library
 
 #! Insert additional module load commands after this line if needed:
-echo "source ${ARLROOT}/scripts/csd3-slurm/activate-env-csd3.sh"
-source $ARLROOT/scripts/csd3-slurm/activate-env-csd3.sh
+echo "source ${RASCIL}/scripts/csd3-slurm/activate-env-csd3.sh"
+source rascil_pathROOT/scripts/csd3-slurm/activate-env-csd3.sh
 
 #module load intel/bundles/psxe/2017.4
 
 #! Full path to application executable: 
-application="$ARLROOT/workflows/mpi/imaging-pipelines-mpi.py"
+application="rascil_pathROOT/workflows/mpi/imaging-pipelines-mpi.py"
 
 #! Run options for the application:
 options="--nfreqwin=@@NFREQ@@"
@@ -79,7 +79,7 @@ options="--nfreqwin=@@NFREQ@@"
 #! Work directory (i.e. where the job will run):
 workdir="$SLURM_SUBMIT_DIR"  # The value of SLURM_SUBMIT_DIR sets workdir to the directory
                              # in which sbatch is run.
-#workdir="$ARLROOT/workflows/mpi"
+#workdir="rascil_pathROOT/workflows/mpi"
 
 #! Are you using OpenMP (NB this is unrelated to OpenMPI)? If so increase this
 #! safe value to no more than 32:

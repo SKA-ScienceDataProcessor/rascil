@@ -23,8 +23,8 @@ export MODULEPATH=$MODULEPATH:$HOME/privatemodules
 module load EXTRAE/impi/3.6.1
 export EXTRAE_HOME=/home/mf582/scratch/Extrae/extrae-3.6.1-install/impi/
 
-## ARLROOT should be defined already
-## export ARLROOT=/home/mf582/scratch/ARL/algorithm-reference-library
+## RASCIL should be defined already
+## export RASCIL=/home/mf582/scratch/ARL/algorithm-reference-library
 
 #module load python-3.6.2-intel-17.0.4-lv2lxsb 
 #module load extrae/3.6.1/cummulus
@@ -32,9 +32,9 @@ export EXTRAE_HOME=/home/mf582/scratch/Extrae/extrae-3.6.1-install/impi/
 
 # Start the building ARL through building a python virtualenvironment
 #virtualenv -p `which python3` _build
-source $ARLROOT/_build/bin/activate
+source rascil_pathROOT/_build/bin/activate
 echo "Activating virtual environment"
-echo source $ARLROOT/_build/bin/activate
+echo source rascil_pathROOT/_build/bin/activate
 
 # _build/lib/python3.x/site-packages/_virtualenv_path_extensions.pth
 #source virtualenvwrapper.sh

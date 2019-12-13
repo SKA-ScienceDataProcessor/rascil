@@ -5,11 +5,11 @@
 
 REALPATH=$(realpath $0)
 
-ARLROOT=$(dirname $(dirname $REALPATH))
+RASCIL=$(dirname $(dirname $REALPATH))
 
-cd $ARLROOT/tools
+cd $RASCIL/tools
 
-VENV=$ARLROOT/venv-patched
+VENV=$RASCIL/venv-patched
 
 if [[ -d $VENV ]]; then
 	echo "Found virtualenv (or conflicting directory) in $VENV"
@@ -21,7 +21,7 @@ else
 	PKGDIR=$VIRTUAL_ENV/lib/python3.6/site-packages
 
 	echo "Installing requirements.txt..."
-	pip install -r $ARLROOT/requirements.txt
+	pip install -r $RASCIL/requirements.txt
 
 	# Check for patch requirements
 	# Scipy 1.0.0 has a thread safety issue in _minpack. Test for this version,
@@ -34,7 +34,7 @@ else
 		curl -o minpack.patch https://patch-diff.githubusercontent.com/raw/scipy/scipy/pull/7999.patch
 
 		pushd $PKGDIR
-		patch -p1 -u < $ARLROOT/tools/minpack.patch
+		patch -p1 -u < $RASCIL/tools/minpack.patch
 		popd
 
 		rm minpack.patch
