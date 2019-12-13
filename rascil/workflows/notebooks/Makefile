@@ -1,4 +1,4 @@
 
-NBs = simple-dask_arlexecute.ipynb imaging-fits_arlexecute.ipynb \
-imaging-wterm_arlexecute.ipynb imaging-pipelines_arlexecute.ipynb bandpass-calibration_arlexecute.ipynb
+NBs = simple-dask_rsexecute.ipynb imaging-fits_rsexecute.ipynb \
+imaging-wterm_rsexecute.ipynb imaging-pipelines_rsexecute.ipynb bandpass-calibration_rsexecute.ipynb
 include ../jupyter.mk

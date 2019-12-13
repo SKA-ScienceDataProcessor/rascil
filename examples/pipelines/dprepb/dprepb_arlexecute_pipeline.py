@@ -15,9 +15,9 @@ from rascil.processing_components import create_visibility_from_ms, create_visib
     append_visibility, convert_visibility_to_stokes, vis_select_uvrange, deconvolve_cube, restore_cube, \
     export_image_to_fits, qa_image, image_gather_channels, create_image_from_visibility
 
-from rascil.workflows import invert_list_arlexecute_workflow, invert_list_serial_workflow
+from rascil.workflows import invert_list_rsexecute_workflow, invert_list_serial_workflow
 
-from rascil.wrappers.arlexecute.execution_support.arlexecute import arlexecute
+from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
 
 import logging
 
@@ -52,11 +52,11 @@ if __name__ == '__main__':
     logging.info("Starting Imaging pipeline")
     
     use_dask = args.use_dask == 'True'
-    arlexecute.set_client(use_dask=use_dask, threads_per_worker=args.threads,
+    rsexecute.set_client(use_dask=use_dask, threads_per_worker=args.threads,
                           memory_limit=args.memory * 1024 * 1024 * 1024,
                           n_workers=args.nworkers,
                           local_dir=dask_dir)
-    arlexecute.run(init_logging)
+    rsexecute.run(init_logging)
     
     nchan = args.nchan
     uvmax = 450.0
@@ -94,35 +94,35 @@ if __name__ == '__main__':
         return create_visibility_from_rows(vf, rows)
     
     
-    vis_list = [arlexecute.execute(load_ms)(c) for c in range(nchan)]
+    vis_list = [rsexecute.execute(load_ms)(c) for c in range(nchan)]
     
     print('Reading visibilities')
-    vis_list = arlexecute.persist(vis_list)
+    vis_list = rsexecute.persist(vis_list)
     
     pol_frame = PolarisationFrame("stokesIQUV")
     
-    model_list = [arlexecute.execute(create_image_from_visibility)(v, npixel=npixel, cellsize=cellsize,
+    model_list = [rsexecute.execute(create_image_from_visibility)(v, npixel=npixel, cellsize=cellsize,
                                                                    polarisation_frame=pol_frame)
                   for v in vis_list]
     
-    model_list = arlexecute.persist(model_list)
+    model_list = rsexecute.persist(model_list)
     
     if args.serial_invert == 'True':
         print("Invert is serial")
-        dirty_list = [arlexecute.execute(invert_list_serial_workflow)
+        dirty_list = [rsexecute.execute(invert_list_serial_workflow)
                       ([vis_list[i]], template_model_imagelist=[model_list[i]],
                        context=context, vis_slices=vis_slices)[0]
                       for i in range(nchan)]
-        psf_list = [arlexecute.execute(invert_list_serial_workflow)
+        psf_list = [rsexecute.execute(invert_list_serial_workflow)
                     ([vis_list[i]], template_model_imagelist=[model_list[i]],
                      context=context, dopsf=True,
                      vis_slices=vis_slices)[0]
                     for i in range(nchan)]
     else:
         print("Invert is parallel")
-        dirty_list = invert_list_arlexecute_workflow(vis_list, template_model_imagelist=model_list, context=context,
+        dirty_list = invert_list_rsexecute_workflow(vis_list, template_model_imagelist=model_list, context=context,
                                                      vis_slices=vis_slices)
-        psf_list = invert_list_arlexecute_workflow(vis_list, template_model_imagelist=model_list, context=context,
+        psf_list = invert_list_rsexecute_workflow(vis_list, template_model_imagelist=model_list, context=context,
                                                    dopsf=True, vis_slices=vis_slices)
     
     
@@ -135,17 +135,17 @@ if __name__ == '__main__':
     
     
     print('About assemble cubes and deconvolve each frequency')
-    restored_list = [arlexecute.execute(deconvolve)(dirty_list[c], psf_list[c], model_list[c])
+    restored_list = [rsexecute.execute(deconvolve)(dirty_list[c], psf_list[c], model_list[c])
                      for c in range(nchan)]
-    restored_cube = arlexecute.execute(image_gather_channels, nout=1)(restored_list)
-    #    restored_cube.visualize('dprepb_arlexecute_pipeline.svg')
-    restored_cube = arlexecute.compute(restored_cube, sync=True)
+    restored_cube = rsexecute.execute(image_gather_channels, nout=1)(restored_list)
+    #    restored_cube.visualize('dprepb_rsexecute_pipeline.svg')
+    restored_cube = rsexecute.compute(restored_cube, sync=True)
     
     print("Processing took %.3f s" % (time.time() - start))
     print(qa_image(restored_cube, context='CLEAN restored cube'))
-    export_image_to_fits(restored_cube, '%s/dprepb_arlexecute_%s_clean_restored_cube.fits' % (results_dir, context))
+    export_image_to_fits(restored_cube, '%s/dprepb_rsexecute_%s_clean_restored_cube.fits' % (results_dir, context))
     
     try:
-        arlexecute.close()
+        rsexecute.close()
     except:
         pass

@@ -1,6 +1,6 @@
 
 Documenting RASCIL
-***************
+******************
 
 * The primary documentation is written in `reStructuredText <http://docutils.sourceforge.net/rst.html>`_ (rst).
 * We use `Sphinx <http://www.sphinx-doc.org>`_ to extract code documentation.

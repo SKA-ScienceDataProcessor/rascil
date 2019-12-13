@@ -1,4 +1,4 @@
-""" Unit tests for pipelines expressed via arlexecute
+""" Unit tests for pipelines expressed via rsexecute
 """
 
 import logging

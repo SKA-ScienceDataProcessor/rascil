@@ -1,9 +1,9 @@
 """ Algorithm Reference Library workflows
 
 """
-__all__ = ['arlexecute', 'serial', 'shared']
+__all__ = ['rsexecute', 'serial', 'shared']
 
-from .arlexecute import *
+from .rsexecute import *
 from .serial import *
 from .shared import *
 

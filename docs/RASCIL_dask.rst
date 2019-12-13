@@ -16,10 +16,10 @@ of constructing a graph, we will need to know the data elements and the function
 These are well-modeled in RASCIL.
 
 In order that Dask.delayed processing can be switched on and off, and that the same code is used for Dask and
-non-Dask processing, we have wrapped Dask.delayed in :py:mod:`wrappers.arlexecute.execution_support.arlexecute.arlexecute`.
+non-Dask processing, we have wrapped Dask.delayed in :py:mod:`wrappers.rsexecute.execution_support.rsexecute.rsexecute`.
 An example is::
 
-        arlexecute.set_client(use_dask=True)
+        rsexecute.set_client(use_dask=True)
         continuum_imaging_list = \
             continuum_imaging_component(vis_list, model_imagelist=self.model_imagelist, context='2d',
                                         algorithm='mmclean', facets=1,
@@ -29,23 +29,23 @@ An example is::
                                         threshold=2.0, nmajor=5, gain=0.1,
                                         deconvolve_facets=8, deconvolve_overlap=16,
                                         deconvolve_taper='tukey')
-        clean, residual, restored = arlexecute.compute(continuum_imaging_list, sync=True)
+        clean, residual, restored = rsexecute.compute(continuum_imaging_list, sync=True)
 
-The function :py:mod:`wrappers.arlexecute.execution_support.arlexecute.arlexecute.set_client` must be called
+The function :py:mod:`wrappers.rsexecute.execution_support.rsexecute.rsexecute.set_client` must be called
 before defining any components. If use_dask is True then a Dask graph is constructed for subsequent execution. If
 use_dask is False then the function is called immediately.
 
 The pipeline workflow
-:py:mod:`workflows.arlexecute.pipelines.pipeline_components.continuum_imaging_component` is itself assembled using the
-:py:mod:`wrappers.arlexecute.execution_support.arlexecute.arlexecute.execute` function.
+:py:mod:`workflows.rsexecute.pipelines.pipeline_components.continuum_imaging_component` is itself assembled using the
+:py:mod:`wrappers.rsexecute.execution_support.rsexecute.rsexecute.execute` function.
 
 The functions for creating graphs are:
 
-    - :py:mod:`workflows.arlexecute.support_workflows.imaging_workflows`: Graphs to perform various types of prediction and inversion of visibility data
-    - :py:mod:`workflows.arlexecute.image.generic_workflows`: Graphs to perform generic image operations
-    - :py:mod:`workflows.arlexecute.visibility.generic_workflows`: Graphs to perform generic visibility perations
-    - :py:mod:`workflows.arlexecute.simulation.simulation_workflows`: Graphs to support simulations
-    - :py:mod:`workflows.arlexecute.pipelines.pipeline_workflows`: Graphs to implement the canonical pipelines
+    - :py:mod:`workflows.rsexecute.support_workflows.imaging_workflows`: Graphs to perform various types of prediction and inversion of visibility data
+    - :py:mod:`workflows.rsexecute.image.generic_workflows`: Graphs to perform generic image operations
+    - :py:mod:`workflows.rsexecute.visibility.generic_workflows`: Graphs to perform generic visibility perations
+    - :py:mod:`workflows.rsexecute.simulation.simulation_workflows`: Graphs to support simulations
+    - :py:mod:`workflows.rsexecute.pipelines.pipeline_workflows`: Graphs to implement the canonical pipelines
 
 In addition there are notebooks that use components in workflows/notebooks.
 
@@ -89,8 +89,8 @@ Client.run() function::
 
 or::
 
-    arlexecute.set_client(use_dask=True)
-    arlexecute.run(init_logging)
+    rsexecute.set_client(use_dask=True)
+    rsexecute.run(init_logging)
 
 This will produce one directory per execution, and in that directory one log file per worker and one for the master.
 You can tail these, etc. This may not be what you might want since it is worker-centric. All tasks run on a given

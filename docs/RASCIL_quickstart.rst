@@ -49,11 +49,11 @@ See the jupyter note books below:
    :maxdepth: 3
 
    processing_components/imaging.rst
-   workflows/imaging-fits_arlexecute.rst
-   workflows/imaging-wterm_arlexecute.rst
-   workflows/simple-dask_arlexecute.rst
-   workflows/imaging-pipelines_arlexecute.rst
-   workflows/bandpass-calibration_arlexecute.rst
+   workflows/imaging-fits_rsexecute.rst
+   workflows/imaging-wterm_rsexecute.rst
+   workflows/simple-dask_rsexecute.rst
+   workflows/imaging-pipelines_rsexecute.rst
+   workflows/bandpass-calibration_rsexecute.rst
 
 In addition, there are other notebooks that are not built as part of this documentation.
 

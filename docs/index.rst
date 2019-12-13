@@ -1,6 +1,5 @@
 .. Documentation master
 
-
 .. toctree::
 
 Radio Astronomy Simulation, Calibration and Imaging Library
@@ -13,7 +12,9 @@ structures such as image, visibility table, gaintable, etc. The python source co
 documentation pages: see the source link in the top right corner.
 
 To acheive sufficient performance we take a dual pronged approach - using threaded libraries for shared memory
-processing, and the `Dask <www.dask.org>`_ library for distributed processing.
+processing, and the `Dask <https:/www.dask.org>`_ library for distributed processing.
+
+RASCIL replaces the Algorithm Reference Library (ARL), which is now frozen.
 
 .. _getting-started:
 

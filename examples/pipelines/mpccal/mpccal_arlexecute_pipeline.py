@@ -32,11 +32,11 @@ from rascil.processing_components import create_gaintable_from_blockvisibility, 
     insert_skycomponent, filter_skycomponents_by_flux, create_blockvisibility, copy_visibility, \
     create_image_from_visibility
 
-from rascil.workflows import invert_list_arlexecute_workflow, restore_list_arlexecute_workflow,\
-    mpccal_skymodel_list_arlexecute_workflow, predict_skymodel_list_arlexecute_workflow,\
+from rascil.workflows import invert_list_rsexecute_workflow, restore_list_rsexecute_workflow,\
+    mpccal_skymodel_list_rsexecute_workflow, predict_skymodel_list_rsexecute_workflow,\
     weight_list_serial_workflow, taper_list_serial_workflow
 
-from rascil.wrappers.arlexecute.execution_support.arlexecute import arlexecute
+from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
 from execution_support import get_dask_Client
 
 if __name__ == '__main__':
@@ -68,9 +68,9 @@ if __name__ == '__main__':
     
     if args.use_dask:
         c = get_dask_Client(n_workers=args.nworkers, memory_limit=args.memory * 1024 * 1024 * 1024)
-        arlexecute.set_client(c)
+        rsexecute.set_client(c)
     else:
-        arlexecute.set_client(use_dask=False)
+        rsexecute.set_client(use_dask=False)
     #######################################################################################################
     # Set up the observation: 10 minutes at transit, with 10s integration.
     # Skip 5/6 points to avoid outstation redundancy. Apply uniform weighting.
@@ -163,11 +163,11 @@ if __name__ == '__main__':
     all_skymodel_vis = convert_blockvisibility_to_visibility(all_skymodel_blockvis)
     
     ngroup = 8
-    future_vis = arlexecute.scatter(all_skymodel_vis)
+    future_vis = rsexecute.scatter(all_skymodel_vis)
     chunks = [all_skymodel[i:i + ngroup] for i in range(0, len(all_skymodel), ngroup)]
     for chunk in chunks:
-        result = predict_skymodel_list_arlexecute_workflow(future_vis, chunk, context='2d', docal=True)
-        work_vis = arlexecute.compute(result, sync=True)
+        result = predict_skymodel_list_rsexecute_workflow(future_vis, chunk, context='2d', docal=True)
+        work_vis = rsexecute.compute(result, sync=True)
         for w in work_vis:
             all_skymodel_vis.data['vis'] += w.data['vis']
         assert numpy.max(numpy.abs(all_skymodel_vis.data['vis'])) > 0.0
@@ -215,10 +215,10 @@ if __name__ == '__main__':
     ical_skymodel = [SkyModel(components=all_components[:args.ninitial], gaintable=null_gaintable,
                               image=model)]
 
-    future_vis = arlexecute.scatter(all_skymodel_vis)
-    future_model = arlexecute.scatter(model)
-    future_theta_list = arlexecute.scatter(ical_skymodel)
-    result = mpccal_skymodel_list_arlexecute_workflow(future_vis, future_model, future_theta_list,
+    future_vis = rsexecute.scatter(all_skymodel_vis)
+    future_model = rsexecute.scatter(model)
+    future_theta_list = rsexecute.scatter(ical_skymodel)
+    result = mpccal_skymodel_list_rsexecute_workflow(future_vis, future_model, future_theta_list,
                                                       mpccal_progress=partial(progress, context='ICAL'),
                                                       nmajor=args.ical_nmajor,
                                                       context='2d',
@@ -230,16 +230,16 @@ if __name__ == '__main__':
                                                       deconvolve_overlap=16,
                                                       deconvolve_taper='tukey')
     
-    (ical_skymodel, residual) = arlexecute.compute(result, sync=True)
+    (ical_skymodel, residual) = rsexecute.compute(result, sync=True)
     print(qa_image(residual, context='ICAL residual image'))
     
     print('ical finished')
     
     combined_model = calculate_skymodel_equivalent_image(ical_skymodel)
     print(qa_image(combined_model, context='ICAL combined model'))
-    psf_obs = invert_list_arlexecute_workflow([future_vis], [future_model], context='2d', dopsf=True)
-    result = restore_list_arlexecute_workflow([combined_model], psf_obs, [(residual, 0.0)])
-    result = arlexecute.compute(result, sync=True)
+    psf_obs = invert_list_rsexecute_workflow([future_vis], [future_model], context='2d', dopsf=True)
+    result = restore_list_rsexecute_workflow([combined_model], psf_obs, [(residual, 0.0)])
+    result = rsexecute.compute(result, sync=True)
     ical_restored = result[0]
     
     export_image_to_fits(ical_restored, rascil_path('test_results/low-sims-mpc-ical-restored_%.1frmax.fits' % rmax))
@@ -278,10 +278,10 @@ if __name__ == '__main__':
     
     #######################################################################################################
     # Now we can run MPCCAL with O(10) distinct masks
-    future_model = arlexecute.scatter(model)
-    future_theta_list = arlexecute.scatter(mpccal_skymodel)
-    future_vis = arlexecute.scatter(all_skymodel_vis)
-    result = mpccal_skymodel_list_arlexecute_workflow(future_vis, future_model, future_theta_list,
+    future_model = rsexecute.scatter(model)
+    future_theta_list = rsexecute.scatter(mpccal_skymodel)
+    future_vis = rsexecute.scatter(all_skymodel_vis)
+    result = mpccal_skymodel_list_rsexecute_workflow(future_vis, future_model, future_theta_list,
                                                       mpccal_progress=partial(progress, context='MPCCAL'),
                                                       nmajor=args.mpccal_nmajor,
                                                       context='2d',
@@ -293,7 +293,7 @@ if __name__ == '__main__':
                                                       deconvolve_overlap=16,
                                                       deconvolve_taper='tukey')
     
-    (mpccal_skymodel, mpccal_residual) = arlexecute.compute(result, sync=True)
+    (mpccal_skymodel, mpccal_residual) = rsexecute.compute(result, sync=True)
     print(qa_image(mpccal_residual, context='MPCCal residual image'))
     
     print('mpccal finished')
@@ -302,9 +302,9 @@ if __name__ == '__main__':
     mpccal_combined_model = insert_skycomponent(mpccal_combined_model, ical_components)
     print(qa_image(mpccal_combined_model, context='MPCCAL combined model'))
     
-    psf_obs = invert_list_arlexecute_workflow([future_vis], [future_model], context='2d', dopsf=True)
-    result = restore_list_arlexecute_workflow([mpccal_combined_model], psf_obs, [(mpccal_residual, 0.0)])
-    result = arlexecute.compute(result, sync=True)
+    psf_obs = invert_list_rsexecute_workflow([future_vis], [future_model], context='2d', dopsf=True)
+    result = restore_list_rsexecute_workflow([mpccal_combined_model], psf_obs, [(mpccal_residual, 0.0)])
+    result = rsexecute.compute(result, sync=True)
     mpccal_restored = result[0]
     
     mpccal_components = find_skycomponents(mpccal_restored, fwhm=2,
@@ -349,4 +349,4 @@ if __name__ == '__main__':
     plt.savefig(rascil_path('test_results/low-sims-mpc-mpccal-screen_%.1frmax.png' % rmax))
     plt.show(block=block_plots)
     
-    arlexecute.close()
+    rsexecute.close()

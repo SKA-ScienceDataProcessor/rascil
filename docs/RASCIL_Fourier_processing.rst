@@ -29,7 +29,7 @@ The full layering is:
 
 + Other algorithms (e.g. timeslice and wstack) are implemented as workflowss using the core 2d imaging functions.
     These are defined in :py:mod:`workflows.serial.imaging.imaging_serial` and
-    :py:mod:`workflows.arlexecute.imaging.imaging_arlexecute`
+    :py:mod:`workflows.rsexecute.imaging.imaging_rsexecute`
 
 The style of first approach is::
 
@@ -47,24 +47,24 @@ of the above example::
         m31model=create_test_image()
         vis = predict_list_serial_workflow(vis, m31model, context='facets', nfacets=4)
 
-The third approach implements imaging via arlexecute::
+The third approach implements imaging via rsexecute::
 
-        m31model_component = arlexecute.execute(create_test_image)()
-        vis_component = arlexecute(vis_scatter_time)(vis, timeslice='auto')
+        m31model_component = rsexecute.execute(create_test_image)()
+        vis_component = rsexecute(vis_scatter_time)(vis, timeslice='auto')
         vis_component = predict_component(vis_component, m31component_component, facets=4)
 
 This form may be executed immediately::
 
-        arlexecute.set_client(use_dask=False)
-        m31model_component = arlexecute.execute(create_test_image)()
-        vis_component = arlexecute(vis_scatter_time)(vis, timeslice='auto')
+        rsexecute.set_client(use_dask=False)
+        m31model_component = rsexecute.execute(create_test_image)()
+        vis_component = rsexecute(vis_scatter_time)(vis, timeslice='auto')
         vis_component = predict_component(vis_component, m31component_component, facets=4)
 
 Or delayed::
 
-        arlexecute.set_client(use_dask=True)
-        m31model_component = arlexecute.execute(create_test_image)()
-        vis_component = arlexecute(vis_scatter_time)(vis, timeslice='auto')
+        rsexecute.set_client(use_dask=True)
+        m31model_component = rsexecute.execute(create_test_image)()
+        vis_component = rsexecute(vis_scatter_time)(vis, timeslice='auto')
         vis_component = predict_component(vis_component, m31component_component, facets=4)
-        vis_component = arlexecute.compute(vis_component, sync=True)
+        vis_component = rsexecute.compute(vis_component, sync=True)
 

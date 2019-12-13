@@ -1,5 +1,5 @@
 """ Pipeline functions. SDP standard pipelines expressed as functions. This is quite slow and is provided mainly for
-completeness. Use arlexecute versions pipelines/components.py for speed.
+completeness. Use rsexecute versions pipelines/components.py for speed.
 """
 
 __all__ = ['ical_list_serial_workflow', 'continuum_imaging_list_serial_workflow',
@@ -148,7 +148,7 @@ def spectral_line_imaging_list_serial_workflow(vis_list, model_imagelist, contex
                                                vis_slices=1, facets=1, gcfcf=None, **kwargs):
     """Create graph for spectral line imaging pipeline
 
-    Uses the continuum imaging arlexecute pipeline after subtraction of a continuum model
+    Uses the continuum imaging rsexecute pipeline after subtraction of a continuum model
 
     :param vis_list: List of visibility components
     :param model_imagelist: Spectral line model graph

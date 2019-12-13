@@ -9,6 +9,7 @@ Other information
 
    RASCIL_background
    RASCIL_developing
+   RASCIL_converting_from_ARL
    RASCIL_documenting
    RASCIL_dask
    RASCIL_Fourier_processing

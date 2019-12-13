@@ -1,4 +1,4 @@
-**May 1, 2019** [Tim] New workflow to map a function across an image: image_arlexecute_map_workflow
+**May 1, 2019** [Tim] New workflow to map a function across an image: image_rsexecute_map_workflow
 
 **April 28, 2019** [Tim] Fill in all __init__.py files so that tab completion works.
 
@@ -29,7 +29,7 @@ neighbour filtering.
 9. Ionospheric phase screen simulation using 
 ARatmospy: create_gaintable_from_screen. Gaintable phases can be 
 back-propagated to screen: grid_gaintable_to_screen.
-10. Pipeline for MPCCAL: mpccal_skymodel_list_arlexecute_workflow.
+10. Pipeline for MPCCAL: mpccal_skymodel_list_rsexecute_workflow.
 
 **November 26, 2018** [Tim] Many changes in run up to demo:
 1. Parallel weighting, imaging weight added to BlockVisibility
@@ -48,7 +48,7 @@ update version of daliuge:
 
 **September 16, 2018** [Tim] Deleted imaging-pipelines-sip.ipynb. Use imaging-pipelines-serial.ipynb instead.
 
-**September 4, 2018** [Rodrigo]  Added add support for daliuge as an (experimental) backend of the arlexecute module. 
+**September 4, 2018** [Rodrigo]  Added add support for daliuge as an (experimental) backend of the rsexecute module. 
 Support uses daliuge's delayed function, which accepts the same parameters as dask's; therefore the change is simple, 
 and transparent to the rest of the ARL code. All these changes are within the context of [SDP ticket 
 TSK-2569](https://jira.ska-sdp.org/browse/TSK-2569). See also the 
@@ -56,27 +56,27 @@ TSK-2569](https://jira.ska-sdp.org/browse/TSK-2569). See also the
 
 **August 16, 2018** [Tim] More refactoring to being closer alignment with SDP architecture.
 1. There are now wrappers for all processing components, both serial and 
-arlexecute. At the moment, these are just pass-throughs but the point is that they can
+rsexecute. At the moment, these are just pass-throughs but the point is that they can
 be expanded as appropriate. The non-python wrappers will be more substantial.
 2. There are only workflows for calibration, imaging, and pipelines.
 3. To distinguish the nature of the workflows, these are now all called something like
-predict_list_arlexecute_workflow since they all work on lists of data models rather 
+predict_list_rsexecute_workflow since they all work on lists of data models rather 
 than just data models.
-4. The workflows for serial and arlexecute should work alike. For example, all now 
+4. The workflows for serial and rsexecute should work alike. For example, all now 
 expect lists of Data Models. This is compared to processing_components
 where only single Data Models are accepted. A necessary consequence is
 that the full range of imaging algorithms are only available via 
-workflows, either as serial or arlexecute versions (and soon other
+workflows, either as serial or rsexecute versions (and soon other
 types of wrappers).
 5. libs has been renamed to processing_library.
 
-All Dask/arlexecute code now lives in either wrappers or workflows.
+All Dask/rsexecute code now lives in either wrappers or workflows.
 
 ![ARL Module View](./docs/ARL_Module_View.png)
 
 
 **July 26, 2018** [Tim], Extracted pure-serial uses of processing components 
-into workflows/serial (in analogy with workflows/arlexecute). This means that
+into workflows/serial (in analogy with workflows/rsexecute). This means that
 all functions remaining in processing components are suitable for use in
 workflows. The split between processing components and workflows is clearer.
 As a consequence nearly all notebooks have moved to workflows/notebooks.
@@ -117,7 +117,7 @@ need to be updated manually.
 * The top level Makefile has been updated
 * The docs have been updated
 * The use of the term 'graph' has been replaced in many places by 'list' to reflect the wrapping of dask in 
-arlexecute.
+rsexecute.
 
 **April 18, 2018** [Tim], Deconvolution can now be done using overlapped, tapered sub-images (aka facets).
 Look for deconvolve_facets, deconvolve_overlap, and deconvolve_taper.

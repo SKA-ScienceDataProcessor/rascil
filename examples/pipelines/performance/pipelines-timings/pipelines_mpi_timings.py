@@ -111,10 +111,10 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
     :param nworkers: Number of dask workers to use
     :param threads_per_worker: Number of threads per worker
     :param processes: Use processes instead of threads 'processes'|'threads'
-    :param order: See simulate_list_list_arlexecute_workflow_workflowkflow
-    :param nfreqwin: See simulate_list_list_arlexecute_workflow_workflowkflow
-    :param ntimes: See simulate_list_list_arlexecute_workflow_workflowkflow
-    :param rmax: See simulate_list_list_arlexecute_workflow_workflowkflow
+    :param order: See simulate_list_list_rsexecute_workflow_workflowkflow
+    :param nfreqwin: See simulate_list_list_rsexecute_workflow_workflowkflow
+    :param ntimes: See simulate_list_list_rsexecute_workflow_workflowkflow
+    :param rmax: See simulate_list_list_rsexecute_workflow_workflowkflow
     :param facets: Number of facets to use
     :param wprojection_planes: Number of wprojection planes to use
     :param use_dask: Use dask or immediate evaluation
@@ -217,7 +217,7 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
     sub_vis_list = numpy.array_split(vis_list,size)
     sub_vis_list = comm.scatter(sub_vis_list,root=0)
     
-    #NOTE: sub_vis_list is scattered (future_vis_list in arlexecute)
+    #NOTE: sub_vis_list is scattered (future_vis_list in rsexecute)
 
     # Find the best imaging parameters but don't bring the vis_list back here
     print("****** Finding wide field parameters ******")
@@ -348,7 +348,7 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
         corrupted_vis_list=list()
     
     
-    #future_corrupted_vis_list = arlexecute.scatter(corrupted_vis_list)
+    #future_corrupted_vis_list = rsexecute.scatter(corrupted_vis_list)
 
     # At this point the only futures are of scatter'ed data so no repeated calculations should be
     # incurred.
@@ -373,7 +373,7 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
         results['dirty_max'] = qa.data['max']
         results['dirty_min'] = qa.data['min']
     if write_fits and rank==0:
-        export_image_to_fits(dirty, "pipelines_arlexecute_timings-%s-dirty.fits" % context)
+        export_image_to_fits(dirty, "pipelines_rsexecute_timings-%s-dirty.fits" % context)
     
     lprint("****** Starting prediction ******")
     start = time.time()
@@ -382,7 +382,7 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
                                                     context=context, facets=facets,
                                                     use_serial_predict=use_serial_imaging,
                                                     gcfcf=gcfcf)
-    # arlexecute.client.cancel(tmp_vis_list)
+    # rsexecute.client.cancel(tmp_vis_list)
     end = time.time()
     results['time predict'] = end - start
     lprint("Predict took %.3f seconds" % (end - start))
@@ -443,7 +443,7 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
         results['deconvolved_min'] = qa.data['min']
         deconvolved_cube = image_gather_channels(deconvolved)
         if write_fits:
-            export_image_to_fits(deconvolved_cube, "pipelines_arlexecute_timings-%s-ical_deconvolved.fits" % context)
+            export_image_to_fits(deconvolved_cube, "pipelines_rsexecute_timings-%s-ical_deconvolved.fits" % context)
     
         qa = qa_image(residual[centre][0])
         results['residual_max'] = qa.data['max']
@@ -451,14 +451,14 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
         residual_cube = remove_sumwt(residual)
         residual_cube = image_gather_channels(residual_cube)
         if write_fits:
-            export_image_to_fits(residual_cube, "pipelines_arlexecute_timings-%s-ical_residual.fits" % context)
+            export_image_to_fits(residual_cube, "pipelines_rsexecute_timings-%s-ical_residual.fits" % context)
     
         qa = qa_image(restored[centre])
         results['restored_max'] = qa.data['max']
         results['restored_min'] = qa.data['min']
         restored_cube = image_gather_channels(restored)
         if write_fits:
-            export_image_to_fits(restored_cube, "pipelines_arlexecute_timings-%s-ical_restored.fits" % context)
+            export_image_to_fits(restored_cube, "pipelines_rsexecute_timings-%s-ical_restored.fits" % context)
     #
     
     end_all = time.time()
@@ -532,7 +532,7 @@ def main(args):
     
     results['hostname'] = socket.gethostname()
     results['epoch'] = time.strftime("%Y-%m-%d %H:%M:%S")
-    results['driver'] = 'pipelines_arlexecute_timings'
+    results['driver'] = 'pipelines_rsexecute_timings'
     
     use_dask = args.use_dask == 'True'
     if use_dask:
@@ -646,7 +646,7 @@ if __name__ == '__main__':
     parser.add_argument('--jobid', type=int, default=0, help='JOBID from slurm')
     parser.add_argument('--flux_limit', type=float, default=0.3, help='Flux limit for components')
     parser.add_argument('--dft_threshold', type=float, default=1.0, help='Flux above which DFT is used')
-    parser.add_argument('--log_file', type=str, default='pipelines_arlexecute_timings.log',
+    parser.add_argument('--log_file', type=str, default='pipelines_rsexecute_timings.log',
                         help='Name of output log file')
     parser.add_argument('--write_fits', type=str, default='False',
                         help='Write FITS files??')

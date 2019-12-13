@@ -1,17 +1,17 @@
-"""Offers he base class for arlexecute-based unit tests"""
+"""Offers he base class for rsexecute-based unit tests"""
 
 
-class ARLExecuteTestCase(object):
-    """Sets up the arlexecute global object as appropriate, and closes it when done"""
+class rsexecuteTestCase(object):
+    """Sets up the rsexecute global object as appropriate, and closes it when done"""
     
     def setUp(self):
-        super(ARLExecuteTestCase, self).setUp()
+        super(rsexecuteTestCase, self).setUp()
         
         import os
-        from rascil.wrappers.arlexecute.execution_support import arlexecute
+        from rascil.wrappers.rsexecute.execution_support import rsexecute
         use_dlg = os.environ.get('ARL_TESTS_USE_DLG', '0') == '1'
         use_dask = os.environ.get('ARL_TESTS_USE_DASK', '1') == '1'
-        arlexecute.set_client(use_dask=use_dask, use_dlg=use_dlg)
+        rsexecute.set_client(use_dask=use_dask, use_dlg=use_dlg)
         
         # Start a daliuge node manager for these tests; make sure it can see
         # the rascil modules. The node manager will be shut down at tearDown
@@ -21,9 +21,9 @@ class ARLExecuteTestCase(object):
             self.nm_proc = tool.start_process('nm', ['--dlg-path', arl_root])
     
     def tearDown(self):
-        from rascil.wrappers.arlexecute.execution_support import arlexecute
-        arlexecute.close()
-        if arlexecute.using_dlg:
+        from rascil.wrappers.rsexecute.execution_support import rsexecute
+        rsexecute.close()
+        if rsexecute.using_dlg:
             from dlg import utils
             utils.terminate_or_kill(self.nm_proc, 10)
-        super(ARLExecuteTestCase, self).tearDown()
+        super(rsexecuteTestCase, self).tearDown()

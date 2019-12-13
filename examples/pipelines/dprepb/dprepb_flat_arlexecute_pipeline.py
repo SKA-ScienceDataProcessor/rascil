@@ -16,7 +16,7 @@ from rascil.processing_components import create_visibility_from_ms, create_visib
 
 from rascil.workflows import invert_list_serial_workflow
 
-from rascil.wrappers.arlexecute.execution_support.arlexecute import arlexecute
+from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
 
 import logging
 
@@ -51,11 +51,11 @@ if __name__ == '__main__':
     logging.info("Starting Imaging pipeline")
     
     use_dask = args.use_dask == 'True'
-    arlexecute.set_client(use_dask=use_dask, threads_per_worker=args.threads,
+    rsexecute.set_client(use_dask=use_dask, threads_per_worker=args.threads,
                           memory_limit=args.memory * 1024 * 1024 * 1024,
                           n_workers=args.nworkers,
                           local_dir=dask_dir)
-    arlexecute.run(init_logging)
+    rsexecute.run(init_logging)
     
     nchan = args.nchan
     uvmax = 450.0
@@ -114,16 +114,16 @@ if __name__ == '__main__':
     
     
     print('About assemble cubes and deconvolve each frequency')
-    restored_list = [arlexecute.execute(load_invert_and_deconvolve)(c) for c in range(nchan)]
-    restored_cube = arlexecute.execute(image_gather_channels, nout=1)(restored_list)
-    #    restored_cube.visualize('dprepb_flat_arlexecute_pipeline.svg')
-    restored_cube = arlexecute.compute(restored_cube, sync=True)
+    restored_list = [rsexecute.execute(load_invert_and_deconvolve)(c) for c in range(nchan)]
+    restored_cube = rsexecute.execute(image_gather_channels, nout=1)(restored_list)
+    #    restored_cube.visualize('dprepb_flat_rsexecute_pipeline.svg')
+    restored_cube = rsexecute.compute(restored_cube, sync=True)
     
     print("Processing took %.3f s" % (time.time() - start))
     print(qa_image(restored_cube, context='CLEAN restored cube'))
-    export_image_to_fits(restored_cube, '%s/dprepb_arlexecute_%s_clean_restored_cube.fits' % (results_dir, context))
+    export_image_to_fits(restored_cube, '%s/dprepb_rsexecute_%s_clean_restored_cube.fits' % (results_dir, context))
     
     try:
-        arlexecute.close()
+        rsexecute.close()
     except:
         pass

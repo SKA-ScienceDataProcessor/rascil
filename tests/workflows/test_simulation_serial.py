@@ -16,7 +16,7 @@ from rascil.workflows.serial.simulation.simulation_serial import simulate_list_s
 log = logging.getLogger(__name__)
 
 
-class TestSimulationArlexecuteSupport(unittest.TestCase):
+class TestSimulationrsexecuteSupport(unittest.TestCase):
     def setUp(self):
     
         from rascil.data_models.parameters import rascil_path

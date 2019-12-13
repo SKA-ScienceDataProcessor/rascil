@@ -94,11 +94,11 @@ export ARL_DASK_SCHEDULER=${scheduler}:8786
 echo "Scheduler is running at ${scheduler}"
 
 root=${ARL}/workflows/scripts/pipelines/performance/pipelines-timings
-cp ${root}/pipelines_arlexecute_timings.py .
-CMD="python pipelines_arlexecute_timings.py --nnodes NUMBER_NODES --nworkers NUMBER_TASKS --memory
+cp ${root}/pipelines_rsexecute_timings.py .
+CMD="python pipelines_rsexecute_timings.py --nnodes NUMBER_NODES --nworkers NUMBER_TASKS --memory
 MEMORY
 --nfreqwin NUMBER_FREQUENCY_WINDOWS --nthreads NUMBER_THREADS --jobid $JOBID --use_serial_imaging SERIAL 
---use_serial_clean SERIAL --rmax RMAX --context CONTEXT > pipelines_arlexecute_timings.out"
+--use_serial_clean SERIAL --rmax RMAX --context CONTEXT > pipelines_rsexecute_timings.out"
 echo "About to execute $CMD"
 eval $CMD
 

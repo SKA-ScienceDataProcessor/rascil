@@ -67,9 +67,9 @@ Visibility predict and invert
 -----------------------------
 
 * Predict BlockVisibility or Visibility for Skycomponent :py:func:`processing_components.imaging.predict_skycomponent_visibility`
-* Predict by de-gridding visibilities :py:func:`workflows.arlexecute.predict_list_arlexecute_workflow`
+* Predict by de-gridding visibilities :py:func:`workflows.rsexecute.predict_list_rsexecute_workflow`
 * Predict by de-gridding visibilities :py:func:`workflows.serial.predict_list_serial_workflow`
-* Invert by gridding visibilities :py:func:`workflows.arlexecute.invert_list_arlexecute_workflow`
+* Invert by gridding visibilities :py:func:`workflows.rsexecute.invert_list_rsexecute_workflow`
 * Invert by gridding visibilities :py:func:`workflows.serial.invert_list_serial_workflow`
 
 Deconvolution
@@ -128,20 +128,20 @@ Workflows
 =========
 
 Workflows coordinate processing using the data models, processing components, and processing library. These are high
-level functions, and are available in arlexecute (i.e. dask) version and sometimes scalar version.
+level functions, and are available in rsexecute (i.e. dask) version and sometimes scalar version.
 
 Calibration workflows
 ---------------------
 
-* Calibrate workflow: :py:func:`workflows.arlexecute.calibrate_list_arlexecute_workflow`
+* Calibrate workflow: :py:func:`workflows.rsexecute.calibrate_list_rsexecute_workflow`
 * Calibrate workflow: :py:func:`workflows.serial.calibrate_list_serial_workflow`
 
 Imaging workflows
 -----------------
 
-* Invert: :py:func:`workflows.arlexecute.invert_list_arlexecute_workflow`
-* Predict: :py:func:`workflows.arlexecute.predict_list_arlexecute_workflow`
-* Deconvolve: :py:func:`workflows.arlexecute.deconvolve_list_arlexecute_workflow`
+* Invert: :py:func:`workflows.rsexecute.invert_list_rsexecute_workflow`
+* Predict: :py:func:`workflows.rsexecute.predict_list_rsexecute_workflow`
+* Deconvolve: :py:func:`workflows.rsexecute.deconvolve_list_rsexecute_workflow`
 * Invert: :py:func:`workflows.serial.invert_list_serial_workflow`
 * Predict: :py:func:`workflows.serial.predict_list_serial_workflow`
 * Deconvolve: :py:func:`workflows.serial.deconvolve_list_serial_workflow`
@@ -149,10 +149,10 @@ Imaging workflows
 Pipeline workflows
 ------------------
 
-* ICAL: :py:func:`workflows.arlexecute.ical_list_arlexecute_workflow`
-* Continuum imaging: :py:func:`workflows.arlexecute.continuum_imaging_list_arlexecute_workflow`
-* Spectral line imaging: :py:func:`workflows.arlexecute.spectral_line_imaging_list_arlexecute_workflow`
-* MPCCAL: :py:func:`workflows.arlexecute.mpccal_skymodel_list_arlexecute_workflow`
+* ICAL: :py:func:`workflows.rsexecute.ical_list_rsexecute_workflow`
+* Continuum imaging: :py:func:`workflows.rsexecute.continuum_imaging_list_rsexecute_workflow`
+* Spectral line imaging: :py:func:`workflows.rsexecute.spectral_line_imaging_list_rsexecute_workflow`
+* MPCCAL: :py:func:`workflows.rsexecute.mpccal_skymodel_list_rsexecute_workflow`
 * ICAL: :py:func:`workflows.serial.ical_list_serial_workflow`
 * Continuum imaging: :py:func:`workflows.serial.continuum_imaging_list_serial_workflow`
 * Spectral line imaging: :py:func:`workflows.serial.spectral_line_imaging_list_serial_workflow`
@@ -160,13 +160,13 @@ Pipeline workflows
 Simulation workflows
 --------------------
 
-* Testing and simulation support: :py:func:`workflows.arlexecute.simulate_list_arlexecute_workflow`
+* Testing and simulation support: :py:func:`workflows.rsexecute.simulate_list_rsexecute_workflow`
 * Testing and simulation support: :py:func:`workflows.serial.simulate_list_serial_workflow`
 
 Execution
 ---------
 
-* Execution framework (an interface to Dask): :py:func:`wrappers.arlexecute.execution_support.arlexecute`
+* Execution framework (an interface to Dask): :py:func:`wrappers.rsexecute.execution_support.rsexecute`
 
 Scripts
 =======

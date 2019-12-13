@@ -16,8 +16,8 @@ from rascil.processing_components.imaging.primary_beams import create_pb
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
-from rascil.workflows.arlexecute.image.image_arlexecute import image_arlexecute_map_workflow
-from rascil.wrappers.arlexecute.execution_support import arlexecute
+from rascil.workflows.rsexecute.image.image_rsexecute import image_rsexecute_map_workflow
+from rascil.wrappers.rsexecute.execution_support import rsexecute
 
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         client = Client(scheduler)
     else:
         client = Client()
-    arlexecute.set_client(client=client)
+    rsexecute.set_client(client=client)
     
     from rascil.data_models.parameters import rascil_path
     
@@ -52,17 +52,17 @@ if __name__ == '__main__':
     config = create_named_configuration('LOWBD2', rmax=1000.0)
     phasecentre = SkyCoord(ra=+15 * u.deg, dec=-45.0 * u.deg, frame='icrs', equinox='J2000')
     
-    bvis_graph = arlexecute.execute(create_blockvisibility)(config, times, frequency,
+    bvis_graph = rsexecute.execute(create_blockvisibility)(config, times, frequency,
                                                             channel_bandwidth=channel_bandwidth,
                                                             phasecentre=phasecentre, weight=1.0,
                                                             polarisation_frame=PolarisationFrame('stokesI'))
-    vis_graph = arlexecute.execute(convert_blockvisibility_to_visibility)(bvis_graph)
+    vis_graph = rsexecute.execute(convert_blockvisibility_to_visibility)(bvis_graph)
     
-    model_graph = arlexecute.execute(create_image_from_visibility)(vis_graph, npixel=4096, cellsize=0.001,
+    model_graph = rsexecute.execute(create_image_from_visibility)(vis_graph, npixel=4096, cellsize=0.001,
                                                                    override_cellsize=False)
-    beam = image_arlexecute_map_workflow(model_graph, create_pb, facets=16, pointingcentre=phasecentre,
+    beam = image_rsexecute_map_workflow(model_graph, create_pb, facets=16, pointingcentre=phasecentre,
                                          telescope='MID')
-    beam = arlexecute.compute(beam, sync=True)
+    beam = rsexecute.compute(beam, sync=True)
     
     assert numpy.max(beam.data) > 0.0
     
