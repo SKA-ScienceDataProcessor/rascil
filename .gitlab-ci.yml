@@ -1,0 +1,35 @@
+image: "python:3.7"
+
+stages:
+  - test
+
+variables:
+  MPLBACKEND: "agg"
+
+test:
+  stage: test
+  before_script:
+    - pip install -r requirements.txt -r requirements-test.txt
+  script:
+    - py.test tests --verbose
+      --cov=arl
+      --cov-report=html:coverage
+  artifacts:
+    paths:
+      - coverage/
+    expire_in: 1 week
+
+docs:
+  stage: test
+  before_script:
+    - apt-get update
+    - apt-get -y install pandoc
+    - pip install -r requirements.txt -r requirements-docs.txt
+  script:
+    - make -k -j -C docs html
+  after_script:
+    - mv docs/build/html html
+  artifacts:
+    paths:
+      - html/
+    expire_in: 1 week
