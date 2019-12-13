@@ -11,9 +11,8 @@ test:
   before_script:
     - pip install -r requirements.txt -r requirements-test.txt
   script:
-    - py.test tests --verbose
-      --cov=arl
-      --cov-report=html:coverage
+    - pip install pytest pytest-xdist pytest-cov
+    - py.test -n 4 tests --verbose --cov=rascil --cov-report=html:coverage
   artifacts:
     paths:
       - coverage/
