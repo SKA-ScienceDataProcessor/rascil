@@ -5,7 +5,21 @@ stages:
 
 variables:
   MPLBACKEND: "agg"
-  RASCIL: $CI_BUILDS_DIR/rascil
+
+docs:
+  stage: test
+  before_script:
+    - apt-get update
+    - apt-get -y install pandoc
+    - pip install -r requirements.txt -r requirements-docs.txt
+  script:
+    - RASCIL=$CI_BUILDS_DIR make -k -j -C docs html
+  after_script:
+    - mv docs/build/html html
+  artifacts:
+    paths:
+      - html/
+    expire_in: 1 week
 
 test:
   stage: test
@@ -19,17 +33,3 @@ test:
       - coverage/
     expire_in: 1 week
 
-docs:
-  stage: test
-  before_script:
-    - apt-get update
-    - apt-get -y install pandoc
-    - pip install -r requirements.txt -r requirements-docs.txt
-  script:
-    - make -k -j -C docs html
-  after_script:
-    - mv docs/build/html html
-  artifacts:
-    paths:
-      - html/
-    expire_in: 1 week
