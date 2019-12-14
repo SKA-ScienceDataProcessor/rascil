@@ -5,6 +5,7 @@ stages:
 
 variables:
   MPLBACKEND: "agg"
+  RASCIL: $CI_BUILDS_DIR
 
 test:
   stage: test
