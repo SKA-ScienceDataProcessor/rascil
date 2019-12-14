@@ -12,6 +12,7 @@ docs:
     - apt-get update
     - apt-get -y install pandoc
     - pip install -r requirements.txt -r requirements-docs.txt
+    - mkdir -p docs/build/html
   script:
     - export PYTHONPATH=`pwd`
     - echo $PYTHONPATH

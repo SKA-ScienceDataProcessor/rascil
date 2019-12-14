@@ -49,7 +49,6 @@ See the jupyter note books below:
    :maxdepth: 3
 
    processing_components/imaging.rst
-   workflows/imaging-fits_rsexecute.rst
    workflows/imaging-wterm_rsexecute.rst
    workflows/simple-dask_rsexecute.rst
    workflows/imaging-pipelines_rsexecute.rst
