@@ -162,7 +162,7 @@ Helm and Tiller are the same version!
 Creating tiller namespace (if missing): default
 Starting Tiller...
 Tiller namespace: default
-Running: helm install charts/arl-cluster/ --name test --wait --namespace default --set arldatadir=/home/piers/git/private/algorithm-reference-library/data --set ingress.hostname=test.arl-cluster.local
+Running: helm install charts/arl-cluster/ --name test --wait --namespace default --set arldatadir=/home/piers/git/private/rascil/data --set ingress.hostname=test.arl-cluster.local
 
 NAME:   test
 LAST DEPLOYED: Tue Jun 11 09:41:37 2019

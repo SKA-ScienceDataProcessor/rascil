@@ -14,11 +14,11 @@ RASCIL requires python 3.6 or higher.
 
 # Use git to make a local clone of the Github respository::
 
-   git clone https://github.com/SKA-ScienceDataProcessor/algorithm-reference-library
+   git clone https://github.com/SKA-ScienceDataProcessor/rascil
 
 # Change into that directory::
 
-   cd algorithm-reference-library
+   cd rascil
 
 # Install required python packages::
 

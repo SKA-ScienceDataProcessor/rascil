@@ -115,7 +115,7 @@ Ensure that the .bashrc file has the same definition as .bash_profile. If not, s
 PYTHONPATH should look like::
 
     $ echo $PYTHONPATH
-    /home/hpccorn1/Code/algorithm-reference-library:/home/hpccorn1/arlenv/lib/python3.5/site-packages
+    /home/hpccorn1/Code/rascil:/home/hpccorn1/arlenv/lib/python3.5/site-packages
 
 You can start a scheduler and workers by hand. Set the environment variable RASCIL_DASK_SCHEDULER appropriately::
 

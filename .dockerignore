@@ -44,7 +44,7 @@
 /tests/test_data
 /tests/unittest_results
 
-/algorithm-reference-library
+/rascil
 /algorithm_reference_library.egg-info
 /build
 /.coverage

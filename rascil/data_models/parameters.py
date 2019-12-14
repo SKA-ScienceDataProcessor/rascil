@@ -66,7 +66,7 @@ def rascil_path(path):
     absolute path::
 
         rascil_path('data/models/SKA1_LOW_beam.fits')
-        '/Users/timcornwell/Code/algorithm-reference-library/data/models/SKA1_LOW_beam.fits'
+        '/Users/timcornwell/Code/rascil/data/models/SKA1_LOW_beam.fits'
 
     :param path:
     :return: absolute path

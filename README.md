@@ -75,7 +75,7 @@ pip install pytest
 pip install pylint
 
 # permanently fix up the RASCIL lib path in the virtualenv with the following:
-add2virtualenv /path/to/checked/out/algorithm-reference-library
+add2virtualenv /path/to/checked/out/rascil
 
 # this updates arlvenv/lib/python3.x/site-packages/_virtualenv_path_extensions.pth
 

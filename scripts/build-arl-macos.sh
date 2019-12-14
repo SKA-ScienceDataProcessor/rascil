@@ -12,7 +12,7 @@
 #   export LDFLAGS="$(python3-config --ldflags) -lcfitsio"
 #* ./timg_serial
 #dyld: Library not loaded: build/lib.macosx-10.6-intel-3.6/libarlffi.cpython-36m-darwin.so
-#  Referenced from: /Users/montsefarreras/Documents/repo/algorithm-reference-library/examples/ffi_demo/timg_serial/./timg_serial
+#  Referenced from: /Users/montsefarreras/Documents/repo/rascil/examples/ffi_demo/timg_serial/./timg_serial
 #    Reason: image not found
 #    Trace/BPT trap: 5
 
@@ -42,8 +42,8 @@
 # ########################################################### #
 # If repository is cloned skip this part ....                 #
 # Clone the repository
-#git clone https://github.com/SKA-ScienceDataProcessor/algorithm-reference-library/
-#cd algorithm-reference-library/
+#git clone https://github.com/SKA-ScienceDataProcessor/rascil/
+#cd rascil/
 
 # Get the data
 #git-lfs pull

@@ -24,7 +24,7 @@ module load EXTRAE/impi/3.6.1
 export EXTRAE_HOME=/home/mf582/scratch/Extrae/extrae-3.6.1-install/impi/
 
 ## RASCIL should be defined already
-## export RASCIL=/home/mf582/scratch/ARL/algorithm-reference-library
+## export RASCIL=/home/mf582/scratch/ARL/rascil
 
 #module load python-3.6.2-intel-17.0.4-lv2lxsb 
 #module load extrae/3.6.1/cummulus

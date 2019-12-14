@@ -3,7 +3,7 @@ import os
 sys.path.append('.')
 import unittest
 
-# dir = '/Users/wangfeng/dev/algorithm-reference-library/data/vis/ASKAP_example.ms'
+# dir = '/Users/wangfeng/dev/rascil/data/vis/ASKAP_example.ms'
 
 import logging
 import numpy
