@@ -13,11 +13,9 @@ docs:
     - apt-get -y install pandoc
     - pip install -r requirements.txt -r requirements-docs.txt
   script:
-    - pwd
+    - export PYTHONPATH=`pwd`
     - echo $PYTHONPATH
-    - PYTHONPATH=`pwd`:$PYTHONPATH
-    - echo $PYTHONPATH
-    - make -k -j -C docs html
+    - PYTHONPATH=`pwd` make -k -j -C docs html
   after_script:
     - mv docs/build/html html
   artifacts:
