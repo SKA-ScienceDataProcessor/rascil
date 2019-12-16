@@ -7,4 +7,4 @@ Examples
 .. toctree::
    :maxdepth: 1
 
-   notebooks/index
+   examples/notebooks/index
