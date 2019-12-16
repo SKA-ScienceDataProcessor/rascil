@@ -16,7 +16,7 @@ of constructing a graph, we will need to know the data elements and the function
 These are well-modeled in RASCIL.
 
 In order that Dask.delayed processing can be switched on and off, and that the same code is used for Dask and
-non-Dask processing, we have wrapped Dask.delayed in :py:mod:`wrappers.rsexecute.execution_support.rsexecute.rsexecute`.
+non-Dask processing, we have wrapped Dask.delayed in :py:func:`rascil.wrappers.rsexecute.execution_support.rsexecute.rsexecute`.
 An example is::
 
         rsexecute.set_client(use_dask=True)
@@ -31,21 +31,21 @@ An example is::
                                         deconvolve_taper='tukey')
         clean, residual, restored = rsexecute.compute(continuum_imaging_list, sync=True)
 
-The function :py:mod:`wrappers.rsexecute.execution_support.rsexecute.rsexecute.set_client` must be called
+The function :py:func:`rascil.wrappers.rsexecute.execution_support.rsexecute.rsexecute` must be called
 before defining any components. If use_dask is True then a Dask graph is constructed for subsequent execution. If
 use_dask is False then the function is called immediately.
 
 The pipeline workflow
-:py:mod:`workflows.rsexecute.pipelines.pipeline_components.continuum_imaging_component` is itself assembled using the
-:py:mod:`wrappers.rsexecute.execution_support.rsexecute.rsexecute.execute` function.
+:py:mod:`rascil.workflows.rsexecute.pipelines.pipeline_components.continuum_imaging_component` is itself assembled using the
+:py:mod:`rascil.wrappers.rsexecute.execution_support.rsexecute.rsexecute.execute` function.
 
 The functions for creating graphs are:
 
-    - :py:mod:`workflows.rsexecute.support_workflows.imaging_workflows`: Graphs to perform various types of prediction and inversion of visibility data
-    - :py:mod:`workflows.rsexecute.image.generic_workflows`: Graphs to perform generic image operations
-    - :py:mod:`workflows.rsexecute.visibility.generic_workflows`: Graphs to perform generic visibility perations
-    - :py:mod:`workflows.rsexecute.simulation.simulation_workflows`: Graphs to support simulations
-    - :py:mod:`workflows.rsexecute.pipelines.pipeline_workflows`: Graphs to implement the canonical pipelines
+    - :py:mod:`rascil.workflows.rsexecute.support_workflows.imaging_workflows`: Graphs to perform various types of prediction and inversion of visibility data
+    - :py:mod:`rascil.workflows.rsexecute.image.generic_workflows`: Graphs to perform generic image operations
+    - :py:mod:`rascil.workflows.rsexecute.visibility.generic_workflows`: Graphs to perform generic visibility perations
+    - :py:mod:`rascil.workflows.rsexecute.simulation.simulation_workflows`: Graphs to support simulations
+    - :py:mod:`rascil.workflows.rsexecute.pipelines.pipeline_workflows`: Graphs to implement the canonical pipelines
 
 In addition there are notebooks that use components in workflows/notebooks.
 

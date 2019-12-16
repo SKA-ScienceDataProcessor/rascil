@@ -28,6 +28,7 @@ Additions and changes should adhere to these principles.
 Submitting code
 ===============
 
-RASCIL is hosted on the `SDP github <https://github.com/SKA-ScienceDataProcessor/rascil.git>`_ .
+RASCIL is hosted on the `SDP github <https://github.com/SKA-ScienceDataProcessor/rascil.git>`_ . CI/CD occurs on Gitlab at:
+`rascil <https://gitlab.com/timcornwell/rascil>`_
 
-We are open to pull requests submitted via github.
+We welcome pull requests submitted via github.

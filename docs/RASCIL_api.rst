@@ -6,7 +6,7 @@ API
 .. _api:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    data_models/index.rst
    processing_components/index.rst

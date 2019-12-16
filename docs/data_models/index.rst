@@ -7,7 +7,7 @@ Data models
 ===========
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    memory_data_models.rst
    buffer_data_models.rst
