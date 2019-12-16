@@ -17,7 +17,6 @@ from .calibration import *
 from .griddata import *
 from .image import *
 from .imaging import *
-from .notebooks import *
 from .simulation import *
 from .skycomponent import *
 from .skymodel import *

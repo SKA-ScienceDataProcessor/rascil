@@ -1,6 +1,7 @@
 
-# Template for making Jupyter notebooks. Will get included
-# by Makefiles in subdirectories.
+NBs = bandpass-calibration_rsexecute.ipynb imaging-pipelines_serial.ipynb mosaic_serial.ipynb  \
+ queue.ipynb imaging-fits_rsexecute.ipynb  imaging-wterm_rsexecute.ipynb \
+ mpc_simulation.ipynb simple-dask_rsexecute.ipynb imaging-pipelines_rsexecute.ipynb  imaging.ipynb
 
 RSTs=  $(NBs:.ipynb=.rst)
 
