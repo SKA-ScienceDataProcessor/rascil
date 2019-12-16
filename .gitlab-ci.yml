@@ -24,7 +24,7 @@ docs:
       - html/
     expire_in: 1 week
 
-test:
+unittests:
   stage: test
   before_script:
     - pip install -r requirements.txt -r requirements-test.txt
@@ -36,4 +36,20 @@ test:
     paths:
       - coverage/
     expire_in: 1 week
+
+pages:
+  stage: test
+  dependencies:
+    - unittests
+    - docs
+  script:
+    - mv docs/build/html public
+    - mv coverage/ public/coverage
+  artifacts:
+    paths:
+      - public
+      - public/coverage
+    expire_in: 1 month
+  only:
+    - master
 

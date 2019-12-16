@@ -41,20 +41,20 @@ Running notebooks
 
 The best way to get familiar with RASCIL is via jupyter notebooks. For example::
 
-   jupyter-notebook processing_components/notebooks/imaging.ipynb
+   examples/notebooks/imaging.ipynb
 
 See the jupyter note books below:
 
 .. toctree::
    :maxdepth: 3
 
-   processing_components/imaging.rst
-   workflows/imaging-wterm_rsexecute.rst
-   workflows/simple-dask_rsexecute.rst
-   workflows/imaging-pipelines_rsexecute.rst
-   workflows/bandpass-calibration_rsexecute.rst
+   examples/notebooks/imaging.rst
+   examples/notebooks/imaging-wterm_rsexecute.rst
+   examples/notebooks/simple-dask_rsexecute.rst
+   examples/notebooks/imaging-pipelines_rsexecute.rst
+   examples/notebooks//bandpass-calibration_rsexecute.rst
 
-In addition, there are other notebooks that are not built as part of this documentation.
+In addition, there are other notebooks in examples/notebooks that are not built as part of this documentation.
 
 * :ref:`genindex`
 * :ref:`modindex`
