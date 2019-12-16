@@ -26,3 +26,5 @@ dask-worker-space
 *.fits
 /sourcetree.txt
 /docs/api
+*/*/notebooks/*_files
+*/*/notebooks/*.rst
