@@ -39,8 +39,11 @@ unittests:
 
 pages:
   stage: test
+  dependencies:
+    - html/
+    - coverage/
   script:
-    - mv docs/build/html public
+    - mv html/* public
     - mv coverage/ public/coverage
   artifacts:
     paths:
@@ -49,4 +52,3 @@ pages:
     expire_in: 1 month
   only:
     - master
-
