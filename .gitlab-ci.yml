@@ -40,7 +40,7 @@ pages:
     - docs
     - unittests
   script:
-    - mv html/* public
+    - mv html public
     - mv coverage/ public/coverage
   artifacts:
     paths:
