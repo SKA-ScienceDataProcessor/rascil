@@ -41,7 +41,7 @@ Running notebooks
 
 The best way to get familiar with RASCIL is via jupyter notebooks. For example::
 
-   examples/notebooks/imaging.ipynb
+   jupyter examples/notebooks/imaging.ipynb
 
 See the jupyter note books below:
 
