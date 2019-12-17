@@ -1,13 +1,10 @@
 image: "python:3.7"
 
-stages:
-  - test
-
 variables:
   MPLBACKEND: "agg"
 
 docs:
-  stage: test
+  stage: build
   before_script:
     - apt-get update
     - apt-get -y install pandoc
@@ -25,7 +22,7 @@ docs:
     expire_in: 1 week
 
 unittests:
-  stage: test
+  stage: build
   before_script:
     - pip install -r requirements.txt -r requirements-test.txt
   script:
@@ -34,14 +31,14 @@ unittests:
     - py.test -n 4 tests --verbose --cov=rascil --cov-report=html:coverage
   artifacts:
     paths:
-      - coverage/
+      - coverage
     expire_in: 1 week
 
 pages:
-  stage: test
+  stage: deploy
   dependencies:
-    - html/
-    - coverage/
+    - docs
+    - unittests
   script:
     - mv html/* public
     - mv coverage/ public/coverage
