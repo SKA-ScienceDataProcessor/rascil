@@ -34,6 +34,8 @@ def create_calibration_controls(**kwargs):
         I: Ionosphere
 
     Get this dictionary and then adjust parameters as desired
+
+    Note that P and I calibration require off diagonal terms producing non-communtation of the Jones matrices. This is not handled yet.
     
     The calibrate function takes a context string e.g. TGB. It then calibrates each of these Jones matrices in turn.
 
@@ -41,11 +43,15 @@ def create_calibration_controls(**kwargs):
     :return:
     """
 
+    # controls = {'T': {'shape': 'scalar', 'timeslice': 'auto', 'phase_only': True, 'first_selfcal': 0},
+    #             'G': {'shape': 'vector', 'timeslice': 60.0, 'phase_only': False, 'first_selfcal': 0},
+    #             'P': {'shape': 'matrix', 'timeslice': 1e4, 'phase_only': False, 'first_selfcal': 0},
+    #             'B': {'shape': 'vector', 'timeslice': 1e5, 'phase_only': False, 'first_selfcal': 0},
+    #             'I': {'shape': 'vector', 'timeslice': 1.0, 'phase_only': True, 'first_selfcal': 0}}
+
     controls = {'T': {'shape': 'scalar', 'timeslice': 'auto', 'phase_only': True, 'first_selfcal': 0},
                 'G': {'shape': 'vector', 'timeslice': 60.0, 'phase_only': False, 'first_selfcal': 0},
-                'P': {'shape': 'matrix', 'timeslice': 1e4, 'phase_only': False, 'first_selfcal': 0},
-                'B': {'shape': 'vector', 'timeslice': 1e5, 'phase_only': False, 'first_selfcal': 0},
-                'I': {'shape': 'vector', 'timeslice': 1.0, 'phase_only': True, 'first_selfcal': 0}}
+                'B': {'shape': 'vector', 'timeslice': 1e5, 'phase_only': False, 'first_selfcal': 0}}
 
     return controls
 

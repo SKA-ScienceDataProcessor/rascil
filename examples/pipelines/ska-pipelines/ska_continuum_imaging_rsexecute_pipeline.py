@@ -1,5 +1,6 @@
-# coding: utf-8
-
+"""
+Continuum processing pipeline
+"""
 # # Pipeline processing using Dask
 
 from rascil.data_models.parameters import rascil_path

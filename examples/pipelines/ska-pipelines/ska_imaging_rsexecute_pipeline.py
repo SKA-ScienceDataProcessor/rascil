@@ -1,4 +1,6 @@
-# coding: utf-8
+"""
+Imaging pipeline
+"""
 
 # # Pipeline processing using Dask
 

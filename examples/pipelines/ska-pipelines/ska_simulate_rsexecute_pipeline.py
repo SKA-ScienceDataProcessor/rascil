@@ -1,6 +1,6 @@
-# coding: utf-8
-
-
+"""
+Simulation of observation for subsequent processing
+"""
 from rascil.data_models import rascil_path
 
 results_dir = rascil_path('test_results')
@@ -12,7 +12,8 @@ import logging
 from astropy.coordinates import SkyCoord
 from astropy import units as u
 
-from rascil.data_models import SkyModel, PolarisationFrame, export_skymodel_to_hdf5, export_blockvisibility_to_hdf5
+from rascil.data_models import SkyModel, PolarisationFrame, export_skymodel_to_hdf5, \
+    export_blockvisibility_to_hdf5
 
 from rascil.processing_library import create_empty_image_like
 
@@ -20,6 +21,7 @@ from rascil.processing_components import create_low_test_image_from_gleam, advis
     convert_blockvisibility_to_visibility, convert_visibility_to_blockvisibility
 from rascil.workflows import predict_list_rsexecute_workflow, simulate_list_rsexecute_workflow, \
     corrupt_list_rsexecute_workflow
+
 from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
 
 def init_logging():

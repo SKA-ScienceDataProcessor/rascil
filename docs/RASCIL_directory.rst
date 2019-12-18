@@ -153,7 +153,7 @@ Pipeline workflows
 * ICAL: :py:func:`rascil.workflows.rsexecute.pipelines.ical_list_rsexecute_workflow`
 * Continuum imaging: :py:func:`rascil.workflows.rsexecute.pipelines.continuum_imaging_list_rsexecute_workflow`
 * Spectral line imaging: :py:func:`rascil.workflows.rsexecute.pipelines.spectral_line_imaging_list_rsexecute_workflow`
-* MPCCAL: :py:func:`rascil.workflows.rsexecute..pipelinesmpccal_skymodel_list_rsexecute_workflow`
+* MPCCAL: :py:func:`rascil.workflows.rsexecute.pipelines.mpccal_skymodel_list_rsexecute_workflow`
 * ICAL: :py:func:`rascil.workflows.serial.pipelines.ical_list_serial_workflow`
 * Continuum imaging: :py:func:`rascil.workflows.serial.pipelines.continuum_imaging_list_serial_workflow`
 * Spectral line imaging: :py:func:`rascil.workflows.serial.pipelines.spectral_line_imaging_list_serial_workflow`

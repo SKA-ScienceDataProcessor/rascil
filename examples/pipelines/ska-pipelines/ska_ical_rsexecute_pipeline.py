@@ -1,4 +1,6 @@
-# coding: utf-8
+"""
+ICAL pipeline
+"""
 
 # # Pipeline processing using Dask
 
