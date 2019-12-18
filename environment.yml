@@ -27,6 +27,7 @@ dependencies:
   - astropy
   - photutils
   - reproject
+  - python-casacore
   - pip
   - pip:
     - seqfile
