@@ -11,7 +11,7 @@ numpy
 paramiko
 photutils
 python-casacore
-python-graphviz
+graphviz
 pyfftw
 reproject
 scikit-image
