@@ -23,11 +23,20 @@ The RASCIL has a few dependencies:
 * git-lfs 2.2.1+
 * Python package dependencies as defined in the requirements.txt
 
+So to install::
+   pip install -r requirements.txt
+
 The Python dependencies will install (amongst other things) Jupyter, numpy, scipy, scikit, and Dask.  Because of this it maybe advantageous to setup a virtualenv to contain the project - [instructions can be found here](http://docs.python-guide.org/en/latest/dev/virtualenvs/).
 
 Note that git-lfs is required for some data files. Complete platform dependent installation [instructions can be found here](https://github.com/git-lfs/git-lfs/wiki/Installation).
 
 Finally, add the location of the installation (e.g. ~/rascil/ )to PYTHONPATH
+
+An alternative route is to use the conda environment file::
+
+   conda env create -f environment.yml 
+   conda activate rascil
+   conda config --env --prepend channels astropy
 
 Platform Specific Instructions
 ------------------------------
