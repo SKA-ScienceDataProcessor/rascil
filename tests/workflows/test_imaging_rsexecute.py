@@ -1,6 +1,7 @@
 """ Unit tests for pipelines expressed via rsexecute
 """
 
+import os
 import logging
 import sys
 import unittest
@@ -49,7 +50,7 @@ class TestImaging(unittest.TestCase):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
     
-        self.persist = False
+        self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def tearDown(self):
         global rsexecute

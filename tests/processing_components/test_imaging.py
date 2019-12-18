@@ -2,6 +2,7 @@
 
 
 """
+import os
 import functools
 import logging
 import sys
@@ -37,7 +38,7 @@ class TestImaging(unittest.TestCase):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         
-        self.persist = False
+        self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def actualSetUp(self, freqwin=1, block=False, dospectral=True, dopol=False, zerow=False):
         

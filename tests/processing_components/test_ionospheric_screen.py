@@ -1,7 +1,7 @@
 """ Unit tests for mpc
 
 """
-
+import os
 import logging
 import unittest
 
@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 class TestIonosphericScreen(unittest.TestCase):
     def setUp(self):
         
-        self.persist = False
+        self.persist = os.getenv("RASCIL_PERSIST", False)
         from rascil.data_models.parameters import rascil_path
         dec = -40.0 * u.deg
         

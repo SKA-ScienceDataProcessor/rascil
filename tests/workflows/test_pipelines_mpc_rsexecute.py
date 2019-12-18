@@ -1,3 +1,4 @@
+import os
 import logging
 import sys
 import unittest
@@ -39,7 +40,7 @@ class TestPipelineMPC(unittest.TestCase):
         rsexecute = rsexecuteBase(use_dask=True)
         rsexecute.set_client(client)
         
-        self.persist = True
+        self.persist = os.getenv("RASCIL_PERSIST", False)
 
     def tearDown(self):
         global rsexecute

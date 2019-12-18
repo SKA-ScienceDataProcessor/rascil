@@ -1,6 +1,7 @@
 """ Unit tests for imaging using nifty gridder
 
 """
+import os
 import logging
 import sys
 import unittest
@@ -40,7 +41,8 @@ class TestImagingNG(unittest.TestCase):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         
-        self.persist = True
+        self.persist = os.getenv("RASCIL_PERSIST", False)
+
         self.verbosity = 0
     
     def actualSetUp(self, freqwin=1, block=True, dospectral=True, dopol=False, zerow=False, do_shift=False):
