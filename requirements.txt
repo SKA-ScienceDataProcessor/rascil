@@ -5,6 +5,7 @@ dask
 distributed
 h5py
 jupyter
+jupyter_contrib_nbextensions
 matplotlib
 numba
 numpy
@@ -17,3 +18,7 @@ reproject
 scikit-image
 scipy
 seqfile
+graphviz
+sphinx
+sphinx_rtd_theme
+sphinx_automodapi
