@@ -287,7 +287,7 @@ def create_vp_generic_numeric(model, pointingcentre=None, diameter=15.0, blockag
             ndisk = 2 * ((ndisk + 1) // 2)
             phase = numpy.zeros([ndisk, ndisk])
             for zernike in zernikes:
-                phase = zernike['coeff'] * aotools.functions.zernike(zernike['noll'], ndisk)
+                phase = zernike['coeff'] * aotools.functions.zernike.zernike_noll(zernike['noll'], ndisk)
             
             # import matplotlib.pyplot as plt
             # plt.clf()

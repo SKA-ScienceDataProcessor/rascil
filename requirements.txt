@@ -1,5 +1,6 @@
-aotools<0.5.1
+aotools
 astropy
+bokeh
 dask
 distributed
 h5py
@@ -7,8 +8,10 @@ jupyter
 matplotlib
 numba
 numpy
+paramiko
 photutils
 python-casacore
+python-graphviz
 pyfftw
 reproject
 scikit-image
