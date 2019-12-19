@@ -26,12 +26,24 @@ unittests:
   before_script:
     - pip install -r requirements.txt -r requirements-test.txt
   script:
-    - echo $RASCIL
     - pip install pytest pytest-xdist pytest-cov
     - py.test -n 4 tests --verbose --cov=rascil --cov-report=html:coverage
   artifacts:
     paths:
       - coverage
+    expire_in: 1 week
+
+code_analysis:
+  stage: build
+  before_script:
+    - pip install pylint pylint-json2html
+  script:
+    - pylint -j 0 --extension-pkg-whitelist=numpy --ignored-classes=astropy.units,astropy.constants,HDUList -f json -E rascil tests | pylint-json2html -o pylint_report.html
+    - mkdir code_analysis
+    - mv pylint_report.html code_analysis/index.html
+  artifacts:
+    paths:
+      - code_analysis
     expire_in: 1 week
 
 pages:
@@ -42,10 +54,12 @@ pages:
   script:
     - mv html public
     - mv coverage/ public/coverage
+    - mv code_analysis/ public/code_analysis
   artifacts:
     paths:
       - public
       - public/coverage
+      - public/code_analysis
     expire_in: 1 month
   only:
     - master
