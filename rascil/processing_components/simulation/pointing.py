@@ -13,7 +13,7 @@ from rascil.data_models.memory_data_models import BlockVisibility
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
-from rascil.processing_library.util.coordinate_support import hadec_to_azel, azel_to_hadec
+from rascil.processing_library.util.coordinate_support import hadec_to_azel
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +22,8 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                                           use_radec=False, **kwargs):
     """ Create gaintables from a pointing table
 
+    :param vis_slices:
+    :param use_radec:
     :param vis:
     :param sc: Sky components for which pierce points are needed
     :param pt: Pointing table
@@ -172,8 +174,8 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
 
     if number_bad > 0:
         log.warning(
-            "simulate_gaintable_from_pointingtable: %d points are inside the voltage pattern image" % (number_good))
+            "simulate_gaintable_from_pointingtable: %d points are inside the voltage pattern image" % number_good)
         log.warning(
-            "simulate_gaintable_from_pointingtable: %d points are outside the voltage pattern image" % (number_bad))
+            "simulate_gaintable_from_pointingtable: %d points are outside the voltage pattern image" % number_bad)
 
     return gaintables

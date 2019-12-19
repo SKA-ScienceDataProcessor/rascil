@@ -35,8 +35,6 @@ def gaintable_timeslice_iter(gt: GainTable, **kwargs) -> numpy.ndarray:
     """ GainTable iterator
 
     :param gt: GainTable
-    :param timeslice: 'auto' or time in seconds
-    :param gaintable_slices: Number of slices (second in precedence to timeslice)
     :return: Boolean array with selected rows=True
     """
     assert isinstance(gt, GainTable)

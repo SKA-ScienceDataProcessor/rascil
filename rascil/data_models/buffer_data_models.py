@@ -35,7 +35,7 @@ from rascil.data_models.memory_data_models import Image, BlockVisibility, SkyMod
 log = logging.getLogger(__name__)
 
 
-class BufferDataModel():
+class BufferDataModel:
     """Buffer version of data model
     
     To create from an existing model in the buffer, make some changes, and then sync to buffer::

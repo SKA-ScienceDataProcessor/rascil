@@ -25,8 +25,9 @@ def weight_visibility(vis, model, gcfcf=None, weighting='uniform', **kwargs):
     This is done collectively so the weights are summed over all vis_lists and then
     corrected
 
-    :param vis_list:
-    :param model_imagelist: Model required to determine weighting parameters
+    :param vis:
+    :param model:
+    :param gcfcf:
     :param weighting: Type of weighting
     :param kwargs: Parameters for functions in graphs
     :return: List of vis_graphs
@@ -81,6 +82,7 @@ def taper_visibility_tukey(vis: Visibility, tukey=0.1) -> Visibility:
     These are cumulative. If You can reset the imaging_weights
     using :py:mod:`processing_library.imaging.weighting.weight_visibility`
 
+    :param tukey:
     :param vis: Visibility with imaging_weight's to be tapered
     :return: visibility with imaging_weight column modified
     """

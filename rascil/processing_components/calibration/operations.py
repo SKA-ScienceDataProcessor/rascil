@@ -93,6 +93,7 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, vis_slic
     If the visibility data are polarised e.g. polarisation_frame("linear") then the inverse operator
     represents an actual inverse of the gains.
     
+    :param vis_slices:
     :param vis: Visibility to have gains applied
     :param gt: Gaintable to be applied
     :param inverse: Apply the inverse (default=False)
@@ -230,6 +231,7 @@ def create_gaintable_from_rows(gt: GainTable, rows: numpy.ndarray, makecopy=True
 def qa_gaintable(gt: GainTable, context=None) -> QA:
     """Assess the quality of a gaintable
 
+    :param context:
     :param gt:
     :return: QA
     """
@@ -254,6 +256,8 @@ def gaintable_plot(gt: GainTable, ax, title='', value='amp', ants=None,  channel
                    label_max=10, **kwargs):
     """ Standard plot of gain table
 
+    :param title:
+    :param label_max:
     :param gt: Gaintable
     :param ax: matplotlib axes
     :param value: 'amp' or 'phase' or 'residual'

@@ -24,6 +24,8 @@ def create_configuration_from_file(antfile: str, location: EarthLocation = None,
                                    rmax=None, name='') -> Configuration:
     """ Define from a file
 
+    :param rmax:
+    :param name:
     :param names: Antenna names
     :param antfile: Antenna file name
     :param location:
@@ -56,11 +58,12 @@ def create_configuration_from_SKAfile(antfile: str,
                                       rmax=None, name='', location=None) -> Configuration:
     """ Define from a file
 
+    :param rmax:
+    :param name:
     :param names: Antenna names
     :param antfile: Antenna file name
     :param location:
     :param mount: mount type: 'azel', 'xy', 'equatorial'
-    :param diameter: Effective diameter of station or antenna
     :return: Configuration
     """
     antdiamlonglat = numpy.genfromtxt(antfile, usecols=[0, 1, 2], delimiter="\t")
@@ -88,7 +91,9 @@ def create_configuration_from_MIDfile(antfile: str, location=None,
                                       rmax=None, name='') -> Configuration:
     """ Define from a file
 
-    :param names: Antenna names
+    :param location:
+    :param rmax:
+    :param name:
     :param antfile: Antenna file name
     :param mount: mount type: 'azel', 'xy'
     :return: Configuration
@@ -145,6 +150,8 @@ def limit_rmax(antxyz, diameters, names, mounts, rmax):
 def create_LOFAR_configuration(antfile: str, location, rmax=1e6) -> Configuration:
     """ Define from the LOFAR configuration file
 
+    :param location:
+    :param rmax:
     :param antfile:
     :return: Configuration
     """
@@ -166,7 +173,6 @@ def create_named_configuration(name: str = 'LOWBD2', **kwargs) -> Configuration:
     """ Standard configurations e.g. LOWBD2, MIDBD2
 
     :param name: name of Configuration LOWBD2, LOWBD1, LOFAR, VLAA, ASKAP
-    :param rmax: Maximum distance of station from the average (m)
     :return:
     
     For LOWBD2, setting rmax gives the following number of stations

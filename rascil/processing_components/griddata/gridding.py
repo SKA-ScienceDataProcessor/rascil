@@ -28,9 +28,10 @@ log = logging.getLogger(__name__)
 def convolution_mapping(vis, griddata, cf, channel_tolerance=1e-8):
     """Find the mappings between visibility, griddata, and convolution function
     
+    :param cf:
+    :param channel_tolerance:
     :param vis:
     :param griddata:
-    :param cf_griddata:
     :return:
     """
     
@@ -106,7 +107,6 @@ def grid_visibility_to_griddata(vis, griddata, cf):
     :param vis: Visibility to be gridded
     :param griddata: GridData
     :param cf: Convolution function
-    :param kwargs:
     :return: GridData
     """
     
@@ -140,9 +140,10 @@ def grid_visibility_to_griddata(vis, griddata, cf):
 def grid_visibility_to_griddata_fast(vis, griddata, cf, gcf):
     """Grid Visibility onto a GridData
 
+    :param cf:
+    :param gcf:
     :param vis: Visibility to be gridded
     :param griddata: GridData
-    :param kwargs:
     :return: GridData
     """
     assert isinstance(vis, Visibility), vis
@@ -165,9 +166,9 @@ def grid_visibility_to_griddata_fast(vis, griddata, cf, gcf):
 def grid_weight_to_griddata(vis, griddata, cf):
     """Grid Visibility weight onto a GridData
 
+    :param cf:
     :param vis: Visibility to be gridded
     :param griddata: GridData
-    :param kwargs:
     :return: GridData
     """
     assert isinstance(vis, Visibility), vis
@@ -191,7 +192,6 @@ def griddata_merge_weights(gd_list, algorithm='uniform'):
     """ Merge weights into one grid
     
     :param gd_list:
-    :param gd:
     :param algorithm:
     :return:
     """
@@ -211,15 +211,15 @@ def griddata_merge_weights(gd_list, algorithm='uniform'):
     
     gd.grid_wcs.wcs.cdelt[4] = bandwidth
     gd.grid_wcs.wcs.crval[4] = frequency / len(gd_list)
-    return (gd, sumwt)
+    return gd, sumwt
 
 
 def griddata_reweight(vis, griddata, cf):
     """Reweight Grid Visibility weight using the weights in griddata
 
+    :param cf:
     :param vis: Visibility to be reweighted
     :param griddata: GridData, sumwt
-    :param kwargs:
     :return: GridData
     """
     pu_grid, pu_offset, pv_grid, pv_offset, pwg_grid, pwg_fraction, pwc_grid, pwc_fraction, pfreq_grid = \
@@ -274,6 +274,7 @@ def degrid_visibility_from_griddata(vis, griddata, cf, **kwargs):
 def fft_griddata_to_image(griddata, gcf=None, imaginary=False):
     """ FFT griddata after applying gcf
 
+    :param imaginary:
     :param griddata:
     :param gcf: Grid correction image
     :return:
@@ -299,6 +300,7 @@ def fft_griddata_to_image(griddata, gcf=None, imaginary=False):
 def fft_image_to_griddata(im, griddata, gcf=None):
     """Fill griddata with transform of im
 
+    :param im:
     :param griddata:
     :param gcf: Grid correction image
     :return:

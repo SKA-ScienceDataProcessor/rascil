@@ -22,6 +22,10 @@ def get_dask_Client(timeout=30, n_workers=None, threads_per_worker=1, processes=
     The environment variable ARL_DASK_SCHEDULER is interpreted as pointing to the scheduler.
     and a client using that scheduler is returned. Otherwise a client is created
 
+    :param local_dir:
+    :param with_file:
+    :param scheduler_file:
+    :param dashboard_address:
     :param timeout: Time out for creation
     :param n_workers: Number of workers
     :param threads_per_worker:

@@ -107,8 +107,9 @@ try:
         This is at the bottom of the layering i.e. all transforms are eventually expressed in terms
         of this function. . Any shifting needed is performed here.
     
+        :param model:
+        :param dopsf:
         :param bvis: BlockVisibility to be inverted
-        :param im: image template (not changed)
         :param normalize: Normalize by the sum of weights (True)
         :return: (resulting image, sum of the weights for each frequency and polarization)
     

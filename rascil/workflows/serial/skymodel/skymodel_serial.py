@@ -24,12 +24,12 @@ def predict_skymodel_list_serial_workflow(obsvis, skymodel_list, context, vis_sl
                                           gcfcf=None, docal=False, **kwargs):
     """Predict from a list of skymodels, producing one visibility per skymodel
 
+    :param gcfcf:
     :param obsvis: "Observed Visibility"
     :param skymodel_list: skymodel list
     :param vis_slices: Number of vis slices (w stack or timeslice)
     :param facets: Number of facets (per axis)
     :param context: Type of processing e.g. 2d, wstack, timeslice or facets
-    :param gcfcg: tuple containing grid correction and convolution function
     :param docal: Apply calibration table in skymodel
     :param kwargs: Parameters for functions in components
     :return: List of vis_lists
@@ -89,12 +89,12 @@ def invert_skymodel_list_serial_workflow(vis_list, skymodel_list, context, vis_s
     The visibility and image are scattered, the visibility is predicted and calibrated on each part, and then the
     parts are assembled. The mask if present, is multiplied in at the end.
 
+    :param gcfcf:
     :param vis_list: List of Visibility data models
     :param skymodel_list: skymodel list
     :param vis_slices: Number of vis slices (w stack or timeslice)
     :param facets: Number of facets (per axis)
     :param context: Type of processing e.g. 2d, wstack, timeslice or facets
-    :param gcfcg: tuple containing grid correction and convolution function
     :param docal: Apply calibration table in skymodel
     :param kwargs: Parameters for functions in components
     :return: List of (image, weight) tuples)
@@ -165,13 +165,12 @@ def convolve_skymodel_list_serial_workflow(obsvis, skymodel_list, context, vis_s
 
     This is similar to convolving the skymodel images with the PSF
 
-    :param vis_list: List of Visibility data models
+    :param obsvis:
+    :param gcfcf:
     :param skymodel_list: skymodel list
     :param vis_slices: Number of vis slices (w stack or timeslice)
     :param facets: Number of facets (per axis)
     :param context: Type of processing e.g. 2d, wstack, timeslice or facets
-    :param gcfcg: tuple containing grid correction and convolution function
-    :param docal: Apply calibration table in skymodel
     :param kwargs: Parameters for functions in components
     :return: List of (image, weight) tuples)
    """

@@ -154,6 +154,7 @@ def calculate_skymodel_equivalent_image(sm):
 def update_skymodel_from_image(sm, im, damping=0.5):
     """Update a skymodel for an image
 
+    :param damping:
     :param sm:
     :param im:
     :return:
@@ -170,8 +171,10 @@ def update_skymodel_from_image(sm, im, damping=0.5):
 def update_skymodel_from_gaintables(sm, gt_list, calibration_context='T', damping=0.5):
     """Update a skymodel from a list of gaintables
 
+    :param gt_list:
+    :param calibration_context:
+    :param damping:
     :param sm:
-    :param im:
     :return:
     """
     assert len(sm) == len(gt_list)

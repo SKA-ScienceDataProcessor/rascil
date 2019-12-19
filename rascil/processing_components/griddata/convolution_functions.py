@@ -214,6 +214,7 @@ def calculate_bounding_box_convolutionfunction(cf, fractional_level=1e-4):
 def qa_convolutionfunction(cf, context="") -> QA:
     """Assess the quality of a convolutionfunction
 
+    :param context:
     :param cf:
     :return: QA
     """

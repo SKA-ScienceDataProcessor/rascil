@@ -43,8 +43,7 @@ def sum_images_rsexecute(image_list, split=2):
     
     if len(image_list) > split:
         centre = len(image_list) // split
-        result = [sum_images_rsexecute(image_list[:centre])]
-        result.append(sum_images_rsexecute(image_list[centre:]))
+        result = [sum_images_rsexecute(image_list[:centre]), sum_images_rsexecute(image_list[centre:])]
         return rsexecute.execute(sum_images, nout=2)(result)
     else:
         return rsexecute.execute(sum_images, nout=2)(image_list)

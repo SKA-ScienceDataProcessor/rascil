@@ -44,6 +44,7 @@ def find_pierce_points(station_locations, ha, dec, phasecentre, height):
 def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, scale=1.0, **kwargs):
     """ Create gaintables from a screen calculated using ARatmospy
 
+    :param vis_slices:
     :param vis:
     :param sc: Sky components for which pierce points are needed
     :param screen:
@@ -91,8 +92,8 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
             gaintables[icomp].phasecentre = comp.direction
         
         if number_bad > 0:
-            log.warning("create_gaintable_from_screen: %d pierce points are inside the screen image" % (number_good))
-            log.warning("create_gaintable_from_screen: %d pierce points are outside the screen image" % (number_bad))
+            log.warning("create_gaintable_from_screen: %d pierce points are inside the screen image" % number_good)
+            log.warning("create_gaintable_from_screen: %d pierce points are outside the screen image" % number_bad)
 
     return gaintables
 
@@ -102,6 +103,7 @@ def grid_gaintable_to_screen(vis, gaintables, screen, height=3e5, gaintable_slic
     
     The phases are just average per grid cell, no phase unwrapping is performed.
 
+    :param gaintable_slices:
     :param vis:
     :param gaintables: input gaintables
     :param screen:
@@ -150,7 +152,7 @@ def grid_gaintable_to_screen(vis, gaintables, screen, height=3e5, gaintable_slic
                     if wt[ant] == 0.0:
                         number_no_weight += 1
     if number_no_weight > 0:
-        log.warning("grid_gaintable_to_screen: %d pierce points are have no weight" % (number_no_weight))
+        log.warning("grid_gaintable_to_screen: %d pierce points are have no weight" % number_no_weight)
 
     newscreen.data[weights.data > 0.0] = newscreen.data[weights.data > 0.0] / weights.data[weights.data > 0.0]
 
@@ -187,10 +189,11 @@ def calculate_sf_from_screen(screen):
 def plot_gaintable_on_screen(vis, gaintables, height=3e5, gaintable_slices=None, plotfile=None):
     """ Plot a gaintable on an ionospheric screen
 
+    :param gaintables:
+    :param gaintable_slices:
+    :param plotfile:
     :param vis:
-    :param sc: Sky components for which pierce points are needed
     :param height: Height (in m) of screen above telescope e.g. 3e5
-    :param scale: Multiply the screen by this factor
     :return: gridded screen image, weights image
     """
     

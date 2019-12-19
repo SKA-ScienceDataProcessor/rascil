@@ -152,6 +152,7 @@ def invert_timeslice_single(vis: Visibility, im: Image, dopsf, normalize=True, r
     """Process single time slice
 
     Extracted for re-use in parallel version
+    :param remove:
     :param vis: Visibility to be inverted
     :param im: image template (not changed)
     :param dopsf: Make the psf instead of the dirty image

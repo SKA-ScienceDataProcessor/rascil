@@ -31,19 +31,19 @@ def fft(a):
     :return: `uv` grid
     """
 
-    if pyfftw_exists == False:
-        if (len(a.shape) == 4):
+    if not pyfftw_exists:
+        if len(a.shape) == 4:
             return numpy.fft.fftshift(numpy.fft.fft2(numpy.fft.ifftshift(a, axes=[2, 3])), axes=[2, 3])
-        if (len(a.shape) == 5):
+        if len(a.shape) == 5:
             return numpy.fft.fftshift(numpy.fft.fft2(numpy.fft.ifftshift(a, axes=[3, 4])), axes=[3, 4])
         else:
             return numpy.fft.fftshift(numpy.fft.fft2(numpy.fft.ifftshift(a)))
     else:
-        if (len(a.shape) == 4):
+        if len(a.shape) == 4:
             b = pyfftw.interfaces.numpy_fft.fftshift(
                 pyfftw.interfaces.numpy_fft.fft2(pyfftw.interfaces.numpy_fft.ifftshift(a, axes=[2, 3]),
                                                  auto_align_input=False, planner_effort='FFTW_MEASURE', threads=nthread), axes=[2, 3])
-        if (len(a.shape) == 5):
+        if len(a.shape) == 5:
             b = pyfftw.interfaces.numpy_fft.fftshift(
                 pyfftw.interfaces.numpy_fft.fft2(pyfftw.interfaces.numpy_fft.ifftshift(a, axes=[3, 4]),
                                                  auto_align_input=False, planner_effort='FFTW_MEASURE', threads=nthread), axes=[3, 4])
@@ -64,10 +64,10 @@ def ifft(a):
     :param a: `uv` grid to transform
     :return: an image in `lm` coordinate space
     """
-    if pyfftw_exists == False:
-        if (len(a.shape) == 4):
+    if not pyfftw_exists:
+        if len(a.shape) == 4:
             return numpy.fft.fftshift(numpy.fft.ifft2(numpy.fft.ifftshift(a, axes=[2, 3])), axes=[2, 3])
-        elif (len(a.shape) == 5):
+        elif len(a.shape) == 5:
             return numpy.fft.fftshift(numpy.fft.ifft2(numpy.fft.ifftshift(a, axes=[2, 3, 4])), axes=[2, 3, 4])
         else:
             return numpy.fft.fftshift(numpy.fft.ifft2(numpy.fft.ifftshift(a)))
@@ -77,9 +77,9 @@ def ifft(a):
             pyfftw.interfaces.numpy_fft.ifft2(pyfftw.interfaces.numpy_fft.ifftshift(a, axes=[2, 3]),
                                               auto_align_input=False, planner_effort='FFTW_MEASURE'),
             axes=[2, 3])
-        if (len(a.shape) == 4):
+        if len(a.shape) == 4:
             pass
-        elif (len(a.shape) == 5):
+        elif len(a.shape) == 5:
             b = pyfftw.interfaces.numpy_fft.fftshift(
                 pyfftw.interfaces.numpy_fft.ifft2(pyfftw.interfaces.numpy_fft.ifftshift(a, axes=[2, 3, 4]),
                                                   auto_align_input=False, planner_effort='FFTW_MEASURE'),

@@ -81,12 +81,10 @@ nosetests: cleantests  ## run tests using nosetests
 
 nosetests-coverage: inplace cleantests  ## run nosetests with coverage
 	rm -rf coverage .coverage
-	ARL=$$(pwd) $(NOSETESTS) -s -v --with-coverage rascil/processing_library
+	ARL=$$(pwd) $(NOSETESTS) -s -v --with-coverage rascil
 
 trailing-spaces:
-	find rascil/processing_library -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
-	find rascil/processing_components -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
-	find rascil/workflows -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
+	find rascil -name "*.py" -exec perl -pi -e 's/[ \t]*$$//' {} \;
 
 docs: inplace  ## build docs - you must have graphviz installed
 	# you must have graphviz installed
@@ -94,19 +92,17 @@ docs: inplace  ## build docs - you must have graphviz installed
 
 code-flake:
 	# flake8 ignore long lines and trailing whitespace
-	$(FLAKE) --ignore=E501,W293,F401 --builtins=ModuleNotFoundError rascil/processing_library
+	$(FLAKE) --ignore=E501,W293,F401,C103,C303,C301 --builtins=ModuleNotFoundError rascil
 
 code-lint:
 	$(PYLINT) --extension-pkg-whitelist=numpy \
 	  --ignored-classes=astropy.units,astropy.constants,HDUList \
-	  -E rascil/processing_library/ tests/
+	  -E rascil tests/
 
 code-analysis: code-flake code-lint  ## run pylint and flake8 checks
 
 examples: inplace  ## launch examples
-	$(MAKE) -C rascil/processing_library/notebooks
-	$(MAKE) -C rascil/processing_components/notebooks
-	$(MAKE) -C rascil/workflows/notebooks
+	$(MAKE) -C examples/notebooks
 
 notebook:  ## launch local jupyter notebook server
 	DEVICE=`ip link | grep -E " ens| wlan| eth" | grep BROADCAST | tail -1 | cut -d : -f 2  | sed "s/ //"` && \

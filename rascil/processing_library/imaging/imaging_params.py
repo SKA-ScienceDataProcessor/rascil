@@ -94,7 +94,7 @@ def get_rowmap(col, ucol=None):
     # for p in col:
     #     vmap.append(pdict[phash(p)])
 
-    n_ucol = numpy.round(col).astype(('int'))
+    n_ucol = numpy.round(col).astype('int')
     vmap = numpy.vectorize(pdict.__getitem__)(n_ucol)
 
     return vmap.tolist()

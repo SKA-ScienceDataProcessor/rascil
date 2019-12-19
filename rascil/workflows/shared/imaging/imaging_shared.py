@@ -128,6 +128,7 @@ def sum_invert_results_local(image_list):
 def sum_invert_results(image_list, normalize=True):
     """ Sum a set of invert results with appropriate weighting
 
+    :param normalize:
     :param image_list: List of [image, sum weights] pairs
     :return: image, sum of weights
     """
@@ -178,6 +179,7 @@ def sum_predict_results(results):
 def threshold_list(imagelist, threshold, fractional_threshold, use_moment0=True, prefix=''):
     """ Find actual threshold for list of results, optionally using moment 0
 
+    :param prefix:
     :param imagelist:
     :param threshold: Absolute threshold
     :param fractional_threshold: Fractional  threshold

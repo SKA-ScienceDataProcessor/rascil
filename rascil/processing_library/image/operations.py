@@ -40,6 +40,7 @@ def create_image(npixel=512, cellsize=0.000015, polarisation_frame=PolarisationF
                  phasecentre=None, nchan=None) -> Image:
     """Create an empty template image consistent with the inputs.
 
+    :param nchan:
     :param npixel: Number of pixels
     :param polarisation_frame: Polarisation frame (default PolarisationFrame("stokesI"))
     :param cellsize: cellsize in radians

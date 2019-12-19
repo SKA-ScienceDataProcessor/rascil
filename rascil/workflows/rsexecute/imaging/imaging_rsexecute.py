@@ -42,12 +42,12 @@ def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slic
     The visibility and image are scattered, the visibility is predicted on each part, and then the
     parts are assembled.
 
+    :param gcfcf:
     :param vis_list:
     :param model_imagelist: Model used to determine image parameters
     :param vis_slices: Number of vis slices (w stack or timeslice)
     :param facets: Number of facets (per axis)
     :param context: Type of processing e.g. 2d, wstack, timeslice or facets
-    :param gcfcg: tuple containing grid correction and convolution function
     :param kwargs: Parameters for functions in components
     :return: List of vis_lists
    """
@@ -141,6 +141,7 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
                                     facets=1, vis_slices=1, gcfcf=None, **kwargs):
     """ Sum results from invert, iterating over the scattered image and vis_list
 
+    :param gcfcf:
     :param vis_list:
     :param template_model_imagelist: Model used to determine image parameters
     :param dopsf: Make the PSF instead of the dirty image
@@ -148,7 +149,6 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
     :param normalize: Normalize by sumwt
     :param vis_slices: Number of slices
     :param context: Imaging context
-    :param gcfcg: tuple containing grid correction and convolution function
     :param kwargs: Parameters for functions in components
     :return: List of (image, sumwt) tuple
    """
@@ -248,10 +248,10 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
 
 def residual_list_rsexecute_workflow(vis, model_imagelist, context='2d', gcfcf=None, **kwargs):
     """ Create a graph to calculate residual image
+    :param gcfcf:
     :param vis:
     :param model_imagelist: Model used to determine image parameters
     :param context:
-    :param gcfcg: tuple containing grid correction and convolution function
     :param kwargs: Parameters for functions in components
     :return:
     """
@@ -512,6 +512,7 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
     This is done collectively so the weights are summed over all vis_lists and then
     corrected
 
+    :param gcfcf:
     :param vis_list:
     :param model_imagelist: Model required to determine weighting parameters
     :param weighting: Type of weighting
@@ -641,8 +642,7 @@ def sum_invert_results_rsexecute(image_list, split=2):
     """
     if len(image_list) > split:
         centre = len(image_list) // split
-        result = [sum_invert_results_rsexecute(image_list[:centre])]
-        result.append(sum_invert_results_rsexecute(image_list[centre:]))
+        result = [sum_invert_results_rsexecute(image_list[:centre]), sum_invert_results_rsexecute(image_list[centre:])]
         return rsexecute.execute(sum_invert_results, nout=2)(result)
     else:
         return rsexecute.execute(sum_invert_results, nout=2)(image_list)

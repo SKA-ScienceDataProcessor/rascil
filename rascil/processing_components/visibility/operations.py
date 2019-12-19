@@ -68,6 +68,7 @@ def sort_visibility(vis, order=None):
 def concatenate_visibility(vis_list, sort=True):
     """Concatenate a list of visibilities, with an optional sort back to index order
 
+    :param sort:
     :param vis_list:
     :return: Visibility
     """
@@ -171,6 +172,7 @@ def sum_visibility(vis: Visibility, direction: SkyCoord) -> numpy.array:
 def subtract_visibility(vis, model_vis, inplace=False):
     """ Subtract model_vis from vis, returning new visibility
     
+    :param inplace:
     :param vis:
     :param model_vis:
     :return:

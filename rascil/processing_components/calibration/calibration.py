@@ -30,6 +30,7 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
     
     If modelvis is None, a point source model is assumed.
 
+    :param normalise_gains:
     :param vis: BlockVisibility containing the observed data_models
     :param modelvis: BlockVisibility containing the visibility predicted by a model
     :param gt: Existing gaintable

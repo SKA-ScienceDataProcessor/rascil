@@ -199,7 +199,6 @@ def remove_neighbouring_components(comps, distance):
     """ Remove the faintest of a pair of components that are within a specified distance
 
     :param comps:
-    :param target_comps:
     :param distance: Minimum distance
     :return: Indices of components in target_comps, selected components
     """

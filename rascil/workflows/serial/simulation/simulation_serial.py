@@ -41,6 +41,8 @@ def simulate_list_serial_workflow(config='LOWBD2',
 
     The output format can be either 'blockvis' (for calibration) or 'vis' (for imaging)
 
+    :param rmax:
+    :param zerow:
     :param config: Name of configuration: def LOWBDS-CORE
     :param phasecentre: Phase centre def: SkyCoord(ra=+15.0 * u.deg, dec=-60.0 * u.deg, frame='icrs', equinox='J2000')
     :param frequency: def [1e8]
@@ -116,6 +118,7 @@ def simulate_list_serial_workflow(config='LOWBD2',
 def corrupt_list_serial_workflow(vis_list, gt_list=None, seed=None, **kwargs):
     """ Create a graph to apply gain errors to a vis_list
 
+    :param seed:
     :param vis_list:
     :param gt_list: Optional gain table graph
     :param kwargs:

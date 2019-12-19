@@ -62,10 +62,11 @@ def apply_calibration_function(vis, gaintables, calibration_context='T', control
     
     The context string can denote a sequence of calibrations e.g. TGB with different timescales.
 
+    :param gaintables:
+    :param controls:
+    :param tol:
     :param vis:
-    :param model_vis:
     :param calibration_context: calibration contexts in order of correction e.g. 'TGB'
-    :param control: controls dictionary, modified as necessary
     :param iteration: Iteration number to be compared to the 'first_selfcal' field.
     :param kwargs:
     :return: Calibrated data_models, dict(gaintables)
@@ -107,6 +108,7 @@ def calibrate_function(vis, model_vis, calibration_context='T', controls=None, i
 
     The context string can denote a sequence of calibrations e.g. TGB with different timescales.
 
+    :param tol:
     :param vis:
     :param model_vis:
     :param calibration_context: calibration contexts in order of correction e.g. 'TGB'
@@ -170,6 +172,7 @@ def solve_calibrate_function(vis, model_vis, calibration_context='T', controls=N
 
     The context string can denote a sequence of calibrations e.g. TGB with different timescales.
 
+    :param tol:
     :param vis:
     :param model_vis:
     :param calibration_context: calibration contexts in order of correction e.g. 'TGB'
