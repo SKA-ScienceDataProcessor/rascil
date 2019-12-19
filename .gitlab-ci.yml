@@ -9,12 +9,15 @@ code_analysis:
     - pip install pylint pylint-json2html
     - pip install -r requirements.txt -r requirements-test.txt
   script:
-    - mkdir -p code_analysis
-    - pylint -j 0 --extension-pkg-whitelist=numpy,scipy --ignored-classes=astropy.units,astropy.constants,HDUList -f json -E rascil tests > pylint.json
-    - pylint-json2html -o code_analysis/index.html pylint.json
+    - mkdir -p pylint
+    - PYTHONPATH=`pwd` pylint -j 0 --extension-pkg-whitelist=numpy,scipy --ignored-classes=astropy.units,astropy.constants,HDUList -f json -E rascil tests > pylint.json
+    - pylint-json2html -o pylint/index.html pylint.json
+    - mkdir -p flake8
+    - PYTHONPATH=`pwd` flake8 --ignore=E501,W293,F401,C103,C303,C301 --builtins=ModuleNotFoundError --format=html --htmldir=flake8/index.html rascil
   artifacts:
     paths:
-      - code_analysis
+      - pylint
+      - flake8
     expire_in: 1 week
 
 docs:
@@ -25,8 +28,6 @@ docs:
     - pip install -r requirements.txt -r requirements-docs.txt
     - mkdir -p docs/build/html
   script:
-    - export PYTHONPATH=`pwd`
-    - echo $PYTHONPATH
     - PYTHONPATH=`pwd` make -k -j -C docs html
   after_script:
     - mv docs/build/html html
@@ -52,16 +53,19 @@ pages:
   dependencies:
     - docs
     - unittests
-    - code_analysis
+    - pylint
+    - flake8
   script:
     - mv html public
     - mv coverage/ public/coverage
-    - mv code_analysis/ public/code_analysis
+    - mv pylint/ public/pylint
+    - mv flake8/ public/flake8
   artifacts:
     paths:
       - public
       - public/coverage
-      - public/code_analysis
+      - public/pylint
+      - public/flake8
     expire_in: 1 month
   only:
     - master
