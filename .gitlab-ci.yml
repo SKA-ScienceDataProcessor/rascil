@@ -7,10 +7,10 @@ code_analysis:
   stage: build
   before_script:
     - pip install pylint pylint-json2html
+    - pip install -r requirements.txt -r requirements-test.txt
   script:
     - mkdir -p code_analysis
     - pylint -j 0 --extension-pkg-whitelist=numpy,scipy --ignored-classes=astropy.units,astropy.constants,HDUList -f json -E rascil tests > pylint.json
-    - cat pylint.json
     - pylint-json2html -o code_analysis/index.html pylint.json
   artifacts:
     paths:
