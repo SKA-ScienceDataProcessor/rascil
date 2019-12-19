@@ -3,23 +3,6 @@ image: "python:3.7"
 variables:
   MPLBACKEND: "agg"
 
-code_analysis:
-  stage: build
-  before_script:
-    - pip install pylint pylint-json2html
-    - pip install -r requirements.txt -r requirements-test.txt
-  script:
-    - mkdir -p pylint
-    - PYTHONPATH=`pwd` pylint -j 0 --extension-pkg-whitelist=numpy,scipy --ignored-classes=astropy.units,astropy.constants,HDUList -f json -E rascil tests > pylint.json
-    - pylint-json2html -o pylint/index.html pylint.json
-    - mkdir -p flake8
-    - PYTHONPATH=`pwd` flake8 --ignore=E501,W293,F401,C103,C303,C301 --builtins=ModuleNotFoundError --format=html --htmldir=flake8/index.html rascil
-  artifacts:
-    paths:
-      - pylint
-      - flake8
-    expire_in: 1 week
-
 docs:
   stage: build
   before_script:
@@ -53,18 +36,13 @@ pages:
   dependencies:
     - docs
     - unittests
-    - code_analysis
   script:
     - mv html public
     - mv coverage/ public/coverage
-    - mv pylint/ public/pylint
-    - mv flake8/ public/flake8
   artifacts:
     paths:
       - public
       - public/coverage
-      - public/pylint
-      - public/flake8
     expire_in: 1 month
   only:
     - master
