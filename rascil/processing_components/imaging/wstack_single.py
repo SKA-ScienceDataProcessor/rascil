@@ -30,8 +30,6 @@ def predict_wstack_single(vis, model, remove=True, gcfcf=None, **kwargs) -> Visi
     
     This processes a single w plane, rotating out the w beam for the average w
 
-    :param remove:
-    :param gcfcf:
     :param vis: Visibility to be predicted
     :param model: model image
     :return: resulting visibility (in place works)
@@ -72,8 +70,6 @@ def invert_wstack_single(vis: Visibility, im: Image, dopsf, normalize=True, remo
                          gcfcf=None, **kwargs) -> (Image, numpy.ndarray):
     """Process single w slice
     
-    :param remove:
-    :param gcfcf:
     :param vis: Visibility to be inverted
     :param im: image template (not changed)
     :param dopsf: Make the psf instead of the dirty image

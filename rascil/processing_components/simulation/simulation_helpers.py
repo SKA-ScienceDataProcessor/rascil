@@ -62,11 +62,8 @@ def plot_visibility(vis_list, ax=None, title='Visibility',
                     y='amp', x='uvdist', **kwargs):
     """ Standard plot of visibility
 
-    :param ax:
-    :param title:
-    :param y:
-    :param x:
     :param vis_list:
+    :param plot_file:
     :param kwargs:
     :return:
     """
@@ -85,8 +82,6 @@ def plot_visibility(vis_list, ax=None, title='Visibility',
 def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV coverage', **kwargs):
     """ Standard plot of uv coverage
 
-    :param ax:
-    :param title:
     :param vis_list:
     :param plot_file:
     :param kwargs:
@@ -224,7 +219,6 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
                                  pbradius, pb_npixel, pb_cellsize, show=False):
     """ Construct components for simulation
     
-    :param show:
     :param context:
     :param phasecentre:
     :param frequency:

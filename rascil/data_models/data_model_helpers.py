@@ -740,7 +740,7 @@ def convert_hdf_to_skymodel(f):
 def convert_griddata_to_hdf(gd: GridData, f):
     """ Convert Griddata to HDF
 
-    :param gd:
+    :param im: GridData
     :param f: HDF root
     :return:
     """
@@ -809,7 +809,7 @@ def import_griddata_from_hdf5(filename):
 def convert_convolutionfunction_to_hdf(cf: ConvolutionFunction, f):
     """ Convert Griddata to HDF
 
-    :param cf:
+    :param im: ConvolutionFunction
     :param f: HDF root
     :return:
     """

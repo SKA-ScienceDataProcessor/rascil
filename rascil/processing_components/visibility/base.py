@@ -8,12 +8,13 @@ __all__ = ['vis_summary', 'copy_visibility', 'create_visibility', 'create_visibi
            'create_visibility_from_ms', 'create_visibility_from_uvfits',
            'list_ms']
 
+import os
 import copy
 import logging
-import re
 from typing import Union
 
 import numpy
+import re
 from astropy import constants as constants
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -61,10 +62,6 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
 
     Note that we keep track of the integration time for BDA purposes
 
-    :param zerow:
-    :param elevation_limit:
-    :param source:
-    :param meta:
     :param config: Configuration of antennas
     :param times: hour angles in radians
     :param frequency: frequencies (Hz] [nchan]
@@ -154,7 +151,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
         log.info('create_visibility: flagged %d/%d visibilities below elevation limit %f (rad)' %
                 (n_flagged, vis.nvis, elevation_limit))
     else:
-        log.info('create_visibility: created %d visibilities' % vis.nvis)
+        log.info('create_visibility: created %d visibilities' % (vis.nvis))
 
     return vis
 
@@ -176,10 +173,6 @@ def create_blockvisibility(config: Configuration,
 
     Note that we keep track of the integration time for BDA purposes
 
-    :param zerow:
-    :param elevation_limit:
-    :param source:
-    :param meta:
     :param config: Configuration of antennas
     :param times: hour angles in radians
     :param frequency: frequencies (Hz] [nchan]
@@ -217,7 +210,7 @@ def create_blockvisibility(config: Configuration,
         log.info('create_visibility: flagged %d/%d times below elevation limit %f (rad)' %
                 (n_flagged, ntimes, elevation_limit))
     else:
-        log.info('create_visibility: created %d times' % ntimes)
+        log.info('create_visibility: created %d times' % (ntimes))
     
     npol = polarisation_frame.npol
     visshape = [ntimes, nants, nants, nch, npol]
@@ -402,10 +395,8 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
 
     Write a list of BlockVisibility's to a MS file, split by field and spectral window
 
-    :param vis_list:
-    :param source_name:
-    :param ack:
     :param msname: File name of MS
+    :param vislist: BlockVisibility
     :return:
     """
     try:
@@ -442,7 +433,7 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
             polarization = ['RR','RL','LR','LL']
         elif vis.polarisation_frame.type == 'stokesIQUV':
             polarization = ['I','Q','U','V']
-        # Current ARL supports I
+        # Current ARL suppots I
         tbl.set_stokes(polarization)
         tbl.set_frequency(vis.frequency,vis.channel_bandwidth)
         n_ant = len(vis.configuration.xyz)
@@ -512,7 +503,6 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
 def list_ms(msname, ack=False):
     """ List sources and data descriptors in a MeasurementSet
 
-    :param ack:
     :param msname: File name of MS
     :return:
     """
@@ -549,10 +539,6 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
     and end_chan is preferred since it only reads the channels required. Channum is more flexible and can be used to
     read a random list of channels.
     
-    :param ack:
-    :param datacolumn:
-    :param selected_sources:
-    :param selected_dds:
     :param msname: File name of MS
     :param channum: range of channels e.g. range(17,32), default is None meaning all
     :param start_chan: Starting channel to read
@@ -604,7 +590,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             datacol = ms.getcol(datacolumn, nrow=1)
             datacol_shape = list(datacol.shape)
             channels = datacol.shape[-2]
-            log.debug("create_blockvisibility_from_ms: Found %d channels" % channels)
+            log.debug("create_blockvisibility_from_ms: Found %d channels" % (channels))
             if channum is None:
                 if start_chan is not None and end_chan is not None:
                     try:
@@ -621,7 +607,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                         raise IndexError("channel number exceeds max. within ms")
 
                 else:
-                    log.debug("create_blockvisibility_from_ms: Reading all %d channels" % channels)
+                    log.debug("create_blockvisibility_from_ms: Reading all %d channels" % (channels))
                     try:
                         channum = range(channels)
                         ms_vis = ms.getcol(datacolumn)[:, channum, :]
@@ -630,7 +616,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                     except IndexError:
                         raise IndexError("channel number exceeds max. within ms")
             else:
-                log.debug("create_blockvisibility_from_ms: Reading channels %s " % channum)
+                log.debug("create_blockvisibility_from_ms: Reading channels %s " % (channum))
                 channum = range(channels)
                 try:
                     ms_vis = ms.getcol(datacolumn)[:, channum, :]
@@ -749,7 +735,6 @@ def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=No
     and end_chan is preferred since it only reads the channels required. Channum is more flexible and can be used to
     read a random list of channels.
     
-    :param ack:
     :param msname: File name of MS
     :param channum: range of channels e.g. range(17,32), default is None meaning all
     :param start_chan: Starting channel to read
@@ -769,14 +754,13 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
     
     Creates a list of BlockVisibility's, split by field and spectral window
     
-    :param ack:
     :param fitsname: File name of UVFITS
     :param channum: range of channels e.g. range(17,32), default is None meaning all
     :param antnum: the number of antenna
     :return:
     """
     def ParamDict(hdul):
-        """Return the dictionary of the random parameters"""
+        "Return the dictionary of the random parameters"
 
         """
         The keys of the dictionary are the parameter names uppercased for
@@ -936,7 +920,6 @@ def create_visibility_from_uvfits(fitsname, channum=None, ack=False, antnum=None
 
     Creates a list of BlockVisibility's, split by field and spectral window
 
-    :param ack:
     :param fitsname: File name of UVFITS file
     :param channum: range of channels e.g. range(17,32), default is None meaning all
     :param antnum: the number of antenna

@@ -970,7 +970,7 @@ class BlockVisibility:
                  phasecentre=None, configuration=None, uvw=None,
                  time=None, vis=None, weight=None, integration_time=None,
                  polarisation_frame=PolarisationFrame('stokesI'),
-                 imaging_weight=None, source='anonymous', meta=None):
+                 imaging_weight=None, source='anonymous', meta=dict()):
         """BlockVisibility
 
         :param data:
@@ -986,8 +986,6 @@ class BlockVisibility:
         :param polarisation_frame:
         :param source:
         """
-        if meta is None:
-            meta = dict()
         if data is None and vis is not None:
             ntimes, nants, _, nchan, npol = vis.shape
             assert vis.shape == weight.shape

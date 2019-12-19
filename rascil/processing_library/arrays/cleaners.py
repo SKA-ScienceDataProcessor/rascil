@@ -301,6 +301,7 @@ def create_scalestack(scaleshape, scales, norm=True):
         halfscale = int(numpy.ceil(scales[iscale] / 2.0))
         if scales[iscale] > 0.0:
             rscale2 = 1.0 / (float(scales[iscale]) / 2.0) ** 2
+            x = range(xcen - halfscale - 1, xcen + halfscale + 1)
             # Unroll this since spheroidal_function needs a scalar
             for y in range(ycen - halfscale - 1, ycen + halfscale + 1):
                 for x in range(xcen - halfscale - 1, xcen + halfscale + 1):

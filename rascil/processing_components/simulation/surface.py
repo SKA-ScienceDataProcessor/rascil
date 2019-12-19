@@ -21,11 +21,9 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
                                              **kwargs):
     """ Create gaintables for a set of zernikes
 
-    :param vp_list:
-    :param vis_slices:
-    :param use_radec:
     :param vis:
     :param sc: Sky components for which pierce points are needed
+    :param vp: List of Voltage patterns in AZELGEO frame
     :param vp_coeffs: Fractional contribution [nants, nvp]
     :param order: order of spline (default is 3)
     :return:
@@ -178,8 +176,8 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
 
     if number_bad > 0:
         log.warning(
-            "simulate_gaintable_from_voltage_patterns: %d points are inside the voltage pattern image" % number_good)
+            "simulate_gaintable_from_voltage_patterns: %d points are inside the voltage pattern image" % (number_good))
         log.warning(
-            "simulate_gaintable_from_voltage_patterns: %d points are outside the voltage pattern image" % number_bad)
+            "simulate_gaintable_from_voltage_patterns: %d points are outside the voltage pattern image" % (number_bad))
 
     return gaintables

@@ -19,9 +19,6 @@ def ical_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=1, 
                               gcfcf=None, calibration_context='TG', do_selfcal=True, **kwargs):
     """Run ICAL pipeline
 
-    :param vis_slices:
-    :param facets:
-    :param gcfcf:
     :param vis_list:
     :param model_imagelist:
     :param context: imaging context e.g. '2d'
@@ -108,9 +105,6 @@ def continuum_imaging_list_serial_workflow(vis_list, model_imagelist, context, g
 
     Same as ICAL but with no selfcal.
 
-    :param gcfcf:
-    :param vis_slices:
-    :param facets:
     :param vis_list:
     :param model_imagelist:
     :param context: Imaging context
@@ -147,7 +141,7 @@ def continuum_imaging_list_serial_workflow(vis_list, model_imagelist, context, g
     residual_imagelist = residual_list_serial_workflow(vis_list, deconvolve_model_imagelist, context=context,
                                                        vis_slices=vis_slices, facets=facets, gcfcf=gcfcf, **kwargs)
     restore_imagelist = restore_list_serial_workflow(deconvolve_model_imagelist, psf_imagelist, residual_imagelist)
-    return deconvolve_model_imagelist, residual_imagelist, restore_imagelist
+    return (deconvolve_model_imagelist, residual_imagelist, restore_imagelist)
 
 
 def spectral_line_imaging_list_serial_workflow(vis_list, model_imagelist, context, continuum_model_imagelist=None,
@@ -156,9 +150,6 @@ def spectral_line_imaging_list_serial_workflow(vis_list, model_imagelist, contex
 
     Uses the continuum imaging rsexecute pipeline after subtraction of a continuum model
 
-    :param vis_slices:
-    :param facets:
-    :param gcfcf:
     :param vis_list: List of visibility components
     :param model_imagelist: Spectral line model graph
     :param continuum_model_imagelist: Continuum model list

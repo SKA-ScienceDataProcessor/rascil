@@ -72,7 +72,6 @@ def solve_antenna_gains_itsubs_scalar(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
     D'Addario c 1980'ish (see ThompsonDaddario1982 Appendix 1). Used
     in the original VLA Dec-10 Antsol.
 
-    :param damping:
     :param gain: gains
     :param gwt: gain weight
     :param x: Equivalent point source visibility[nants, nants, ...]

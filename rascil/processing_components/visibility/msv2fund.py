@@ -85,7 +85,7 @@ try:
             return "Stand %i:  x=%+.2f m, y=%+.2f m, z=%+.2f m" % (self.id, self.x, self.y, self.z)
 
         def __reduce__(self):
-            return Stand, (self.id, self.x, self.y, self.z)
+            return (Stand, (self.id, self.x, self.y, self.z))
 
         def __getitem__(self, key):
             if key == 0:
@@ -171,7 +171,7 @@ try:
             self.theta = float(theta)
             self.phi = float(phi)
 
-            self.fee = fee
+            self.FEE = fee
             self.feePort = feePort
 
             self.cable = cable
@@ -391,8 +391,7 @@ try:
                 else:
                     return self.name
 
-        @staticmethod
-        def parse_time(ref_time):
+        def parse_time(self, ref_time):
             """
             Given a time as either a integer, float, string, or datetime object,
             convert it to a string in the formation 'YYYY-MM-DDTHH:MM:SS'.
@@ -419,8 +418,6 @@ try:
 
         def __init__(self, filename, ref_time=0.0, source_name = None, frame='ITRF', verbose=False):
             # File-specific information
-            self.nStokes = len(self.stokes)
-            self.channelWidth = channel_width[0]
             self.filename = filename
             self.verbose = verbose
             self.site_config = None
@@ -471,6 +468,8 @@ try:
             if self.stokes[0] < 0:
                 self.stokes.reverse()
 
+            self.nStokes = len(self.stokes)
+
         def set_frequency(self, freq, channel_width):
             """
             Given a numpy array of frequencies, set the relevant common observation
@@ -485,6 +484,7 @@ try:
             else:
                 assert (len(freq) == self.nchan)
                 offset = freq[0] - self.refVal
+                self.channelWidth = channel_width[0]
 
             if self.nchan == 1:
                 totalWidth = self.channel_width

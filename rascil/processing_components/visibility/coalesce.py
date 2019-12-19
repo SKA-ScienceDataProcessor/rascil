@@ -60,7 +60,7 @@ def coalesce_visibility(vis: BlockVisibility, **kwargs) -> Visibility:
     max_frequency_coal = get_parameter(kwargs, 'max_frequency_coal', 100)
 
     if time_coal == 0.0 and frequency_coal == 0.0:
-        return convert_blockvisibility_to_visibility(vis)
+        return convert_blockvisibility_to_visibility((vis))
 
     cvis, cuvw, cwts, cimwt, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, cintegration_time, cindex \
         = average_in_blocks(vis.data['vis'], vis.data['uvw'], vis.data['weight'], vis.data['imaging_weight'],

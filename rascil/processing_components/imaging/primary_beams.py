@@ -24,7 +24,6 @@ log = logging.getLogger(__name__)
 def set_pb_header(pb, use_local=True):
     """Fill in PB header correctly
     
-    :param use_local:
     :param pb:
     :return:
     """
@@ -44,12 +43,6 @@ def gauss(x0, y0, amp, sigma, rho, diff, a):
     """
     2D gaussian
  
-    :param x0:
-    :param y0:
-    :param amp:
-    :param sigma:
-    :param rho:
-    :param diff:
     :param a: Grid of aperture plane coordinates
     """
     dx = a[..., 0] - x0
@@ -82,9 +75,6 @@ def tapered_disk(r, radius, blockage=0.0, taper='gaussian', edge=1.0):
 def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=True):
     """
     Make an image like model and fill it with an analytical model of the voltage pattern
-    :param pointingcentre:
-    :param padding:
-    :param use_local:
     :param model: Template image
     :param telescope: 'VLA' or 'ASKAP'
     :return: Primary beam image
@@ -141,8 +131,6 @@ def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=
 def create_pb(model, telescope='MID', pointingcentre=None, use_local=True):
     """
     Make an image like model and fill it with an analytical model of the primary beam
-    :param pointingcentre:
-    :param use_local:
     :param model: Template image
     :param telescope: 'VLA' or 'ASKAP'
     :return: Primary beam image
@@ -162,7 +150,6 @@ def mosaic_pb(model, telescope, pointingcentres, use_local=True):
     
     Note that the addition is root sum of squares
     
-    :param use_local:
     :param model:  Template image
     :param telescope:
     :param pointingcentres:  list of pointing centres
@@ -180,10 +167,6 @@ def mosaic_pb(model, telescope, pointingcentres, use_local=True):
 def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True):
     """
     Make an image like model and fill it with an analytical model of the primary beam
-    :param pointingcentre:
-    :param diameter:
-    :param blockage:
-    :param use_local:
     :param model:
     :return:
     """
@@ -196,10 +179,6 @@ def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
 def create_vp_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True):
     """
     Make an image like model and fill it with an analytical model of the primary beam
-    :param pointingcentre:
-    :param diameter:
-    :param blockage:
-    :param use_local:
     :param model:
     :return:
     """
@@ -252,8 +231,6 @@ def create_vp_generic_numeric(model, pointingcentre=None, diameter=15.0, blockag
     
     The dish is zero padded according to padding and FFT'ed to get the voltage pattern.
     
-    :param rho:
-    :param diff:
     :param model:
     :param pointingcentre: SkyCoord of desired pointing centre
     :param diameter: Diameter of dish in metres
@@ -339,7 +316,6 @@ def create_vp_generic_numeric(model, pointingcentre=None, diameter=15.0, blockag
 def create_low_test_beam(model: Image, use_local=True) -> Image:
     """Create a test power beam for LOW using an image from OSKAR
 
-    :param use_local:
     :param model: Template image
     :return: Image
     """
@@ -387,7 +363,6 @@ def create_low_test_beam(model: Image, use_local=True) -> Image:
 def create_low_test_vp(model: Image, use_local=True) -> Image:
     """Create a test power beam for LOW using an example image from OSKAR
 
-    :param use_local:
     :param model: Template image
     :return: Image
     """

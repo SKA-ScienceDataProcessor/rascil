@@ -112,7 +112,6 @@ def add_image(im1: Image, im2: Image, docheckwcs=False) -> Image:
 def qa_image(im, context="") -> QA:
     """Assess the quality of an image
 
-    :param context:
     :param im:
     :return: QA
     """
@@ -135,7 +134,6 @@ def show_image(im: Image, fig=None, title: str = '', pol=0, chan=0, cm='Greys', 
                vmin=None, vmax=None, vscale=1.0):
     """ Show an Image with coordinates using matplotlib, optionally with components
 
-    :param cm:
     :param im: Image
     :param fig: Matplotlib figure
     :param title:
@@ -183,9 +181,6 @@ def show_image(im: Image, fig=None, title: str = '', pol=0, chan=0, cm='Greys', 
 def show_components(im, comps, npixels=128, fig=None, vmax=None, vmin=None, title=''):
     """ Show components against an image
 
-    :param vmax:
-    :param vmin:
-    :param title:
     :param im:
     :param comps:
     :param npixels:
@@ -327,7 +322,7 @@ def calculate_image_from_frequency_moments(im: Image, moment_image: Image, refer
     
     if reference_frequency is None:
         reference_frequency = numpy.average(freq)
-    log.debug("calculate_image_from_frequency_moments: Reference frequency = %.3f (MHz)" % reference_frequency)
+    log.debug("calculate_image_from_frequency_moments: Reference frequency = %.3f (MHz)" % (reference_frequency))
     
     newim = copy_image(im)
     
@@ -389,7 +384,7 @@ def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame)
         cimarr = convert_stokes_to_circular(im.data)
         return create_image_from_array(cimarr, im.wcs, polarisation_frame)
     else:
-        raise ValueError("Cannot convert stokes to %s" % polarisation_frame.type)
+        raise ValueError("Cannot convert stokes to %s" % (polarisation_frame.type))
 
 
 def convert_polimage_to_stokes(im: Image):
@@ -406,13 +401,13 @@ def convert_polimage_to_stokes(im: Image):
         cimarr = convert_circular_to_stokes(im.data)
         return create_image_from_array(cimarr, im.wcs, PolarisationFrame('stokesIQUV'))
     else:
-        raise ValueError("Cannot convert %s to stokes" % im.polarisation_frame.type)
+        raise ValueError("Cannot convert %s to stokes" % (im.polarisation_frame.type))
 
 def create_window(template, window_type, **kwargs):
     """
     
-    :param window_type:
     :param template:
+    :param type: 
     :return:
     """
     window = create_empty_image_like(template)
@@ -426,13 +421,13 @@ def create_window(template, window_type, **kwargs):
         nx = template.shape[3]
         ny = template.shape[2]
         window.data[..., (edge + 1):(ny - edge), (edge + 1):(nx - edge)] = 1.0
-        log.info('create_mask: Window omits %d-pixel edge of each sky plane' % edge)
+        log.info('create_mask: Window omits %d-pixel edge of each sky plane' % (edge))
     elif window_type == 'threshold':
         window_threshold = get_parameter(kwargs, 'window_threshold', None)
         if window_threshold is None:
             window_threshold = 10.0 * numpy.std(template.data)
         window[template.data >= window_threshold] = 1.0
-        log.info('create_mask: Window omits all points below %g' % window_threshold)
+        log.info('create_mask: Window omits all points below %g' % (window_threshold))
     elif window_type is None:
         log.info("create_mask: Mask covers entire image")
     else:

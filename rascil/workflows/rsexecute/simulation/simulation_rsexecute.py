@@ -59,8 +59,6 @@ def simulate_list_rsexecute_workflow(config='LOWBD2',
 
     The output format can be either 'blockvis' (for calibration) or 'vis' (for imaging)
 
-    :param rmax:
-    :param zerow:
     :param config: Name of configuration: def LOWBDS-CORE
     :param phasecentre: Phase centre def: SkyCoord(ra=+15.0 * u.deg, dec=-60.0 * u.deg, frame='icrs', equinox='J2000')
     :param frequency: def [1e8]
@@ -135,7 +133,6 @@ def simulate_list_rsexecute_workflow(config='LOWBD2',
 def corrupt_list_rsexecute_workflow(vis_list, gt_list=None, seed=None, **kwargs):
     """ Create a graph to apply gain errors to a vis_list
 
-    :param seed:
     :param vis_list:
     :param gt_list: Optional gain table graph
     :param kwargs:
@@ -254,7 +251,7 @@ def create_pointing_errors_gaintable_rsexecute_workflow(sub_bvis_list, sub_compo
     if show:
         tmp_error_pt_list = rsexecute.compute(error_pt_list, sync=True)
         if time_series != "":
-            plot_file = 'pointing_error_%s.png' % time_series_type
+            plot_file = 'pointing_error_%s.png' % (time_series_type)
         else:
             r2s = 180 * 3600.0 / numpy.pi
             plot_file = 'pointing_error_dynamic_%.2f_static_(%.2f,%.2f)_global_(%.2f,%.2f).png' % \
@@ -344,9 +341,10 @@ def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, t
                                                        shared_directory):
     """ Create the standard MID simulation
     
-    :param phasecentre:
     :param band:
     :param rmax:
+    :param ra:
+    :param declination:
     :param time_range:
     :param time_chunk:
     :param integration_time:

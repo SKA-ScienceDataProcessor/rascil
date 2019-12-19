@@ -21,14 +21,11 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
-class _rsexecuteBase:
+class _rsexecuteBase():
     
     _instance = None
     
     def __init__(self, use_dask=True, use_dlg=False, verbose=False, optimize=True):
-        self.start_time = time.time()
-        self._client = None
-        self.start_time = time.time()
         if bool(use_dask) and bool(use_dlg):
             raise ValueError('use_dask and use_dlg cannot be specified together')
         self._set_state(use_dask, use_dlg, None, verbose, optimize)
@@ -45,7 +42,6 @@ class _rsexecuteBase:
         
         Passes through if dask is not being used
         
-        :param func:
         :param args:
         :param kwargs:
         :return: delayed func or func
@@ -96,6 +92,7 @@ class _rsexecuteBase:
             self._set_state(True, False, client, verbose, optim)
             self._client.profile()
             self._client.get_task_stream()
+            self.start_time = time.time()
 
         elif use_dlg:
             self._set_state(False, True, client, verbose, optim)
@@ -112,7 +109,6 @@ class _rsexecuteBase:
         If using dask and sync=True then this waits and resturns the actual wait.
         If using dask and sync=False then this returns a future, on which you will need to call .result()
         
-        :param sync:
         :param value:
         :return:
         """
@@ -219,12 +215,14 @@ class _rsexecuteBase:
             if self._client.cluster is not None:
                 self._client.cluster.close()
             self._client.close()
+            self._client = None
 
     def init_statistics(self):
         """
         Initialise the profile and task stream info
         :return:
         """
+        self.start_time = time.time()
         if self._using_dask:
             self._client.profile()
             self._client.get_task_stream()

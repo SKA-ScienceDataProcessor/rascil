@@ -24,7 +24,6 @@ def create_box_convolutionfunction(im, oversampling=1, support=1):
 
     Also returns the griddata correction function as an image
 
-    :param support:
     :param im: Image template
     :param oversampling: Oversampling of the convolution function in uv space
     :return: griddata correction Image, griddata kernel as ConvolutionFunction
@@ -61,7 +60,6 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
 
     Also returns the griddata correction function as an image
 
-    :param support:
     :param im: Image template
     :param oversampling: Oversampling of the convolution function in uv space
     :return: griddata correction Image, griddata kernel as ConvolutionFunction
@@ -106,9 +104,6 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
                                       maxsupport=512):
     """ Fill AW projection kernel into a GridData.
 
-    :param support:
-    :param use_aaf:
-    :param maxsupport:
     :param im: Image template
     :param make_pb: Function to make the primary beam model image (hint: use a partial)
     :param nw: Number of w planes

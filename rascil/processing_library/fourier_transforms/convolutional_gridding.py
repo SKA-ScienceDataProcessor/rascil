@@ -76,7 +76,7 @@ def coordinates2Offset(npixel: int, cx: int, cy: int, quadrant=False):
         cx = npixel // 2
     if cy is None:
         cy = npixel // 2
-    if not quadrant:
+    if quadrant == False:
         mg = numpy.mgrid[0:npixel, 0:npixel]
     else:
         # If npixel is even, we should create a grid with npixel//2+1
@@ -134,8 +134,8 @@ def grdsf(nu):
 def w_beam(npixel, field_of_view, w, cx=None, cy=None, remove_shift=False):
     """ W beam, the fresnel diffraction pattern arising from non-coplanar baselines
     
-    :param field_of_view:
     :param npixel: Size of the grid in pixels
+    :param field_w_beamof_view: Field of view
     :param w: Baseline distance to the projection plane
     :param cx: location of delay centre def :npixel//2
     :param cy: location of delay centre def :npixel//2

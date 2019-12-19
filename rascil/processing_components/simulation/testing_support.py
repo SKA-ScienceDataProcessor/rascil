@@ -199,7 +199,7 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
         log.info('create_test_image_from_s3: Reading S3 sources from %s ' % csvfilename)
     else:
         assert fov in [10, 20, 40], "Field of view invalid: use one of %s" % ([10, 20, 40])
-        csvfilename = rascil_path('data/models/S3_151MHz_%ddeg.csv' % fov)
+        csvfilename = rascil_path('data/models/S3_151MHz_%ddeg.csv' % (fov))
         log.info('create_test_image_from_s3: Reading S3 sources from %s ' % csvfilename)
     
     with open(csvfilename) as csvfile:
@@ -278,8 +278,9 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
 
     If polarisation_frame is not stokesI then the image will a polarised axis but the values will be zero.
 
-    :param radius:
+    :param npixel: Number of pixels
     :param polarisation_frame: Polarisation frame (default PolarisationFrame("stokesI"))
+    :param cellsize: cellsize in radians
     :param frequency:
     :param channel_bandwidth: Channel width (Hz)
     :param phasecentre: phasecentre (SkyCoord)
@@ -311,7 +312,7 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
         log.info('create_test_skycomponents_from_s3: Reading S3-SEX sources from %s ' % csvfilename)
     else:
         assert fov in [10, 20, 40], "Field of view invalid: use one of %s" % ([10, 20, 40])
-        csvfilename = rascil_path('data/models/S3_151MHz_%ddeg.csv' % fov)
+        csvfilename = rascil_path('data/models/S3_151MHz_%ddeg.csv' % (fov))
         log.info('create_test_skycomponents_from_s3: Reading S3-SEX sources from %s ' % csvfilename)
     
     skycomps = list()
@@ -377,12 +378,6 @@ def create_low_test_image_from_gleam(npixel=512, polarisation_frame=Polarisation
     GaLactic and Extragalactic All-sky Murchison Wide Field Array (GLEAM) survey. I: A low-frequency extragalactic
     catalogue. Hurley-Walker N., et al., Mon. Not. R. Astron. Soc., 464, 1146-1167 (2017), 2017MNRAS.464.1146H
 
-    :param applybeam:
-    :param flux_limit:
-    :param flux_max:
-    :param flux_min:
-    :param radius:
-    :param insert_method:
     :param npixel: Number of pixels
     :param polarisation_frame: Polarisation frame (default PolarisationFrame("stokesI"))
     :param cellsize: cellsize in radians
@@ -573,7 +568,7 @@ def create_low_test_skycomponents_from_gleam(flux_limit=0.1, polarisation_frame=
                                212, 220, 227])
     gleam_flux_freq = numpy.zeros([len(names), len(gleam_freqs)])
     for i, f in enumerate(gleam_freqs):
-        gleam_flux_freq[:, i] = filtered_recs['int_flux_%03d' % f][:]
+        gleam_flux_freq[:, i] = filtered_recs['int_flux_%03d' % (f)][:]
     
     skycomps = []
     
@@ -659,21 +654,17 @@ def create_blockvisibility_iterator(config: Configuration, times: numpy.array, f
             fullvis = append_visibility(fullvis, vis)
 
 
-    :param channel_bandwidth:
-    :param polarisation_frame:
-    :param predict:
-    :param phase_error:
-    :param amplitude_error:
-    :param sleep:
     :param config: Configuration of antennas
     :param times: hour angles in radians
     :param frequency: frequencies (Hz] Shape [nchan]
     :param weight: weight of a single sample
     :param phasecentre: phasecentre of observation
+    :param npol: Number of polarizations
     :param integration_time: Integration time ('auto' or value in s)
     :param number_integrations: Number of integrations to be created at each time.
     :param model: Model image to be inserted
     :param components: Components to be inserted
+    :param sleep_time: Time to sleep between yields
     :return: Visibility
 
     """
@@ -765,7 +756,6 @@ def simulate_pointingtable(pt: PointingTable, pointing_error, static_pointing_er
                            seed=None, **kwargs) -> PointingTable:
     """ Simulate a gain table
 
-    :param seed:
     :type pt: PointingTable
     :param pointing_error: std of normal distribution (radians)
     :param static_pointing_error: std of normal distribution (radians)
@@ -820,11 +810,9 @@ def simulate_pointingtable_from_timeseries(pt, type='wind', time_series_type='pr
                                            seed=None):
     """Create a pointing table with time series created from PSD.
 
-    :param time_series_type:
-    :param pointing_directory:
-    :param seed:
     :param pt: Pointing table to be filled
     :param type: Type of pointing: 'tracking' or 'wind'
+    :param pointing_file: Name of pointing file
     :param reference_pointing: Use reference pointing?
     :return:
     """
@@ -1033,7 +1021,7 @@ def create_unittest_components(model, flux, applypb=False, telescope='LOW', npix
                                scale=1.0, single=False, symmetric=False, angular_scale=1.0):
     # Fill the visibility with exactly computed point sources.
     
-    if npixel is None:
+    if npixel == None:
         _, _, _, npixel = model.data.shape
     spacing_pixels = int(scale * npixel) // 4
     log.info('Spacing in pixels = %s' % spacing_pixels)
@@ -1089,7 +1077,6 @@ def create_unittest_model(vis, model_pol, npixel=None, cellsize=None, nchan=1):
 def insert_unittest_errors(vt, seed=180555, calibration_context="TG", amp_errors=None, phase_errors=None):
     """Simulate gain errors and apply
     
-    :param calibration_context:
     :param vt:
     :param seed: Random number seed, set to big integer repeat values from run to run
     :param phase_errors: e.g. {'T': 1.0, 'G': 0.1, 'B': 0.01}

@@ -91,7 +91,7 @@ try:
             # No use if don't need to consider antenna name
             mapper = []
             ants = []
-            if self.frame.upper() == 'WGS84':
+            if (self.frame).upper() == 'WGS84':
                 topo2eci = get_eci_transform(latitude)
                 for i in range(len(stands)):
                     eci = numpy.dot(topo2eci, xyz[i, :])

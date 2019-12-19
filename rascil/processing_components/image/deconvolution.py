@@ -63,9 +63,17 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
                                          
     For the MFS clean, the psf must have number of channels >= 2 * nmoment
     
-    :param prefix:
     :param dirty: Image dirty image
     :param psf: Image Point Spread Function
+    :param window_shape: Window image (Bool) - clean where True
+    :param mask: Window in the form of an image, overrides woindow_shape
+    :param algorithm: Cleaning algorithm: 'msclean'|'hogbom'|'mfsmsclean'
+    :param gain: loop gain (float) 0.7
+    :param threshold: Clean threshold (0.0)
+    :param fractional_threshold: Fractional threshold (0.01)
+    :param scales: Scales (in pixels) for multiscale ([0, 3, 10, 30])
+    :param nmoment: Number of frequency moments (default 3)
+    :param findpeak: Method of finding peak in mfsclean: 'Algorithm1'|'ASKAPSoft'|'CASA'|'ARL', Default is ARL.
     :return: componentimage, residual
     
     """
@@ -97,11 +105,11 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
     mask = get_parameter(kwargs, 'mask', None)
     if isinstance(mask, Image):
         if window is not None:
-            log.warning('deconvolve_cube %s: Overriding window_shape with mask image' % prefix)
+            log.warning('deconvolve_cube %s: Overriding window_shape with mask image' % (prefix))
         window = mask.data
 
     psf_support = get_parameter(kwargs, 'psf_support', max(dirty.shape[2] // 2, dirty.shape[3] // 2))
-    if (psf_support <= psf.shape[2] // 2) and (psf_support <= psf.shape[3] // 2):
+    if (psf_support <= psf.shape[2] // 2) and ((psf_support <= psf.shape[3] // 2)):
         centre = [psf.shape[2] // 2, psf.shape[3] // 2]
         psf.data = psf.data[..., (centre[0] - psf_support):(centre[0] + psf_support),
                    (centre[1] - psf_support):(centre[1] + psf_support)]
@@ -265,7 +273,7 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
                         log.info("deconvolve_cube_complex: Skipping pol %d, channel %d" % (pol, channel))
                 if pol == 1:
                     if psf.data[channel, 1:2, :, :].max():
-                        log.info("deconvolve_cube_complex: Processing pol 1 and 2, channel %d" % channel)
+                        log.info("deconvolve_cube_complex: Processing pol 1 and 2, channel %d" % (channel))
                         if window is None:
                             comp_array[channel, 1, :, :], comp_array[channel, 2, :, :], residual_array[channel, 1, :,
                                                                                         :], residual_array[channel, 2,
@@ -279,7 +287,7 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
                                 dirty.data[channel, 1, :, :], dirty.data[channel, 2, :, :], psf.data[channel, 1, :, :],
                                 psf.data[channel, 2, :, :], window[channel, pol, :, :], gain, thresh, niter, fracthresh)
                     else:
-                        log.info("deconvolve_cube_complex: Skipping pol 1 and 2, channel %d" % channel)
+                        log.info("deconvolve_cube_complex: Skipping pol 1 and 2, channel %d" % (channel))
                 if pol == 2:
                     continue
     
@@ -322,7 +330,7 @@ def restore_cube(model: Image, psf: Image, residual=None, **kwargs) -> Image:
                 size = 1.0
             else:
                 size = max(fit.x_stddev, fit.y_stddev)
-                log.debug('restore_cube: psfwidth = %s' % size)
+                log.debug('restore_cube: psfwidth = %s' % (size))
         except minpack.error as err:
             log.debug('restore_cube: minpack error, using 1 pixel stddev')
             size = 1.0
@@ -330,7 +338,7 @@ def restore_cube(model: Image, psf: Image, residual=None, **kwargs) -> Image:
             log.debug('restore_cube: warning in fit to psf, using 1 pixel stddev')
             size = 1.0
     else:
-        log.debug('restore_cube: Using specified psfwidth = %s' % size)
+        log.debug('restore_cube: Using specified psfwidth = %s' % (size))
 
     # By convention, we normalise the peak not the integral so this is the volume of the Gaussian
     norm = 2.0 * numpy.pi * size ** 2
