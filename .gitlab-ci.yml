@@ -21,18 +21,6 @@ docs:
       - html/
     expire_in: 1 week
 
-unittests:
-  stage: build
-  before_script:
-    - pip install -r requirements.txt -r requirements-test.txt
-  script:
-    - pip install pytest pytest-xdist pytest-cov
-    - py.test -n 4 tests --verbose --cov=rascil --cov-report=html:coverage
-  artifacts:
-    paths:
-      - coverage
-    expire_in: 1 week
-
 code_analysis:
   stage: build
   before_script:
@@ -46,11 +34,25 @@ code_analysis:
       - code_analysis
     expire_in: 1 week
 
+
+unittests:
+  stage: build
+  before_script:
+    - pip install -r requirements.txt -r requirements-test.txt
+  script:
+    - pip install pytest pytest-xdist pytest-cov
+    - py.test -n 4 tests --verbose --cov=rascil --cov-report=html:coverage
+  artifacts:
+    paths:
+      - coverage
+    expire_in: 1 week
+
 pages:
   stage: deploy
   dependencies:
     - docs
     - unittests
+    - code_analysis
   script:
     - mv html public
     - mv coverage/ public/coverage
