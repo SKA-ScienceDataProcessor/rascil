@@ -80,7 +80,7 @@ def visibility_gather(visibility_list: List[Visibility], vis: Visibility, vis_it
         if visibility_list[i] is not None and sum_rows > 0:
             assert sum_rows == visibility_list[i].nvis, \
                 "Mismatch in number of rows (%d, %d) in gather for slice %d" % \
-            (sum_rows, visibility_list[i].nvis, i)
+            (int(sum_rows), visibility_list[i].nvis, i)
             vis.data[rows] = visibility_list[i].data[...]
     
     return vis

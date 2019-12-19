@@ -11,6 +11,8 @@ Use the `SIP Coding and Documentation Guide <https://confluence.ska-sdp
 We recommend using a tool to help ensure PEP 8 compliance. PyCharm does a good job at this and other code quality
 checks.
 
+Please use pylint as a final check.
+
 Design
 ======
 

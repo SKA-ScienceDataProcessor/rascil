@@ -9,7 +9,8 @@ code_analysis:
     - pip install pylint pylint-json2html
   script:
     - mkdir -p code_analysis
-    - pylint -j 0 --extension-pkg-whitelist=numpy --ignored-classes=astropy.units,astropy.constants,HDUList -f json -E rascil tests | pylint-json2html -o code_analysis/index.html
+    - pylint -j 0 --extension-pkg-whitelist=numpy --extension-pkg-whitelist=numpy,scipy --ignored-classes=astropy.units,astropy.constants,HDUList -f json -E rascil tests > pylint.json
+    - pylint-json2html -o code_analysis/index.html pylint.json
   artifacts:
     paths:
       - code_analysis
