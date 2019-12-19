@@ -171,7 +171,7 @@ try:
             self.theta = float(theta)
             self.phi = float(phi)
 
-            self.FEE = fee
+            self.fee = fee
             self.feePort = feePort
 
             self.cable = cable

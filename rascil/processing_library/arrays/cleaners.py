@@ -236,8 +236,9 @@ def msclean(dirty, psf, window, gain, thresh, niter, scales, fracthresh, prefix=
     if windowstack is not None:
         assert numpy.sum(windowstack) > 0
 
-    log.info("msclean %s: Max abs in dirty Image = %.6f Jy/beam" % (prefix, numpy.fabs(res_scalestack[0, :, :]).max()))
-    absolutethresh = max(thresh, fracthresh * numpy.fabs(res_scalestack[0, :, :]).max())
+    maxabs = numpy.max(numpy.abs(res_scalestack[0, :, :]))
+    log.info("msclean %s: Max abs in dirty Image = %.6f Jy/beam" % (prefix, maxabs))
+    absolutethresh = max(thresh, fracthresh * maxabs)
     log.info("msclean %s: Start of minor cycle" % prefix)
     log.info("msclean %s: This minor cycle will stop at %d iterations or peak < %.6f (Jy/beam)" %
              (prefix, niter, absolutethresh))
@@ -255,9 +256,11 @@ def msclean(dirty, psf, window, gain, thresh, niter, scales, fracthresh, prefix=
         if niter < 10 or i % (niter // 10) == 0:
             log.info("msclean %s: Minor cycle %d, peak %s at [%d, %d, %d]" %
                      (prefix, i, res_scalestack[:, mx, my], mx, my, mscale))
-        if numpy.fabs(res_scalestack[mscale, mx, my]) < 0.9 * absolutethresh:
+        maxabs = numpy.max(numpy.abs((res_scalestack[mscale, mx, my])))
+
+        if maxabs < 0.9 * absolutethresh:
             log.info("msclean %s: At iteration %d, absolute value of peak %.6f is below stopping threshold %.6f"
-                     % (prefix, i, numpy.fabs(res_scalestack[mscale, mx, my]), absolutethresh))
+                     % (prefix, i, maxabs, absolutethresh))
             break
 
         # Update the cached residuals and add to the cached model.
@@ -547,8 +550,9 @@ def msmfsclean(dirty, psf, window, gain, thresh, niter, scales, fracthresh, find
         windowstack = numpy.zeros_like(scalestack)
         windowstack[convolve_scalestack(scalestack, window) > 0.9] = 1.0
 
-    log.info("mmclean %s: Max abs in dirty Image = %.6f Jy/beam" % (prefix, numpy.fabs(smresidual[0, 0, :, :]).max()))
-    absolutethresh = max(thresh, fracthresh * numpy.fabs(smresidual[0, 0, :, :]).max())
+    maxabs = numpy.max(numpy.abs((smresidual[0, 0, :, :])))
+    log.info("mmclean %s: Max abs in dirty Image = %.6f Jy/beam" % (prefix, maxabs))
+    absolutethresh = max(thresh, fracthresh * maxabs)
     log.info("mmclean %s: Start of minor cycle" % prefix)
     log.info("mmclean %s: This minor cycle will stop at %d iterations or peak < %.6f (Jy/beam)" %
              (prefix, niter, absolutethresh))

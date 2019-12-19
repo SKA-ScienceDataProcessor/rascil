@@ -23,7 +23,7 @@ from astropy.wcs.utils import pixel_to_skycoord
 from astropy.wcs.utils import skycoord_to_pixel
 from photutils import segmentation
 from scipy import interpolate
-from scipy.spatial import Voronoi
+from scipy.spatial.qhull import Voronoi
 
 from rascil.data_models.memory_data_models import Image, Skycomponent, assert_same_chan_pol
 from rascil.data_models.polarisation import PolarisationFrame

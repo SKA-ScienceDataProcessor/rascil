@@ -229,13 +229,13 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
     log.info('create_test_image_from_s3: %d sources read' % (len(fluxes)))
     
     p = w.sub(2).wcs_world2pix(numpy.array(ras), numpy.array(decs), 1)
-    total_flux = numpy.sum(fluxes)
     fluxes = numpy.array(fluxes)
+    total_flux = numpy.sum(fluxes)[0]
     ip = numpy.round(p).astype('int')
     ok = numpy.where((0 <= ip[0, :]) & (npixel > ip[0, :]) & (0 <= ip[1, :]) & (npixel > ip[1, :]))[0]
     ps = ip[:, ok]
     fluxes = fluxes[ok]
-    actual_flux = numpy.sum(fluxes)
+    actual_flux = numpy.sum(fluxes)[0]
     
     log.info('create_test_image_from_s3: %d sources inside the image' % (ps.shape[1]))
     

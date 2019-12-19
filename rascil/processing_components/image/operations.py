@@ -426,7 +426,7 @@ def create_window(template, window_type, **kwargs):
         window_threshold = get_parameter(kwargs, 'window_threshold', None)
         if window_threshold is None:
             window_threshold = 10.0 * numpy.std(template.data)
-        window[template.data >= window_threshold] = 1.0
+        window.data[template.data >= window_threshold] = 1.0
         log.info('create_mask: Window omits all points below %g' % (window_threshold))
     elif window_type is None:
         log.info("create_mask: Mask covers entire image")
