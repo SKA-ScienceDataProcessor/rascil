@@ -23,7 +23,7 @@ from astropy.time import Time
 
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Configuration
 from rascil.data_models.polarisation import PolarisationFrame, ReceptorFrame, correlate_polarisation
-from rascil.processing_library.util.coordinate_support import xyz_to_uvw, uvw_to_xyz, skycoord_to_lmn, simulate_point, \
+from rascil.processing_components.util.coordinate_support import xyz_to_uvw, uvw_to_xyz, skycoord_to_lmn, simulate_point, \
     hadec_to_azel
 
 log = logging.getLogger(__name__)

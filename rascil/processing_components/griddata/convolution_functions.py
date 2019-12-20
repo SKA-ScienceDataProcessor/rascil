@@ -23,7 +23,7 @@ from astropy.wcs import WCS
 from rascil.data_models.memory_data_models import ConvolutionFunction
 from rascil.data_models.memory_data_models import QA
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_library.image.operations import create_image_from_array
+from rascil.processing_components.image.operations import create_image_from_array
 
 log = logging.getLogger(__name__)
 

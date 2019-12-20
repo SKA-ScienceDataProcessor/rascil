@@ -17,7 +17,7 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation.pointing import simulate_gaintable_from_pointingtable
 from rascil.processing_components.simulation import simulate_pointingtable_from_timeseries
 from rascil.processing_components.visibility.base import create_blockvisibility
-from rascil.processing_library.image.operations import create_image
+from rascil.processing_components import create_image
 
 log = logging.getLogger(__name__)
 

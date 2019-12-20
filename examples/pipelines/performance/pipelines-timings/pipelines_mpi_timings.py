@@ -13,8 +13,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_library.image import create_image
-from rascil.processing_library.util.sizeof import get_size
+from rascil.processing_components import create_image
+from rascil.processing_components.util.sizeof import get_size
 from rascil.workflows.mpi.imaging.imaging_mpi import invert_list_mpi_workflow, \
     predict_list_mpi_workflow, \
     remove_sumwt

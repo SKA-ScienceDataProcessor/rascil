@@ -16,7 +16,7 @@ from rascil.processing_components.skycomponent.operations import create_skycompo
     filter_skycomponents_by_flux, select_neighbouring_components, voronoi_decomposition, \
     apply_beam_to_skycomponent, image_voronoi_iter, partition_skycomponent_neighbours, \
     remove_neighbouring_components
-from rascil.processing_library.image.operations import create_image
+from rascil.processing_components import create_image
 from rascil.processing_components.imaging.primary_beams import create_low_test_beam
 
 log = logging.getLogger(__name__)

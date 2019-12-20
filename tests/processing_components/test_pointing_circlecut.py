@@ -19,7 +19,7 @@ from rascil.processing_components.simulation.pointing import simulate_gaintable_
 from rascil.processing_components.simulation import create_test_image, simulate_pointingtable
 from rascil.processing_components.simulation import create_test_skycomponents_from_s3
 from rascil.processing_components.visibility.base import create_blockvisibility
-from rascil.processing_library.image.operations import create_image
+from rascil.processing_components import create_image
 
 log = logging.getLogger(__name__)
 

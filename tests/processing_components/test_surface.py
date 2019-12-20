@@ -15,7 +15,7 @@ from rascil.processing_components.imaging.primary_beams import create_vp_generic
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation.surface import simulate_gaintable_from_voltage_patterns
 from rascil.processing_components.visibility.base import create_blockvisibility
-from rascil.processing_library.image.operations import create_image
+from rascil.processing_components import create_image
 
 log = logging.getLogger(__name__)
 

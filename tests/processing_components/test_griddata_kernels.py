@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
 
-from rascil.processing_library.image.operations import create_image
+from rascil.processing_components import create_image
 from rascil.processing_components.griddata.kernels  import create_pswf_convolutionfunction, \
     create_awterm_convolutionfunction, create_box_convolutionfunction
 from rascil.processing_components.griddata import convert_convolutionfunction_to_image, \

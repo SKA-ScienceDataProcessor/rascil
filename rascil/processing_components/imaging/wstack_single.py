@@ -15,9 +15,7 @@ import numpy
 
 from rascil.data_models.memory_data_models import Visibility, Image, BlockVisibility
 
-from rascil.processing_library.image.operations import create_w_term_like
-
-from rascil.processing_components.image.operations import copy_image
+from rascil.processing_components.image.operations import copy_image, create_w_term_like
 from rascil.processing_components.visibility.base import copy_visibility
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
 

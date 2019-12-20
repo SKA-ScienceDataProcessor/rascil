@@ -10,7 +10,8 @@ import numpy
 
 from rascil.data_models.polarisation import PolarisationFrame
 
-from rascil.processing_components.image.operations import create_empty_image_like, export_image_to_fits
+from rascil.processing_components.image.operations import export_image_to_fits
+from rascil.processing_components.image.operations import create_empty_image_like
 from rascil.processing_components.image.gather_scatter import image_gather_facets, image_scatter_facets, image_gather_channels, \
     image_scatter_channels
 from rascil.processing_components.simulation import create_test_image

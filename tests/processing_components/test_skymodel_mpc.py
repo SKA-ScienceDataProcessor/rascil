@@ -20,7 +20,7 @@ from rascil.processing_components.skycomponent.operations import apply_beam_to_s
 from rascil.processing_components.skycomponent.operations import filter_skycomponents_by_flux
 from rascil.processing_components.skymodel.operations import image_voronoi_iter
 from rascil.processing_components.visibility.base import create_blockvisibility
-from rascil.processing_library.image.operations import create_image
+from rascil.processing_components import create_image
 
 log = logging.getLogger(__name__)
 

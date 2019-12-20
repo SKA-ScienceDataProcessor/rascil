@@ -8,13 +8,12 @@ import unittest
 import numpy
 
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.image.operations import copy_image, export_image_to_fits, \
-    calculate_image_frequency_moments, calculate_image_from_frequency_moments, create_empty_image_like, \
-    create_image_from_array, add_image, qa_image, checkwcs, reproject_image, convert_polimage_to_stokes, \
+from rascil.processing_components.image.operations import export_image_to_fits, \
+    calculate_image_frequency_moments, calculate_image_from_frequency_moments, add_image, qa_image, reproject_image, convert_polimage_to_stokes, \
     convert_stokes_to_polimage, smooth_image
 from rascil.processing_components.simulation import create_test_image, create_low_test_image_from_gleam
-from rascil.processing_library.image.operations import create_image, create_w_term_like, fft_image, \
-    polarisation_frame_from_wcs, pad_image, convert_image_to_kernel
+from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, checkwcs, \
+    convert_image_to_kernel, copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like
 
 log = logging.getLogger(__name__)
 

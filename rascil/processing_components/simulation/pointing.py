@@ -13,7 +13,7 @@ from rascil.data_models.memory_data_models import BlockVisibility
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
-from rascil.processing_library.util.coordinate_support import hadec_to_azel, azel_to_hadec
+from rascil.processing_components.util.coordinate_support import hadec_to_azel, azel_to_hadec
 
 log = logging.getLogger(__name__)
 

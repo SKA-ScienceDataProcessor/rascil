@@ -3,7 +3,7 @@ __all__ = ['image_rsexecute_map_workflow', 'sum_images_rsexecute']
 
 import logging
 
-from rascil.processing_library.image import copy_image
+from rascil.processing_components import copy_image
 from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.image import image_scatter_facets, image_gather_facets
 

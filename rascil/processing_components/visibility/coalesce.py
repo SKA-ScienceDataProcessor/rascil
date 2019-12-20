@@ -25,7 +25,7 @@ import numpy
 
 from astropy import constants
 
-from rascil.processing_library.util.array_functions import average_chunks, average_chunks2
+from rascil.processing_components.util.array_functions import average_chunks, average_chunks2
 
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.data_models.parameters import get_parameter

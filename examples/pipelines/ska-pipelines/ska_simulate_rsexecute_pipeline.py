@@ -15,7 +15,7 @@ from astropy import units as u
 from rascil.data_models import SkyModel, PolarisationFrame, export_skymodel_to_hdf5, \
     export_blockvisibility_to_hdf5
 
-from rascil.processing_library import create_empty_image_like
+from rascil.processing_components.image.operations import create_empty_image_like
 
 from rascil.processing_components import create_low_test_image_from_gleam, advise_wide_field, \
     convert_blockvisibility_to_visibility, convert_visibility_to_blockvisibility

@@ -12,7 +12,6 @@ The long form of the name is given for all entries but all function names arre u
 accessed using the very top level import::
 
    import rascil.data_models
-   import rascil.processing_library
    import rascil.processing_components
    import rascil.workflows
 
@@ -78,10 +77,10 @@ Deconvolution
 
 * Deconvolution :py:func:`rascil.processing_components.image.deconvolve_cube` wraps:
 
- * Hogbom Clean: :py:func:`rascil.processing_library.arrays.hogbom`
- * Hogbom Complex Clean: :py:func:`rascil.processing_library.arrays.hogbom_complex`
- * Multi-scale Clean: :py:func:`rascil.processing_library.arrays.msclean`
- * Multi-scale multi-frequency Clean: :py:func:`rascil.processing_library.arrays.msmfsclean`
+ * Hogbom Clean: :py:func:`rascil.processing_components.arrays.hogbom`
+ * Hogbom Complex Clean: :py:func:`rascil.processing_components.arrays.hogbom_complex`
+ * Multi-scale Clean: :py:func:`rascil.processing_components.arrays.msclean`
+ * Multi-scale multi-frequency Clean: :py:func:`rascil.processing_components.arrays.msmfsclean`
 
 
 * Restore: :py:func:`rascil.processing_components.image.restore_cube`
@@ -97,8 +96,8 @@ Coordinate transforms
 ---------------------
 
 * Phase rotation: :py:func:`rascil.processing_components.visibility.phaserotate_visibility`
-* Station/baseline (XYZ <-> UVW): :py:mod:`rascil.processing_library.util.coordinate_support`
-* Source (spherical -> tangent plane): :py:mod:`rascil.processing_library.util.coordinate_support`
+* Station/baseline (XYZ <-> UVW): :py:mod:`rascil.processing_components.util.coordinate_support`
+* Source (spherical -> tangent plane): :py:mod:`rascil.processing_components.util.coordinate_support`
 
 Image
 -----
@@ -108,7 +107,7 @@ Image
 * Export from FITS: :py:func:`rascil.processing_components.image.export_image_to_fits`
 * Reproject coordinate system: :py:func:`rascil.processing_components.image.reproject_image`
 * Smooth image: :py:func:`rascil.processing_components.image.smooth_image`
-* FFT: :py:func:`rascil.processing_library.image.fft_image`
+* FFT: :py:func:`rascil.processing_components.image.fft_image`
 * Remove continuum: :py:func:`rascil.processing_components.image.remove_continuum_image`
 * Convert polarisation:
 

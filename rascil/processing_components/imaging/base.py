@@ -1,6 +1,6 @@
 """
 Functions that aid fourier transform processing. These are built on top of the core
-functions in processing_library.fourier_transforms.
+functions in processing_components.fourier_transforms.
 
 The measurement equation for a sufficently narrow field of view interferometer is:
 
@@ -36,9 +36,9 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility, I
 from rascil.data_models.parameters import get_parameter
 from rascil.data_models.polarisation import convert_pol_frame, PolarisationFrame
 
-from rascil.processing_library.image.operations import create_image_from_array
-from rascil.processing_library.imaging.imaging_params import get_frequency_map
-from rascil.processing_library.util.coordinate_support import simulate_point, skycoord_to_lmn
+from rascil.processing_components.image import create_image_from_array
+from rascil.processing_components.imaging.imaging_params import get_frequency_map
+from rascil.processing_components.util.coordinate_support import simulate_point, skycoord_to_lmn
 
 from rascil.processing_components.griddata.kernels  import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
