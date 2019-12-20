@@ -15,15 +15,13 @@ processing, and the `Dask <https:/www.dask.org>`_ library for distributed proces
 
 RASCIL replaces the Algorithm Reference Library (ARL), which is now frozen.
 
-.. _getting-started:
-
 .. toctree::
    :maxdepth: 2
 
-   RASCIL_quickstart
+   RASCIL_install
+   RASCIL_notebooks
    RASCIL_directory
    RASCIL_api
-   RASCIL_examples
    RASCIL_otherinfo
 
 * :ref:`genindex`

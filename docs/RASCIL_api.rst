@@ -1,9 +1,7 @@
-..
+.. _api:
 
 API
 ===
-
-.. _api:
 
 .. toctree::
    :maxdepth: 1
@@ -13,7 +11,6 @@ API
    processing_library/index.rst
    workflows/index.rst
    wrappers/index.rst
-
 
 * :ref:`genindex`
 * :ref:`modindex`

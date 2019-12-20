@@ -13,44 +13,7 @@ To acheive sufficient performance we take a dual pronged approach -
 using threaded libraries for shared memory processing, and the Dask
 library for distributed processing.
 
-Installing
-----------
-
-The RASCIL has a few dependencies:
-* Python 3.6+
-* git 2.11.0+
-* git-lfs 2.2.1+
-* Python package dependencies as defined in the file requirements.txt
-
-Common Installation Process
----------------------------
-
-* Use git to make a local clone of the Github repository::
-
-   `git clone https://github.com/SKA-ScienceDataProcessor/rascil`
-
-* Change into that directory::
-   `cd rascil`
-
-* Install required python package::
-   `pip install -r requirements.txt`
-
-* Setup RASCIL::
-   `python setup.py install`
-
-* Get the data files form Git LFS::
-   `git-lfs pull`
-
-* Finally fix up the python search path so that Jupyter can find the arl with something like::
-
-    `export PYTHONPATH=$PYTHONPATH:/path/to/checked/out/rascil`
-    `export RASCIL=/path/to/checked/out/rascil`
-
-An alternative to the use of pip is to use [Anaconda](<https://www.anaconda.com>). The environment is defined in the conda environment file::
-
-   conda env create -f environment.yml 
-   conda activate rascil
-   conda config --env --prepend channels astropy
+Installation instructions are available from the documentation pages <https://timcornwell.gitlab.io/rascil/
 
 Orientation
 -----------

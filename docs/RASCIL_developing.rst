@@ -1,17 +1,11 @@
 
-Best Practices
-**************
+Developing in RASCIL
+********************
 
-Coding and documentation
-========================
-
-Use the `SIP Coding and Documentation Guide <https://confluence.ska-sdp
-.org/display/SIP/Coding+and+Documentation+Guide+for+SIP/>`_ .
+Use the SIP Coding and Documentation Guide (https://confluence.ska-sdp.org/display/SIP/Coding+and+Documentation+Guide+for+SIP)
 
 We recommend using a tool to help ensure PEP 8 compliance. PyCharm does a good job at this and other code quality
 checks.
-
-Please use pylint as a final check.
 
 Design
 ======
@@ -30,7 +24,7 @@ Additions and changes should adhere to these principles.
 Submitting code
 ===============
 
-RASCIL is hosted on the `SDP github <https://github.com/SKA-ScienceDataProcessor/rascil.git>`_ . CI/CD occurs on Gitlab at:
-`rascil <https://gitlab.com/timcornwell/rascil>`_
+RASCIL is hosted on the SDP github https://github.com/SKA-ScienceDataProcessor/rascil.git . CI/CD occurs on Gitlab at:
+https://gitlab.com/timcornwell/rascil
 
 We welcome pull requests submitted via github.
