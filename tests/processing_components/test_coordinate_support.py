@@ -1,4 +1,4 @@
-""" Unit processing_library for coordinate support
+""" Unit processing_components for coordinate support
 
 """
 
@@ -9,7 +9,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 from numpy.testing import assert_allclose
 
-from rascil.processing_library.util.coordinate_support import xyz_to_uvw, xyz_at_latitude, simulate_point, baselines, uvw_to_xyz, \
+from rascil.processing_components.util.coordinate_support import xyz_to_uvw, xyz_at_latitude, simulate_point, baselines, uvw_to_xyz, \
     skycoord_to_lmn, azel_to_hadec, hadec_to_azel
 
 

@@ -1,4 +1,4 @@
-""" Unit processing_library for Array functions
+""" Unit processing_components for Array functions
 
 
 """
@@ -6,8 +6,8 @@ import unittest
 import numpy
 import logging
 
-from rascil.processing_library.util.array_functions import average_chunks_jit as average_chunks
-from rascil.processing_library.util.array_functions import average_chunks2, average_chunks_jit
+from rascil.processing_components.util.array_functions import average_chunks_jit as average_chunks
+from rascil.processing_components.util.array_functions import average_chunks2, average_chunks_jit
 
 log = logging.getLogger(__name__)
 

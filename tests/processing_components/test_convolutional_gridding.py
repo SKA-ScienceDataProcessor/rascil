@@ -1,4 +1,4 @@
-""" Unit processing_library for convolutional Gridding
+""" Unit processing_components for convolutional Gridding
 
 
 """
@@ -8,7 +8,7 @@ import unittest
 import numpy
 from numpy.testing import assert_allclose
 
-from rascil.processing_library.fourier_transforms.convolutional_gridding import w_beam, coordinates, \
+from rascil.processing_components.fourier_transforms.convolutional_gridding import w_beam, coordinates, \
     coordinates2, coordinateBounds
 
 

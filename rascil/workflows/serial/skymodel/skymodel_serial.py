@@ -7,7 +7,7 @@ import logging
 import numpy
 
 from rascil.data_models.memory_data_models import Image, GainTable, Visibility, SkyModel, ConvolutionFunction
-from rascil.processing_library.image import copy_image
+from rascil.processing_components import copy_image
 from rascil.workflows.serial.imaging.imaging_serial import predict_list_serial_workflow, invert_list_serial_workflow
 from rascil.processing_components.calibration import apply_gaintable
 from rascil.processing_components.imaging import predict_skycomponent_visibility

@@ -10,11 +10,11 @@ import logging
 import numpy
 
 from rascil.data_models.memory_data_models import Image
-from rascil.processing_library.fourier_transforms.convolutional_gridding import coordinates, grdsf
-from rascil.processing_library.image.operations import copy_image, create_w_term_like, pad_image, fft_image
-from rascil.processing_library.image.operations import create_image_from_array
+from rascil.processing_components.fourier_transforms.convolutional_gridding import coordinates, grdsf
+from rascil.processing_components.image.operations import create_image_from_array, copy_image, create_empty_image_like, fft_image, pad_image, \
+    create_w_term_like
 from rascil.processing_components.griddata.convolution_functions import create_convolutionfunction_from_image
-from rascil.processing_components.image.operations import reproject_image, create_empty_image_like
+from rascil.processing_components.image.operations import reproject_image
 
 log = logging.getLogger(__name__)
 

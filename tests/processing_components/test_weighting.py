@@ -12,7 +12,7 @@ from photutils import fit_2dgaussian
 
 from rascil.data_models.polarisation import PolarisationFrame
 
-from rascil.processing_library.image.operations import fft_image
+from rascil.processing_components import fft_image
 
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.processing_components.imaging.base import invert_2d

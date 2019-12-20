@@ -16,7 +16,7 @@ from rascil.processing_components.calibration.iterators import gaintable_timesli
 from rascil.processing_components.image.operations import copy_image, create_empty_image_like
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
-from rascil.processing_library.util.coordinate_support import xyz_to_uvw, skycoord_to_lmn
+from rascil.processing_components.util.coordinate_support import xyz_to_uvw, skycoord_to_lmn
 
 import logging
 log = logging.getLogger(__name__)

@@ -348,9 +348,9 @@ class Image:
     """Image class with Image data (as a numpy.array) and the AstroPy `implementation of
     a World Coodinate System <http://docs.astropy.org/en/stable/wcs>`_
 
-    Many operations can be done conveniently using numpy processing_library on Image.data_models.
+    Many operations can be done conveniently using numpy processing_components on Image.data_models.
 
-    Most of the imaging processing_library require an image in canonical format:
+    Most of the imaging processing_components require an image in canonical format:
     - 4 axes: RA, DEC, POL, FREQ
 
     The conventions for indexing in WCS and numpy are opposite.

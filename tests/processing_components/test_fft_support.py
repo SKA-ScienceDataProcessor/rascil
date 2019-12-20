@@ -1,4 +1,4 @@
-""" Unit processing_library for FFT support
+""" Unit processing_components for FFT support
 
 
 """
@@ -7,8 +7,8 @@ import unittest
 
 from numpy.testing import assert_allclose
 
-from rascil.processing_library.fourier_transforms.fft_support import extract_mid, pad_mid, extract_oversampled
-from rascil.processing_library.fourier_transforms.convolutional_gridding import coordinates2
+from rascil.processing_components.fourier_transforms.fft_support import extract_mid, pad_mid, extract_oversampled
+from rascil.processing_components.fourier_transforms.convolutional_gridding import coordinates2
 
 
 class TestFFTSupport(unittest.TestCase):

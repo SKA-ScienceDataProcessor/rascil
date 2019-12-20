@@ -24,9 +24,9 @@ from astropy import constants
 import astropy.units as u
 from astropy.coordinates import SkyCoord
 
-from rascil.processing_library.util.array_functions import average_chunks2
-from rascil.processing_library.util.compass_bearing import calculate_initial_compass_bearing
-from rascil.processing_library.util.coordinate_support import skycoord_to_lmn, azel_to_hadec, hadec_to_azel
+from rascil.processing_components.util.array_functions import average_chunks2
+from rascil.processing_components.util.compass_bearing import calculate_initial_compass_bearing
+from rascil.processing_components.util.coordinate_support import skycoord_to_lmn, azel_to_hadec, hadec_to_azel
 from rascil.processing_components.visibility.base import simulate_point
 
 def simulate_DTV(frequency, times, power=50e3, timevariable=False, frequency_variable=False):

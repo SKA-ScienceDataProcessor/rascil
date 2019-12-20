@@ -3,13 +3,16 @@ Framework
 
 """
 __all__ = [
+    'arrays',
     'calibration',
     'griddata',
+    'fourier_transforms',
     'image',
     'imaging',
     'simulation',
     'skycomponent',
     'skymodel',
+    'util',
     'visibility']
 
 from .calibration import *

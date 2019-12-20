@@ -13,7 +13,7 @@ import numpy.linalg
 from rascil.data_models.memory_data_models import PointingTable, BlockVisibility, QA
 from rascil.data_models.memory_data_models import ReceptorFrame
 
-from rascil.processing_library.util.coordinate_support import hadec_to_azel
+from rascil.processing_components.util.coordinate_support import hadec_to_azel
 
 log = logging.getLogger(__name__)
 

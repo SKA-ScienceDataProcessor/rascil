@@ -11,8 +11,8 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
 
-from rascil.processing_library.arrays.cleaners import overlapIndices
-from rascil.processing_library.image.operations import create_image_from_array
+from rascil.processing_components.arrays.cleaners import overlapIndices
+from rascil.processing_components.image.operations import create_image_from_array
 
 from rascil.processing_components.image.deconvolution import deconvolve_cube, restore_cube
 from rascil.processing_components.image.operations import export_image_to_fits

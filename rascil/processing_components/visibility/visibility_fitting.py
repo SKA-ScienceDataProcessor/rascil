@@ -8,7 +8,7 @@ import numpy
 
 from scipy.optimize import minimize
 
-from rascil.processing_library.util.coordinate_support import lmn_to_skycoord, skycoord_to_lmn
+from rascil.processing_components.util.coordinate_support import lmn_to_skycoord, skycoord_to_lmn
 
 
 def fit_visibility(vis, sc, tol=1e-6, niter=20, verbose=False, method='trust-exact', **kwargs):

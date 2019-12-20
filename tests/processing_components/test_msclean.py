@@ -1,4 +1,4 @@
-""" Unit processing_library for image deconvolution via MSClean
+""" Unit processing_components for image deconvolution via MSClean
 
 
 """
@@ -6,7 +6,7 @@ import unittest
 import numpy
 import logging
 
-from rascil.processing_library.arrays.cleaners import create_scalestack, convolve_scalestack, convolve_convolve_scalestack,\
+from rascil.processing_components.arrays.cleaners import create_scalestack, convolve_scalestack, convolve_convolve_scalestack,\
     argmax
 
 log = logging.getLogger(__name__)

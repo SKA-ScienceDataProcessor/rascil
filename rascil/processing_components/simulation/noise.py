@@ -32,7 +32,7 @@ from rascil.processing_components.skycomponent.operations import create_skycompo
 from rascil.processing_components.visibility.base import create_blockvisibility, create_visibility
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
-from rascil.processing_library.image.operations import create_image_from_array
+from rascil.processing_components.image.operations import create_image_from_array
 
 log = logging.getLogger(__name__)
 
