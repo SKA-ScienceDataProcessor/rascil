@@ -18,7 +18,6 @@ reproject
 scikit-image
 scipy
 seqfile
-graphviz
 sphinx
 sphinx_rtd_theme
 sphinx_automodapi
