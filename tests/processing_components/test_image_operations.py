@@ -12,7 +12,7 @@ from rascil.processing_components.image.operations import export_image_to_fits, 
     calculate_image_frequency_moments, calculate_image_from_frequency_moments, add_image, qa_image, reproject_image, convert_polimage_to_stokes, \
     convert_stokes_to_polimage, smooth_image
 from rascil.processing_components.simulation import create_test_image, create_low_test_image_from_gleam
-from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, checkwcs, \
+from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, \
     convert_image_to_kernel, copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like
 
 log = logging.getLogger(__name__)
@@ -38,7 +38,6 @@ class TestImage(unittest.TestCase):
         m31model_by_array = create_image_from_array(self.m31image.data, self.m31image.wcs,
                                                     self.m31image.polarisation_frame)
         add_image(self.m31image, m31model_by_array)
-        add_image(self.m31image, m31model_by_array, docheckwcs=True)
         assert m31model_by_array.shape == self.m31image.shape
         log.debug(export_image_to_fits(self.m31image, fitsfile='%s/test_model.fits' % (self.dir)))
         log.debug(qa_image(m31model_by_array, context='test_create_from_image'))
@@ -47,14 +46,6 @@ class TestImage(unittest.TestCase):
         emptyimage = create_empty_image_like(self.m31image)
         assert emptyimage.shape == self.m31image.shape
         assert numpy.max(numpy.abs(emptyimage.data)) == 0.0
-    
-    def test_checkwcs(self):
-        newwcs = self.m31image.wcs.deepcopy()
-        newwcs = self.m31image.wcs
-        checkwcs(self.m31image.wcs, newwcs)
-        cellsize = 1.5 * self.cellsize
-        newwcs.wcs.cdelt[0] = -cellsize
-        newwcs.wcs.cdelt[1] = +cellsize
     
     def test_reproject(self):
         # Reproject an image
@@ -67,8 +58,7 @@ class TestImage(unittest.TestCase):
         newshape[2] /= 1.5
         newshape[3] /= 1.5
         newimage, footprint = reproject_image(self.m31image, newwcs, shape=newshape)
-        checkwcs(newimage.wcs, newwcs)
-    
+
     def test_stokes_conversion(self):
         assert self.m31image.polarisation_frame == PolarisationFrame("stokesI")
         stokes = create_test_image(cellsize=0.0001, polarisation_frame=PolarisationFrame("stokesIQUV"))

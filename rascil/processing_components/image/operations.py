@@ -5,7 +5,6 @@
 __all__ = ['add_image',
            'calculate_image_frequency_moments',
            'calculate_image_from_frequency_moments',
-           'checkwcs',
            'convert_image_to_kernel',
            'convert_polimage_to_stokes',
            'convert_stokes_to_polimage',
@@ -17,6 +16,7 @@ __all__ = ['add_image',
            'create_window',
            'export_image_to_fits',
            'fft_image',
+           'image_is_canonical',
            'import_image_from_fits',
            'pad_image',
            'polarisation_frame_from_wcs',
@@ -27,16 +27,12 @@ __all__ = ['add_image',
            'show_image',
            'smooth_image']
 
-
 import copy
 import warnings
 
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.wcs import FITSFixedWarning
-
-warnings.simplefilter('ignore', FITSFixedWarning)
-
 import numpy
 from astropy.io import fits
 from astropy.wcs import WCS
@@ -47,19 +43,37 @@ from rascil.data_models.memory_data_models import Image, QA
 from rascil.data_models.parameters import get_parameter
 
 import logging
-log = logging.getLogger(__name__)
 
 from rascil.data_models.polarisation import PolarisationFrame, convert_stokes_to_linear, convert_stokes_to_circular, \
     convert_linear_to_stokes, convert_circular_to_stokes
 
 from rascil.processing_components.fourier_transforms import w_beam, fft, ifft
 
+warnings.simplefilter('ignore', FITSFixedWarning)
+log = logging.getLogger(__name__)
+
+def image_is_canonical(im: Image):
+    """ Is this Image canonical format?
+
+    :param im:
+    :return:
+    """
+    canonical = True
+    canonical = canonical and len(im.shape) == 4
+    canonical = canonical and im.wcs.wcs.ctype[0] == 'RA---SIN' and im.wcs.wcs.ctype[1] == 'DEC--SIN'
+    canonical = canonical and im.wcs.wcs.ctype[2] == 'STOKES' and im.wcs.wcs.ctype[3] == 'FREQ'
+
+    if not canonical:
+        log.debug("image_is_canonical: Image is not canonical 4D image with axes RA---SIN, DEC--SIN, STOKES, FREQ")
+
+    return canonical
 
 def export_image_to_fits(im: Image, fitsfile: str = 'imaging.fits'):
     """ Write an image to fits
     
     :param im: Image
-    :param fitsfile: Name of output fits file
+    :param fitsfile: Name of output fits file in storage
+    :returns: None
     """
     assert isinstance(im, Image), im
     return fits.writeto(filename=fitsfile, data=im.data, header=im.wcs.to_header(), overwrite=True)
@@ -68,7 +82,7 @@ def export_image_to_fits(im: Image, fitsfile: str = 'imaging.fits'):
 def import_image_from_fits(fitsfile: str) -> Image:
     """ Read an Image from fits
     
-    :param fitsfile:
+    :param fitsfile: FITS file in storage
     :return: Image
     """
     fim = Image()
@@ -77,7 +91,7 @@ def import_image_from_fits(fitsfile: str) -> Image:
     fim.data = hdulist[0].data
     fim.wcs = WCS(fitsfile)
     hdulist.close()
-    
+
     if len(fim.data) == 2:
         fim.polarisation_frame = PolarisationFrame('stokesI')
     else:
@@ -85,11 +99,11 @@ def import_image_from_fits(fitsfile: str) -> Image:
             fim.polarisation_frame = polarisation_frame_from_wcs(fim.wcs, fim.data.shape)
         except ValueError:
             fim.polarisation_frame = PolarisationFrame('stokesI')
-    
+
     log.debug("import_image_from_fits: created %s image of shape %s, size %.3f (GB)" %
               (fim.data.dtype, str(fim.shape), image_sizeof(fim)))
     log.debug("import_image_from_fits: Max, min in %s = %.6f, %.6f" % (fitsfile, fim.data.max(), fim.data.min()))
-    
+
     assert isinstance(fim, Image)
     return fim
 
@@ -98,41 +112,41 @@ def reproject_image(im: Image, newwcs: WCS, shape=None) -> (Image, Image):
     """ Re-project an image to a new coordinate system
     
     Currently uses the reproject python package. This seems to have some features do be careful using this method.
-    For timeslice imaging I had to use griddata.
-
+    For timeslice imaging griddata is used.
 
     :param im: Image to be reprojected
     :param newwcs: New WCS
-    :param shape:
+    :param shape: Desired shape
     :return: Reprojected Image, Footprint Image
     """
-    
+
     assert isinstance(im, Image), im
     rep, foot = reproject_interp((im.data, im.wcs), newwcs, shape, order='bicubic')
     return create_image_from_array(rep, newwcs, im.polarisation_frame), create_image_from_array(foot, newwcs,
                                                                                                 im.polarisation_frame)
 
 
-def add_image(im1: Image, im2: Image, docheckwcs=False) -> Image:
+def add_image(im1: Image, im2: Image) -> Image:
     """ Add two images
     
-    :param docheckwcs:
-    :param im1:
-    :param im2:
+    :param im1: Image
+    :param im2: Image
     :return: Image
     """
     assert isinstance(im1, Image), im1
+    assert image_is_canonical(im1)
     assert isinstance(im2, Image), im2
-    if docheckwcs:
-        checkwcs(im1.wcs, im2.wcs)
-    
+    assert image_is_canonical(im2)
+
     assert im1.polarisation_frame == im2.polarisation_frame
-    
+
     return create_image_from_array(im1.data + im2.data, im1.wcs, im1.polarisation_frame)
 
 
 def qa_image(im, context="") -> QA:
     """Assess the quality of an image
+
+    QA is a standard set of statistics of an image; max, min, maxabs, rms, sum, medianabs, medianabsdevmedian, median
 
     :param im:
     :return: QA
@@ -145,9 +159,9 @@ def qa_image(im, context="") -> QA:
             'rms': numpy.std(im.data),
             'sum': numpy.sum(im.data),
             'medianabs': numpy.median(numpy.abs(im.data)),
-            'medianabsdevmedian': numpy.median(numpy.abs(im.data-numpy.median(im.data))),
+            'medianabsdevmedian': numpy.median(numpy.abs(im.data - numpy.median(im.data))),
             'median': numpy.median(im.data)}
-    
+
     qa = QA(origin="qa_image", data=data, context=context)
     return qa
 
@@ -158,45 +172,46 @@ def show_image(im: Image, fig=None, title: str = '', pol=0, chan=0, cm='Greys', 
 
     :param im: Image
     :param fig: Matplotlib figure
-    :param title:
-    :param pol: Polarisation
-    :param chan: Channel
-    :param components: Optional components
+    :param title: String for title of plot
+    :param pol: Polarisation to show (index)
+    :param chan: Channel to show (index)
+    :param components: Optional components to be overlaid
     :param vmin: Clip to this minimum
     :param vmax: Clip to this maximum
     :param vscale: scale max, min by this amount
     :return:
     """
     import matplotlib.pyplot as plt
-    
+
     assert isinstance(im, Image), im
+    assert image_is_canonical((im))
 
     fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1, projection=im.wcs.sub([1,2]))
-    
+    ax = fig.add_subplot(1, 1, 1, projection=im.wcs.sub([1, 2]))
+
     if len(im.data.shape) == 4:
         data_array = numpy.real(im.data[chan, pol, :, :])
     else:
         data_array = numpy.real(im.data)
-        
+
     if vmax is None:
         vmax = vscale * numpy.max(data_array)
     if vmin is None:
         vmin = vscale * numpy.min(data_array)
 
-    cm = ax.imshow(data_array, origin = 'lower', cmap = cm, vmax=vmax, vmin=vmin)
+    cm = ax.imshow(data_array, origin='lower', cmap=cm, vmax=vmax, vmin=vmin)
 
     ax.set_xlabel(im.wcs.wcs.ctype[0])
     ax.set_ylabel(im.wcs.wcs.ctype[1])
     ax.set_title(title)
-    
+
     fig.colorbar(cm, orientation='vertical', shrink=0.7)
-    
+
     if components is not None:
         for sc in components:
             x, y = skycoord_to_pixel(sc.direction, im.wcs, 0, 'wcs')
             ax.plot(x, y, marker='+', color='red')
-            
+
     return fig
 
 
@@ -210,23 +225,25 @@ def show_components(im, comps, npixels=128, fig=None, vmax=None, vmin=None, titl
     :return:
     """
     import matplotlib.pyplot as plt
-    
+
     if vmax is None:
         vmax = numpy.max(im.data[0, 0, ...])
     if vmin is None:
         vmin = numpy.min(im.data[0, 0, ...])
-    
+
     if not fig:
         fig = plt.figure()
     plt.clf()
-    
+
+    assert image_is_canonical(im)
+
     for isc, sc in enumerate(comps):
         newim = copy_image(im)
         plt.subplot(111, projection=newim.wcs.sub([1, 2]))
         centre = numpy.round(skycoord_to_pixel(sc.direction, newim.wcs, 1, 'wcs')).astype('int')
-        newim.data = newim.data[:, :,
-                     (centre[1] - npixels // 2):(centre[1] + npixels // 2),
-                     (centre[0] - npixels // 2):(centre[0] + npixels // 2)]
+        newim.data = \
+            newim.data[:, :, (centre[1] - npixels // 2):(centre[1] + npixels // 2),
+            (centre[0] - npixels // 2):(centre[0] + npixels // 2)]
         newim.wcs.wcs.crpix[0] -= centre[0] - npixels // 2
         newim.wcs.wcs.crpix[1] -= centre[1] - npixels // 2
         plt.imshow(newim.data[0, 0, ...], origin='lower', cmap='Greys', vmax=vmax, vmin=vmin)
@@ -237,35 +254,36 @@ def show_components(im, comps, npixels=128, fig=None, vmax=None, vmin=None, titl
 
 
 def smooth_image(model: Image, width=1.0, normalise=True):
-    """ Smooth an image with a kernel
+    """ Smooth an image with a 2D Gaussian kernel
     
     :param model: Image
-    :param width: Kernel in pixels
+    :param width: Kernel width in pixels
     :param normalise: Normalise kernel peak to unity
     
     """
     assert isinstance(model, Image), model
-    
+    assert image_is_canonical(model)
+
     from astropy.convolution.kernels import Gaussian2DKernel
     from astropy.convolution import convolve_fft
-    
+
     kernel = Gaussian2DKernel(width)
-    
+
     cmodel = create_empty_image_like(model)
     nchan, npol, _, _ = model.shape
     for pol in range(npol):
         for chan in range(nchan):
             cmodel.data[chan, pol, :, :] = convolve_fft(model.data[chan, pol, :, :], kernel,
-                                                                        normalize_kernel=False,
+                                                        normalize_kernel=False,
                                                         allow_huge=True)
     if normalise and isinstance(kernel, Gaussian2DKernel):
         cmodel.data *= 2 * numpy.pi * width ** 2
-    
+
     return cmodel
 
 
 def calculate_image_frequency_moments(im: Image, reference_frequency=None, nmoment=1) -> Image:
-    """Calculate frequency weighted moments
+    """Calculate frequency weighted moments of an image cube
     
     Weights are ((freq-reference_frequency)/reference_frequency)**moment
     
@@ -282,36 +300,38 @@ def calculate_image_frequency_moments(im: Image, reference_frequency=None, nmome
     :return: Moments image
     """
     assert isinstance(im, Image)
+    assert image_is_canonical(im)
+
     assert nmoment > 0
     nchan, npol, ny, nx = im.shape
     channels = numpy.arange(nchan)
     freq = im.wcs.sub(['spectral']).wcs_pix2world(channels, 0)[0]
-    
+
     assert nmoment <= nchan, "Number of moments %d cannot exceed the number of channels %d" % (nmoment, nchan)
-    
+
     if reference_frequency is None:
         reference_frequency = numpy.average(freq)
-    log.debug("calculate_image_frequency_moments: Reference frequency = %.3f (MHz)" % (reference_frequency/1e6))
-    
+    log.debug("calculate_image_frequency_moments: Reference frequency = %.3f (MHz)" % (reference_frequency / 1e6))
+
     moment_data = numpy.zeros([nmoment, npol, ny, nx])
-    
+
     for moment in range(nmoment):
         for chan in range(nchan):
             weight = numpy.power((freq[chan] - reference_frequency) / reference_frequency, moment)
             moment_data[moment, ...] += im.data[chan, ...] * weight
-    
+
     moment_wcs = copy.deepcopy(im.wcs)
     moment_wcs.wcs.ctype[3] = 'MOMENT'
     moment_wcs.wcs.crval[3] = 0.0
     moment_wcs.wcs.crpix[3] = 1.0
     moment_wcs.wcs.cdelt[3] = 1.0
     moment_wcs.wcs.cunit[3] = ''
-    
+
     return create_image_from_array(moment_data, moment_wcs, im.polarisation_frame)
 
 
 def calculate_image_from_frequency_moments(im: Image, moment_image: Image, reference_frequency=None) -> Image:
-    """Calculate image from frequency weighted moments
+    """Calculate channel image from frequency weighted moments
 
     Weights are ((freq-reference_frequency)/reference_frequency)**moment
 
@@ -336,25 +356,27 @@ def calculate_image_from_frequency_moments(im: Image, moment_image: Image, refer
     assert npol == mnpol
     assert ny == mny
     assert nx == mnx
-    
+
     assert moment_image.wcs.wcs.ctype[3] == 'MOMENT', "Second image should be a moment image"
-    
+
     channels = numpy.arange(nchan)
     freq = im.wcs.sub(['spectral']).wcs_pix2world(channels, 0)[0]
-    
+
     if reference_frequency is None:
         reference_frequency = numpy.average(freq)
     log.debug("calculate_image_from_frequency_moments: Reference frequency = %.3f (MHz)" % (reference_frequency))
-    
+
     newim = copy_image(im)
-    
+
     newim.data[...] = 0.0
-    
+
     for moment in range(nmoment):
         for chan in range(nchan):
             weight = numpy.power((freq[chan] - reference_frequency) / reference_frequency, moment)
             newim.data[chan, ...] += moment_image.data[moment, ...] * weight
-    
+
+    assert image_is_canonical(newim)
+
     return newim
 
 
@@ -365,14 +387,15 @@ def remove_continuum_image(im: Image, degree=1, mask=None):
 
     :param im:
     :param degree: 1 is a constant, 2 is a slope, etc.
-    :param mask:
+    :param mask: Frequency mask
     :return:
     """
     assert isinstance(im, Image)
-    
+    assert image_is_canonical(im)
+
     if mask is not None:
         assert numpy.sum(mask) > 2 * degree, "Insufficient channels for fit"
-    
+
     nchan, npol, ny, nx = im.shape
     channels = numpy.arange(nchan)
     frequency = im.wcs.sub(['spectral']).wcs_pix2world(channels, 0)[0]
@@ -381,7 +404,7 @@ def remove_continuum_image(im: Image, degree=1, mask=None):
     wt = numpy.ones_like(frequency)
     if mask is not None:
         wt[mask] = 0.0
-    
+
     for pol in range(npol):
         for y in range(ny):
             for x in range(nx):
@@ -392,13 +415,20 @@ def remove_continuum_image(im: Image, degree=1, mask=None):
 
 
 def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame):
-    """Convert a stokes image to polarisation_frame
+    """Convert a stokes image in IQUV to polarisation_frame
 
+    For example::
+        impol = convert_stokes_to_polimage(imIQUV, Polarisation_Frame('linear'))
+
+    :param im: Image to be converted
+    :param polarisation_frame: desired polarisation frame
+    :returns: Complex image
     """
-    
+
     assert isinstance(im, Image)
+    assert image_is_canonical(im)
     assert isinstance(polarisation_frame, PolarisationFrame)
-    
+
     if polarisation_frame == PolarisationFrame('linear'):
         cimarr = convert_stokes_to_linear(im.data)
         return create_image_from_array(cimarr, im.wcs, polarisation_frame)
@@ -410,12 +440,17 @@ def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame)
 
 
 def convert_polimage_to_stokes(im: Image):
-    """Convert a polarisation image to stokes (complex)
-    
+    """Convert a polarisation image to stokes IQUV (complex)
+
+    For example:
+        imIQUV = convert_stokes_to_polimage(impol)
+
+    :param im: Complex Image in linear or circular
+    :returns: Complex image
     """
     assert isinstance(im, Image)
     assert im.data.dtype == 'complex'
-    
+
     if im.polarisation_frame == PolarisationFrame('linear'):
         cimarr = convert_linear_to_stokes(im.data)
         return create_image_from_array(cimarr, im.wcs, PolarisationFrame('stokesIQUV'))
@@ -425,13 +460,21 @@ def convert_polimage_to_stokes(im: Image):
     else:
         raise ValueError("Cannot convert %s to stokes" % (im.polarisation_frame.type))
 
+
 def create_window(template, window_type, **kwargs):
+    """Create a window image using one of a number of methods
+
+    'quarter': Inner quarter of the image
+    'no_edge': 'window_edge' pixels around edge set to zero
+    'threshold': template image pixels < 'window_threshold' absolute value set to zero
+
+    :param template: Template image
+    :param window_type: 'quarter' | 'no_edge' | 'threshold'
+    :return: New image containing mask
     """
-    
-    :param template:
-    :param type: 
-    :return:
-    """
+
+    assert image_is_canonical(template)
+
     window = create_empty_image_like(template)
     if window_type == 'quarter':
         qx = template.shape[3] // 4
@@ -454,29 +497,33 @@ def create_window(template, window_type, **kwargs):
         log.info("create_mask: Mask covers entire image")
     else:
         raise ValueError("Window shape %s is not recognized" % window_type)
-    
+
     return window
 
 
 def image_sizeof(im: Image):
-    """ Return size in GB
+    """ Return size of Image in GB
+
+    :param im: Image
+    :return: Float, size in GB
     """
     return im.size()
 
 
+# noinspection PyUnresolvedReferences
 def create_image(npixel=512, cellsize=0.000015, polarisation_frame=PolarisationFrame("stokesI"),
                  frequency=numpy.array([1e8]), channel_bandwidth=numpy.array([1e6]),
                  phasecentre=None, nchan=None) -> Image:
     """Create an empty template image consistent with the inputs.
 
     :param npixel: Number of pixels
-    :param polarisation_frame: Polarisation frame (default PolarisationFrame("stokesI"))
     :param cellsize: cellsize in radians
-    :param frequency:
-    :param channel_bandwidth: Channel width (Hz)
+    :param polarisation_frame: Polarisation frame (default PolarisationFrame("stokesI"))
+    :param frequency: Array of frequencies (Hz)
+    :param channel_bandwidth: Array of Channel width (Hz)
     :param phasecentre: phasecentre (SkyCoord)
+    :param nchan: Number of channels in image
     :return: Image
-
     """
 
     if phasecentre is None:
@@ -555,6 +602,9 @@ def polarisation_frame_from_wcs(wcs, shape) -> PolarisationFrame:
         circular [-1,-2,-3,-4]
         linear [-5,-6,-7,-8]
 
+    :param wcs: World Coordinate System
+    :param shape: Shape corresponding to wcs
+    :returns: Polarisation_Frame object
     """
     # The third axis should be stokes:
 
@@ -577,18 +627,7 @@ def polarisation_frame_from_wcs(wcs, shape) -> PolarisationFrame:
     assert isinstance(polarisation_frame, PolarisationFrame)
     return polarisation_frame
 
-
-def checkwcs(wcs1, wcs2):
-    """ Check for compatbility of wcs
-
-    :param wcs1:
-    :param wcs2:
-    """
-    pass
-    # No confidence in this next test
-    # assert wcs1.wcs.compare(wcs2.wcs, cmp=1 | 2 | 4), "WCS's do not agree"
-
-
+# noinspection PyUnresolvedReferences
 def convert_image_to_kernel(im: Image, oversampling, kernelwidth):
     """ Convert an image to a griddata kernel
 
@@ -598,7 +637,6 @@ def convert_image_to_kernel(im: Image, oversampling, kernelwidth):
     :return: numpy.ndarray[nchan, npol, oversampling, oversampling, kernelwidth, kernelwidth]
     """
     naxis = len(im.shape)
-    assert naxis == 4
 
     assert numpy.max(numpy.abs(im.data)) > 0.0, "Image is empty"
 
@@ -651,13 +689,12 @@ def convert_image_to_kernel(im: Image, oversampling, kernelwidth):
 
 
 def copy_image(im: Image):
-    """ Create an image from an array
+    """ Copy an image
 
     Performs deepcopy of data_models, breaking reference semantics
 
     :param im:
     :return: Image
-
     """
 
     if im is None:
@@ -701,9 +738,11 @@ def create_empty_image_like(im: Image) -> Image:
 
 
 def fft_image(im, template_image=None):
-    """ FFT an image, transform WCS as well
+    """ WCS-aware FFT of an image
 
-    Prefer to use axes 'UU---SIN' and 'VV---SIN' but astropy will not accept.
+    The only transforms supported are:
+        RA--SIN, DEC--SIN <-> UU, VV
+        XX, YY <-> KX, KY
 
     :param im:
     :param template_image:
@@ -714,6 +753,7 @@ def fft_image(im, template_image=None):
     ft_wcs = copy.deepcopy(im.wcs)
     ft_shape = im.shape
     if im.wcs.wcs.ctype[0] == 'RA---SIN' and im.wcs.wcs.ctype[1] == 'DEC--SIN':
+        assert image_is_canonical(im)
         ft_wcs.wcs.axis_types[0] = 0
         ft_wcs.wcs.axis_types[1] = 0
         ft_wcs.wcs.crval[0] = 0.0
@@ -767,14 +807,17 @@ def fft_image(im, template_image=None):
 
 
 def pad_image(im: Image, shape):
-    """Pad an image to desired shape
+    """Pad an image to desired shape, adding equally to all edges
 
-    The wcs crpix is adjusted appropriately
+    Appropriate for standard 4D image with axes (freq, pol, y, x). Only pads in y, x
 
-    :param im:
-    :param shape:
-    :return:
+    The wcs crpix is adjusted appropriately.
+
+    :param im: Image to be padded
+    :param shape: Shape in 4 dimensions
+    :return: Padded image
     """
+    assert image_is_canonical(im)
     if im.shape == shape:
         return im
     else:
@@ -803,16 +846,17 @@ def create_w_term_like(im: Image, w, phasecentre=None, remove_shift=False, dopol
     I(l,m) = e^{-2 \\pi j (w(\\sqrt{1-l^2-m^2}-1)}
 
 
-    The vis phasecentre is used as the delay centre for the w term (i.e. where n==0)
+    The phasecentre is used as the delay centre for the w term (i.e. where n==0)
 
-    :param phasecentre:
     :param im: template image
-    :param w: w value to evaluate (default is median abs)
+    :param phasecentre: SkyCoord definition of phasecentre
+    :param w: w value to evaluate
     :param remove_shift:
     :param dopol: Do screen in polarisation?
     :return: Image
     """
 
+    assert image_is_canonical(im)
     fim_shape = list(im.shape)
     if not dopol:
         fim_shape[1] = 1
@@ -827,13 +871,8 @@ def create_w_term_like(im: Image, w, phasecentre=None, remove_shift=False, dopol
     else:
         wcentre = [im.wcs.wcs.crpix[0] - 1.0, im.wcs.wcs.crpix[1] - 1.0]
 
-    # for chan in range(nchan):
-    #     for pol in range(npol):
-    #         fim.data[chan, pol, ...] = w_beam(npixel, npixel * cellsize, w=w, cx=wcentre[0],
-    #                                           cy=wcentre[1], remove_shift=remove_shift)
-
-    temp = w_beam(npixel, npixel * cellsize, w=w, cx=wcentre[0], cy=wcentre[1], remove_shift=remove_shift)
-    fim.data[:, :, ...] = temp
+    fim.data[:, :, ...] = w_beam(npixel, npixel * cellsize, w=w, cx=wcentre[0], cy=wcentre[1],
+                                 remove_shift=remove_shift)
 
     fov = npixel * cellsize
     fresnel = numpy.abs(w) * (0.5 * fov) ** 2
