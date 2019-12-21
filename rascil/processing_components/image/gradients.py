@@ -14,7 +14,7 @@ from rascil.data_models.memory_data_models import Image
 import logging
 log = logging.getLogger(__name__)
 
-from rascil.processing_components.image.operations import create_empty_image_like
+from rascil.processing_components.image.operations import create_empty_image_like, image_is_canonical
 
 
 def image_gradients(im: Image):
@@ -26,6 +26,8 @@ def image_gradients(im: Image):
     :return: Gradient images
     """
     assert isinstance(im, Image)
+    assert image_is_canonical(im)
+
     nchan, npol, ny, nx = im.shape
     
     gradientx = create_empty_image_like(im)

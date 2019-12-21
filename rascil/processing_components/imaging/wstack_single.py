@@ -15,7 +15,7 @@ import numpy
 
 from rascil.data_models.memory_data_models import Visibility, Image, BlockVisibility
 
-from rascil.processing_components.image.operations import copy_image, create_w_term_like
+from rascil.processing_components.image.operations import copy_image, create_w_term_like, image_is_canonical
 from rascil.processing_components.visibility.base import copy_visibility
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
 
@@ -34,7 +34,8 @@ def predict_wstack_single(vis, model, remove=True, gcfcf=None, **kwargs) -> Visi
     """
 
     assert isinstance(vis, Visibility), vis
-    
+    assert image_is_canonical(model)
+
     vis.data['vis'][...] = 0.0
 
     log.debug("predict_wstack_single: predicting using single w slice")
@@ -73,6 +74,8 @@ def invert_wstack_single(vis: Visibility, im: Image, dopsf, normalize=True, remo
     :param dopsf: Make the psf instead of the dirty image
     :param normalize: Normalize by the sum of weights (True)
     """
+    assert image_is_canonical(im)
+
     log.debug("invert_wstack_single: predicting using single w slice")
     
     kwargs['imaginary'] = True

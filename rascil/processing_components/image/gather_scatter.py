@@ -12,7 +12,8 @@ import numpy
 
 from rascil.data_models.memory_data_models import Image
 
-from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like
+from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like, \
+    image_is_canonical
 from rascil.processing_components.image.iterators import image_raster_iter, image_channel_iter
 
 log = logging.getLogger(__name__)
@@ -102,7 +103,9 @@ def image_scatter_channels(im: Image, subimages=None) -> List[Image]:
     :param subimages: Number of channels
     :return: list of subimages
     """
-    
+
+    assert image_is_canonical(im)
+
     image_list = list()
     if subimages is None:
         subimages = im.shape[0]
@@ -134,6 +137,8 @@ def image_gather_channels(image_list: List[Image], im: Image = None, subimages=0
         im = create_image_from_array(numpy.zeros(im_shape, dtype=image_list[0].data.dtype),
                                      image_list[0].wcs, image_list[0].polarisation_frame)
     
+    assert image_is_canonical(im)
+
     if subimages == 0:
         subimages = len(image_list)
     

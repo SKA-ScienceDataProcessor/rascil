@@ -38,7 +38,7 @@ from rascil.data_models.parameters import get_parameter
 from rascil.processing_components.arrays.cleaners import hogbom, hogbom_complex, msclean, msmfsclean
 from rascil.processing_components.image.operations import create_image_from_array, copy_image
 from rascil.processing_components.image.operations import calculate_image_frequency_moments, \
-    calculate_image_from_frequency_moments
+    calculate_image_from_frequency_moments, image_is_canonical
 
 log = logging.getLogger(__name__)
 
@@ -46,9 +46,11 @@ log = logging.getLogger(__name__)
 def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Image):
     """ Clean using a variety of algorithms
     
-    Functions that clean a dirty image using a point spread function. The algorithms available are:
+    The algorithms available are:
     
     hogbom: Hogbom CLEAN See: Hogbom CLEAN A&A Suppl, 15, 417, (1974)
+
+    hogbom-complex: Complex Hogbom CLEAN of stokesIQUV image
     
     msclean: MultiScale CLEAN See: Cornwell, T.J., Multiscale CLEAN (IEEE Journal of Selected Topics in Sig Proc,
     2008 vol. 2 pp. 793-801)
@@ -67,7 +69,7 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
     :param dirty: Image dirty image
     :param psf: Image Point Spread Function
     :param window_shape: Window image (Bool) - clean where True
-    :param mask: Window in the form of an image, overrides woindow_shape
+    :param mask: Window in the form of an image, overrides window_shape
     :param algorithm: Cleaning algorithm: 'msclean'|'hogbom'|'mfsmsclean'
     :param gain: loop gain (float) 0.7
     :param threshold: Clean threshold (0.0)
@@ -75,13 +77,14 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
     :param scales: Scales (in pixels) for multiscale ([0, 3, 10, 30])
     :param nmoment: Number of frequency moments (default 3)
     :param findpeak: Method of finding peak in mfsclean: 'Algorithm1'|'ASKAPSoft'|'CASA'|'ARL', Default is ARL.
-    :return: componentimage, residual
-    
+    :return: component image, residual image
     """
     
     assert isinstance(dirty, Image), dirty
+    assert image_is_canonical(dirty)
     assert isinstance(psf, Image), psf
-    
+    assert image_is_canonical(psf)
+
     window_shape = get_parameter(kwargs, 'window_shape', None)
     if window_shape == 'quarter':
         log.info("deconvolve_cube %s: window is inner quarter" % prefix)
@@ -311,8 +314,12 @@ def restore_cube(model: Image, psf: Image, residual=None, **kwargs) -> Image:
 
     """
     assert isinstance(model, Image), model
+    assert image_is_canonical(model)
     assert isinstance(psf, Image), psf
+    assert image_is_canonical(psf)
+
     assert residual is None or isinstance(residual, Image), residual
+    assert image_is_canonical(residual)
     
     restored = copy_image(model)
     

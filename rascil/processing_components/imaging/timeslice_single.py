@@ -27,6 +27,7 @@ Ignoring changes in the normalisation term, we have:
 __all__ = ['fit_uvwplane', 'fit_uvwplane_only', 'predict_timeslice_single', 'invert_timeslice_single']
 
 import logging
+from rascil.processing_components import image_is_canonical
 
 log = logging.getLogger(__name__)
 
@@ -115,7 +116,8 @@ def predict_timeslice_single(vis: Visibility, model: Image, predict=predict_2d, 
     :param gcfcf: (Grid correction function, convolution function)
     :return: resulting visibility (in place works)
     """
-    
+    assert image_is_canonical(model)
+
     assert isinstance(vis, Visibility), vis
     
     vis.data['vis'][...] = 0.0
@@ -159,6 +161,7 @@ def invert_timeslice_single(vis: Visibility, im: Image, dopsf, normalize=True, r
     :param normalize: Normalize by the sum of weights (True)
     """
     assert isinstance(vis, Visibility), vis
+    assert image_is_canonical(im)
     
     uvw = vis.uvw
     vis, p, q = fit_uvwplane(vis, remove=remove)

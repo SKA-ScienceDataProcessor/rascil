@@ -1,6 +1,7 @@
 import numpy
 
 from rascil.data_models import Image, Visibility, PolarisationFrame
+from rascil.processing_components import image_is_canonical
 
 __all__ = ['get_rowmap', 'get_polarisation_map', 'get_frequency_map']
 
@@ -8,6 +9,8 @@ def get_frequency_map(vis, im: Image = None):
     """ Map channels from visibilities to image
 
     """
+
+    assert image_is_canonical(im)
 
     # Find the unique frequencies in the visibility
     ufrequency = numpy.unique(vis.frequency)
@@ -51,6 +54,8 @@ def get_polarisation_map(vis: Visibility, im: Image = None):
     """ Get the mapping of visibility polarisations to image polarisations
 
     """
+    assert image_is_canonical(im)
+
     if vis.polarisation_frame == im.polarisation_frame:
         if vis.polarisation_frame == PolarisationFrame('stokesI'):
             return "stokesI->stokesI", lambda pol: 0
