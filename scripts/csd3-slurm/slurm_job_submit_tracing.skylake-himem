@@ -64,7 +64,7 @@ module load rhel7/default-peta4            # REQUIRED - loads the basic environm
 
 
 #! Insert additional module load commands after this line if needed:
-export RASCIL=/home/mf582/scratch/ARL/algorithm-reference-library
+export RASCIL=/home/mf582/scratch/ARL/rascil
 echo "source ${RASCIL}/scripts/csd3-slurm/activate-env-csd3-profiling.sh"
 source rascil_pathROOT/scripts/csd3-slurm/activate-env-csd3.sh
 

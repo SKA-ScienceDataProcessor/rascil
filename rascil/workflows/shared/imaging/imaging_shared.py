@@ -9,7 +9,7 @@ import numpy
 
 import logging
 
-from rascil.processing_library.image import copy_image, create_empty_image_like
+from rascil.processing_components.image.operations import copy_image, create_empty_image_like
 
 from rascil.processing_components.imaging import normalize_sumwt
 from rascil.processing_components.visibility import copy_visibility

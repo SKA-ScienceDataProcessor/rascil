@@ -1,29 +1,15 @@
 image: "python:3.7"
 
-stages:
-  - test
-
 variables:
   MPLBACKEND: "agg"
 
-test:
-  stage: test
-  before_script:
-    - pip install -r requirements.txt -r requirements-test.txt
-  script:
-    - pip install pytest pytest-xdist pytest-cov
-    - py.test -n 4 tests --verbose --cov=rascil --cov-report=html:coverage
-  artifacts:
-    paths:
-      - coverage/
-    expire_in: 1 week
-
 docs:
-  stage: test
+  stage: build
   before_script:
     - apt-get update
     - apt-get -y install pandoc
     - pip install -r requirements.txt -r requirements-docs.txt
+    - mkdir -p docs/build/html
   script:
     - PYTHONPATH=`pwd` make -k -j -C docs html
   after_script:
@@ -32,3 +18,31 @@ docs:
     paths:
       - html/
     expire_in: 1 week
+
+unittests:
+  stage: build
+  before_script:
+    - pip install -r requirements.txt -r requirements-test.txt
+  script:
+    - pip install pytest pytest-xdist pytest-cov
+    - py.test -n 4 tests --verbose --cov=rascil --cov-report=html:coverage
+  artifacts:
+    paths:
+      - coverage
+    expire_in: 1 week
+
+pages:
+  stage: deploy
+  dependencies:
+    - docs
+    - unittests
+  script:
+    - mv html public
+    - mv coverage/ public/coverage
+  artifacts:
+    paths:
+      - public
+      - public/coverage
+    expire_in: 1 month
+  only:
+    - master

@@ -23,12 +23,12 @@ from astropy.wcs.utils import pixel_to_skycoord
 from astropy.wcs.utils import skycoord_to_pixel
 from photutils import segmentation
 from scipy import interpolate
-from scipy.spatial import Voronoi
+from scipy.spatial.qhull import Voronoi
 
 from rascil.data_models.memory_data_models import Image, Skycomponent, assert_same_chan_pol
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_library.image.operations import create_image_from_array
-from rascil.processing_library.util.array_functions import insert_function_sinc, insert_function_L, \
+from rascil.processing_components.image.operations import create_image_from_array
+from rascil.processing_components.util.array_functions import insert_function_sinc, insert_function_L, \
     insert_function_pswf, insert_array
 
 log = logging.getLogger(__name__)

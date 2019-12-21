@@ -2,7 +2,7 @@
 
 
 """
-
+import os
 import logging
 import unittest
 
@@ -46,7 +46,7 @@ class TestImageGraph(unittest.TestCase):
         assert len(self.config.names) == nants
         assert len(self.config.mount) == nants
         
-        self.persist = False
+        self.persist = os.getenv("RASCIL_PERSIST", False)
 
     def tearDown(self):
         global rsexecute

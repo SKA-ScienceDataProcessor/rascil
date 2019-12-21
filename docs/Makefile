@@ -6,6 +6,7 @@ SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
 PAPER         =
 BUILDDIR      = build
+APIDIR        = api
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
@@ -51,22 +52,14 @@ help:
 
 .PHONY: clean
 clean:
-	rm -rf $(BUILDDIR)/*
+	rm -rf $(BUILDDIR)/* ${APIDIR}/*
 
-make_example_rst = \
- make -C ../rascil/$1/notebooks rst && \
- if [ ! -d $1 ]; then mkdir $1; fi && \
- cp ../rascil/$1/notebooks/*.rst $1/ && \
- if ls ../rascil/$1/notebooks/$2 1> /dev/null 2>&1; then cp -R ../rascil/$1/notebooks/$2 $1/; fi
-
-.PHONY: prepare_processing_library prepare_processing_components prepare_workflows prepare
-prepare_processing_library:
-	+$(call make_example_rst,processing_library,*_files)
-prepare_processing_components:
-	+$(call make_example_rst,processing_components,*_files)
-prepare_workflows:
-	+$(call make_example_rst,workflows,*_files)
-prepare: prepare_processing_components prepare_workflows
+.PHONY: prepare
+prepare:
+	make -C ../examples/notebooks rst
+	mkdir -p examples/notebooks/
+	cp ../examples/notebooks/*.rst examples/notebooks/
+	cp -R ../examples/notebooks/*_files examples/notebooks/
 
 .PHONY: html
 html: prepare

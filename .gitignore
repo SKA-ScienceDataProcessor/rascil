@@ -10,8 +10,6 @@
 /algorithm_reference_library.egg-info/
 
 dask-worker-space
-/docs/processing_components
-/docs/workflows
 */notebooks/*_files
 */notebooks/*.rst
 *.log
@@ -26,3 +24,6 @@ dask-worker-space
 *.fits
 /sourcetree.txt
 /docs/api
+*/*/notebooks/*_files
+*/*/notebooks/*.rst
+/docs/examples/notebooks

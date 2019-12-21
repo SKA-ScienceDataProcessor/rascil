@@ -19,8 +19,8 @@
 # ########################################################### #
 # If repository is cloned skip this part ....                 #
 # Clone the repository
-#git clone https://github.com/SKA-ScienceDataProcessor/algorithm-reference-library/
-#cd algorithm-reference-library/
+#git clone https://github.com/SKA-ScienceDataProcessor/rascil/
+#cd rascil/
 
 # Get the data
 #git-lfs pull

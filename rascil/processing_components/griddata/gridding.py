@@ -19,8 +19,9 @@ import numpy.testing
 
 from rascil.data_models.memory_data_models import Visibility
 from rascil.processing_components.griddata.operations import copy_griddata
-from rascil.processing_components.visibility.operations import copy_visibility
-from rascil.processing_library.image.operations import ifft, fft, create_image_from_array
+from rascil.processing_components.visibility.base import copy_visibility
+from rascil.processing_components.image.operations import ifft, fft
+from rascil.processing_components.image.operations import create_image_from_array
 
 log = logging.getLogger(__name__)
 

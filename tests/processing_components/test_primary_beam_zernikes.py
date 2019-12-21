@@ -3,6 +3,7 @@
 
 """
 
+import os
 import logging
 import unittest
 
@@ -27,6 +28,8 @@ class TestPrimaryBeams(unittest.TestCase):
     def setUp(self):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
+
+        self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def createVis(self, config='MID', dec=-35.0, rmax=1e3, freq=1e9):
         self.frequency = numpy.linspace(freq, 1.5 * freq, 3)
@@ -60,7 +63,8 @@ class TestPrimaryBeams(unittest.TestCase):
                                         edge=0.03162278, zernikes=zernikes, padding=2, use_local=True)
             vp_data = vp.data
             vp.data = numpy.real(vp_data)
-            export_image_to_fits(vp, "%s/test_voltage_pattern_real_%s_NOLL%d.fits" % (self.dir, 'MID_ZERNIKES', noll))
+            if self.persist:
+                export_image_to_fits(vp, "%s/test_voltage_pattern_real_%s_NOLL%d.fits" % (self.dir, 'MID_ZERNIKES', noll))
             # row = (noll-1)//7
             # col = (noll-1) - 7 * row
             # ax = axs[row, col]

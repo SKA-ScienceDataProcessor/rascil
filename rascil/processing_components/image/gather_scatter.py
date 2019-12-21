@@ -12,9 +12,8 @@ import numpy
 
 from rascil.data_models.memory_data_models import Image
 
-from rascil.processing_components.image.operations import create_image_from_array
+from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like
 from rascil.processing_components.image.iterators import image_raster_iter, image_channel_iter
-from rascil.processing_components.image.operations import create_empty_image_like
 
 log = logging.getLogger(__name__)
 

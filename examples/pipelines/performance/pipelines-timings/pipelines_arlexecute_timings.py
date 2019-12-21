@@ -14,7 +14,8 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models import PolarisationFrame
 
-from rascil.processing_library import create_image, get_size
+from rascil.processing_components import get_size
+from rascil.processing_components import create_image
 
 from rascil.processing_components import create_awterm_convolutionfunction, create_pswf_convolutionfunction,\
     image_gather_channels, export_image_to_fits, qa_image, advise_wide_field, create_low_test_skymodel_from_gleam, \

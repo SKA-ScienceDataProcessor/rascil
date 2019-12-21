@@ -1,6 +1,7 @@
 """ Unit tests for pipelines expressed via rsexecute
 """
 
+import os
 import logging
 import sys
 import unittest
@@ -49,7 +50,7 @@ class TestImaging(unittest.TestCase):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
     
-        self.persist = False
+        self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def tearDown(self):
         global rsexecute
@@ -268,11 +269,12 @@ class TestImaging(unittest.TestCase):
         self._predict_base(context='wstack', extra='_wprojection', fluxthreshold=1.0, vis_slices=11,
                            gcfcf=self.gcfcf_joint)
     
+    @unittest.skip("Too much for CI/CD")
     def test_predict_wstack_spectral(self):
         self.actualSetUp(dospectral=True)
         self._predict_base(context='wstack', extra='_spectral', fluxthreshold=4.0, vis_slices=101)
     
-    @unittest.skip("Too much for jenkins")
+    @unittest.skip("Too much for CI/CD")
     def test_predict_wstack_spectral_pol(self):
         self.actualSetUp(dospectral=True, dopol=True)
         self._predict_base(context='wstack', extra='_spectral', fluxthreshold=4.0, vis_slices=101)
@@ -355,7 +357,7 @@ class TestImaging(unittest.TestCase):
         self._invert_base(context='wstack', extra='_spectral', positionthreshold=2.0,
                           vis_slices=101)
     
-    @unittest.skip("Too much for jenkins")
+    @unittest.skip("Too much for CI/CD")
     def test_invert_wstack_spectral_pol(self):
         self.actualSetUp(dospectral=True, dopol=True)
         self._invert_base(context='wstack', extra='_spectral_pol', positionthreshold=2.0,

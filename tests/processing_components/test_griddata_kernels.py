@@ -2,6 +2,7 @@
 
 
 """
+import os
 import logging
 import unittest
 import functools
@@ -12,7 +13,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
 
-from rascil.processing_library.image.operations import create_image
+from rascil.processing_components import create_image
 from rascil.processing_components.griddata.kernels  import create_pswf_convolutionfunction, \
     create_awterm_convolutionfunction, create_box_convolutionfunction
 from rascil.processing_components.griddata import convert_convolutionfunction_to_image, \
@@ -33,7 +34,7 @@ class TestGridDataKernels(unittest.TestCase):
         self.phasecentre = SkyCoord(ra=+180.0 * u.deg, dec=-60.0 * u.deg, frame='icrs', equinox='J2000')
         self.image = create_image(npixel=512, cellsize=0.0005, phasecentre=self.phasecentre,
                                   polarisation_frame=PolarisationFrame("stokesI"))
-        self.persist = False
+        self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def test_create_convolutionfunction(self):
         cf = create_convolutionfunction_from_image(self.image, nz=1)

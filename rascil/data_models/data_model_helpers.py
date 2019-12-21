@@ -1,6 +1,6 @@
 """Functions to help with persistence of data models
 
-These do data conversion and persistence. Functions from rascil.processing_library and processing_components are used.
+These do data conversion and persistence. Functions from processing_components are used.
 """
 
 __all__ = ['convert_earthlocation_to_string',

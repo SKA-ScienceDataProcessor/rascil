@@ -17,7 +17,7 @@ import numpy
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image
 from rascil.data_models.parameters import get_parameter
 from rascil.data_models.polarisation import convert_pol_frame
-from rascil.processing_components.image.operations import copy_image
+from rascil.processing_components import copy_image
 from rascil.processing_components.imaging.base import shift_vis_to_image, normalize_sumwt
 from rascil.processing_components.visibility.base import copy_visibility
 

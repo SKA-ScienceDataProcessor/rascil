@@ -35,9 +35,10 @@ from photutils import fit_2dgaussian
 
 from rascil.data_models.memory_data_models import Image
 from rascil.data_models.parameters import get_parameter
-from rascil.processing_library.arrays.cleaners import hogbom, hogbom_complex, msclean, msmfsclean
-from rascil.processing_library.image.operations import create_image_from_array, copy_image
-from rascil.processing_components.image.operations import calculate_image_frequency_moments, calculate_image_from_frequency_moments
+from rascil.processing_components.arrays.cleaners import hogbom, hogbom_complex, msclean, msmfsclean
+from rascil.processing_components.image.operations import create_image_from_array, copy_image
+from rascil.processing_components.image.operations import calculate_image_frequency_moments, \
+    calculate_image_from_frequency_moments
 
 log = logging.getLogger(__name__)
 

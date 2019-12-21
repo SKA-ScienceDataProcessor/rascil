@@ -12,8 +12,8 @@ import numpy
 
 from rascil.data_models.memory_data_models import Image
 
-from rascil.processing_library.image.operations import create_image_from_array, create_empty_image_like
-from rascil.processing_library.util.array_functions import tukey_filter
+from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like
+from rascil.processing_components.util.array_functions import tukey_filter
 
 log = logging.getLogger(__name__)
 

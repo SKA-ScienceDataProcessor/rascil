@@ -6,8 +6,7 @@ Radio Astronomy Simulation, Calibration and Imaging Library
 ###########################################################
 
 The Radio Astronomy Simulation, Calibration and Imaging Library expresses radio interferometry calibration and
-imaging algorithms in python and numpy.
-The emphasis is on capturing the key algorithms and data models. The interfaces all operate with familiar data
+imaging algorithms in python and numpy. The interfaces all operate with familiar data
 structures such as image, visibility table, gaintable, etc. The python source code is directly accessible from these
 documentation pages: see the source link in the top right corner.
 
@@ -16,15 +15,11 @@ processing, and the `Dask <https:/www.dask.org>`_ library for distributed proces
 
 RASCIL replaces the Algorithm Reference Library (ARL), which is now frozen.
 
-.. _getting-started:
-
-Getting Started
-***************
-
 .. toctree::
    :maxdepth: 2
 
-   RASCIL_quickstart
+   RASCIL_install
+   RASCIL_notebooks
    RASCIL_directory
    RASCIL_api
    RASCIL_otherinfo

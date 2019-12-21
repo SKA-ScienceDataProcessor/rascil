@@ -12,8 +12,8 @@ module load git-lfs-2.3.0-gcc-5.4.0-oktvmkw
 module load cfitsio-3.410-gcc-5.4.0-tp3pkyv
 
 # Clone the repository
-#git clone https://github.com/SKA-ScienceDataProcessor/algorithm-reference-library/
-#cd algorithm-reference-library/
+#git clone https://github.com/SKA-ScienceDataProcessor/rascil/
+#cd rascil/
 
 # Get the data
 git-lfs pull

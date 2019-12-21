@@ -1,7 +1,8 @@
 """ Unit tests for visibility operations
     
     
-    """
+"""
+import os
 import sys
 import unittest
 import logging
@@ -30,7 +31,7 @@ class TestCreateMS(unittest.TestCase):
     def setUp(self):
         self.dir = rascil_path('test_results')
         
-        self.persist = False
+        self.persist = os.getenv("RASCIL_PERSIST", False)
     
         return
     

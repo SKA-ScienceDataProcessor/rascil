@@ -7,10 +7,11 @@
 Converting from ARL to RASCIL
 *****************************
 
++ The top level environment variable ARL is now RASCIL. PYTHONPATH should be set to include RASCIL
 
-+ The top level environment variable ARL is now RASCIL
++ processing_library and processing_components have been combined
 
-+ There is now a top level package called rascil. The source directories data_models, processing_library, processing_components, and workflows have been moved to that directory.
++ There is now a top level package called rascil. The source directories data_models, processing_components, and workflows have been moved to that directory.
 
 + Imports now only have to be to the e.g. rascil.processing_components level but deeper imports will still work.
 

@@ -7,7 +7,7 @@
 
 # If dependency environment modules are loaded and repository is already cloned
 # this file can be sources from RASCIL and should build the system
-# i.e. algorithm-reference-library> source scripts/build-rascil-linux-new.sh
+# i.e. rascil> source scripts/build-rascil-linux-new.sh
 
 
 # Load the dependency modules
@@ -22,8 +22,8 @@
 #module load cfitsio-3.410-gcc-5.4.0-tp3pkyv
 
 # Clone the repository
-#git clone https://github.com/SKA-ScienceDataProcessor/algorithm-reference-library/
-#cd algorithm-reference-library/
+#git clone https://github.com/SKA-ScienceDataProcessor/rascil/
+#cd rascil/
 
 # Get the data
 #git-lfs pull

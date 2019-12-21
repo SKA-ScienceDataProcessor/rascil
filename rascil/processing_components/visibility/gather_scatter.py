@@ -76,10 +76,11 @@ def visibility_gather(visibility_list: List[Visibility], vis: Visibility, vis_it
 
     for i, rows in enumerate(rowses):
         assert i < len(visibility_list), "Gather not consistent with scatter for slice %d" % i
-        if visibility_list[i] is not None and numpy.sum(rows):
-            assert numpy.sum(rows) == visibility_list[i].nvis, \
+        sum_rows = numpy.sum(numpy.array(rows)).astype('int')
+        if visibility_list[i] is not None and sum_rows > 0:
+            assert sum_rows == visibility_list[i].nvis, \
                 "Mismatch in number of rows (%d, %d) in gather for slice %d" % \
-            (numpy.sum(rows), visibility_list[i].nvis, i)
+            (int(sum_rows), visibility_list[i].nvis, i)
             vis.data[rows] = visibility_list[i].data[...]
     
     return vis
@@ -101,7 +102,7 @@ def visibility_gather_w(visibility_list: List[Visibility], vis: Visibility, vis_
 def visibility_gather_time(visibility_list: List[Visibility], vis: Visibility, vis_slices=1) -> Visibility:
     return visibility_gather(visibility_list, vis, vis_iter=vis_timeslice_iter, vis_slices=vis_slices)
 
-def visibility_scatter_channel(vis: BlockVisibility) -> List[Visibility]:
+def visibility_scatter_channel(vis: BlockVisibility) -> List[BlockVisibility]:
     """ Scatter channels to separate visibilities
     
     :param vis:

@@ -22,6 +22,9 @@ log = logging.getLogger(__name__)
 def gaintable_summary(gt: GainTable):
     """Return string summarizing the Gaintable
 
+    :param gt: Gaintable
+    :returns: string
+
     """
     return "%s rows, %.3f GB" % (gt.data.shape, gt.size())
 
@@ -34,7 +37,7 @@ def create_gaintable_from_blockvisibility(vis: BlockVisibility, timeslice=None,
     
     :param vis: BlockVisibilty
     :param timeslice: Time interval between solutions (s)
-    :param frequency_width: Frequency solution width (Hz)
+    :param frequencyslice: Frequency solution width (Hz) (NYI)
     :return: GainTable
     
     """
@@ -228,7 +231,7 @@ def qa_gaintable(gt: GainTable, context=None) -> QA:
     """Assess the quality of a gaintable
 
     :param gt:
-    :return: AQ
+    :return: QA
     """
     agt = numpy.abs(gt.gain[gt.weight > 0.0])
     pgt = numpy.angle(gt.gain[gt.weight > 0.0])

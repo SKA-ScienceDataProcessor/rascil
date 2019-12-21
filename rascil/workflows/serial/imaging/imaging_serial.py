@@ -19,7 +19,7 @@ import numpy
 
 from rascil.data_models.memory_data_models import Image, Visibility, BlockVisibility
 from rascil.data_models.parameters import get_parameter
-from rascil.processing_library.image import copy_image, create_empty_image_like
+from rascil.processing_components.image.operations import copy_image, create_empty_image_like
 from rascil.workflows.shared.imaging import imaging_context
 from rascil.workflows.shared.imaging import sum_invert_results, remove_sumwt, sum_predict_results, \
     threshold_list

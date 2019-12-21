@@ -21,7 +21,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models import SkyModel, rascil_path, PolarisationFrame
 
-from rascil.processing_library import create_empty_image_like, copy_image
+from rascil.processing_components.image.operations import copy_image, create_empty_image_like
 
 from rascil.processing_components import create_gaintable_from_blockvisibility, export_image_to_fits,\
     remove_neighbouring_components, find_skycomponents, calculate_skymodel_equivalent_image, \

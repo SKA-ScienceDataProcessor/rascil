@@ -1,7 +1,7 @@
 """ Unit tests for mpc
 
 """
-
+import os
 import logging
 import unittest
 
@@ -11,7 +11,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.parameters import rascil_path
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.image.operations import import_image_from_fits, create_empty_image_like, qa_image, \
+from rascil.processing_components.image.operations import import_image_from_fits, qa_image, \
     export_image_to_fits
 from rascil.processing_components.imaging.primary_beams import create_low_test_beam
 from rascil.processing_components.simulation.ionospheric_screen import create_gaintable_from_screen, \
@@ -22,7 +22,7 @@ from rascil.processing_components.simulation import create_test_image
 from rascil.processing_components.skycomponent.operations import apply_beam_to_skycomponent
 from rascil.processing_components.skycomponent.operations import filter_skycomponents_by_flux
 from rascil.processing_components.visibility.base import create_blockvisibility
-from rascil.processing_library.image.operations import create_image
+from rascil.processing_components import create_image, create_empty_image_like
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 class TestIonosphericScreen(unittest.TestCase):
     def setUp(self):
         
-        self.persist = False
+        self.persist = os.getenv("RASCIL_PERSIST", False)
         from rascil.data_models.parameters import rascil_path
         dec = -40.0 * u.deg
         

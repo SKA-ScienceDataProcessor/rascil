@@ -19,8 +19,8 @@ from astropy.coordinates import SkyCoord
 from rascil.data_models.memory_data_models import BlockVisibility, Visibility, QA
 from rascil.data_models.polarisation import convert_linear_to_stokes, convert_circular_to_stokesI, convert_linear_to_stokesI, \
     convert_circular_to_stokes, PolarisationFrame
-from rascil.processing_library.imaging.imaging_params import get_frequency_map
-from rascil.processing_library.util.coordinate_support import skycoord_to_lmn, simulate_point
+from rascil.processing_components.imaging import get_frequency_map
+from rascil.processing_components.util.coordinate_support import skycoord_to_lmn, simulate_point
 from rascil.processing_components.visibility import copy_visibility
 
 log = logging.getLogger(__name__)

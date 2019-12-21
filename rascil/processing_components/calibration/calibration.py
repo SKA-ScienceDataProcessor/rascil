@@ -20,7 +20,7 @@ import numpy
 from rascil.data_models import BlockVisibility, GainTable, assert_vis_gt_compatible
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.visibility import create_visibility_from_rows, divide_visibility
-from rascil.processing_library.calibration.solvers import solve_from_X
+from rascil.processing_components.calibration.solvers import solve_from_X
 
 log = logging.getLogger(__name__)
 

@@ -61,7 +61,7 @@ from rascil.processing_components.skycomponent.operations import create_skycompo
 from rascil.processing_components.visibility.base import create_blockvisibility, create_visibility
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
-from rascil.processing_library.image.operations import create_image_from_array
+from rascil.processing_components.image.operations import create_image_from_array
 
 log = logging.getLogger(__name__)
 
@@ -229,8 +229,8 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
     log.info('create_test_image_from_s3: %d sources read' % (len(fluxes)))
     
     p = w.sub(2).wcs_world2pix(numpy.array(ras), numpy.array(decs), 1)
-    total_flux = numpy.sum(fluxes)
     fluxes = numpy.array(fluxes)
+    total_flux = numpy.sum(fluxes)
     ip = numpy.round(p).astype('int')
     ok = numpy.where((0 <= ip[0, :]) & (npixel > ip[0, :]) & (0 <= ip[1, :]) & (npixel > ip[1, :]))[0]
     ps = ip[:, ok]

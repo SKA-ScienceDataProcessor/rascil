@@ -16,6 +16,6 @@ rst: $(RSTs)
 %.html: %.rst
 	${RST2HTML} $(<:.rstw=.rst)  > $@
 
-.PHONY: clean
-clean:
-	rm -f ${RSTs}
+#.PHONY: clean
+#clean:
+#	rm -f ${RSTs}

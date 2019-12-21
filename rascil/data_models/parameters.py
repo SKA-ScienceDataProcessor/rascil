@@ -66,14 +66,14 @@ def rascil_path(path):
     absolute path::
 
         rascil_path('data/models/SKA1_LOW_beam.fits')
-        '/Users/timcornwell/Code/algorithm-reference-library/data/models/SKA1_LOW_beam.fits'
+        '/Users/timcornwell/Code/rascil/data/models/SKA1_LOW_beam.fits'
 
     :param path:
     :return: absolute path
     """
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)) + "/../../")
-    arlhome = os.getenv('RASCIL', project_root)
-    return os.path.join(arlhome, path)
+    rascilhome = os.getenv('RASCIL', project_root)
+    return os.path.join(rascilhome, path)
 
 
 def get_parameter(kwargs, key, default=None):

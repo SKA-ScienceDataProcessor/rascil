@@ -22,5 +22,4 @@ More details can be found at: `SKA1 SDP Algorithm Reference Library (ARL) Report
 
 * :ref:`modindex`
 * :ref:`genindex`
-* :ref:`search`
 
