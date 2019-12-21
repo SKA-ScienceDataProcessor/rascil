@@ -27,7 +27,7 @@ Ignoring changes in the normalisation term, we have:
 __all__ = ['fit_uvwplane', 'fit_uvwplane_only', 'predict_timeslice_single', 'invert_timeslice_single']
 
 import logging
-from rascil.processing_components import image_is_canonical
+from rascil.processing_components.image.operations import image_is_canonical
 
 log = logging.getLogger(__name__)
 
