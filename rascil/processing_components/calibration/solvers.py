@@ -53,7 +53,7 @@ def solve_from_X(gt: GainTable, x: numpy.ndarray, xwt: numpy.ndarray, chunk, cro
                 solve_antenna_gains_itsubs_vector(gt.data['gain'][chunk, ...], gt.data['weight'][chunk, ...],
                                                   x, xwt, phase_only=phase_only, niter=niter,
                                                   tol=tol)
-    
+
     else:
         gt.data['gain'][chunk, ...], gt.data['weight'][chunk, ...], gt.data['residual'][chunk, ...] = \
             solve_antenna_gains_itsubs_scalar(gt.data['gain'][chunk, ...], gt.data['weight'][chunk, ...],
@@ -83,15 +83,24 @@ def solve_antenna_gains_itsubs_scalar(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
     :return: gain [nants, ...], weight [nants, ...]
 
     """
-    
+
     nants = x.shape[0]
-    for ant1 in range(nants):
-        x[ant1, ant1, ...] = 0.0
-        xwt[ant1, ant1, ...] = 0.0
-        for ant2 in range(ant1 + 1, nants):
-            x[ant1, ant2, ...] = numpy.conjugate(x[ant2, ant1, ...])
-            xwt[ant1, ant2, ...] = xwt[ant2, ant1, ...]
-    
+    # Optimized
+    i_diag = numpy.diag_indices(nants, nants)
+    x[i_diag[0], i_diag[1], ...] = 0.0
+    xwt[i_diag[0], i_diag[1], ...] = 0.0
+    i_lower = numpy.tril_indices(nants, -1)
+    i_upper = (i_lower[1], i_lower[0])
+    x[i_upper] = numpy.conjugate(x[i_lower])
+    xwt[i_upper] = xwt[i_lower]
+    # Original
+    # for ant1 in range(nants):
+    #     x[ant1, ant1, ...] = 0.0
+    #     xwt[ant1, ant1, ...] = 0.0
+    #     for ant2 in range(ant1 + 1, nants):
+    #         x[ant1, ant2, ...] = numpy.conjugate(x[ant2, ant1, ...])
+    #         xwt[ant1, ant2, ...] = xwt[ant2, ant1, ...]
+
     for iter in range(niter):
         gainLast = gain
         gain, gwt = gain_substitution_scalar(gain, x, xwt)
@@ -104,33 +113,46 @@ def solve_antenna_gains_itsubs_scalar(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
         change = numpy.max(numpy.abs(gain - gainLast))
         if change < tol:
             return gain, gwt, solution_residual_scalar(gain, x, xwt)
-    
+
     return gain, gwt, solution_residual_scalar(gain, x, xwt)
 
 
 def gain_substitution_scalar(gain, x, xwt):
     nants, nchan, nrec, _ = gain.shape
-    newgain = numpy.ones_like(gain, dtype='complex')
-    gwt = numpy.zeros_like(gain, dtype='float')
-    
+    # newgain = numpy.ones_like(gain, dtype='complex128')
+    # gwt = numpy.zeros_like(gain, dtype='double')
+    newgain1 = numpy.ones_like(gain, dtype='complex128')
+    gwt1 = numpy.zeros_like(gain, dtype='double')
+
     x = x.reshape([nants, nants, nchan, nrec, nrec])
     xwt = xwt.reshape([nants, nants, nchan, nrec, nrec])
-    
+
     xxwt = x[:, :, :, 0, 0] * xwt[:, :, :, 0, 0]
     cgain = numpy.conjugate(gain)
     gcg = gain[:, :, 0, 0] * cgain[:, :, 0, 0]
-    
-    for ant1 in range(nants):
-        top = numpy.sum(gain[:, :, 0, 0] * xxwt[:, ant1, :], axis=0)
-        bot = numpy.sum((gcg[:, :] * xwt[:, ant1, :, 0, 0]).real, axis=0)
-        
-        if bot.all() > 0.0:
-            newgain[ant1, :, 0, 0] = top / bot
-            gwt[ant1, :, 0, 0] = bot
-        else:
-            newgain[ant1, :, 0, 0] = 0.0
-            gwt[ant1, :, 0, 0] = 0.0
-    return newgain, gwt
+    # Optimzied
+    n_top = numpy.einsum('ik...,ijk...->jk...', gain[..., 0, 0], xxwt[:, :, :])
+    n_bot = numpy.einsum('ik...,ijk...->jk...', gcg, xwt[..., 0, 0]).real
+    newgain1[:, :, 0, 0][n_bot[:].all() > 0.0] = n_top[n_bot[:].all() > 0.0] / n_bot[n_bot[:].all() > 0.0]
+    newgain1[:, :, 0, 0][n_bot[:].all() <= 0.0] = 0.0
+    gwt1[:, :, 0, 0] = n_bot
+    gwt1[:, :, 0, 0][n_bot[:].all() <= 0.0] = 0.0
+    return newgain1, gwt1
+    # Original scripts
+    # for ant1 in range(nants):
+    #     ntt = gain[:, :, 0, 0] * xxwt[:, ant1, :]
+    #     top = numpy.sum(gain[:, :, 0, 0] * xxwt[:, ant1, :], axis=0)
+    #     bot = numpy.sum((gcg[:, :] * xwt[:, ant1, :, 0, 0]).real, axis=0)
+    #
+    #     if bot.all() > 0.0:
+    #         newgain[ant1, :, 0, 0] = top / bot
+    #         gwt[ant1, :, 0, 0] = bot
+    #     else:
+    #         newgain[ant1, :, 0, 0] = 0.0
+    #         gwt[ant1, :, 0, 0] = 0.0
+    # assert(newgain == newgain1).all()
+    # assert(gwt == gwt1).all()
+    # return newgain, gwt
 
 
 def solve_antenna_gains_itsubs_vector(gain, gwt, x, xwt, niter=30, tol=1e-8, phase_only=True, refant=0):
@@ -154,23 +176,33 @@ def solve_antenna_gains_itsubs_vector(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
     :param refant: Reference antenna for phase (default=0.0)
     :return: gain [nants, ...], weight [nants, ...]
     """
-    
+
     nants, _, nchan, npol = x.shape
     assert npol == 4
     newshape = (nants, nants, nchan, 2, 2)
     x = x.reshape(newshape)
     xwt = xwt.reshape(newshape)
-    
-    for ant1 in range(nants):
-        x[ant1, ant1, ...] = 0.0
-        xwt[ant1, ant1, ...] = 0.0
-        for ant2 in range(ant1 + 1, nants):
-            x[ant1, ant2, ...] = numpy.conjugate(x[ant2, ant1, ...])
-            xwt[ant1, ant2, ...] = xwt[ant2, ant1, ...]
-    
+
+    # Initial Data - Optimized
+    i_diag = numpy.diag_indices(nants, nants)
+    x[i_diag[0], i_diag[1], ...] = 0.0
+    xwt[i_diag[0], i_diag[1], ...] = 0.0
+    i_lower = numpy.tril_indices(nants, -1)
+    i_upper = (i_lower[1], i_lower[0])
+    x[i_upper] = numpy.conjugate(x[i_lower])
+    xwt[i_upper] = xwt[i_lower]
+
+    # Original
+    # for ant1 in range(nants):
+    #     x[ant1, ant1, ...] = 0.0
+    #     xwt[ant1, ant1, ...] = 0.0
+    #     for ant2 in range(ant1 + 1, nants):
+    #         x[ant1, ant2, ...] = numpy.conjugate(x[ant2, ant1, ...])
+    #         xwt[ant1, ant2, ...] = xwt[ant2, ant1, ...]
+
     gain[..., 0, 1] = 0.0
     gain[..., 1, 0] = 0.0
-    
+
     for iter in range(niter):
         gainLast = gain
         gain, gwt = gain_substitution_vector(gain, x, xwt)
@@ -183,45 +215,55 @@ def solve_antenna_gains_itsubs_vector(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
         gain = 0.5 * (gain + gainLast)
         if change < tol:
             return gain, gwt, solution_residual_vector(gain, x, xwt)
-    
+
     return gain, gwt, solution_residual_vector(gain, x, xwt)
 
 
 def gain_substitution_vector(gain, x, xwt):
     nants, nchan, nrec, _ = gain.shape
-    newgain = numpy.ones_like(gain, dtype='complex')
+    newgain = numpy.ones_like(gain, dtype='complex128')
     if nrec > 0:
         newgain[..., 0, 1] = 0.0
         newgain[..., 1, 0] = 0.0
-    
-    gwt = numpy.zeros_like(gain, dtype='float')
-    
+    gwt = numpy.zeros_like(gain, dtype='double')
+
     # We are going to work with Jones 2x2 matrix formalism so everything has to be
     # converted to that format
     x = x.reshape(nants, nants, nchan, nrec, nrec)
     xwt = xwt.reshape(nants, nants, nchan, nrec, nrec)
-    
+
     if nrec > 0:
         gain[..., 0, 1] = 0.0
         gain[..., 1, 0] = 0.0
-    
-    for ant1 in range(nants):
-        for chan in range(nchan):
-            # Loop over e.g. 'RR', 'LL, or 'xx', 'YY' ignoring cross terms
-            for rec in range(nrec):
-                top = numpy.sum(x[:, ant1, chan, rec, rec] *
-                                gain[:, chan, rec, rec] * xwt[:, ant1, chan, rec, rec], axis=0)
-                bot = numpy.sum((gain[:, chan, rec, rec] * numpy.conjugate(gain[:, chan, rec, rec]) *
-                                 xwt[:, ant1, chan, rec, rec]).real, axis=0)
-                
-                if bot > 0.0:
-                    newgain[ant1, chan, rec, rec] = top / bot
-                    gwt[ant1, chan, rec, rec] = bot
-                else:
-                    newgain[ant1, chan, rec, rec] = 0.0
-                    gwt[ant1, chan, rec, rec] = 0.0
-    
+
+    for rec in range(nrec):
+        n_top = numpy.einsum('ik...,ijk...->jk...', gain[..., rec, rec], x[:, :, :, rec, rec] * xwt[:, :, :, rec, rec])
+        n_bot = numpy.einsum('ik...,ijk...->jk...', gain[:, :, rec, rec] * numpy.conjugate(gain[:, :, rec, rec]),
+                             xwt[..., rec, rec]).real
+        newgain[:, :, rec, rec][n_bot[:].all() > 0.0] = n_top[n_bot[:].all() > 0.0] / n_bot[n_bot[:].all() > 0.0]
+        newgain[:, :, rec, rec][n_bot[:].all() <= 0.0] = 0.0
+        gwt[:, :, rec, rec] = n_bot
+        gwt[:, :, rec, rec][n_bot[:].all() <= 0.0] = 0.0
     return newgain, gwt
+
+    # for ant1 in range(nants):
+    #     for chan in range(nchan):
+    #         # Loop over e.g. 'RR', 'LL, or 'xx', 'YY' ignoring cross terms
+    #         for rec in range(nrec):
+    #             top = numpy.sum(x[:, ant1, chan, rec, rec] *
+    #                             gain[:, chan, rec, rec] * xwt[:, ant1, chan, rec, rec], axis=0)
+    #             bot = numpy.sum((gain[:, chan, rec, rec] * numpy.conjugate(gain[:, chan, rec, rec]) *
+    #                              xwt[:, ant1, chan, rec, rec]).real, axis=0)
+    #
+    #             if bot > 0.0:
+    #                 newgain[ant1, chan, rec, rec] = top / bot
+    #                 gwt[ant1, chan, rec, rec] = bot
+    #             else:
+    #                 newgain[ant1, chan, rec, rec] = 0.0
+    #                 gwt[ant1, chan, rec, rec] = 0.0
+    # # assert(newgain1==newgain).all()
+    # # assert(gwt1==gwt).all()
+    # return newgain, gwt
 
 
 def solve_antenna_gains_itsubs_matrix(gain, gwt, x, xwt, niter=30, tol=1e-8, phase_only=True, refant=0):
@@ -245,23 +287,32 @@ def solve_antenna_gains_itsubs_matrix(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
     :param refant: Reference antenna for phase (default=0.0)
     :return: gain [nants, ...], weight [nants, ...]
     """
-    
+
     nants, _, nchan, npol = x.shape
     assert npol == 4
     newshape = (nants, nants, nchan, 2, 2)
     x = x.reshape(newshape)
     xwt = xwt.reshape(newshape)
-    
-    for ant1 in range(nants):
-        x[ant1, ant1, ...] = 0.0
-        xwt[ant1, ant1, ...] = 0.0
-        for ant2 in range(ant1 + 1, nants):
-            x[ant1, ant2, ...] = numpy.conjugate(x[ant2, ant1, ...])
-            xwt[ant1, ant2, ...] = xwt[ant2, ant1, ...]
-    
+
+    # Optimzied
+    i_diag = numpy.diag_indices(nants, nants)
+    x[i_diag[0], i_diag[1], ...] = 0.0
+    xwt[i_diag[0], i_diag[1], ...] = 0.0
+    i_lower = numpy.tril_indices(nants, -1)
+    i_upper = (i_lower[1], i_lower[0])
+    x[i_upper] = numpy.conjugate(x[i_lower])
+    xwt[i_upper] = xwt[i_lower]
+    # Original
+    # for ant1 in range(nants):
+    #     x[ant1, ant1, ...] = 0.0
+    #     xwt[ant1, ant1, ...] = 0.0
+    #     for ant2 in range(ant1 + 1, nants):
+    #         x[ant1, ant2, ...] = numpy.conjugate(x[ant2, ant1, ...])
+    #         xwt[ant1, ant2, ...] = xwt[ant2, ant1, ...]
+
     gain[..., 0, 1] = 0.0
     gain[..., 1, 0] = 0.0
-    
+
     for iter in range(niter):
         gainLast = gain
         gain, gwt = gain_substitution_matrix(gain, x, xwt)
@@ -271,38 +322,68 @@ def solve_antenna_gains_itsubs_matrix(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
         gain = 0.5 * (gain + gainLast)
         if change < tol:
             return gain, gwt, solution_residual_matrix(gain, x, xwt)
-    
+
     return gain, gwt, solution_residual_matrix(gain, x, xwt)
 
 
 def gain_substitution_matrix(gain, x, xwt):
     nants, nchan, nrec, _ = gain.shape
-    newgain = numpy.ones_like(gain, dtype='complex')
-    gwt = numpy.zeros_like(gain, dtype='float')
-    
+    # newgain = numpy.ones_like(gain, dtype='complex128')
+    newgain1 = numpy.ones_like(gain, dtype='complex128')
+    # gwt = numpy.zeros_like(gain, dtype='double')
+    gwt1 = numpy.zeros_like(gain, dtype='double')
+
     # We are going to work with Jones 2x2 matrix formalism so everything has to be
     # converted to that format
     x = x.reshape([nants, nants, nchan, nrec, nrec])
+    diag = numpy.ones_like(x)
     xwt = xwt.reshape([nants, nants, nchan, nrec, nrec])
-    
     # Write these loops out explicitly. Derivation of these vector equations is tedious but they are
     # structurally identical to the scalar case with the following changes
     # Vis -> 2x2 coherency vector, g-> 2x2 Jones matrix, *-> matmul, conjugate->Hermitean transpose (.H)
-    for ant1 in range(nants):
-        for chan in range(nchan):
-            top = 0.0
-            bot = 0.0
-            for ant2 in range(nants):
-                if ant1 != ant2:
-                    xmat = x[ant2, ant1, chan]
-                    xwtmat = xwt[ant2, ant1, chan]
-                    g2 = gain[ant2, chan]
-                    top += xmat * xwtmat * g2
-                    bot += numpy.conjugate(g2) * xwtmat * g2
-            newgain[ant1, chan][bot > 0.0] = top[bot > 0.0] / bot[bot > 0.0]
-            newgain[ant1, chan][bot <= 0.0] = 0.0
-            gwt[ant1, chan] = bot.real
-    return newgain, gwt
+    #
+    gain_conj = numpy.conjugate(gain)
+    for ant in range(nants):
+        diag[ant, ant, ...] = 0
+    n_top1 = numpy.einsum('ij...->j...', xwt * diag * x * gain[:, None, ...])
+    # n_top1 *= gain
+    # n_top1 = numpy.conjugate(n_top1)
+    n_bot = diag * xwt * gain_conj * gain
+    n_bot1 = numpy.einsum('ij...->i...', n_bot)
+
+    # Using Boolean Index - 158 ms
+    # newgain1[:, :][n_bot1[:,:] > 0.0] = n_top1[n_bot1[:,:] > 0.0] / n_bot1[n_bot1[:,:] > 0.0]
+    # newgain1[:,:][n_bot1[:,:] <= 0.0] = 0.0
+
+    # Using putmask: 121 ms
+    n_top2 = n_top1.copy()
+    numpy.putmask(n_top2, n_bot1[...] <= 0, 0.)
+    n_bot2 = n_bot1.copy()
+    numpy.putmask(n_bot2, n_bot1[...] <= 0, 1.)
+    newgain1 = n_top2 / n_bot2
+
+    gwt1 = n_bot1.real
+    return newgain1, gwt1
+
+    # Original Scripts translated from Fortran
+    #
+    # for ant1 in range(nants):
+    #     for chan in range(nchan):
+    #         top = 0.0
+    #         bot = 0.0
+    #         for ant2 in range(nants):
+    #             if ant1 != ant2:
+    #                 xmat = x[ant2, ant1, chan]
+    #                 xwtmat = xwt[ant2, ant1, chan]
+    #                 g2 = gain[ant2, chan]
+    #                 top += xmat * xwtmat * g2
+    #                 bot += numpy.conjugate(g2) * xwtmat * g2
+    #         newgain[ant1, chan][bot > 0.0] = top[bot > 0.0] / bot[bot > 0.0]
+    #         newgain[ant1, chan][bot <= 0.0] = 0.0
+    #         gwt[ant1, chan] = bot.real
+    # assert(newgain==newgain1).all()
+    # assert(gwt == gwt1).all()
+    # return newgain, gwt
 
 
 def solution_residual_scalar(gain, x, xwt):
@@ -313,15 +394,15 @@ def solution_residual_scalar(gain, x, xwt):
     :param xwt: Point source equivalent weight [nant, ...]
     :return: residual[...]
     """
-    
+
     nant, nchan, nrec, _ = gain.shape
     x = x.reshape(nant, nant, nchan, nrec, nrec)
-    
+
     xwt = xwt.reshape(nant, nant, nchan, nrec, nrec)
-    
+
     residual = numpy.zeros([nchan, nrec, nrec])
     sumwt = numpy.zeros([nchan, nrec, nrec])
-    
+
     for chan in range(nchan):
         lgain = gain[:, chan, 0, 0]
         clgain = numpy.conjugate(lgain)
@@ -331,10 +412,10 @@ def solution_residual_scalar(gain, x, xwt):
             error[i, i] = 0.0
         residual += numpy.sum(error * xwt[:, :, chan, 0, 0] * numpy.conjugate(error)).real
         sumwt += numpy.sum(xwt[:, :, chan, 0, 0])
-    
+
     residual[sumwt > 0.0] = numpy.sqrt(residual[sumwt > 0.0] / sumwt[sumwt > 0.0])
     residual[sumwt <= 0.0] = 0.0
-    
+
     return residual
 
 
@@ -348,32 +429,49 @@ def solution_residual_vector(gain, x, xwt):
     :param xwt: Point source equivalent weight [nant, ...]
     :return: residual[...]
     """
-    
+
     nants, nchan, nrec, _ = gain.shape
     x = x.reshape(nants, nants, nchan, nrec, nrec)
     x[..., 1, 0] = 0.0
     x[..., 0, 1] = 0.0
-    
+
     xwt = xwt.reshape(nants, nants, nchan, nrec, nrec)
     xwt[..., 1, 0] = 0.0
     xwt[..., 0, 1] = 0.0
-    
-    residual = numpy.zeros([nchan, nrec, nrec])
-    sumwt = numpy.zeros([nchan, nrec, nrec])
-    
-    for ant1 in range(nants):
-        for ant2 in range(nants):
-            for chan in range(nchan):
-                for rec in range(nrec):
-                    error = x[ant2, ant1, chan, rec, rec] - \
-                            gain[ant1, chan, rec, rec] * numpy.conjugate(gain[ant2, chan, rec, rec])
-                    residual += (error * xwt[ant2, ant1, chan, rec, rec] * numpy.conjugate(error)).real
-                    sumwt += xwt[ant2, ant1, chan, rec, rec]
-    
-    residual[sumwt > 0.0] = numpy.sqrt(residual[sumwt > 0.0] / sumwt[sumwt > 0.0])
-    residual[sumwt <= 0.0] = 0.0
-    
-    return residual
+
+    # residual = numpy.zeros([nchan, nrec, nrec])
+    # sumwt = numpy.zeros([nchan, nrec, nrec])
+    n_residual = numpy.zeros([nchan, nrec, nrec])
+    n_sumwt = numpy.zeros([nchan, nrec, nrec])
+
+    for rec in range(nrec):
+        n_gain = numpy.einsum('i...,j...->ij...',numpy.conjugate(gain[...,rec,rec]),gain[...,rec,rec])
+        n_error = numpy.conjugate(x[...,rec,rec] - n_gain)
+        nn_residual = (n_error*xwt[...,rec,rec]*numpy.conjugate(n_error)).real
+        n_residual[:,rec,rec] = numpy.einsum('ijk->k',nn_residual)
+        n_sumwt[:,rec,rec] = numpy.einsum('ijk->k',xwt[...,rec,rec])
+
+    n_residual[n_sumwt > 0.0] = numpy.sqrt(n_residual[n_sumwt > 0.0] / n_sumwt[n_sumwt > 0.0])
+    n_residual[n_sumwt <= 0.0] = 0.0
+
+    return n_residual
+
+    # for ant1 in range(nants):
+    #     for ant2 in range(nants):
+    #         for chan in range(nchan):
+    #             for rec in range(nrec):
+    #                 error = x[ant2, ant1, chan, rec, rec] - \
+    #                         gain[ant1, chan, rec, rec] * numpy.conjugate(gain[ant2, chan, rec, rec])
+    #                 residual[chan,rec,rec] += (error * xwt[ant2, ant1, chan, rec, rec] * numpy.conjugate(error)).real
+    #                 sumwt[chan,rec,rec] += xwt[ant2, ant1, chan, rec, rec]
+    #                 # The following 2 lines would be wrong if we use chan and rec implictly.
+    #                 residual += (error * xwt[ant2, ant1, chan, rec, rec] * numpy.conjugate(error)).real
+    #                 sumwt += xwt[ant2, ant1, chan, rec, rec]
+    #
+    # residual[sumwt > 0.0] = numpy.sqrt(residual[sumwt > 0.0] / sumwt[sumwt > 0.0])
+    # residual[sumwt <= 0.0] = 0.0
+    #
+    # return residual
 
 
 def solution_residual_matrix(gain, x, xwt):
@@ -384,25 +482,40 @@ def solution_residual_matrix(gain, x, xwt):
     :param xwt: Point source equivalent weight [nant, ...]
     :return: residual[...]
     """
-    
+
     nants, _, nchan, nrec, _ = x.shape
-    
-    residual = numpy.zeros([nchan, nrec, nrec])
-    sumwt = numpy.zeros([nchan, nrec, nrec])
-    
-    # This is written out in long winded form but should be optimised for
+
+    # residual = numpy.zeros([nchan, nrec, nrec])
+    # sumwt = numpy.zeros([nchan, nrec, nrec])
+
+    n_residual = numpy.zeros([nchan, nrec, nrec])
+    n_sumwt = numpy.zeros([nchan, nrec, nrec])
+
+    n_gain = numpy.einsum('i...,j...->ij...',numpy.conjugate(gain),gain)
+    n_error = numpy.conjugate(x - n_gain)
+    nn_residual = (n_error*xwt*numpy.conjugate(n_error)).real
+    n_residual = numpy.einsum('ijk...->k...',nn_residual)
+    n_sumwt = numpy.einsum('ijk...->k...',xwt)
+
+    n_residual[n_sumwt > 0.0] = numpy.sqrt(n_residual[n_sumwt > 0.0] / n_sumwt[n_sumwt > 0.0])
+    n_residual[n_sumwt <= 0.0] = 0.0
+
+    return n_residual
+
+    # This is written out in long winded form but should e optimised for
     # production code!
-    for ant1 in range(nants):
-        for ant2 in range(nants):
-            for chan in range(nchan):
-                for rec1 in range(nrec):
-                    for rec2 in range(nrec):
-                        error = x[ant2, ant1, chan, rec2, rec1] - \
-                                gain[ant1, chan, rec2, rec1] * numpy.conjugate(gain[ant2, chan, rec2, rec1])
-                        residual[chan, rec2, rec1] += (error * xwt[ant2, ant1, chan, rec2, rec1] * numpy.conjugate(
-                            error)).real
-                        sumwt[chan, rec2, rec1] += xwt[ant2, ant1, chan, rec2, rec1]
-    
-    residual[sumwt > 0.0] = numpy.sqrt(residual[sumwt > 0.0] / sumwt[sumwt > 0.0])
-    residual[sumwt <= 0.0] = 0.0
-    return residual
+    # for ant1 in range(nants):
+    #     for ant2 in range(nants):
+    #         for chan in range(nchan):
+    #             for rec1 in range(nrec):
+    #                 for rec2 in range(nrec):
+    #                     error = x[ant2, ant1, chan, rec2, rec1] - \
+    #                             gain[ant1, chan, rec2, rec1] * numpy.conjugate(gain[ant2, chan, rec2, rec1])
+    #                     residual[chan, rec2, rec1] += (error * xwt[ant2, ant1, chan, rec2, rec1] * numpy.conjugate(
+    #                         error)).real
+    #                     sumwt[chan, rec2, rec1] += xwt[ant2, ant1, chan, rec2, rec1]
+    #
+    # residual[sumwt > 0.0] = numpy.sqrt(residual[sumwt > 0.0] / sumwt[sumwt > 0.0])
+    # residual[sumwt <= 0.0] = 0.0
+    # # assert (residual == n_residual).all()
+    # return residual
