@@ -187,7 +187,6 @@ def show_image(im: Image, fig=None, title: str = '', pol=0, chan=0, cm='Greys', 
     import matplotlib.pyplot as plt
 
     assert isinstance(im, Image), im
-    assert image_is_canonical((im))
 
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=im.wcs.sub([1, 2]))

@@ -26,7 +26,6 @@ def image_gradients(im: Image):
     :return: Gradient images
     """
     assert isinstance(im, Image)
-    assert image_is_canonical(im)
 
     nchan, npol, ny, nx = im.shape
     
