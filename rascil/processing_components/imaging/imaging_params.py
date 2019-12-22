@@ -10,8 +10,6 @@ def get_frequency_map(vis, im: Image = None):
 
     """
 
-    assert image_is_canonical(im)
-
     # Find the unique frequencies in the visibility
     ufrequency = numpy.unique(vis.frequency)
     vnchan = len(ufrequency)
@@ -27,6 +25,8 @@ def get_frequency_map(vis, im: Image = None):
         assert min(vfrequencymap) >= 0, "Invalid frequency map: visibility channel < 0: %s" % str(vfrequencymap)
 
     elif im.data.shape[0] == 1 and vnchan >= 1:
+        assert image_is_canonical(im)
+
         spectral_mode = 'mfs'
         if vis.frequency_map is None:
             vfrequencymap = numpy.zeros_like(vis.frequency, dtype='int')
@@ -35,6 +35,8 @@ def get_frequency_map(vis, im: Image = None):
             vfrequencymap = vis.frequency_map
 
     else:
+        assert image_is_canonical(im)
+
         # We can map these to image channels
         v2im_map = im.wcs.sub(['spectral']).wcs_world2pix(ufrequency, 0)[0].astype('int')
 

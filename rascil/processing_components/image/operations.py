@@ -58,6 +58,9 @@ def image_is_canonical(im: Image):
     :param im:
     :return:
     """
+    if im is None:
+        return True
+
     canonical = True
     canonical = canonical and len(im.shape) == 4
     canonical = canonical and im.wcs.wcs.ctype[0] == 'RA---SIN' and im.wcs.wcs.ctype[1] == 'DEC--SIN'
