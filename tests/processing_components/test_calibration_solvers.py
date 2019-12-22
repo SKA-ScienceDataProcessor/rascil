@@ -160,12 +160,24 @@ class TestCalibrationSolvers(unittest.TestCase):
         self.core_solve('stokesIQUV', 'linear', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.01, residual_tol=1e-3, crosspol=True,
                         phase_only=False, f=[100.0, 50.0, 0.0, 0.0])
-    
+
+    @unittest.skip("Known not to work")
+    def test_solve_gaintable_matrix_both_linear_cross(self):
+        self.core_solve('stokesIQUV', 'linear', phase_error=0.1, amplitude_error=0.01,
+                        leakage=0.11, residual_tol=1e-3, crosspol=True,
+                        phase_only=False, f=[100.0, 50.0, 10.0, -20.0])
+
     def test_solve_gaintable_matrix_both_circular(self):
         self.core_solve('stokesIQUV', 'circular', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.01, residual_tol=1e-3, crosspol=True,
                         phase_only=False, f=[100.0, 0.0, 0.0, 50.0])
-    
+
+    @unittest.skip("Known not to work")
+    def test_solve_gaintable_matrix_both_circular_cross(self):
+        self.core_solve('stokesIQUV', 'circular', phase_error=0.1, amplitude_error=0.01,
+                        leakage=0.1, residual_tol=1e-3, crosspol=True,
+                        phase_only=False, f=[100.0, 10.0, -20.0, 50.0])
+
     def test_solve_gaintable_matrix_both_circular_channel(self):
         self.core_solve('stokesIQUV', 'circular', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.01, residual_tol=1e-3, crosspol=True, vnchan=4,
