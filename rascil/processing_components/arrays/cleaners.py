@@ -16,7 +16,7 @@ def hogbom(dirty, psf, window, gain, thresh, niter, fracthresh, prefix=''):
 
     See Hogbom CLEAN (1974A&AS...15..417H)
 
-    This version operates on numpy arrays.
+    This version operates on numpy arrays. deconvolve_cube provides a version for Images.
 
     :param fracthresh:
     :param prefix:
@@ -79,15 +79,15 @@ def hogbom_complex(dirty_q, dirty_u, psf_q, psf_u, window, gain, thresh, niter, 
     The starting-point for the code was the standard Hogbom clean algorithm available in ARL.
 
     Args:
-    dirty_q (numpy array): The dirty Q Image, i.e., the Q Image to be deconvolved.
-    dirty_u (numpy array): The dirty U Image, i.e., the U Image to be deconvolved.
-    psf_q (numpy array): The point spread-function in Stokes Q.
-    psf_u (numpy array): The point spread-function in Stokes U.
-    window (float): Regions where clean components are allowed. If True, entire dirty Image is allowed.
-    gain (float): The "loop gain", i.e., the fraction of the brightest pixel that is removed in each iteration.
-    thresh (float): Cleaning stops when the maximum of the absolute deviation of the residual is less than this value.
-    niter (int): Maximum number of components to make if the threshold `thresh` is not hit.
-    fracthresh (float): The predefined fractional threshold at which to stop cleaning.
+    :param dirty_q: (numpy array): The dirty Q Image, i.e., the Q Image to be deconvolved.
+    :param dirty_u: (numpy array): The dirty U Image, i.e., the U Image to be deconvolved.
+    :param psf_q: (numpy array): The point spread-function in Stokes Q.
+    :param psf_u: (numpy array): The point spread-function in Stokes U.
+    :param window: (float): Regions where clean components are allowed. If True, entire dirty Image is allowed.
+    :param gain: (float): The "loop gain", i.e., the fraction of the brightest pixel that is removed in each iteration.
+    :param thresh: (float): Cleaning stops when the maximum of the absolute deviation of the residual is less than this value.
+    :param niter: (int): Maximum number of components to make if the threshold `thresh` is not hit.
+    :param fracthresh: (float): The predefined fractional threshold at which to stop cleaning.
 
     Returns:
     comps.real: real clean component image.

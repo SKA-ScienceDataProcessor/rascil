@@ -16,6 +16,9 @@ class TestPrimaryBeams(unittest.TestCase):
     def setUp(self):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
+
+        self.show = False
+        self.persist = False
     
     def test_create_gradient(self):
         real_vp = import_image_from_fits(rascil_path('data/models/MID_GRASP_VP_real.fits'))
@@ -31,32 +34,37 @@ class TestPrimaryBeams(unittest.TestCase):
         gradyx.data *= real_vp.data
         gradyy.data *= real_vp.data
 
-        import matplotlib.pyplot as plt
-        plt.clf()
-        show_image(gradx, title='gradx')
-        plt.show()
-        plt.clf()
-        show_image(grady, title='grady')
-        plt.show()
-        export_image_to_fits(gradx, "%s/test_image_gradients_gradx.fits" % (self.dir))
-        export_image_to_fits(grady, "%s/test_image_gradients_grady.fits" % (self.dir))
+        if self.show:
+            import matplotlib.pyplot as plt
+            plt.clf()
+            show_image(gradx, title='gradx')
+            plt.show()
+            plt.clf()
+            show_image(grady, title='grady')
+            plt.show()
+        if self.persist:
+            export_image_to_fits(gradx, "%s/test_image_gradients_gradx.fits" % (self.dir))
+            export_image_to_fits(grady, "%s/test_image_gradients_grady.fits" % (self.dir))
 
-        plt.clf()
-        show_image(gradxx, title='gradxx')
-        plt.show()
-        plt.clf()
-        show_image(gradxy, title='gradxy')
-        plt.show()
-        plt.clf()
-        show_image(gradyx, title='gradyx')
-        plt.show()
-        plt.clf()
-        show_image(gradyy, title='gradyy')
-        plt.show()
-        export_image_to_fits(gradxx, "%s/test_image_gradients_gradxx.fits" % (self.dir))
-        export_image_to_fits(gradxy, "%s/test_image_gradients_gradxy.fits" % (self.dir))
-        export_image_to_fits(gradyx, "%s/test_image_gradients_gradyx.fits" % (self.dir))
-        export_image_to_fits(gradyy, "%s/test_image_gradients_gradyy.fits" % (self.dir))
+        if self.show:
+            import matplotlib.pyplot as plt
+            plt.clf()
+            show_image(gradxx, title='gradxx')
+            plt.show()
+            plt.clf()
+            show_image(gradxy, title='gradxy')
+            plt.show()
+            plt.clf()
+            show_image(gradyx, title='gradyx')
+            plt.show()
+            plt.clf()
+            show_image(gradyy, title='gradyy')
+            plt.show()
+        if self.persist:
+            export_image_to_fits(gradxx, "%s/test_image_gradients_gradxx.fits" % (self.dir))
+            export_image_to_fits(gradxy, "%s/test_image_gradients_gradxy.fits" % (self.dir))
+            export_image_to_fits(gradyx, "%s/test_image_gradients_gradyx.fits" % (self.dir))
+            export_image_to_fits(gradyy, "%s/test_image_gradients_gradyy.fits" % (self.dir))
 
 
 if __name__ == '__main__':

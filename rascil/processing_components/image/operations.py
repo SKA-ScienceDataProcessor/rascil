@@ -5,7 +5,6 @@
 __all__ = ['add_image',
            'calculate_image_frequency_moments',
            'calculate_image_from_frequency_moments',
-           'convert_image_to_kernel',
            'convert_polimage_to_stokes',
            'convert_stokes_to_polimage',
            'copy_image',
@@ -77,6 +76,10 @@ def export_image_to_fits(im: Image, fitsfile: str = 'imaging.fits'):
     :param im: Image
     :param fitsfile: Name of output fits file in storage
     :returns: None
+
+    See also
+        :py:func:`rascil.processing_components.image.import_image_from_array`
+
     """
     assert isinstance(im, Image), im
     return fits.writeto(filename=fitsfile, data=im.data, header=im.wcs.to_header(), overwrite=True)
@@ -87,6 +90,11 @@ def import_image_from_fits(fitsfile: str) -> Image:
     
     :param fitsfile: FITS file in storage
     :return: Image
+
+    See also
+        :py:func:`rascil.processing_components.image.export_image_to_array`
+
+
     """
     fim = Image()
     warnings.simplefilter('ignore', FITSFixedWarning)
@@ -286,9 +294,14 @@ def smooth_image(model: Image, width=1.0, normalise=True):
 
 def calculate_image_frequency_moments(im: Image, reference_frequency=None, nmoment=1) -> Image:
     """Calculate frequency weighted moments of an image cube
-    
-    Weights are ((freq-reference_frequency)/reference_frequency)**moment
-    
+
+    The frequency moments are calculated using:
+
+    .. math::
+
+        w_k = \\left(\\left(\\nu - \\nu_{ref}\\right) /  \\nu_{ref}\\right)^k
+
+
     Note that the spectral axis is replaced by a MOMENT axis.
     
     For example, to find the moments and then reconstruct from just the moments::
@@ -335,7 +348,10 @@ def calculate_image_frequency_moments(im: Image, reference_frequency=None, nmome
 def calculate_image_from_frequency_moments(im: Image, moment_image: Image, reference_frequency=None) -> Image:
     """Calculate channel image from frequency weighted moments
 
-    Weights are ((freq-reference_frequency)/reference_frequency)**moment
+    .. math::
+
+        w_k = \\left(\\left(\\nu - \\nu_{ref}\\right) /  \\nu_{ref}\\right)^k
+
 
     Note that a new image is created
     
@@ -385,7 +401,7 @@ def calculate_image_from_frequency_moments(im: Image, moment_image: Image, refer
 def remove_continuum_image(im: Image, degree=1, mask=None):
     """ Fit and remove continuum visibility in place
     
-    Fit a polynomial in frequency of the specified degree where mask is True
+    Fit a polynomial in frequency of the specified degree where mask is True and remove it from the image
 
     :param im:
     :param degree: 1 is a constant, 2 is a slope, etc.
@@ -425,6 +441,11 @@ def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame)
     :param im: Image to be converted
     :param polarisation_frame: desired polarisation frame
     :returns: Complex image
+
+    See also
+        :py:func:`rascil.processing_components.image.convert_polimage_to_stokes`
+        :py:func:`rascil.data_models.polarisation.convert_circular_to_stokes`
+        :py:func:`rascil.data_models.polarisation.convert_linear_to_stokes`
     """
 
     assert isinstance(im, Image)
@@ -445,10 +466,16 @@ def convert_polimage_to_stokes(im: Image):
     """Convert a polarisation image to stokes IQUV (complex)
 
     For example:
-        imIQUV = convert_stokes_to_polimage(impol)
+        imIQUV = convert_polimage_to_stokes(impol)
 
     :param im: Complex Image in linear or circular
     :returns: Complex image
+
+    See also
+        :py:func:`rascil.processing_components.image.convert_stokes_to_polimage`
+        :py:func:`rascil.data_models.polarisation.convert_stokes_to_circular`
+        :py:func:`rascil.data_models.polarisation.convert_stokes_to_linear`
+
     """
     assert isinstance(im, Image)
     assert im.data.dtype == 'complex'
@@ -466,13 +493,23 @@ def convert_polimage_to_stokes(im: Image):
 def create_window(template, window_type, **kwargs):
     """Create a window image using one of a number of methods
 
-    'quarter': Inner quarter of the image
-    'no_edge': 'window_edge' pixels around edge set to zero
-    'threshold': template image pixels < 'window_threshold' absolute value set to zero
+    The window is 1.0 or 0.0
+
+    window types:
+        'quarter': Inner quarter of the image
+
+        'no_edge': 'window_edge' pixels around edge set to zero
+
+        'threshold': template image pixels < 'window_threshold' absolute value set to zero
 
     :param template: Template image
     :param window_type: 'quarter' | 'no_edge' | 'threshold'
-    :return: New image containing mask
+    :return: New image containing window
+
+    See also
+        :py:func:`rascil.processing_components.image.deconvolve_cube`
+
+
     """
 
     assert image_is_canonical(template)
@@ -515,7 +552,7 @@ def image_sizeof(im: Image):
 # noinspection PyUnresolvedReferences
 def create_image(npixel=512, cellsize=0.000015, polarisation_frame=PolarisationFrame("stokesI"),
                  frequency=numpy.array([1e8]), channel_bandwidth=numpy.array([1e6]),
-                 phasecentre=None, nchan=None) -> Image:
+                 phasecentre=None, nchan=None, dtype='float64') -> Image:
     """Create an empty template image consistent with the inputs.
 
     :param npixel: Number of pixels
@@ -525,7 +562,15 @@ def create_image(npixel=512, cellsize=0.000015, polarisation_frame=PolarisationF
     :param channel_bandwidth: Array of Channel width (Hz)
     :param phasecentre: phasecentre (SkyCoord)
     :param nchan: Number of channels in image
+    :param dtype: Python data type for array
     :return: Image
+
+    See also
+        :py:func:`rascil.processing_components.image.create_image_from_array`
+        :py:func:`rascil.processing_components.imaging.create_image_from_visibility`
+        :py:func:`rascil.processing_components.simulation.create_test_image`
+        :py:mod:`rascil.processing_components.simulation`
+
     """
 
     if phasecentre is None:
@@ -549,7 +594,7 @@ def create_image(npixel=512, cellsize=0.000015, polarisation_frame=PolarisationF
     w.wcs.radesys = 'ICRS'
     w.wcs.equinox = 2000.0
 
-    return create_image_from_array(numpy.zeros(shape), w, polarisation_frame=polarisation_frame)
+    return create_image_from_array(numpy.zeros(shape, dtype=dtype), w, polarisation_frame=polarisation_frame)
 
 
 def create_image_from_array(data: numpy.array, wcs: WCS, polarisation_frame: PolarisationFrame) -> Image:
@@ -561,6 +606,10 @@ def create_image_from_array(data: numpy.array, wcs: WCS, polarisation_frame: Pol
     :param wcs: World coordinate system
     :param polarisation_frame: Polarisation Frame
     :return: Image
+
+    See also
+        :py:func:`rascil.processing_components.image.create_image`
+        :py:func:`rascil.processing_components.imaging.create_image_from_visibility`
 
     """
     fim = Image()
@@ -604,6 +653,10 @@ def polarisation_frame_from_wcs(wcs, shape) -> PolarisationFrame:
         circular [-1,-2,-3,-4]
         linear [-5,-6,-7,-8]
 
+    For example::
+        pol_frame = polarisation_frame_from_wcs(im.wcs, im.shape)
+
+
     :param wcs: World Coordinate System
     :param shape: Shape corresponding to wcs
     :returns: Polarisation_Frame object
@@ -628,67 +681,6 @@ def polarisation_frame_from_wcs(wcs, shape) -> PolarisationFrame:
 
     assert isinstance(polarisation_frame, PolarisationFrame)
     return polarisation_frame
-
-# noinspection PyUnresolvedReferences
-def convert_image_to_kernel(im: Image, oversampling, kernelwidth):
-    """ Convert an image to a griddata kernel
-
-    :param im: Image to be converted
-    :param oversampling: Oversampling of Image spatially
-    :param kernelwidth: Kernel width to be extracted
-    :return: numpy.ndarray[nchan, npol, oversampling, oversampling, kernelwidth, kernelwidth]
-    """
-    naxis = len(im.shape)
-
-    assert numpy.max(numpy.abs(im.data)) > 0.0, "Image is empty"
-
-    nchan, npol, ny, nx = im.shape
-    assert nx % oversampling == 0, "Oversampling must be even"
-    assert ny % oversampling == 0, "Oversampling must be even"
-
-    assert kernelwidth < nx and kernelwidth < ny, "Specified kernel width %d too large"
-
-    assert im.wcs.wcs.ctype[0] == 'UU', 'Axis type %s inappropriate for construction of kernel' % im.wcs.wcs.ctype[0]
-    assert im.wcs.wcs.ctype[1] == 'VV', 'Axis type %s inappropriate for construction of kernel' % im.wcs.wcs.ctype[1]
-    newwcs = WCS(naxis=naxis + 2)
-    for axis in range(2):
-        newwcs.wcs.ctype[axis] = im.wcs.wcs.ctype[axis]
-        newwcs.wcs.crpix[axis] = kernelwidth // 2
-        newwcs.wcs.crval[axis] = 0.0
-        newwcs.wcs.cdelt[axis] = im.wcs.wcs.cdelt[axis] * oversampling
-
-        newwcs.wcs.ctype[axis + 2] = im.wcs.wcs.ctype[axis]
-        newwcs.wcs.crpix[axis + 2] = oversampling // 2
-        newwcs.wcs.crval[axis + 2] = 0.0
-        newwcs.wcs.cdelt[axis + 2] = im.wcs.wcs.cdelt[axis]
-
-        # Now do Stokes and Frequency
-        newwcs.wcs.ctype[axis + 4] = im.wcs.wcs.ctype[axis + 2]
-        newwcs.wcs.crpix[axis + 4] = im.wcs.wcs.crpix[axis + 2]
-        newwcs.wcs.crval[axis + 4] = im.wcs.wcs.crval[axis + 2]
-        newwcs.wcs.cdelt[axis + 4] = im.wcs.wcs.cdelt[axis + 2]
-
-    newdata_shape = [nchan, npol, oversampling, oversampling, kernelwidth, kernelwidth]
-
-    newdata = numpy.zeros(newdata_shape, dtype=im.data.dtype)
-
-    assert oversampling * kernelwidth < ny
-    assert oversampling * kernelwidth < nx
-
-    ystart = ny // 2 - oversampling * kernelwidth // 2
-    xstart = nx // 2 - oversampling * kernelwidth // 2
-    yend = ny // 2 + oversampling * kernelwidth // 2
-    xend = nx // 2 + oversampling * kernelwidth // 2
-    for chan in range(nchan):
-        for pol in range(npol):
-            for y in range(oversampling):
-                slicey = slice(yend + y, ystart + y, -oversampling)
-                for x in range(oversampling):
-                    slicex = slice(xend + x, xstart + x, -oversampling)
-                    newdata[chan, pol, y, x, ...] = im.data[chan, pol, slicey, slicex]
-
-    return create_image_from_array(newdata, newwcs, polarisation_frame=im.polarisation_frame)
-
 
 def copy_image(im: Image):
     """ Copy an image
@@ -720,6 +712,8 @@ def copy_image(im: Image):
 def create_empty_image_like(im: Image) -> Image:
     """ Create an empty image like another in shape and wcs
 
+    The data array is initialized to zero
+
     :param im:
     :return: Image
 
@@ -740,15 +734,54 @@ def create_empty_image_like(im: Image) -> Image:
 
 
 def fft_image(im, template_image=None):
-    """ WCS-aware FFT of an image
+    """ WCS-aware FFT of a canonical image
 
     The only transforms supported are:
         RA--SIN, DEC--SIN <-> UU, VV
         XX, YY <-> KX, KY
 
+    For example::
+
+        from rascil.processing_components import create_test_image, fft_image
+        im = create_test_image()
+        print(im)
+            Image:
+                Shape: (1, 1, 256, 256)
+                WCS: WCS Keywords
+            Number of WCS axes: 4
+            CTYPE : 'RA---SIN'  'DEC--SIN'  'STOKES'  'FREQ'
+            CRVAL : 0.0  35.0  1.0  100000000.0
+            CRPIX : 129.0  129.0  1.0  1.0
+            PC1_1 PC1_2 PC1_3 PC1_4  : 1.0  0.0  0.0  0.0
+            PC2_1 PC2_2 PC2_3 PC2_4  : 0.0  1.0  0.0  0.0
+            PC3_1 PC3_2 PC3_3 PC3_4  : 0.0  0.0  1.0  0.0
+            PC4_1 PC4_2 PC4_3 PC4_4  : 0.0  0.0  0.0  1.0
+            CDELT : -0.000277777791  0.000277777791  1.0  100000.0
+            NAXIS : 0  0
+                Polarisation frame: stokesI
+        print(fft_image(im))
+            Image:
+                Shape: (1, 1, 256, 256)
+                WCS: WCS Keywords
+            Number of WCS axes: 4
+            CTYPE : 'UU'  'VV'  'STOKES'  'FREQ'
+            CRVAL : 0.0  0.0  1.0  100000000.0
+            CRPIX : 129.0  129.0  1.0  1.0
+            PC1_1 PC1_2 PC1_3 PC1_4  : 1.0  0.0  0.0  0.0
+            PC2_1 PC2_2 PC2_3 PC2_4  : 0.0  1.0  0.0  0.0
+            PC3_1 PC3_2 PC3_3 PC3_4  : 0.0  0.0  1.0  0.0
+            PC4_1 PC4_2 PC4_3 PC4_4  : 0.0  0.0  0.0  1.0
+            CDELT : -805.7218610503596  805.7218610503596  1.0  100000.0
+            NAXIS : 0  0
+                Polarisation frame: stokesI
+
     :param im:
     :param template_image:
     :return:
+
+    See also
+        :py:func:`rascil.processing_components.fourier_transforms.fft`
+        :py:func:`rascil.processing_components.fourier_transforms.ifft`
     """
     assert len(im.shape) == 4
     d2r = numpy.pi / 180.0
@@ -845,7 +878,7 @@ def create_w_term_like(im: Image, w, phasecentre=None, remove_shift=False, dopol
 
     .. math::
 
-    I(l,m) = e^{-2 \\pi j (w(\\sqrt{1-l^2-m^2}-1)}
+        I(l,m) = e^{-2 \\pi j (w(\\sqrt{1-l^2-m^2}-1)}
 
 
     The phasecentre is used as the delay centre for the w term (i.e. where n==0)

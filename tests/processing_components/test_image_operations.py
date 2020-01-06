@@ -13,7 +13,8 @@ from rascil.processing_components.image.operations import export_image_to_fits, 
     convert_stokes_to_polimage, smooth_image
 from rascil.processing_components.simulation import create_test_image, create_low_test_image_from_gleam
 from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, \
-    convert_image_to_kernel, copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like
+    copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like
+from griddata.kernels import convert_image_to_kernel
 
 log = logging.getLogger(__name__)
 

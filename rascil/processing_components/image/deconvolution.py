@@ -78,6 +78,13 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
     :param nmoment: Number of frequency moments (default 3)
     :param findpeak: Method of finding peak in mfsclean: 'Algorithm1'|'ASKAPSoft'|'CASA'|'ARL', Default is ARL.
     :return: component image, residual image
+
+    See also
+        :py:func:`rascil.processing_components.arrays.hogbom`
+        :py:func:`rascil.processing_components.arrays.hogbom_complex`
+        :py:func:`rascil.processing_components.arrays.msclean`
+        :py:func:`rascil.processing_components.arrays.msmfsclean`
+
     """
     
     assert isinstance(dirty, Image), dirty
