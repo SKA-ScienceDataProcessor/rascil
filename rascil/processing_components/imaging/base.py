@@ -52,9 +52,9 @@ log = logging.getLogger(__name__)
 
 def shift_vis_to_image(vis: Union[Visibility, BlockVisibility], im: Image, tangent: bool = True, inverse: bool = False) \
         -> Union[Visibility, BlockVisibility]:
-    """Shift visibility to the FFT phase centre of the image in place
+    """Shift visibility in place to the phase centre of the Image
 
-    :param vis: Visibility data
+    :param vis: Visibility or BlockVisibility
     :param im: Image model used to determine phase centre
     :param tangent: Is the shift purely on the tangent plane True|False
     :param inverse: Do the inverse operation True|False
@@ -86,6 +86,9 @@ def shift_vis_to_image(vis: Union[Visibility, BlockVisibility], im: Image, tange
 
 def normalize_sumwt(im: Image, sumwt) -> Image:
     """Normalize out the sum of weights
+
+    The gridding weights are accumulated as a function of channel and polarisation. This function
+    corrects for this sum of weights.
 
     :param im: Image, im.data has shape [nchan, npol, ny, nx]
     :param sumwt: Sum of weights [nchan, npol]
@@ -148,7 +151,7 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     Use the image im as a template. Do PSF in a separate call.
 
     This is at the bottom of the layering i.e. all transforms are eventually expressed in terms
-    of this function. . Any shifting needed is performed here.
+    of this function. Any shifting needed is performed here.
 
     :param vis: Visibility to be inverted
     :param im: image template (not changed)
@@ -262,6 +265,9 @@ def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwar
     :param equinox: Equinox for WCS (2000.0)
     :param nchan: Number of image channels (Default is 1 -> MFS)
     :return: image
+
+    See also
+        :py:func:`rascil.processing_components.image.create_image`
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), \
         "vis is not a Visibility or a BlockVisibility: %r" % (vis)

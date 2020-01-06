@@ -109,6 +109,28 @@ def predict_timeslice_single(vis: Visibility, model: Image, predict=predict_2d, 
 
     This fits a single plane and corrects the image geometry.
 
+    The w-term can be viewed as a time-variable distortion. Approximating the array as instantaneously
+    co-planar, we have that w can be expressed in terms of u,v:
+
+    .. math::
+        w = a u + b v
+
+    Transforming to a new coordinate system:
+
+    .. math::
+
+        l' = l + a ( \\sqrt{1-l^2-m^2}-1))
+
+    .. math::
+
+        m' = m + b ( \\sqrt{1-l^2-m^2}-1))
+
+    Ignoring changes in the normalisation term, we have:
+
+    .. math::
+
+        V(u,v,w) =\\int \\frac{ I(l',m')} { \\sqrt{1-l'^2-m'^2}} e^{-2 \\pi j (ul'+um')} dl' dm'
+
     :param vis: Visibility to be predicted
     :param model: model image
     :param predict:
@@ -154,11 +176,35 @@ def invert_timeslice_single(vis: Visibility, im: Image, dopsf, normalize=True, r
     """Process single time slice
 
     Extracted for re-use in parallel version
+
+    The w-term can be viewed as a time-variable distortion. Approximating the array as instantaneously
+    co-planar, we have that w can be expressed in terms of u,v:
+
+    .. math::
+        w = a u + b v
+
+    Transforming to a new coordinate system:
+
+    .. math::
+
+        l' = l + a ( \\sqrt{1-l^2-m^2}-1))
+
+    .. math::
+
+        m' = m + b ( \\sqrt{1-l^2-m^2}-1))
+
+    Ignoring changes in the normalisation term, we have:
+
+    .. math::
+
+        V(u,v,w) =\\int \\frac{ I(l',m')} { \\sqrt{1-l'^2-m'^2}} e^{-2 \\pi j (ul'+um')} dl' dm'
+
     :param vis: Visibility to be inverted
     :param im: image template (not changed)
     :param dopsf: Make the psf instead of the dirty image
     :param gcfcf: (Grid correction function, convolution function)
     :param normalize: Normalize by the sum of weights (True)
+    :returns: image, sum of weights
     """
     assert isinstance(vis, Visibility), vis
     assert image_is_canonical(im)

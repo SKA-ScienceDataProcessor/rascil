@@ -28,6 +28,15 @@ def predict_wstack_single(vis, model, remove=True, gcfcf=None, **kwargs) -> Visi
     
     This processes a single w plane, rotating out the w beam for the average w
 
+    The w-stacking or w-slicing approach is to partition the visibility data by slices in w. The measurement equation is
+    approximated as:
+
+    .. math::
+
+        V(u,v,w) =\\sum_i \\int \\frac{ I(l,m) e^{-2 \\pi j (w_i(\\sqrt{1-l^2-m^2}-1))})}{\\sqrt{1-l^2-m^2}} e^{-2 \\pi j (ul+vm)} dl dm
+
+    If images constructed from slices in w are added after applying a w-dependent image plane correction, the w term will be corrected.
+
     :param vis: Visibility to be predicted
     :param model: model image
     :return: resulting visibility (in place works)
@@ -69,10 +78,20 @@ def invert_wstack_single(vis: Visibility, im: Image, dopsf, normalize=True, remo
                          gcfcf=None, **kwargs) -> (Image, numpy.ndarray):
     """Process single w slice
     
+    The w-stacking or w-slicing approach is to partition the visibility data by slices in w. The measurement equation is
+    approximated as:
+
+    .. math::
+
+        V(u,v,w) =\\sum_i \\int \\frac{ I(l,m) e^{-2 \\pi j (w_i(\\sqrt{1-l^2-m^2}-1))})}{\\sqrt{1-l^2-m^2}} e^{-2 \\pi j (ul+vm)} dl dm
+
+    If images constructed from slices in w are added after applying a w-dependent image plane correction, the w term will be corrected.
+
     :param vis: Visibility to be inverted
     :param im: image template (not changed)
     :param dopsf: Make the psf instead of the dirty image
     :param normalize: Normalize by the sum of weights (True)
+    :returns: image, sum of weights
     """
     assert image_is_canonical(im)
 

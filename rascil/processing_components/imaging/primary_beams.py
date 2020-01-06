@@ -20,7 +20,9 @@ log = logging.getLogger(__name__)
 
 
 def set_pb_header(pb, use_local=True):
-    """Fill in PB header correctly
+    """Fill in PB header correctly for local coordinates.
+
+    There is no convention on how to represent primary beams. We use axes 'AZELGEO long' and 'AZELGEO lati'
     
     :param pb:
     :return:
@@ -71,10 +73,11 @@ def tapered_disk(r, radius, blockage=0.0, taper='gaussian', edge=1.0):
 
 
 def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=True):
-    """
-    Make an image like model and fill it with an analytical model of the voltage pattern
+    """ Create an image containing the dish voltage pattern for a number of cases
+
+
     :param model: Template image
-    :param telescope: 'VLA' or 'ASKAP'
+    :param telescope:
     :return: Primary beam image
     """
     if telescope == 'MID_GAUSS':
@@ -127,8 +130,8 @@ def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=
 
 
 def create_pb(model, telescope='MID', pointingcentre=None, use_local=True):
-    """
-    Make an image like model and fill it with an analytical model of the primary beam
+    """ Create an image containing the primary beam for a number of cases
+
     :param model: Template image
     :param telescope: 'VLA' or 'ASKAP'
     :return: Primary beam image
@@ -144,13 +147,13 @@ def create_pb(model, telescope='MID', pointingcentre=None, use_local=True):
 
 
 def mosaic_pb(model, telescope, pointingcentres, use_local=True):
-    """ Create a mosaic primary beam by adding primary beams for a set of pointing centres
+    """ Create a mosaic effective primary beam by adding primary beams for a set of pointing centres
     
     Note that the addition is root sum of squares
     
     :param model:  Template image
     :param telescope:
-    :param pointingcentres:  list of pointing centres
+    :param pointingcentres: list of pointing centres
     :return:
     """
     assert isinstance(pointingcentres, collections.Iterable), "Need a list of pointing centres"
@@ -163,9 +166,13 @@ def mosaic_pb(model, telescope, pointingcentres, use_local=True):
 
 
 def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True):
-    """
-    Make an image like model and fill it with an analytical model of the primary beam
+    """ Create a generic analytical model of the primary beam
+
+    Feeed legs are ignored
+
     :param model:
+    :param diameter: Diameter of dish (m)
+    :param blockage: Diameter of blockage
     :return:
     """
     beam = create_vp_generic(model, pointingcentre, diameter, blockage, use_local=use_local)
@@ -175,11 +182,16 @@ def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
 
 
 def create_vp_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True):
-    """
-    Make an image like model and fill it with an analytical model of the primary beam
+    """ Create a generic analytical model of the voltage pattern
+
+    Feeed legs are ignored
+
     :param model:
+    :param diameter: Diameter of dish (m)
+    :param blockage: Diameter of blockage
     :return:
     """
+
     beam = create_empty_image_like(model)
     beam.data = numpy.zeros(beam.data.shape, dtype='complex')
     
@@ -314,6 +326,8 @@ def create_vp_generic_numeric(model, pointingcentre=None, diameter=15.0, blockag
 def create_low_test_beam(model: Image, use_local=True) -> Image:
     """Create a test power beam for LOW using an image from OSKAR
 
+    This is not fit for anything except the most basic testing. It does not include any form of elevation/pa dependence.
+
     :param model: Template image
     :return: Image
     """
@@ -360,6 +374,8 @@ def create_low_test_beam(model: Image, use_local=True) -> Image:
 
 def create_low_test_vp(model: Image, use_local=True) -> Image:
     """Create a test power beam for LOW using an example image from OSKAR
+
+    This is not fit for anything except the most basic testing. It does not include any form of elevation/pa dependence.
 
     :param model: Template image
     :return: Image

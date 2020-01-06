@@ -22,6 +22,8 @@ log = logging.getLogger(__name__)
 def image_null_iter(im: Image, facets=1, overlap=0) -> collections.Iterable:
     """One time iterator
 
+    This is useful to simplify control structures.
+
     :param im:
     :param facets: Number of image partitions on each axis (2)
     :param overlap: overlap in pixels
@@ -39,8 +41,9 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
     Provided we don't break reference semantics, memory should be conserved. However make_flat
     creates a new set of images and thus reference semantics dont hold.
 
-    To update the image in place:
-        for r in raster(im, facets=2)::
+    To update the image in place::
+
+        for r in image_raster_iter(im, facets=2):
             r.data[...] = numpy.sqrt(r.data[...])
             
     If the overlap is greater than zero, we choose to keep all images the same size so the
@@ -55,6 +58,11 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
     :param overlap: overlap in pixels
     :param taper: method of tapering at the edges: 'flat' or 'linear' or 'quadratic' or 'tukey'
     :param make_flat: Make the flat images
+    :returns: Generator of images
+
+    See also
+        :py:func:`rascil.processing_components.image.image_gather_facets`
+        :py:func:`rascil.processing_components.image.image_scatter_facets`
     """
 
     assert image_is_canonical(im)
@@ -158,12 +166,18 @@ def image_channel_iter(im: Image, subimages=1) -> collections.Iterable:
 
     Provided we don't break reference semantics, memory should be conserved
 
-    To update the image in place:
-        for r in raster(im, facets=2)::
+    To update the image in place::
+
+        for r in image_channel_iter(im, subimages=nchan):
             r.data[...] = numpy.sqrt(r.data[...])
 
     :param im: Image
     :param subimages: Number of subimages
+    :returns: Generator of images
+
+    See also
+        :py:func:`rascil.processing_components.image.image_gather_channels`
+        :py:func:`rascil.processing_components.image.image_scatter_channels`
     """
 
     assert image_is_canonical(im)

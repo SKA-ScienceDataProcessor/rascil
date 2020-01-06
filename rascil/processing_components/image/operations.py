@@ -717,6 +717,8 @@ def create_empty_image_like(im: Image) -> Image:
     :param im:
     :return: Image
 
+    See also
+        :py:func:`rascil.processing_components.image.copy_image`
     """
     assert isinstance(im, Image), im
     fim = Image()

@@ -18,7 +18,9 @@ from rascil.processing_components.image.operations import create_empty_image_lik
 
 
 def image_gradients(im: Image):
-    """Calculate image gradients numerically
+    """Calculate image first order gradients numerically
+
+    Two images are returned: one with respect to x and one with respect to y
     
     Gradient units are (incoming unit)/pixel e.g. Jy/beam/pixel
     

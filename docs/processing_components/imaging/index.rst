@@ -2,7 +2,6 @@
 
 .. py:currentmodule:: rascil.processing_components.imaging
 
-*******
 Imaging
 *******
 
