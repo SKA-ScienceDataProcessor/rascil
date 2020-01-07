@@ -21,7 +21,7 @@ from rascil.processing_components.griddata.kernels import create_pswf_convolutio
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.processing_components.imaging.primary_beams import create_pb_generic
 from rascil.processing_components.simulation import create_test_image
-from processing_components.griddata.kernels import convert_image_to_kernel
+from rascil.processing_components.griddata.kernels import convert_image_to_kernel
 
 log = logging.getLogger(__name__)
 
