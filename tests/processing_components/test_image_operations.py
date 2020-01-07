@@ -14,7 +14,6 @@ from rascil.processing_components.image.operations import export_image_to_fits, 
 from rascil.processing_components.simulation import create_test_image, create_low_test_image_from_gleam
 from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, \
     copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like
-from griddata.kernels import convert_image_to_kernel
 
 log = logging.getLogger(__name__)
 
@@ -181,17 +180,6 @@ class TestImage(unittest.TestCase):
         with self.assertRaises(IndexError):
             padded = pad_image(m31image, [1, 1])
     
-    def test_convert_image_to_kernel(self):
-        m31image = create_test_image(cellsize=0.001, frequency=[1e8], canonical=True)
-        screen = create_w_term_like(m31image, w=20000.0, remove_shift=True)
-        screen_fft = fft_image(screen)
-        converted = convert_image_to_kernel(screen_fft, 8, 8)
-        assert converted.shape == (1, 1, 8, 8, 8, 8)
-        with self.assertRaises(AssertionError):
-            converted = convert_image_to_kernel(m31image, 15, 1)
-        with self.assertRaises(AssertionError):
-            converted = convert_image_to_kernel(m31image, 15, 1000)
-
 
 if __name__ == '__main__':
     unittest.main()
