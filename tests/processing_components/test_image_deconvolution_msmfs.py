@@ -67,7 +67,7 @@ class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def test_deconvolve_mmclean_no_taylor(self):
         self.comp, self.residual = deconvolve_cube(self.dirty, self.psf, niter=self.niter, gain=0.1,
                                                    algorithm='mmclean',
-                                                   scales=[0, 3, 10], threshold=0.01, nmoment=1, findpeak='ARL',
+                                                   scales=[0, 3, 10], threshold=0.01, nmoment=1, findpeak='RASCIL',
                                                    fractional_threshold=0.01, window=self.innerquarter)
         if self.persist: export_image_to_fits(self.comp, "%s/test_deconvolve_mmclean_notaylor-comp.fits" % self.dir)
         if self.persist: export_image_to_fits(self.residual, "%s/test_deconvolve_mmclean_notaylor-residual.fits" % self.dir)
@@ -78,7 +78,7 @@ class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def test_deconvolve_mmclean_no_taylor_edge(self):
         self.comp, self.residual = deconvolve_cube(self.dirty, self.psf, niter=self.niter, gain=0.1,
                                                    algorithm='mmclean',
-                                                   scales=[0, 3, 10], threshold=0.01, nmoment=1, findpeak='ARL',
+                                                   scales=[0, 3, 10], threshold=0.01, nmoment=1, findpeak='RASCIL',
                                                    fractional_threshold=0.01, window_shape='no_edge', window_edge=32)
         if self.persist: export_image_to_fits(self.comp, "%s/test_deconvolve_mmclean_notaylor-comp.fits" % self.dir)
         if self.persist: export_image_to_fits(self.residual, "%s/test_deconvolve_mmclean_notaylor-residual.fits" % self.dir)
@@ -89,7 +89,7 @@ class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def test_deconvolve_mmclean_no_taylor_noscales(self):
         self.comp, self.residual = deconvolve_cube(self.dirty, self.psf, niter=self.niter, gain=0.1,
                                                    algorithm='mmclean',
-                                                   scales=[0], threshold=0.01, nmoment=1, findpeak='ARL',
+                                                   scales=[0], threshold=0.01, nmoment=1, findpeak='RASCIL',
                                                    fractional_threshold=0.01, window=self.innerquarter)
         if self.persist: export_image_to_fits(self.comp, "%s/test_deconvolve_mmclean_notaylor_noscales-comp.fits" % self.dir)
         if self.persist: export_image_to_fits(self.residual, "%s/test_deconvolve_mmclean_notaylor_noscales-residual.fits" % self.dir)
@@ -100,7 +100,7 @@ class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def test_deconvolve_mmclean_linear(self):
         self.comp, self.residual = deconvolve_cube(self.dirty, self.psf, niter=self.niter, gain=0.1,
                                                    algorithm='mmclean',
-                                                   scales=[0, 3, 10], threshold=0.01, nmoment=2, findpeak='ARL',
+                                                   scales=[0, 3, 10], threshold=0.01, nmoment=2, findpeak='RASCIL',
                                                    fractional_threshold=0.01, window=self.innerquarter)
         if self.persist: export_image_to_fits(self.comp, "%s/test_deconvolve_mmclean_linear-comp.fits" % self.dir)
         if self.persist: export_image_to_fits(self.residual, "%s/test_deconvolve_mmclean_linear-residual.fits" % self.dir)
@@ -111,7 +111,7 @@ class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def test_deconvolve_mmclean_linear_noscales(self):
         self.comp, self.residual = deconvolve_cube(self.dirty, self.psf, niter=self.niter, gain=0.1,
                                                    algorithm='mmclean',
-                                                   scales=[0], threshold=0.01, nmoment=2, findpeak='ARL',
+                                                   scales=[0], threshold=0.01, nmoment=2, findpeak='RASCIL',
                                                    fractional_threshold=0.01, window=self.innerquarter)
         if self.persist: export_image_to_fits(self.comp, "%s/test_deconvolve_mmclean_linear_noscales-comp.fits" % self.dir)
         if self.persist: export_image_to_fits(self.residual, "%s/test_deconvolve_mmclean_linear_noscales-residual.fits" % self.dir)
@@ -122,7 +122,7 @@ class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def test_deconvolve_mmclean_quadratic(self):
         self.comp, self.residual = deconvolve_cube(self.dirty, self.psf, niter=self.niter, gain=0.1,
                                                    algorithm='mmclean',
-                                                   scales=[0, 3, 10], threshold=0.01, nmoment=2, findpeak='ARL',
+                                                   scales=[0, 3, 10], threshold=0.01, nmoment=2, findpeak='RASCIL',
                                                    fractional_threshold=0.01, window=self.innerquarter)
         if self.persist: export_image_to_fits(self.comp, "%s/test_deconvolve_mmclean_quadratic-comp.fits" % self.dir)
         if self.persist: export_image_to_fits(self.residual, "%s/test_deconvolve_mmclean_quadratic-residual.fits" % self.dir)
@@ -133,7 +133,7 @@ class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def test_deconvolve_mmclean_quadratic_noscales(self):
         self.comp, self.residual = deconvolve_cube(self.dirty, self.psf, niter=self.niter, gain=0.1,
                                                    algorithm='mmclean',
-                                                   scales=[0], threshold=0.01, nmoment=2, findpeak='ARL',
+                                                   scales=[0], threshold=0.01, nmoment=2, findpeak='RASCIL',
                                                    fractional_threshold=0.01, window=self.innerquarter)
         if self.persist: export_image_to_fits(self.comp, "%s/test_deconvolve_mmclean_quadratic_noscales-comp.fits" % self.dir)
         if self.persist: export_image_to_fits(self.residual, "%s/test_deconvolve_mmclean_quadratic_noscales-residual.fits" % self.dir)
@@ -144,7 +144,7 @@ class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def test_deconvolve_mmclean_quadratic_psf(self):
         self.comp, self.residual = deconvolve_cube(self.dirty, self.psf, niter=self.niter, gain=0.1,
                                                    algorithm='mmclean',
-                                                   scales=[0, 3, 10], threshold=0.01, nmoment=2, findpeak='ARL',
+                                                   scales=[0, 3, 10], threshold=0.01, nmoment=2, findpeak='RASCIL',
                                                    fractional_threshold=0.01, window=self.innerquarter,
                                                    psf_support=32)
         if self.persist: export_image_to_fits(self.comp, "%s/test_deconvolve_mmclean_quadratic_psf-comp.fits" % self.dir)

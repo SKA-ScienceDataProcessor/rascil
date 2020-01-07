@@ -15,8 +15,8 @@ from rascil.data_models.polarisation import PolarisationFrame
 from rascil.workflows.rsexecute.calibration.calibration_rsexecute import calibrate_list_rsexecute_workflow
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
-from rascil.wrappers.rsexecute.execution_support import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
 from rascil.processing_components.simulation import ingest_unittest_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import simulate_gaintable
@@ -27,7 +27,6 @@ log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
-
 
 class TestCalibrateGraphs(unittest.TestCase):
     

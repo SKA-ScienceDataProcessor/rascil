@@ -156,7 +156,7 @@ def convert_configuration_to_hdf(config: Configuration, f):
     :return:
     """
     cf = f.create_group('configuration')
-    cf.attrs['ARL_data_model'] = 'Configuration'
+    cf.attrs['RASCIL_data_model'] = 'Configuration'
     cf.attrs['name'] = config.name
     cf.attrs['location'] = convert_earthlocation_to_string(config.location)
     cf.attrs['frame'] = config.frame
@@ -177,7 +177,7 @@ def convert_configuration_from_hdf(f):
     """
     cf = f['configuration']
     
-    assert cf.attrs['ARL_data_model'] == "Configuration", "%s is a Configuration" % cf.attrs['ARL_data_model']
+    assert cf.attrs['RASCIL_data_model'] == "Configuration", "%s is a Configuration" % cf.attrs['RASCIL_data_model']
     
     name = cf.attrs['name']
     location = convert_earthlocation_from_string(cf.attrs['location'])
@@ -201,7 +201,7 @@ def convert_visibility_to_hdf(vis, f):
     """
     assert isinstance(vis, Visibility)
     
-    f.attrs['ARL_data_model'] = 'Visibility'
+    f.attrs['RASCIL_data_model'] = 'Visibility'
     f.attrs['nvis'] = vis.nvis
     f.attrs['npol'] = vis.npol
     f.attrs['phasecentre_coords'] = vis.phasecentre.to_string()
@@ -220,7 +220,7 @@ def convert_hdf_to_visibility(f):
     :param f:
     :return:
     """
-    assert f.attrs['ARL_data_model'] == "Visibility", "Not a Visibility"
+    assert f.attrs['RASCIL_data_model'] == "Visibility", "Not a Visibility"
     s = f.attrs['phasecentre_coords'].split()
     ss = [float(s[0]), float(s[1])] * u.deg
     phasecentre = SkyCoord(ra=ss[0], dec=ss[1], frame=f.attrs['phasecentre_frame'])
@@ -243,7 +243,7 @@ def convert_blockvisibility_to_hdf(vis: BlockVisibility, f):
     """
     assert isinstance(vis, BlockVisibility)
     
-    f.attrs['ARL_data_model'] = 'BlockVisibility'
+    f.attrs['RASCIL_data_model'] = 'BlockVisibility'
     f.attrs['nvis'] = vis.nvis
     f.attrs['npol'] = vis.npol
     f.attrs['phasecentre_coords'] = vis.phasecentre.to_string()
@@ -264,7 +264,7 @@ def convert_hdf_to_blockvisibility(f):
     :param f:
     :return:
     """
-    assert f.attrs['ARL_data_model'] == "BlockVisibility", "Not a BlockVisibility"
+    assert f.attrs['RASCIL_data_model'] == "BlockVisibility", "Not a BlockVisibility"
     s = f.attrs['phasecentre_coords'].split()
     ss = [float(s[0]), float(s[1])] * u.deg
     phasecentre = SkyCoord(ra=ss[0], dec=ss[1], frame=f.attrs['phasecentre_frame'])
@@ -360,7 +360,7 @@ def convert_gaintable_to_hdf(gt: GainTable, f):
     """
     assert isinstance(gt, GainTable)
     
-    f.attrs['ARL_data_model'] = 'GainTable'
+    f.attrs['RASCIL_data_model'] = 'GainTable'
     f.attrs['frequency'] = gt.frequency
     f.attrs['receptor_frame'] = gt.receptor_frame.type
     f.attrs['phasecentre_coords'] = gt.phasecentre.to_string()
@@ -375,7 +375,7 @@ def convert_hdf_to_gaintable(f):
     :param f:
     :return:
     """
-    assert f.attrs['ARL_data_model'] == "GainTable", "Not a GainTable"
+    assert f.attrs['RASCIL_data_model'] == "GainTable", "Not a GainTable"
     receptor_frame = ReceptorFrame(f.attrs['receptor_frame'])
     frequency = numpy.array(f.attrs['frequency'])
     data = numpy.array(f['data'])
@@ -430,7 +430,7 @@ def convert_pointingtable_to_hdf(pt: PointingTable, f):
     """
     assert isinstance(pt, PointingTable)
     
-    f.attrs['ARL_data_model'] = 'PointingTable'
+    f.attrs['RASCIL_data_model'] = 'PointingTable'
     f.attrs['frequency'] = pt.frequency
     f.attrs['receptor_frame'] = pt.receptor_frame.type
     f.attrs['pointingcentre_coords'] = pt.pointingcentre.to_string()
@@ -447,7 +447,7 @@ def convert_hdf_to_pointingtable(f):
     :param f:
     :return:
     """
-    assert f.attrs['ARL_data_model'] == "PointingTable", "Not a PointingTable"
+    assert f.attrs['RASCIL_data_model'] == "PointingTable", "Not a PointingTable"
     receptor_frame = ReceptorFrame(f.attrs['receptor_frame'])
     frequency = numpy.array(f.attrs['frequency'])
     data = numpy.array(f['data'])
@@ -504,7 +504,7 @@ def convert_skycomponent_to_hdf(sc: Skycomponent, f):
     """
     assert isinstance(sc, Skycomponent)
     
-    f.attrs['ARL_data_model'] = 'Skycomponent'
+    f.attrs['RASCIL_data_model'] = 'Skycomponent'
     f.attrs['direction'] = convert_direction_to_string(sc.direction)
     f.attrs['frequency'] = sc.frequency
     f.attrs['polarisation_frame'] = sc.polarisation_frame.type
@@ -521,7 +521,7 @@ def convert_hdf_to_skycomponent(f):
     :param f:
     :return:
     """
-    assert f.attrs['ARL_data_model'] == "Skycomponent", "Not a Skycomponent"
+    assert f.attrs['RASCIL_data_model'] == "Skycomponent", "Not a Skycomponent"
     direction = convert_direction_from_string(f.attrs['direction'])
     frequency = numpy.array(f.attrs['frequency'])
     name = f.attrs['name']
@@ -578,7 +578,7 @@ def convert_image_to_hdf(im: Image, f):
     :return:
     """
     if isinstance(im, Image):
-        f.attrs['ARL_data_model'] = 'Image'
+        f.attrs['RASCIL_data_model'] = 'Image'
         f['data'] = im.data
         f.attrs['wcs'] = numpy.string_(im.wcs.to_header_string())
         f.attrs['polarisation_frame'] = im.polarisation_frame.type
@@ -592,7 +592,7 @@ def convert_hdf_to_image(f):
     :param f:
     :return:
     """
-    if 'ARL_data_model' in f.attrs.keys() and f.attrs['ARL_data_model'] == "Image":
+    if 'RASCIL_data_model' in f.attrs.keys() and f.attrs['RASCIL_data_model'] == "Image":
         data = numpy.array(f['data'])
         polarisation_frame = PolarisationFrame(f.attrs['polarisation_frame'])
         wcs = WCS(f.attrs['wcs'])
@@ -666,7 +666,7 @@ def convert_skymodel_to_hdf(sm, f):
     :param f:
     :return:
     """
-    f.attrs['ARL_data_model'] = 'SkyModel'
+    f.attrs['RASCIL_data_model'] = 'SkyModel'
     f.attrs['fixed'] = sm.fixed
     if sm.components is not None:
         f.attrs['number_skycomponents'] = len(sm.components)
@@ -709,7 +709,7 @@ def convert_hdf_to_skymodel(f):
     :param f:
     :return:
     """
-    assert f.attrs['ARL_data_model'] == "SkyModel", f.attrs['ARL_data_model']
+    assert f.attrs['RASCIL_data_model'] == "SkyModel", f.attrs['RASCIL_data_model']
     
     fixed = f.attrs['fixed']
     
@@ -746,7 +746,7 @@ def convert_griddata_to_hdf(gd: GridData, f):
     """
     assert isinstance(gd, GridData)
     
-    f.attrs['ARL_data_model'] = 'GridData'
+    f.attrs['RASCIL_data_model'] = 'GridData'
     f['data'] = gd.data
     f.attrs['grid_wcs'] = numpy.string_(gd.grid_wcs.to_header_string())
     f.attrs['projection_wcs'] = numpy.string_(gd.projection_wcs.to_header_string())
@@ -760,7 +760,7 @@ def convert_hdf_to_griddata(f):
     :param f:
     :return:
     """
-    assert f.attrs['ARL_data_model'] == "GridData", "Not a GridData"
+    assert f.attrs['RASCIL_data_model'] == "GridData", "Not a GridData"
     data = numpy.array(f['data'])
     polarisation_frame = PolarisationFrame(f.attrs['polarisation_frame'])
     grid_wcs = WCS(f.attrs['grid_wcs'])
@@ -815,7 +815,7 @@ def convert_convolutionfunction_to_hdf(cf: ConvolutionFunction, f):
     """
     assert isinstance(cf, ConvolutionFunction)
     
-    f.attrs['ARL_data_model'] = 'ConvolutionFunction'
+    f.attrs['RASCIL_data_model'] = 'ConvolutionFunction'
     f['data'] = cf.data
     f.attrs['grid_wcs'] = numpy.string_(cf.grid_wcs.to_header_string())
     f.attrs['projection_wcs'] = numpy.string_(cf.projection_wcs.to_header_string())
@@ -829,7 +829,7 @@ def convert_hdf_to_convolutionfunction(f):
     :param f:
     :return:
     """
-    assert f.attrs['ARL_data_model'] == "ConvolutionFunction", "Not a ConvolutionFunction"
+    assert f.attrs['RASCIL_data_model'] == "ConvolutionFunction", "Not a ConvolutionFunction"
     data = numpy.array(f['data'])
     polarisation_frame = PolarisationFrame(f.attrs['polarisation_frame'])
     grid_wcs = WCS(f.attrs['grid_wcs'])

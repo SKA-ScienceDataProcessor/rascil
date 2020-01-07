@@ -166,7 +166,7 @@ Simulation workflows
 Execution
 ---------
 
-* Execution framework (an interface to Dask): :py:func:`rascil.wrappers.rsexecute.execution_support.rsexecute`
+* Execution framework (an interface to Dask): :py:func:`rascil.workflows.rsexecute.execution_support.rsexecute`
 
 Scripts
 =======

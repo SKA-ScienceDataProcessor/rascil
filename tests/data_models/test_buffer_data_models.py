@@ -49,7 +49,7 @@ class TestBufferDataModelHelpers(unittest.TestCase):
                                           channel_bandwidth=self.channel_bandwidth,
                                           phasecentre=self.phasecentre,
                                           polarisation_frame=PolarisationFrame("linear"),
-                                          weight=1.0, meta={"ARL":0.0})
+                                          weight=1.0, meta={"RASCIL":0.0})
         self.vis = predict_skycomponent_visibility(self.vis, self.comp)
         
         config = {"buffer": {"directory": self.dir},

@@ -8,7 +8,7 @@ import unittest
 import numpy
 
 # Import the base and then make a global version
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
 
 log = logging.getLogger(__name__)
 

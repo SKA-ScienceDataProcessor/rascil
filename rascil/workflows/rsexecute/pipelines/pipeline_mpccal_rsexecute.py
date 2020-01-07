@@ -9,7 +9,7 @@ import numpy
 from rascil.processing_components.image.operations import create_empty_image_like
 from rascil.workflows.rsexecute.skymodel.skymodel_rsexecute import predict_skymodel_list_rsexecute_workflow, \
     invert_skymodel_list_rsexecute_workflow, crosssubtract_datamodels_skymodel_list_rsexecute_workflow
-from rascil.wrappers.rsexecute.execution_support import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.skymodel import update_skymodel_from_image, update_skymodel_from_gaintables
 from rascil.workflows.rsexecute.calibration.calibration_rsexecute import calibrate_list_rsexecute_workflow
 from rascil.workflows.rsexecute.imaging.imaging_rsexecute import invert_list_rsexecute_workflow, \

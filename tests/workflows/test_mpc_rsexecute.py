@@ -17,8 +17,8 @@ from rascil.processing_components.skymodel.operations import expand_skymodel_by_
 from rascil.workflows.rsexecute.skymodel.skymodel_rsexecute import predict_skymodel_list_rsexecute_workflow, \
     invert_skymodel_list_rsexecute_workflow, crosssubtract_datamodels_skymodel_list_rsexecute_workflow
 from rascil.workflows.shared.imaging.imaging_shared import sum_predict_results
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
-from rascil.wrappers.rsexecute.execution_support import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.rsexecute import get_dask_Client
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_low_test_skymodel_from_gleam
 from rascil.processing_components.simulation import create_named_configuration

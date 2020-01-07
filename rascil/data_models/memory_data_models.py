@@ -1,4 +1,4 @@
-"""The data models used in ARL:
+"""The data models used in RASCIL:
 
 """
 

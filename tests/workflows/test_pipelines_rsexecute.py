@@ -17,8 +17,8 @@ from rascil.data_models.data_model_helpers import export_gaintable_to_hdf5
 from rascil.workflows.rsexecute.pipelines.pipeline_rsexecute import ical_list_rsexecute_workflow, \
     continuum_imaging_list_rsexecute_workflow
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
-from rascil.wrappers.rsexecute.execution_support import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.rsexecute import get_dask_Client
 from rascil.processing_components.image.operations import export_image_to_fits, qa_image, smooth_image
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \

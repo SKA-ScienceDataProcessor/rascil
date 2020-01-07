@@ -10,8 +10,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 from rascil.data_models.memory_data_models import BlockVisibility
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
-from rascil.wrappers.rsexecute.execution_support import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.rsexecute import get_dask_Client
 
 from rascil.workflows.rsexecute.simulation.simulation_rsexecute import simulate_list_rsexecute_workflow
 

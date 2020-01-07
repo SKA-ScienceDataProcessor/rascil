@@ -17,7 +17,7 @@ from rascil.processing_components import create_visibility_from_ms, create_visib
 
 from rascil.workflows import invert_list_rsexecute_workflow, invert_list_serial_workflow
 
-from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 import logging
 

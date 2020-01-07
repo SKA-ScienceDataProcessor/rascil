@@ -14,8 +14,8 @@ from rascil.data_models.memory_data_models import Image
 from rascil.data_models.memory_data_models import Skycomponent
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.workflows.rsexecute.skymodel.skymodel_rsexecute import predict_skymodel_list_rsexecute_workflow
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
-from rascil.wrappers.rsexecute.execution_support import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.rsexecute import get_dask_Client
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_low_test_skymodel_from_gleam
 from rascil.processing_components.simulation import create_named_configuration

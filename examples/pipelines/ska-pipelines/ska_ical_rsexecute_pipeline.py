@@ -18,7 +18,7 @@ from rascil.processing_components.calibration.chain_calibration import create_ca
 
 from rascil.workflows import ical_list_rsexecute_workflow
 
-from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 import logging
 

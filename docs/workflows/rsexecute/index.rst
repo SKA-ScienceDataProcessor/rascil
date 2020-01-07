@@ -29,3 +29,7 @@ rsexute workflows can be used in two modes: serially executed immediately on def
 .. automodapi::    rascil.workflows.rsexecute.skymodel
    :no-inheritance-diagram:
 
+.. automodapi::    rascil.workflows.rsexecute.execution_support
+   :no-inheritance-diagram:
+
+

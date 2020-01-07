@@ -15,7 +15,7 @@ from rascil.processing_components import export_image_to_fits, qa_image, create_
 
 from rascil.workflows import continuum_imaging_list_rsexecute_workflow
 
-from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 import logging
 

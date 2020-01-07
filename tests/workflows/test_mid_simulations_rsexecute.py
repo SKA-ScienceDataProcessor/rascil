@@ -35,7 +35,7 @@ from rascil.workflows.rsexecute.simulation.simulation_rsexecute import \
     calculate_residual_from_gaintables_rsexecute_workflow, create_surface_errors_gaintable_rsexecute_workflow, \
     create_pointing_errors_gaintable_rsexecute_workflow, create_standard_mid_simulation_rsexecute_workflow
 
-from rascil.wrappers.rsexecute.execution_support import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 import logging
 

@@ -1,4 +1,4 @@
-.. _api:
+.. _RASCIL_api:
 
 API
 ===
@@ -22,7 +22,6 @@ The API is specified in the rascii directory.
    data_models/index.rst
    processing_components/index.rst
    workflows/index.rst
-   wrappers/index.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

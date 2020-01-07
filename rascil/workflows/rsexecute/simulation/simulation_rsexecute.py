@@ -22,7 +22,7 @@ from rascil.processing_components.simulation.simulation_helpers import plot_poin
 from rascil.processing_components.simulation.simulation_helpers import find_times_above_elevation_limit
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.calibration import apply_gaintable, create_gaintable_from_blockvisibility
-from rascil.wrappers.rsexecute.execution_support import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility import create_blockvisibility, create_visibility

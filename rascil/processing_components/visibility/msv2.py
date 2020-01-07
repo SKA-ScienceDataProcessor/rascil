@@ -1,5 +1,5 @@
 #
-# MeasurementSets V2 Codes Based on Python-casacore For ARL
+# MeasurementSets V2 Codes Based on Python-casacore For RASCIL
 # Ver 0.1
 #
 
@@ -62,7 +62,7 @@ try:
             parameters and add entries to the self.array list.
 
             configuration - base.py
-            :param site_config:  ARL Configuration
+            :param site_config:  RASCIL Configuration
             :param antennas: Antenna array
             :param bits: Preserved
 

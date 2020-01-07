@@ -27,7 +27,7 @@ from rascil.workflows import invert_list_rsexecute_workflow, weight_list_rsexecu
     ical_list_rsexecute_workflow, simulate_list_rsexecute_workflow, \
     corrupt_list_rsexecute_workflow, predict_skymodel_list_rsexecute_workflow
 
-from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from execution_support import findNodes, get_dask_Client
 
 pp = pprint.PrettyPrinter()

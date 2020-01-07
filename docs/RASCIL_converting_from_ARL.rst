@@ -7,7 +7,10 @@
 Converting from ARL to RASCIL
 *****************************
 
-+ The top level environment variable ARL is now RASCIL. PYTHONPATH should be set to include RASCIL
++ The top level environment variable ARL is now RASCIL. PYTHONPATH should be set to include RASCIL::
+
+    export RASCIL=/path/to/rascil
+    export PYTHONPATH=$RASCIL:$PYTHONPATH
 
 + processing_library and processing_components have been combined
 

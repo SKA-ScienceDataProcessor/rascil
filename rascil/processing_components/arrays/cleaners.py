@@ -76,7 +76,7 @@ def hogbom_complex(dirty_q, dirty_u, psf_q, psf_u, window, gain, thresh, niter, 
 
     This uses the complex Hogbom CLEAN for polarised data (2016MNRAS.462.3483P)
 
-    The starting-point for the code was the standard Hogbom clean algorithm available in ARL.
+    The starting-point for the code was the standard Hogbom clean algorithm available in RASCIL.
 
     Args:
     :param dirty_q: (numpy array): The dirty Q Image, i.e., the Q Image to be deconvolved.
@@ -468,7 +468,7 @@ def spheroidal_function(vnu):
     return value
 
 
-def msmfsclean(dirty, psf, window, gain, thresh, niter, scales, fracthresh, findpeak='ARL', prefix=''):
+def msmfsclean(dirty, psf, window, gain, thresh, niter, scales, fracthresh, findpeak='RASCIL', prefix=''):
     """ Perform image plane multiscale multi frequency clean
 
     This algorithm is documented as Algorithm 1 in: U. Rau and T. J. Cornwell, “A multi-scale multi-frequency
@@ -488,7 +488,7 @@ def msmfsclean(dirty, psf, window, gain, thresh, niter, scales, fracthresh, find
     :param niter: Maximum number of components to make if the threshold "thresh" is not hit
     :param scales: Scales (in pixels width) to be used
     :param fracthresh: Fractional stopping threshold
-    :param findpeak: Method of finding peak in mfsclean: 'Algorithm1'|'CASA'|'ARL', Default is ARL.
+    :param findpeak: Method of finding peak in mfsclean: 'Algorithm1'|'CASA'|'RASCIL', Default is RASCIL.
     :param prefix: Prefix to log messages to provide context
     :return: clean component image, residual image
     """

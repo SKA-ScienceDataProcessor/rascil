@@ -123,7 +123,7 @@ def calculate_averaged_correlation(correlation, time_width, channel_width):
 def simulate_rfi_block(bvis, emitter_location, emitter_power=5e4, attenuation=1.0, use_pole=False):
     """ Simulate RFI block
 
-    :param config: ARL telescope Configuration
+    :param config: RASCIL telescope Configuration
     :param times: observation times (hour angles)
     :param frequency: frequencies
     :param phasecentre:
