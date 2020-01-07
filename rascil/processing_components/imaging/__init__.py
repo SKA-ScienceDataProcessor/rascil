@@ -39,3 +39,5 @@ try:
     import nifty_gridder
 except ImportError:
     pass
+except RuntimeError:
+    pass
