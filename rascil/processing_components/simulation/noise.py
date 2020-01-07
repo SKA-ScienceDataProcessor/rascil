@@ -21,7 +21,7 @@ from rascil.data_models.memory_data_models import Configuration, Image, GainTabl
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.data_models.parameters import rascil_path
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.calibration.calibration import create_calibration_controls
+from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 from rascil.processing_components.image.operations import import_image_from_fits
 from rascil.processing_components.imaging.base import predict_2d, predict_skycomponent_visibility, \

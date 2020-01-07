@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.workflows.rsexecute.calibration.calibration_rsexecute import calibrate_list_rsexecute_workflow
-from rascil.processing_components.calibration.calibration import create_calibration_controls
+from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
 from rascil.wrappers.rsexecute.execution_support import get_dask_Client
