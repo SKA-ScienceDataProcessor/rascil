@@ -8,11 +8,11 @@ import unittest
 import numpy
 from numpy.testing import assert_allclose
 
-from rascil.processing_components.fourier_transforms.convolutional_gridding import w_beam, coordinates, \
+from rascil.processing_components.fourier_transforms.fft_coordinates import w_beam, coordinates, \
     coordinates2, coordinateBounds
 
 
-class TestConvolutionalGridding(unittest.TestCase):
+class TestFFTCoordinates(unittest.TestCase):
     
     @staticmethod
     def assertAlmostEqualScalar(a, result=1.0):

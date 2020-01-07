@@ -1,13 +1,5 @@
 """ GainTable iterators for iterating through a GainTable
 
-A typical use would be to make a sequence of snapshot images::
-
-    for rows in gaintable_timeslice_iter(vt):
-        visslice = create_GainTable_from_rows(vt, rows)
-        dirtySnapshot = create_image_from_GainTable(visslice, npixel=512, cellsize=0.001, npol=1)
-        dirtySnapshot, sumwt = invert_2d(visslice, dirtySnapshot)
-
-
 """
 
 __all__ = ['gaintable_timeslice_iter', 'gaintable_null_iter']

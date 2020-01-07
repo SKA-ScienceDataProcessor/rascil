@@ -12,7 +12,8 @@ from astropy.coordinates import SkyCoord
 from rascil.data_models.memory_data_models import Skycomponent
 from rascil.data_models.polarisation import PolarisationFrame
 
-from rascil.processing_components.calibration import  calibrate_function, create_calibration_controls, apply_gaintable
+from rascil.processing_components.calibration import apply_gaintable
+from rascil.processing_components.calibration.calibration import create_calibration_controls, calibrate_function
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, gaintable_summary
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.simulation import simulate_gaintable
@@ -22,7 +23,7 @@ from rascil.processing_components.visibility.base import copy_visibility, create
 log = logging.getLogger(__name__)
 
 
-class TestCalibrationContext(unittest.TestCase):
+class TestCalibration(unittest.TestCase):
     def setUp(self):
         numpy.random.seed(180555)
     

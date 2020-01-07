@@ -15,7 +15,7 @@ from rascil.processing_components.calibration.pointing import create_pointingtab
 from rascil.processing_components.imaging.primary_beams import create_vp
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation.pointing import simulate_gaintable_from_pointingtable
-from rascil.processing_components.simulation import simulate_pointingtable_from_timeseries
+from rascil.processing_components.simulation.pointing import simulate_pointingtable_from_timeseries
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components import create_image
 

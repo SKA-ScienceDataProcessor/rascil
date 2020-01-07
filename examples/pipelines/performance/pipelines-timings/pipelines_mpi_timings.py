@@ -31,7 +31,7 @@ from rascil.wrappers.mpi.griddata import create_awterm_convolutionfunction, crea
 from rascil.wrappers.mpi.image import image_gather_channels
 from rascil.wrappers.mpi.image import export_image_to_fits, qa_image
 from rascil.wrappers.mpi.imaging import advise_wide_field
-from simulation import create_low_test_skymodel_from_gleam
+from rascil.processing_components.simulation import create_low_test_skymodel_from_gleam
 from visibility import convert_blockvisibility_to_visibility
 
 pp = pprint.PrettyPrinter()

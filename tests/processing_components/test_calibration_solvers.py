@@ -11,7 +11,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.memory_data_models import Skycomponent
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.calibration.calibration import solve_gaintable
+from rascil.processing_components.calibration.solvers import solve_gaintable
 from rascil.processing_components.calibration.operations import apply_gaintable, create_gaintable_from_blockvisibility, \
     gaintable_summary, qa_gaintable
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility

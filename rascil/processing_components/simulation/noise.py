@@ -1,5 +1,5 @@
 """
-Functions that add noise
+Functions that add noise.
 
 """
 
@@ -21,7 +21,7 @@ from rascil.data_models.memory_data_models import Configuration, Image, GainTabl
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.data_models.parameters import rascil_path
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.calibration import  create_calibration_controls
+from rascil.processing_components.calibration.calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 from rascil.processing_components.image.operations import import_image_from_fits
 from rascil.processing_components.imaging.base import predict_2d, predict_skycomponent_visibility, \
@@ -37,7 +37,13 @@ from rascil.processing_components.image.operations import create_image_from_arra
 log = logging.getLogger(__name__)
 
 def calculate_noise_visibility(bandwidth, int_time, diameter, t_sys, eta):
-    """Determine noise rms per visibility
+    """Calculate noise rms per visibility
+
+    :param bandwidth: (Hz)
+    :param int_time: Integration time (s)
+    :param diameter: Diameter (m)
+    :param t_sys: (K)
+    :param eta: Efficiency
     :returns: Sigma [nrows]
     """
     
@@ -50,7 +56,13 @@ def calculate_noise_visibility(bandwidth, int_time, diameter, t_sys, eta):
 
 
 def calculate_noise_blockvisibility(bandwidth, int_time, diameter, t_sys, eta):
-    """Determine noise rms per visibility
+    """Calculate noise rms per visibility
+
+    :param bandwidth: (Hz)
+    :param int_time: Integration time (s)
+    :param diameter: Diameter (m)
+    :param t_sys: (K)
+    :param eta: Efficiency
     :returns: Sigma [nrows, nchan]
     """
     
@@ -70,7 +82,7 @@ def addnoise_visibility(vis, t_sys=None, eta=None):
     :param vis:
     :param t_sys: System temperature
     :param eta: Efficiency
-    :return:
+    :return: vis with noise added
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     

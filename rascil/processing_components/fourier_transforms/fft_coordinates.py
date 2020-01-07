@@ -1,11 +1,4 @@
-""" Imaging is based on used of the FFT to perform Fourier transforms efficiently. Since the observed visibility data_models
-do not arrive naturally on grid points, the sampled points are resampled on the FFT grid using a convolution function to
-smear out the sample points. The resulting grid points are then FFT'ed. The result can be corrected for the griddata
-convolution function by division in the image plane of the transform.
-
-This approach may be extended to include image plane effect such as the w term and the antenna/station primary beam.
-
-This module contains functions for performing the griddata process and the inverse degridding process.
+""" Support for coordinates in FFTs
 
 All grids and images are considered quadratic and centered around
 `npixel//2`, where `npixel` is the pixel width/height. This means that `npixel//2` is
@@ -13,14 +6,9 @@ the zero frequency for FFT purposes, as is convention. Note that this
 means that for even `npixel` the grid is not symmetrical, which means that
 e.g. for convolution kernels odd image sizes are preferred.
 
-This is implemented for reference in `coordinates`/`coordinates2`. Some noteworthy properties:
-- `ceil(field_of_view * lam)` gives the image size `npixel` in pixels
-- `lam * coordinates2(npixel)` yields the `u,v` grid coordinate system
-- `field_of_view * coordinates2(npixel)` yields the `l,m` image coordinate system (radians, roughly)
-
 """
 
-__all__ = ['w_beam', 'weight_gridding', 'visibility_recentre']
+__all__ = ['w_beam']
 
 import logging
 
@@ -202,79 +190,3 @@ def w_beam(npixel, field_of_view, w, cx=None, cy=None, remove_shift=False):
     return cp
 
 
-def frac_coord(npixel, kernel_oversampling, p):
-    """ Compute whole and fractional parts of coordinates, rounded to
-    kernel_oversampling-th fraction of pixel size
-
-    The fractional values are rounded to nearest 1/kernel_oversampling pixel value. At
-    fractional values greater than (kernel_oversampling-0.5)/kernel_oversampling coordinates are
-    rounded to next integer index.
-
-    :param npixel: Number of pixels in total
-    :param kernel_oversampling: Fractional values to round to
-    :param p: Coordinate in range [-.5,.5[
-    """
-    assert numpy.array(p >= -0.5).all() and numpy.array(
-        p < 0.5).all(), "Cellsize is too large: uv overflows grid uv= %s" % str(p)
-    x = npixel // 2 + p * npixel
-    flx = numpy.floor(x + 0.5 / kernel_oversampling)
-    fracx = numpy.around((x - flx) * kernel_oversampling)
-    return flx.astype(int), fracx.astype(int)
-
-
-def weight_gridding(shape, visweights, vuvwmap, vfrequencymap, vpolarisationmap=None, weighting='uniform'):
-    """Reweight data using one of a number of algorithms
-
-    :param shape:
-    :param visweights: Visibility weights
-    :param vuvwmap: map uvw to grid fractions
-    :param vfrequencymap: map frequency to image channels
-    :param vpolarisationmap: map polarisation to image polarisation
-    :param weighting: '' | 'uniform'
-    :return: visweights, density, densitygrid
-    """
-    densitygrid = numpy.zeros(shape, dtype='float')
-    if weighting == 'uniform':
-        log.debug("weight_gridding: Performing uniform weighting")
-        inchan, inpol, ny, nx = shape
-
-        wts = visweights[...]
-        # uvw -> fraction of grid mapping
-        for flip in [-1.0, 1.0]:
-            y, yf = frac_coord(ny, 1.0, flip * vuvwmap[:, 1])
-            x, xf = frac_coord(nx, 1.0, flip * vuvwmap[:, 0])
-            coords = list(vfrequencymap), x, y
-            for pol in range(inpol):
-                for vwt, chan, x, y in zip(wts, *coords):
-                    densitygrid[chan, pol, y, x] += vwt[..., pol]
-
-        # Find the total weight per sample counting redundancies with other samples
-        newvisweights = numpy.zeros_like(visweights)
-        density = numpy.zeros_like(visweights)
-        y, _ = frac_coord(ny, 1.0, vuvwmap[:, 1])
-        x, _ = frac_coord(nx, 1.0, vuvwmap[:, 0])
-        coords = list(vfrequencymap), x, y
-        for pol in range(inpol):
-            density[..., pol] += [densitygrid[chan, pol, y, x] for chan, x, y in zip(*coords)]
-
-        # Normalise each visibility weight to sum to one in a grid cell
-        if numpy.sum(density[:, 0] > 0.0) < visweights.shape[0]:
-            log.warning("weight_gridding: Losing samples in weighting")
-
-        newvisweights[density > 0.0] = visweights[density > 0.0] / density[density > 0.0]
-        return newvisweights, density, densitygrid
-    else:
-        return visweights, None, None
-
-
-def visibility_recentre(uvw, dl, dm):
-    """ Compensate for kernel re-centering - see `w_kernel_function`.
-
-    :param uvw: Visibility coordinates
-    :param dl: Horizontal shift to compensate for
-    :param dm: Vertical shift to compensate for
-    :returns: Visibility coordinates re-centrered on the peak of their w-kernel
-    """
-
-    u, v, w = numpy.hsplit(uvw, 3)  # pylint: disable=unbalanced-tuple-unpacking
-    return numpy.hstack([u - w * dl, v - w * dm, w])

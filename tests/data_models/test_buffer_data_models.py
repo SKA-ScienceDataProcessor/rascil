@@ -19,7 +19,8 @@ from rascil.processing_components.griddata import create_convolutionfunction_fro
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.calibration.pointing import create_pointingtable_from_blockvisibility
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
-from rascil.processing_components.simulation import simulate_gaintable, simulate_pointingtable, create_test_image
+from rascil.processing_components.simulation import simulate_gaintable, create_test_image
+from rascil.processing_components.simulation.pointing import simulate_pointingtable
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_blockvisibility
 

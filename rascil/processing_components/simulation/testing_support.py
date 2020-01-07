@@ -28,12 +28,19 @@ Functions that aid testing in various ways. A typical use would be::
 
 """
 
-__all__ = ['create_test_image', 'create_test_image_from_s3', 'create_test_skycomponents_from_s3',
-           'create_blockvisibility_iterator', 'ingest_unittest_visibility',
-           'create_low_test_image_from_gleam', 'create_low_test_skymodel_from_gleam',
-           'create_low_test_skycomponents_from_gleam', 'create_unittest_components',
-           'create_unittest_model', 'insert_unittest_errors', 'replicate_image',
-           'simulate_gaintable', 'simulate_pointingtable', 'simulate_pointingtable_from_timeseries']
+__all__ = ['create_blockvisibility_iterator',
+           'create_low_test_image_from_gleam',
+           'create_low_test_skycomponents_from_gleam',
+           'create_low_test_skymodel_from_gleam',
+           'create_test_image',
+           'create_test_image_from_s3',
+           'create_test_skycomponents_from_s3',
+           'create_unittest_components',
+           'create_unittest_model',
+           'ingest_unittest_visibility',
+           'insert_unittest_errors',
+           'replicate_image',
+           'simulate_gaintable']
 
 import csv
 import logging
@@ -47,11 +54,12 @@ from astropy.wcs import WCS
 from astropy.wcs.utils import pixel_to_skycoord
 from scipy import interpolate
 
-from rascil.data_models.memory_data_models import Configuration, Image, GainTable, Skycomponent, SkyModel, PointingTable
+from rascil.data_models.memory_data_models import Configuration, Image, GainTable, Skycomponent, SkyModel
 from rascil.data_models.parameters import rascil_path
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.calibration import  create_calibration_controls
+from rascil.processing_components.calibration.calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
+from rascil.processing_components.image.operations import create_image_from_array
 from rascil.processing_components.image.operations import import_image_from_fits
 from rascil.processing_components.imaging.base import predict_2d, predict_skycomponent_visibility, \
     create_image_from_visibility, advise_wide_field
@@ -61,7 +69,6 @@ from rascil.processing_components.skycomponent.operations import create_skycompo
 from rascil.processing_components.visibility.base import create_blockvisibility, create_visibility
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
-from rascil.processing_components.image.operations import create_image_from_array
 
 log = logging.getLogger(__name__)
 
@@ -85,14 +92,14 @@ def create_test_image(canonical=True, cellsize=None, frequency=None, channel_ban
         frequency = [1e8]
     im = import_image_from_fits(rascil_path("data/models/M31.MOD"))
     if canonical:
-        
+
         if polarisation_frame is None:
             im.polarisation_frame = PolarisationFrame("stokesI")
         elif isinstance(polarisation_frame, PolarisationFrame):
             im.polarisation_frame = polarisation_frame
         else:
             raise ValueError("polarisation_frame is not valid")
-        
+
         im = replicate_image(im, frequency=frequency, polarisation_frame=im.polarisation_frame)
         if cellsize is not None:
             im.wcs.wcs.cdelt[0] = -180.0 * cellsize / numpy.pi
@@ -108,14 +115,14 @@ def create_test_image(canonical=True, cellsize=None, frequency=None, channel_ban
                 im.wcs.wcs.cdelt[3] = 0.001 * frequency[0]
         im.wcs.wcs.radesys = 'ICRS'
         im.wcs.wcs.equinox = 2000.00
-    
+
     if phasecentre is not None:
         im.wcs.wcs.crval[0] = phasecentre.ra.deg
         im.wcs.wcs.crval[1] = phasecentre.dec.deg
         # WCS is 1 relative
         im.wcs.wcs.crpix[0] = im.data.shape[3] // 2 + 1
         im.wcs.wcs.crpix[1] = im.data.shape[2] // 2 + 1
-    
+
     return im
 
 
@@ -158,21 +165,21 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
     :param flux_limit: Minimum flux (Jy)
     :return: Image
     """
-    
+
     ras = []
     decs = []
     fluxes = []
-    
+
     if phasecentre is None:
         phasecentre = SkyCoord(ra=+180.0 * u.deg, dec=-60.0 * u.deg, frame='icrs', equinox='J2000')
-    
+
     if polarisation_frame is None:
         polarisation_frame = PolarisationFrame("stokesI")
-    
+
     npol = polarisation_frame.npol
-    
+
     nchan = len(frequency)
-    
+
     shape = [nchan, npol, npixel, npixel]
     w = WCS(naxis=4)
     # The negation in the longitude is needed by definition of RA, DEC
@@ -181,12 +188,12 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
     w.wcs.ctype = ["RA---SIN", "DEC--SIN", 'STOKES', 'FREQ']
     w.wcs.crval = [phasecentre.ra.deg, phasecentre.dec.deg, 1.0, frequency[0]]
     w.naxis = 4
-    
+
     w.wcs.radesys = 'ICRS'
     w.wcs.equinox = 2000.0
-    
+
     model = create_image_from_array(numpy.zeros(shape), w, polarisation_frame=polarisation_frame)
-    
+
     if numpy.max(frequency) > 6.1E8:
         if fov > 10:
             fovstr = '18'
@@ -201,7 +208,7 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
         assert fov in [10, 20, 40], "Field of view invalid: use one of %s" % ([10, 20, 40])
         csvfilename = rascil_path('data/models/S3_151MHz_%ddeg.csv' % (fov))
         log.info('create_test_image_from_s3: Reading S3 sources from %s ' % csvfilename)
-    
+
     with open(csvfilename) as csvfile:
         readCSV = csv.reader(csvfile, delimiter=',')
         r = 0
@@ -221,13 +228,13 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
                     decs.append(dec)
                     fluxes.append(flux)
             r += 1
-    
+
     csvfile.close()
-    
+
     assert len(fluxes) > 0, "No sources found above flux limit %s" % flux_limit
-    
+
     log.info('create_test_image_from_s3: %d sources read' % (len(fluxes)))
-    
+
     p = w.sub(2).wcs_world2pix(numpy.array(ras), numpy.array(decs), 1)
     fluxes = numpy.array(fluxes)
     total_flux = numpy.sum(fluxes)
@@ -236,15 +243,15 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
     ps = ip[:, ok]
     fluxes = fluxes[ok]
     actual_flux = numpy.sum(fluxes)
-    
+
     log.info('create_test_image_from_s3: %d sources inside the image' % (ps.shape[1]))
-    
+
     log.info('create_test_image_from_s3: average channel flux in S3 model = %.3f, actual average channel flux in '
              'image = %.3f' % (total_flux / float(nchan), actual_flux / float(nchan)))
     for chan in range(nchan):
         for iflux, flux in enumerate(fluxes):
             model.data[chan, 0, ps[1, iflux], ps[0, iflux]] = flux[chan]
-    
+
     return model
 
 
@@ -288,18 +295,18 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
     :param flux_limit: Minimum flux (Jy)
     :return: Image
     """
-    
+
     ras = []
     decs = []
     fluxes = []
     names = []
-    
+
     if phasecentre is None:
         phasecentre = SkyCoord(ra=+180.0 * u.deg, dec=-60.0 * u.deg, frame='icrs', equinox='J2000')
-    
+
     if polarisation_frame is None:
         polarisation_frame = PolarisationFrame("stokesI")
-    
+
     if numpy.max(frequency) > 6.1E8:
         if fov > 10:
             fovstr = '18'
@@ -314,16 +321,16 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
         assert fov in [10, 20, 40], "Field of view invalid: use one of %s" % ([10, 20, 40])
         csvfilename = rascil_path('data/models/S3_151MHz_%ddeg.csv' % (fov))
         log.info('create_test_skycomponents_from_s3: Reading S3-SEX sources from %s ' % csvfilename)
-    
+
     skycomps = list()
-    
+
     with open(csvfilename) as csvfile:
         readCSV = csv.reader(csvfile, delimiter=',')
         r = 0
         for row in readCSV:
             # Skip first row
             if r > 0:
-                ra = float(row[4])/numpy.cos(phasecentre.dec.rad) + phasecentre.ra.deg
+                ra = float(row[4]) / numpy.cos(phasecentre.dec.rad) + phasecentre.ra.deg
                 dec = float(row[5]) + phasecentre.dec.deg
                 if numpy.max(frequency) > 6.1E8:
                     alpha = (float(row[11]) - float(row[10])) / numpy.log10(1400.0 / 610.0)
@@ -337,17 +344,17 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
                     fluxes.append([[f] for f in flux])
                     names.append("S3_%s" % row[0])
             r += 1
-    
+
     csvfile.close()
-    
+
     assert len(fluxes) > 0, "No sources found above flux limit %s" % flux_limit
-    
+
     directions = SkyCoord(ra=ras * u.deg, dec=decs * u.deg)
     if phasecentre is not None:
         separations = directions.separation(phasecentre).to('rad').value
     else:
         separations = numpy.zeros(len(names))
-    
+
     for isource, name in enumerate(names):
         direction = directions[isource]
         if separations[isource] < radius:
@@ -355,10 +362,10 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
                 skycomps.append(Skycomponent(direction=direction, flux=fluxes[isource], frequency=frequency,
                                              name=names[isource], shape='Point',
                                              polarisation_frame=polarisation_frame))
-    
+
     log.info('create_test_skycomponents_from_s3: %d sources found above fluxlimit inside search radius' %
              len(skycomps))
-    
+
     return skycomps
 
 
@@ -388,22 +395,22 @@ def create_low_test_image_from_gleam(npixel=512, polarisation_frame=Polarisation
     :return: Image
 
     """
-    
+
     if phasecentre is None:
         phasecentre = SkyCoord(ra=+15.0 * u.deg, dec=-35.0 * u.deg, frame='icrs', equinox='J2000')
-    
+
     if radius is None:
         radius = npixel * cellsize / numpy.sqrt(2.0)
-    
+
     sc = create_low_test_skycomponents_from_gleam(flux_limit=flux_limit, polarisation_frame=polarisation_frame,
                                                   frequency=frequency, phasecentre=phasecentre,
                                                   kind=kind, radius=radius)
-    
+
     sc = filter_skycomponents_by_flux(sc, flux_min=flux_min, flux_max=flux_max)
-    
+
     if polarisation_frame is None:
         polarisation_frame = PolarisationFrame("stokesI")
-    
+
     npol = polarisation_frame.npol
     nchan = len(frequency)
     shape = [nchan, npol, npixel, npixel]
@@ -416,14 +423,14 @@ def create_low_test_image_from_gleam(npixel=512, polarisation_frame=Polarisation
     w.naxis = 4
     w.wcs.radesys = 'ICRS'
     w.wcs.equinox = 2000.0
-    
+
     model = create_image_from_array(numpy.zeros(shape), w, polarisation_frame=polarisation_frame)
-    
+
     model = insert_skycomponent(model, sc, insert_method=insert_method)
     if applybeam:
         beam = create_pb(model, telescope='LOW', use_local=False)
         model.data[...] *= beam.data[...]
-    
+
     return model
 
 
@@ -460,20 +467,20 @@ def create_low_test_skymodel_from_gleam(npixel=512, polarisation_frame=Polarisat
     :return: SkyModel
 
     """
-    
+
     if phasecentre is None:
         phasecentre = SkyCoord(ra=+15.0 * u.deg, dec=-35.0 * u.deg, frame='icrs', equinox='J2000')
-    
+
     radius = npixel * cellsize
-    
+
     sc = create_low_test_skycomponents_from_gleam(flux_limit=flux_limit, polarisation_frame=polarisation_frame,
                                                   frequency=frequency, phasecentre=phasecentre,
                                                   kind=kind, radius=radius)
-    
+
     sc = filter_skycomponents_by_flux(sc, flux_max=flux_max)
     if polarisation_frame is None:
         polarisation_frame = PolarisationFrame("stokesI")
-    
+
     npol = polarisation_frame.npol
     nchan = len(frequency)
     shape = [nchan, npol, npixel, npixel]
@@ -486,21 +493,21 @@ def create_low_test_skymodel_from_gleam(npixel=512, polarisation_frame=Polarisat
     w.naxis = 4
     w.wcs.radesys = 'ICRS'
     w.wcs.equinox = 2000.0
-    
+
     model = create_image_from_array(numpy.zeros(shape), w, polarisation_frame=polarisation_frame)
-    
+
     if applybeam:
         beam = create_pb(model, telescope=telescope, use_local=False)
         sc = apply_beam_to_skycomponent(sc, beam)
-    
+
     weaksc = filter_skycomponents_by_flux(sc, flux_max=flux_threshold)
     brightsc = filter_skycomponents_by_flux(sc, flux_min=flux_threshold)
     model = insert_skycomponent(model, weaksc, insert_method=insert_method)
-    
+
     log.info(
         'create_low_test_skymodel_from_gleam: %d bright sources above flux threshold %.3f, %d weak sources below ' %
         (len(brightsc), flux_threshold, len(weaksc)))
-    
+
     return SkyModel(components=brightsc, image=model, mask=None, gaintable=None)
 
 
@@ -528,40 +535,40 @@ def create_low_test_skycomponents_from_gleam(flux_limit=0.1, polarisation_frame=
     :param radius: Radius of sources selected around phasecentre (default 1.0 rad)
     :return: List of Skycomponents
     """
-    
+
     fitsfile = rascil_path("data/models/GLEAM_EGC.fits")
-    
+
     rad2deg = 180.0 / numpy.pi
     decmin = phasecentre.dec.to('deg').value - rad2deg * radius / 2.0
     decmax = phasecentre.dec.to('deg').value + rad2deg * radius / 2.0
-    
+
     hdulist = fits.open(fitsfile, lazy_load_hdus=False)
     recs = hdulist[1].data[0].array
-    
+
     fluxes = recs['peak_flux_wide']
-    
+
     mask = fluxes > flux_limit
     filtered_recs = recs[mask]
-    
+
     decs = filtered_recs['DEJ2000']
     mask = decs > decmin
     filtered_recs = filtered_recs[mask]
-    
+
     decs = filtered_recs['DEJ2000']
     mask = decs < decmax
     filtered_recs = filtered_recs[mask]
-    
+
     ras = filtered_recs['RAJ2000']
     decs = filtered_recs['DEJ2000']
     names = filtered_recs['Name']
-    
+
     if polarisation_frame is None:
         polarisation_frame = PolarisationFrame("stokesI")
-    
+
     npol = polarisation_frame.npol
-    
+
     nchan = len(frequency)
-    
+
     # For every source, we read all measured fluxes and interpolate to the
     # required frequencies
     gleam_freqs = numpy.array([76, 84, 92, 99, 107, 115, 122, 130, 143, 151, 158, 166, 174, 181, 189, 197, 204,
@@ -569,19 +576,19 @@ def create_low_test_skycomponents_from_gleam(flux_limit=0.1, polarisation_frame=
     gleam_flux_freq = numpy.zeros([len(names), len(gleam_freqs)])
     for i, f in enumerate(gleam_freqs):
         gleam_flux_freq[:, i] = filtered_recs['int_flux_%03d' % (f)][:]
-    
+
     skycomps = []
-    
+
     directions = SkyCoord(ra=ras * u.deg, dec=decs * u.deg)
     if phasecentre is not None:
         separations = directions.separation(phasecentre).to('rad').value
     else:
         separations = numpy.zeros(len(names))
-    
+
     for isource, name in enumerate(names):
         direction = directions[isource]
         if separations[isource] < radius:
-            
+
             fint = interpolate.interp1d(gleam_freqs * 1.0e6, gleam_flux_freq[isource, :], kind=kind)
             flux = numpy.zeros([nchan, npol])
             flux[:, 0] = fint(frequency)
@@ -589,11 +596,11 @@ def create_low_test_skycomponents_from_gleam(flux_limit=0.1, polarisation_frame=
                 skycomps.append(Skycomponent(direction=direction, flux=flux, frequency=frequency,
                                              name=name, shape='Point',
                                              polarisation_frame=polarisation_frame))
-    
+
     log.info('create_low_test_skycomponents_from_gleam: %d sources above flux limit %.3f' % (len(skycomps), flux_limit))
-    
+
     hdulist.close()
-    
+
     return skycomps
 
 
@@ -609,21 +616,21 @@ def replicate_image(im: Image, polarisation_frame=PolarisationFrame('stokesI'), 
     :param polarisation_frame: Polarisation_frame
     :return: Image
     """
-    
+
     if len(im.data.shape) == 2:
         fim = Image()
-        
+
         newwcs = WCS(naxis=4)
-        
+
         newwcs.wcs.crpix = [im.wcs.wcs.crpix[0] + 1.0, im.wcs.wcs.crpix[1] + 1.0, 1.0, 1.0]
         newwcs.wcs.cdelt = [im.wcs.wcs.cdelt[0], im.wcs.wcs.cdelt[1], 1.0, 1.0]
         newwcs.wcs.crval = [im.wcs.wcs.crval[0], im.wcs.wcs.crval[1], 1.0, frequency[0]]
         newwcs.wcs.ctype = [im.wcs.wcs.ctype[0], im.wcs.wcs.ctype[1], 'STOKES', 'FREQ']
-        
+
         nchan = len(frequency)
         npol = polarisation_frame.npol
         fim.polarisation_frame = polarisation_frame
-        
+
         fim.wcs = newwcs
         fshape = [nchan, npol, im.data.shape[1], im.data.shape[0]]
         fim.data = numpy.zeros(fshape)
@@ -673,24 +680,24 @@ def create_blockvisibility_iterator(config: Configuration, times: numpy.array, f
         bvis = create_blockvisibility(config, actualtimes, frequency=frequency, phasecentre=phasecentre, weight=weight,
                                       polarisation_frame=polarisation_frame, integration_time=integration_time,
                                       channel_bandwidth=channel_bandwidth)
-        
+
         if model is not None:
             vis = convert_blockvisibility_to_visibility(bvis)
             vis = predict(vis, model, **kwargs)
             bvis = convert_visibility_to_blockvisibility(vis)
-        
+
         if components is not None:
             vis = predict_skycomponent_visibility(bvis, components)
-        
+
         # Add phase errors
         if phase_error > 0.0 or amplitude_error > 0.0:
             gt = create_gaintable_from_blockvisibility(bvis)
             gt = simulate_gaintable(gt=gt, phase_error=phase_error, amplitude_error=amplitude_error)
             bvis = apply_gaintable(bvis, gt)
-        
+
         import time
         time.sleep(sleep)
-        
+
         yield bvis
 
 
@@ -707,10 +714,10 @@ def simulate_gaintable(gt: GainTable, phase_error=0.1, amplitude_error=0.0, smoo
     :return: Gaintable
 
     """
-    
+
     def moving_average(a, n=3):
         return numpy.convolve(a, numpy.ones((n,)) / n, mode='valid')
-    
+
     log.debug("simulate_gaintable: Simulating amplitude error = %.4f, phase error = %.4f"
               % (amplitude_error, phase_error))
     amps = 1.0
@@ -724,7 +731,7 @@ def simulate_gaintable(gt: GainTable, phase_error=0.1, amplitude_error=0.0, smoo
                 if smooth_channels > 1:
                     phase = moving_average(phase, smooth_channels)
                 phases[time, ant, ...] = phase[..., numpy.newaxis, numpy.newaxis]
-    
+
     if amplitude_error > 0.0:
         amps = numpy.ones(gt.data['gain'].shape, dtype='complex')
         for time in range(ntimes):
@@ -734,7 +741,7 @@ def simulate_gaintable(gt: GainTable, phase_error=0.1, amplitude_error=0.0, smoo
                     amp = moving_average(amp, smooth_channels)
                     amp = amp / numpy.average(amp)
                 amps[time, ant, ...] = amp[..., numpy.newaxis, numpy.newaxis]
-    
+
     gt.data['gain'] = amps * numpy.exp(0 + 1j * phases)
     nrec = gt.data['gain'].shape[-1]
     if nrec > 1:
@@ -748,261 +755,8 @@ def simulate_gaintable(gt: GainTable, phase_error=0.1, amplitude_error=0.0, smoo
         else:
             gt.data['gain'][..., 0, 1] = 0.0
             gt.data['gain'][..., 1, 0] = 0.0
-    
+
     return gt
-
-
-def simulate_pointingtable(pt: PointingTable, pointing_error, static_pointing_error=None, global_pointing_error=None,
-                           seed=None, **kwargs) -> PointingTable:
-    """ Simulate a gain table
-
-    :type pt: PointingTable
-    :param pointing_error: std of normal distribution (radians)
-    :param static_pointing_error: std of normal distribution (radians)
-    :param global_pointing_error: 2-vector of global pointing error (rad)
-    :param kwargs:
-    :return: PointingTable
-
-    """
-    
-    if seed is not None:
-        numpy.random.seed(seed)
-        
-    if static_pointing_error is None:
-        static_pointing_error = [0.0, 0.0]
-    
-    r2s = 180.0 * 3600.0 / numpy.pi
-    pt.data['pointing'] = numpy.zeros(pt.data['pointing'].shape)
-    
-    ntimes, nant, nchan, nrec, _ = pt.data['pointing'].shape
-    if pointing_error > 0.0:
-        log.debug("simulate_pointingtable: Simulating dynamic pointing error = %g (rad) %g (arcsec)"
-                  % (pointing_error, r2s * pointing_error))
-        
-        pt.data['pointing'] += numpy.random.normal(0.0, pointing_error, pt.data['pointing'].shape)
-    if (abs(static_pointing_error[0]) > 0.0) or (abs(static_pointing_error[1]) > 0.0):
-        numpy.random.seed(18051955)
-        log.debug("simulate_pointingtable: Simulating static pointing error = (%g, %g) (rad) (%g, %g)(arcsec)"
-                  % (static_pointing_error[0], static_pointing_error[1],
-                     r2s * static_pointing_error[0], r2s * static_pointing_error[1]))
-        
-        static_pe = numpy.zeros(pt.data['pointing'].shape[1:])
-        static_pe[...,0] = numpy.random.normal(0.0, static_pointing_error[0],
-                                               static_pe[...,0].shape)[numpy.newaxis, ...]
-        static_pe[...,1] = numpy.random.normal(0.0, static_pointing_error[1],
-                                               static_pe[...,1].shape)[numpy.newaxis, ...]
-        pt.data['pointing'] += static_pe
-
-    if global_pointing_error is not None:
-        if seed is not None:
-            numpy.random.seed(seed)
-    
-        log.debug("simulate_pointingtable: Simulating global pointing error = [%g, %g] (rad) [%g,s %g] (arcsec)"
-                  % (global_pointing_error[0], global_pointing_error[1],
-                     r2s * global_pointing_error[0], r2s * global_pointing_error[1]))
-        pt.data['pointing'][..., :] += global_pointing_error
-    
-    return pt
-
-
-def simulate_pointingtable_from_timeseries(pt, type='wind', time_series_type='precision',
-                                           pointing_directory=None, reference_pointing=False,
-                                           seed=None):
-    """Create a pointing table with time series created from PSD.
-
-    :param pt: Pointing table to be filled
-    :param type: Type of pointing: 'tracking' or 'wind'
-    :param pointing_file: Name of pointing file
-    :param reference_pointing: Use reference pointing?
-    :return:
-    """
-    if seed is not None:
-        numpy.random.seed(seed)
-    
-    if pointing_directory is None:
-        pointing_directory = rascil_path("data/models/%s" % time_series_type)
-        
-    pt.data['pointing'] = numpy.zeros(pt.data['pointing'].shape)
-    
-    ntimes, nant, nchan, nrec, _ = pt.data['pointing'].shape
-    
-    # Use az and el at the beginning of this pointingtable
-    axis_values = pt.nominal[0,0,0,0,0]
-    el = pt.nominal[0,0,0,0,1]
-    
-    el_deg = el * 180.0 / numpy.pi
-    az_deg = axis_values * 180.0 / numpy.pi
-    
-    if el_deg < 30.0:
-        el_deg = 15.0
-    elif el_deg < (90.0+45.0)/2.0:
-        el_deg = 45.0
-    else:
-        el_deg = 90.0
-        
-    if abs(az_deg) < 45.0 / 2.0:
-        az_deg = 0.0
-    elif abs(az_deg) < (45.0 + 90.0)/2.0:
-        az_deg = 45.0
-    elif abs(az_deg) < (90.0 + 135.0)/2.0:
-        az_deg = 90.0
-    elif abs(az_deg) < (135.0 + 180.0)/2.0:
-        az_deg = 135.0
-    else:
-        az_deg = 180.0
-    
-    pointing_file = '%s/El%dAz%d.dat' % (pointing_directory, int(el_deg), int(az_deg))
-    log.debug("simulate_pointingtable_from_timeseries: Reading wind PSD from %s" % pointing_file)
-    psd = numpy.loadtxt(pointing_file)
-    
-    # define some arrays
-    freq = psd[:, 0]
-    axesdict = {
-        "az": psd[:, 1],
-        "el": psd[:, 2],
-        "pxel": psd[:, 3],
-        "pel": psd[:, 4]
-    }
-    
-    if type == 'tracking':
-        axes = ["az", "el"]
-    elif type == 'wind':
-         axes = ["pxel", "pel"]
-    else:
-        raise ValueError("Pointing type %s not known" % type)
-
-    freq_interval = 0.0001
-    
-    for axis in axes:
-        
-        axis_values = axesdict[axis]
-
-        if (axis == "az") or (axis == "el"):
-            # determine index of maximum PSD value; add 50 for better fit
-            axis_values_max_index = numpy.argwhere(axis_values == numpy.max(axis_values))[0][0] + 50
-            axis_values_max_index = min(axis_values_max_index, len(axis_values))
-            # max_freq = 2.0 / pt.interval[0]
-            max_freq = 0.4
-            freq_max_index = numpy.argwhere(freq > max_freq)[0][0]
-        else:
-            break_freq = 0.01 # not max; just a break
-            axis_values_max_index = numpy.argwhere(freq>break_freq)[0][0]
-            # max_freq = 2.0 / pt.interval[0]
-            max_freq = 0.1
-            freq_max_index = numpy.argwhere(freq > max_freq)[0][0]
-
-        # construct regularly-spaced frequencies
-        regular_freq = numpy.arange(freq[0], freq[freq_max_index], freq_interval)
-
-        regular_axis_values_max_index =  numpy.argwhere(numpy.abs(regular_freq-freq[axis_values_max_index])==numpy.min(numpy.abs(regular_freq-freq[axis_values_max_index])))[0][0]
-
-        # print ('Frequency break: ', freq[az_max_index])
-        # print ('Max frequency: ', max_freq)
-        #
-        # print ('New frequency break: ', regular_freq[regular_az_max_index])
-        # print ('New max frequency: ', regular_freq[-1])
-
-        if axis_values_max_index>=freq_max_index:
-            raise ValueError('Frequency break is higher than highest frequency; select a lower break')
-
-        # use original frequency break and max frequency to fit function
-        # fit polynomial to psd up to max value
-        import warnings
-        from numpy import RankWarning
-        warnings.simplefilter('ignore', RankWarning)
-
-        p_axis_values1 = numpy.polyfit(freq[:axis_values_max_index],
-                                       numpy.log(axis_values[:axis_values_max_index]), 5)
-        f_axis_values1 = numpy.poly1d(p_axis_values1)
-        # fit polynomial to psd beyond max value
-        p_axis_values2 = numpy.polyfit(freq[axis_values_max_index:freq_max_index],
-                                       numpy.log(axis_values[axis_values_max_index:freq_max_index]), 5)
-        f_axis_values2 = numpy.poly1d(p_axis_values2)
-
-        # use new frequency break and max frequency to apply function (ensures equal spacing of frequency intervals)
-
-        # resampled to construct regularly-spaced frequencies
-        regular_axis_values1 = numpy.exp(f_axis_values1(regular_freq[:regular_axis_values_max_index]))
-        regular_axis_values2 = numpy.exp(f_axis_values2(regular_freq[regular_axis_values_max_index:]))
-
-        # join
-        regular_axis_values = numpy.append(regular_axis_values1, regular_axis_values2)
-
-        M0 = len(regular_axis_values)
-        
-        #  check rms of resampled PSD
-        # df = regular_freq[1:]-regular_freq[:-1]
-        # psd2rms_pxel = numpy.sqrt(numpy.sum(regular_az[:-1]*df))
-        # print ('Calculate rms of resampled PSD: ', psd2rms_pxel)
-
-        original_regular_freq = regular_freq
-        original_regular_axis_values = regular_axis_values
-        # get amplitudes from psd values
-        
-        if (regular_axis_values<0).any():
-            raise ValueError('Resampling returns negative power values; change fit range')
-
-        amp_axis_values = numpy.sqrt(regular_axis_values*2*freq_interval)
-        # need to scale PSD by 2* frequency interval before square rooting, then by number of modes in resampled PSD
-
-        # Now we generate some random phases
-        for ant in range(nant):
-            regular_freq = original_regular_freq
-            regular_axis_values = original_regular_axis_values
-            phi_axis_values = numpy.random.rand(len(regular_axis_values)) * 2 * numpy.pi
-            # create complex array
-            z_axis_values = amp_axis_values * numpy.exp(1j * phi_axis_values)  # polar
-            # make symmetrical frequencies
-            mirror_z_axis_values = numpy.copy(z_axis_values)
-            # make complex conjugates
-            mirror_z_axis_values.imag -= 2 * z_axis_values.imag
-            # make negative frequencies
-            mirror_regular_freq = -regular_freq
-            # join
-            z_axis_values = numpy.append(z_axis_values, mirror_z_axis_values[::-1])
-            regular_freq = numpy.append(regular_freq, mirror_regular_freq[::-1])
-            
-            # add a 0 Fourier term
-            z_axis_values = numpy.append(0 + 0 * 1j, z_axis_values)
-            regular_freq = numpy.append(0, regular_freq)
-            
-            # perform inverse fft
-            ts = numpy.fft.ifft(z_axis_values)
-            
-            # set up and check scalings
-            N = len(ts)
-            Dt = pt.interval[0]
-            ts = numpy.real(ts)
-            ts *= M0  # the result is scaled by number of points in the signal, so multiply - real part - by this
-            
-            # The output of the iFFT will be a random time series on the finite
-            # (bounded, limited) time interval t = 0 to tmax = (N-1) X Dt, #
-            # where Dt = 1 / (2 X Fmax)
-            
-            # scale to time interval
-            times = numpy.arange(ntimes) * Dt
-            
-            # Convert from arcsec to radians
-            ts *= numpy.pi / (180.0 * 3600.0)
-            
-            # We take reference pointing to mean that the pointing errors are zero at the beginning
-            # of the set of integrations
-            if reference_pointing:
-                ts[:] -= ts[0]
-            
-            #            pt.data['time'] = times[:ntimes]
-            if axis == 'az':
-                pt.data['pointing'][:, ant, :, :, 0] = ts[:ntimes, numpy.newaxis, numpy.newaxis, ...]
-            elif axis == 'el':
-                pt.data['pointing'][:, ant, :, :, 1] = ts[:ntimes, numpy.newaxis, numpy.newaxis, ...]
-            elif axis == 'pxel':
-                pt.data['pointing'][:, ant, :, :, 0] = ts[:ntimes, numpy.newaxis, numpy.newaxis, ...]
-            elif axis == 'pel':
-                pt.data['pointing'][:, ant, :, :, 1] = ts[:ntimes, numpy.newaxis, numpy.newaxis, ...]
-            else:
-                raise ValueError("Unknown axis %s" % axis)
-    
-    return pt
 
 
 def ingest_unittest_visibility(config, frequency, channel_bandwidth, times, vis_pol, phasecentre, block=False,
@@ -1020,21 +774,21 @@ def ingest_unittest_visibility(config, frequency, channel_bandwidth, times, vis_
 def create_unittest_components(model, flux, applypb=False, telescope='LOW', npixel=None,
                                scale=1.0, single=False, symmetric=False, angular_scale=1.0):
     # Fill the visibility with exactly computed point sources.
-    
+
     if npixel == None:
         _, _, _, npixel = model.data.shape
     spacing_pixels = int(scale * npixel) // 4
     log.info('Spacing in pixels = %s' % spacing_pixels)
-    
+
     if not symmetric:
-        centers = [(0.2*angular_scale, 1.1*angular_scale)]
+        centers = [(0.2 * angular_scale, 1.1 * angular_scale)]
     else:
         centers = list()
-    
+
     if not single:
         centers.append([0.0, 0.0])
-        
-        for x in numpy.linspace(-1.2*angular_scale, 1.2*angular_scale, 7):
+
+        for x in numpy.linspace(-1.2 * angular_scale, 1.2 * angular_scale, 7):
             if abs(x) > 1e-15:
                 centers.append([x, x])
                 centers.append([x, -x])
@@ -1050,15 +804,15 @@ def create_unittest_components(model, flux, applypb=False, telescope='LOW', npix
             int(round(rpix[1] + iy * spacing_pixels * numpy.sign(model.wcs.wcs.cdelt[1])))
         sc = pixel_to_skycoord(p[0], p[1], model.wcs, origin=1)
         log.info("Component at (%f, %f) [0-rel] %s" % (p[0], p[1], str(sc)))
-        
+
         # Channel images
         comp = create_skycomponent(direction=sc, flux=flux, frequency=model.frequency, polarisation_frame=model_pol)
         components.append(comp)
-    
+
     if applypb:
         beam = create_pb(model, telescope=telescope, use_local=False)
         components = apply_beam_to_skycomponent(components, beam)
-    
+
     return components
 
 
@@ -1084,19 +838,19 @@ def insert_unittest_errors(vt, seed=180555, calibration_context="TG", amp_errors
     :return:
     """
     controls = create_calibration_controls()
-    
+
     if amp_errors is None:
         amp_errors = {'T': 0.0, 'G': 0.01, 'B': 0.01}
-    
+
     if phase_errors is None:
         phase_errors = {'T': 1.0, 'G': 0.1, 'B': 0.01}
-    
+
     for c in calibration_context:
         gaintable = create_gaintable_from_blockvisibility(vt, timeslice=controls[c]['timeslice'])
         gaintable = simulate_gaintable(gaintable, phase_error=phase_errors[c], amplitude_error=amp_errors[c],
                                        timeslice=controls[c]['timeslice'], phase_only=controls[c]['phase_only'],
                                        crosspol=controls[c]['shape'] == 'matrix')
-        
+
         vt = apply_gaintable(vt, gaintable, timeslice=controls[c]['timeslice'], inverse=True)
-    
+
     return vt

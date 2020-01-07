@@ -90,10 +90,7 @@ def hogbom_complex(dirty_q, dirty_u, psf_q, psf_u, window, gain, thresh, niter, 
     :param fracthresh: (float): The predefined fractional threshold at which to stop cleaning.
 
     Returns:
-    comps.real: real clean component image.
-    comps.imag: imaginary clean component image.
-    res.real: real residual image.
-    res.imag: imaginary residual image.
+    :return (comps.real, comps.imag, res.real, res.imag)
     """
     
     assert 0.0 < gain < 2.0

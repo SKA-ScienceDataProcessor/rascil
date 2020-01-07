@@ -13,7 +13,8 @@ from rascil.data_models import PolarisationFrame
 from rascil.data_models import import_blockvisibility_from_hdf5
 
 from rascil.processing_components import export_image_to_fits, qa_image, convert_blockvisibility_to_visibility,\
-    create_image_from_visibility, create_calibration_controls
+    create_image_from_visibility
+from rascil.processing_components.calibration.calibration import create_calibration_controls
 
 from rascil.workflows import ical_list_rsexecute_workflow
 

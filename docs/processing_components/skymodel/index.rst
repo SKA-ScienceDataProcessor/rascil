@@ -9,6 +9,6 @@ Sky models
 .. toctree::
    :maxdepth: 3
 
-.. automodapi::    rascil.processing_components.skymodel
+.. automodapi::    rascil.processing_components.skymodel.operations
    :no-inheritance-diagram:
 

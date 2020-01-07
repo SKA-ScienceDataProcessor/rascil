@@ -5,8 +5,7 @@
 __all__ = ['calibrate_list_rsexecute_workflow']
 
 from rascil.wrappers.rsexecute.execution_support import rsexecute
-from rascil.processing_components.calibration import apply_calibration_function, \
-    solve_calibrate_function
+from rascil.processing_components.calibration.calibration import apply_calibration_function, solve_calibrate_function
 from rascil.processing_components.visibility import  convert_visibility_to_blockvisibility
 from rascil.processing_components.visibility import visibility_gather_channel
 from rascil.processing_components.visibility import integrate_visibility_by_channel, \

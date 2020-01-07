@@ -3,11 +3,11 @@
 .. py:currentmodule:: rascil.processing_components.arrays
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
 Arrays
 ******
 
-.. automodapi::    rascil.processing_components.arrays
+.. automodapi::    rascil.processing_components.arrays.cleaners
    :no-inheritance-diagram:
 

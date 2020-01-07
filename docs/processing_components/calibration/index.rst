@@ -34,6 +34,22 @@ This is specified via a dictionary::
 .. toctree::
    :maxdepth: 3
 
-.. automodapi::    rascil.processing_components.calibration
+.. automodapi::    rascil.processing_components.calibration.calibration
    :no-inheritance-diagram:
+
+.. automodapi::    rascil.processing_components.calibration.iterators
+   :no-inheritance-diagram:
+
+.. automodapi::    rascil.processing_components.calibration.operations
+   :no-inheritance-diagram:
+
+.. automodapi::    rascil.processing_components.calibration.pointing
+   :no-inheritance-diagram:
+
+.. automodapi::    rascil.processing_components.calibration.rcal
+   :no-inheritance-diagram:
+
+.. automodapi::    rascil.processing_components.calibration.solvers
+   :no-inheritance-diagram:
+
 

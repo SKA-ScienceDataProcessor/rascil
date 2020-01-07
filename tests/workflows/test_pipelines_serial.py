@@ -16,7 +16,7 @@ from rascil.data_models.polarisation import PolarisationFrame
 from rascil.data_models.data_model_helpers import export_gaintable_to_hdf5
 
 from rascil.workflows.serial.pipelines.pipeline_serial import ical_list_serial_workflow, continuum_imaging_list_serial_workflow
-from rascil.processing_components.calibration import  create_calibration_controls
+from rascil.processing_components.calibration.calibration import create_calibration_controls
 from rascil.processing_components.image.operations import export_image_to_fits, qa_image, smooth_image
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \

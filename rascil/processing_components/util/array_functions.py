@@ -152,7 +152,7 @@ def insert_function_L(x, a=5):
 
 
 def insert_function_pswf(x, a=5):
-    from rascil.processing_components.fourier_transforms.convolutional_gridding import grdsf
+    from rascil.processing_components.fourier_transforms.fft_coordinates import grdsf
     return grdsf(abs(x) / a)[1]
 
 
