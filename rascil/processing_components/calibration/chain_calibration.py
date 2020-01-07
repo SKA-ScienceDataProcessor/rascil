@@ -251,7 +251,11 @@ def solve_calibrate_chain(vis, model_vis, calibration_context='T', controls=None
                 log.debug('calibrate_chain: Jones matrix %s, iteration %d' % (c, iteration))
                 log.debug(qa_gaintable(gaintables[c], context='Jones matrix %s, iteration %d' % (c, iteration)))
                 avis = apply_gaintable(avis, gaintables[c], inverse=True, timeslice=controls[c]['timeslice'])
+            else:
+                print('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
+                log.debug('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
         else:
+            print('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
             log.debug('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
 
     return gaintables
