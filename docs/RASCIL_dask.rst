@@ -16,7 +16,7 @@ of constructing a graph, we will need to know the data elements and the function
 These are well-modeled in RASCIL.
 
 In order that Dask.delayed processing can be switched on and off, and that the same code is used for Dask and
-non-Dask processing, we have wrapped Dask.delayed in :py:func:`rascil.wrappers.rsexecute.execution_support.rsexecute.rsexecute`.
+non-Dask processing, we have wrapped Dask.delayed in :py:func:`rascil.workflows.rsexecute.execution_support.rsexecute.rsexecute`.
 An example is::
 
         rsexecute.set_client(use_dask=True)
@@ -31,13 +31,13 @@ An example is::
                                         deconvolve_taper='tukey')
         clean, residual, restored = rsexecute.compute(continuum_imaging_list, sync=True)
 
-The function :py:func:`rascil.wrappers.rsexecute.execution_support.rsexecute.rsexecute` must be called
+The function :py:func:`rascil.workflows.rsexecute.execution_support.rsexecute.rsexecute` must be called
 before defining any components. If use_dask is True then a Dask graph is constructed for subsequent execution. If
 use_dask is False then the function is called immediately.
 
 The pipeline workflow
 :py:mod:`rascil.workflows.rsexecute.pipelines.pipeline_components.continuum_imaging_component` is itself assembled using the
-:py:mod:`rascil.wrappers.rsexecute.execution_support.rsexecute.rsexecute.execute` function.
+:py:mod:`rascil.workflows.rsexecute.execution_support.rsexecute.rsexecute.execute` function.
 
 The functions for creating graphs are:
 

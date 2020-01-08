@@ -8,6 +8,8 @@
 Fourier Transforms
 ******************
 
-.. automodapi::    rascil.processing_components.fourier_transforms
+.. automodapi::    rascil.processing_components.fourier_transforms.fft_coordinates
    :no-inheritance-diagram:
 
+.. automodapi::    rascil.processing_components.fourier_transforms.fft_support
+   :no-inheritance-diagram:

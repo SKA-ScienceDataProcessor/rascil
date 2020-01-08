@@ -6,7 +6,7 @@ __all__ = ['ical_list_rsexecute_workflow', 'continuum_imaging_list_rsexecute_wor
 import logging
 
 from rascil.data_models.parameters import get_parameter
-from rascil.wrappers.rsexecute.execution_support import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.griddata import create_pswf_convolutionfunction
 from rascil.processing_components.visibility import copy_visibility
 from rascil.workflows.rsexecute.calibration.calibration_rsexecute import calibrate_list_rsexecute_workflow

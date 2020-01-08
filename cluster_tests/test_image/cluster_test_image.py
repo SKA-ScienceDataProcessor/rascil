@@ -17,7 +17,7 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
 from rascil.workflows.rsexecute.image.image_rsexecute import image_rsexecute_map_workflow
-from rascil.wrappers.rsexecute.execution_support import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)

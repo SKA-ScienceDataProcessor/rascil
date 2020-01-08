@@ -33,9 +33,3 @@ from .imaging_params import *
 from .timeslice_single import *
 from .weighting import *
 from .wstack_single import *
-
-# Import ng if available. We need this here for the documentation build
-try:
-    import nifty_gridder
-except ImportError:
-    pass

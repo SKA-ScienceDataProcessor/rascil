@@ -20,7 +20,7 @@ extra phase term in the Fourier transform cannot be ignored.
 """
 
 __all__ = ['shift_vis_to_image', 'normalize_sumwt', 'predict_2d', 'invert_2d', 'predict_skycomponent_visibility',
-           'create_image_from_visibility', 'advise_wide_field']
+           'create_image_from_visibility', 'advise_wide_field', 'visibility_recentre']
 
 import collections
 import logging
@@ -67,7 +67,7 @@ def shift_vis_to_image(vis: Union[Visibility, BlockVisibility], im: Image, tange
     nchan, npol, ny, nx = im.data.shape
     
     # Convert the FFT definition of the phase center to world coordinates (1 relative)
-    # This is the only place in ARL where the relationship between the image and visibility
+    # This is the only place in RASCIL where the relationship between the image and visibility
     # frames is defined.
     
     image_phasecentre = pixel_to_skycoord(nx // 2 + 1, ny // 2 + 1, im.wcs, origin=1)
@@ -525,3 +525,16 @@ def rad_deg_arcsec(x):
     
     """
     return "%.3g (rad) %.3g (deg) %.3g (asec)" % (x, 180.0 * x / numpy.pi, 3600.0 * 180.0 * x / numpy.pi)
+
+
+def visibility_recentre(uvw, dl, dm):
+    """ Compensate for kernel re-centering - see `w_kernel_function`.
+
+    :param uvw: Visibility coordinates
+    :param dl: Horizontal shift to compensate for
+    :param dm: Vertical shift to compensate for
+    :returns: Visibility coordinates re-centrered on the peak of their w-kernel
+    """
+
+    u, v, w = numpy.hsplit(uvw, 3)  # pylint: disable=unbalanced-tuple-unpacking
+    return numpy.hstack([u - w * dl, v - w * dm, w])

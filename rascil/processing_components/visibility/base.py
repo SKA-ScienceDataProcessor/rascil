@@ -390,7 +390,7 @@ def phaserotate_visibility(vis: Visibility, newphasecentre: SkyCoord, tangent=Tr
 def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
     """ Minimal BlockVisibility to MS converter
 
-    The MS format is much more general than the ARL BlockVisibility so we cut many corners. This requires casacore to be
+    The MS format is much more general than the RASCIL BlockVisibility so we cut many corners. This requires casacore to be
     installed. If not an exception ModuleNotFoundError is raised.
 
     Write a list of BlockVisibility's to a MS file, split by field and spectral window
@@ -419,7 +419,7 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
     # Start the table
     tbl = msv2.Ms(msname, ref_time=0, source_name= source_name, if_delete=True)
     if source_name is None:
-        source_name = 'ARL'
+        source_name = 'RASCIL'
     for vis in vis_list:
         # Check polarisition
         npol = vis.npol
@@ -433,7 +433,7 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
             polarization = ['RR','RL','LR','LL']
         elif vis.polarisation_frame.type == 'stokesIQUV':
             polarization = ['I','Q','U','V']
-        # Current ARL suppots I
+        # Current RASCIL supports I
         tbl.set_stokes(polarization)
         tbl.set_frequency(vis.frequency,vis.channel_bandwidth)
         n_ant = len(vis.configuration.xyz)
@@ -530,7 +530,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                                    datacolumn='DATA', selected_sources=None, selected_dds=None):
     """ Minimal MS to BlockVisibility converter
 
-    The MS format is much more general than the ARL BlockVisibility so we cut many corners. This requires casacore to be
+    The MS format is much more general than the RASCIL BlockVisibility so we cut many corners. This requires casacore to be
     installed. If not an exception ModuleNotFoundError is raised.
 
     Creates a list of BlockVisibility's, split by field and spectral window
@@ -726,7 +726,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
 def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=None,  ack=False):
     """ Minimal MS to BlockVisibility converter
 
-    The MS format is much more general than the ARL BlockVisibility so we cut many corners. This requires casacore to be
+    The MS format is much more general than the RASCIL BlockVisibility so we cut many corners. This requires casacore to be
     installed. If not an exception ModuleNotFoundError is raised.
 
     Creates a list of BlockVisibility's, split by field and spectral window
@@ -750,7 +750,7 @@ def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=No
 def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum=None):
     """ Minimal UVFIT to BlockVisibility converter
 
-    The UVFITS format is much more general than the ARL BlockVisibility so we cut many corners. 
+    The UVFITS format is much more general than the RASCIL BlockVisibility so we cut many corners.
     
     Creates a list of BlockVisibility's, split by field and spectral window
     

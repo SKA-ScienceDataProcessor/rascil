@@ -22,7 +22,7 @@ from rascil.processing_components import create_low_test_image_from_gleam, advis
 from rascil.workflows import predict_list_rsexecute_workflow, simulate_list_rsexecute_workflow, \
     corrupt_list_rsexecute_workflow
 
-from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 def init_logging():
     logging.basicConfig(filename='%s/ska-pipeline.log' % results_dir,

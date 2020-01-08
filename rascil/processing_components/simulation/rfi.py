@@ -1,18 +1,16 @@
-"""Functions used to simulate RFI. Developed as part of SP-122/SIM.
+"""Functions used to simulate RFI from DTV systems. Developed as part of SKA SP-122/SIM.
 
-The scenario is:
-* There is a TV station at a remote location (e.g. Perth), emitting a broadband signal (7MHz) of known power (50kW).
-* The emission from the TV station arrives at LOW stations with phase delay and attenuation. Neither of these are
-well known but they are probably static.
-* The RFI enters LOW stations in a sidelobe of the main beam. Calulations by Fred Dulwich indicate that this
-provides attenuation of about 55 - 60dB for a source close to the horizon.
-* The RFI enters each LOW station with fixed delay and zero fringe rate (assuming no e.g. ionospheric ducting)
-* In tracking a source on the sky, the signal from one station is delayed and fringe-rotated to stop the fringes for one direction on the sky.
-* The fringe rotation stops the fringe from a source at the phase tracking centre but phase rotates the RFI, which
-now becomes time-variable.
-* The correlation data are time- and frequency-averaged over a timescale appropriate for the station field of view.
-This averaging decorrelates the RFI signal.
-* We want to study the effects of this RFI on statistics of the images: on source and at the pole.
+The scenario is
+
+ - There is a TV station at a remote location (e.g. Perth), emitting a broadband signal (7MHz) of known power (50kW).
+ - The emission from the TV station arrives at LOW stations with phase delay and attenuation. Neither of these are well known but they are probably static.
+ - The RFI enters LOW stations in a sidelobe of the main beam. Calulations by Fred Dulwich indicate that this provides attenuation of about 55 - 60dB for a source close to the horizon.
+ - The RFI enters each LOW station with fixed delay and zero fringe rate (assuming no e.g. ionospheric ducting)
+ - In tracking a source on the sky, the signal from one station is delayed and fringe-rotated to stop the fringes for one direction on the sky.
+ - The fringe rotation stops the fringe from a source at the phase tracking centre but phase rotates the RFI, which now becomes time-variable.
+ - The correlation data are time- and frequency-averaged over a timescale appropriate for the station field of view. This averaging decorrelates the RFI signal.
+
+We want to study the effects of this RFI on statistics of the images: on source and at the pole.
 """
 
 __all__ = ['simulate_DTV', 'create_propagators', 'calculate_averaged_correlation', 'calculate_rfi_at_station',
@@ -125,7 +123,7 @@ def calculate_averaged_correlation(correlation, time_width, channel_width):
 def simulate_rfi_block(bvis, emitter_location, emitter_power=5e4, attenuation=1.0, use_pole=False):
     """ Simulate RFI block
 
-    :param config: ARL telescope Configuration
+    :param config: RASCIL telescope Configuration
     :param times: observation times (hour angles)
     :param frequency: frequencies
     :param phasecentre:

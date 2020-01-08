@@ -16,7 +16,7 @@ from rascil.processing_components import export_image_to_fits, create_image_from
 
 from rascil.workflows import invert_list_rsexecute_workflow
 
-from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 import logging
 

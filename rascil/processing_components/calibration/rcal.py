@@ -8,7 +8,7 @@ import collections
 
 from rascil.data_models.memory_data_models import BlockVisibility, GainTable
 from rascil.processing_components.visibility.operations import copy_visibility
-from rascil.processing_components.calibration.calibration import solve_gaintable
+from rascil.processing_components.calibration.solvers import solve_gaintable
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 
 def rcal(vis: BlockVisibility, components, **kwargs) -> GainTable:

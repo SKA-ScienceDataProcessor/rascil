@@ -1,4 +1,6 @@
-""" Functions for ionospheric modelling: see SDP memo 97
+""" Functions for ionospheric modelling: see
+`SDP Memo 97 <http://ska-sdp.org/sites/default/files/attachments/direction_dependent_self_calibration_in_arl_-_signed.pdf>`_
+
 
 """
 
@@ -23,8 +25,10 @@ log = logging.getLogger(__name__)
 
 def find_pierce_points(station_locations, ha, dec, phasecentre, height):
     """Find the pierce points for a flat screen at specified height
+
+    A pierce point is where the line of site from a station to a source passes through a thin screen
     
-    :param station_locations: All station locations [:3]
+    :param station_locations: station locations [:3]
     :param ha: Hour angle
     :param dec: Declination
     :param phasecentre: Phase centre
@@ -43,6 +47,8 @@ def find_pierce_points(station_locations, ha, dec, phasecentre, height):
 
 def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, scale=1.0, **kwargs):
     """ Create gaintables from a screen calculated using ARatmospy
+
+    Screen axes are ['XX', 'YY', 'TIME', 'FREQ']
 
     :param vis:
     :param sc: Sky components for which pierce points are needed
@@ -99,8 +105,10 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
 
 def grid_gaintable_to_screen(vis, gaintables, screen, height=3e5, gaintable_slices=None, scale=1.0, **kwargs):
     """ Grid a gaintable to a screen image
-    
-    The phases are just average per grid cell, no phase unwrapping is performed.
+
+    Screen axes are ['XX', 'YY', 'TIME', 'FREQ']
+
+    The phases are just averaged per grid cell, no phase unwrapping is performed.
 
     :param vis:
     :param gaintables: input gaintables
@@ -161,6 +169,7 @@ def calculate_sf_from_screen(screen):
     """ Calculate structure function image from screen
 
     Screen axes are ['XX', 'YY', 'TIME', 'FREQ']
+
     :param screen:
     :return:
     """
@@ -186,6 +195,8 @@ def calculate_sf_from_screen(screen):
 
 def plot_gaintable_on_screen(vis, gaintables, height=3e5, gaintable_slices=None, plotfile=None):
     """ Plot a gaintable on an ionospheric screen
+
+    Screen axes are ['XX', 'YY', 'TIME', 'FREQ']
 
     :param vis:
     :param sc: Sky components for which pierce points are needed

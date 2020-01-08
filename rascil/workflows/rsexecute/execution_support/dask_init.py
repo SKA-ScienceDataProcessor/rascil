@@ -19,7 +19,7 @@ def get_dask_Client(timeout=30, n_workers=None, threads_per_worker=1, processes=
                     dashboard_address=':8787'):
     """ Get a Dask.distributed Client for the scheduler defined externally, otherwise create
 
-    The environment variable ARL_DASK_SCHEDULER is interpreted as pointing to the scheduler.
+    The environment variable RASCIL_DASK_SCHEDULER is interpreted as pointing to the scheduler.
     and a client using that scheduler is returned. Otherwise a client is created
 
     :param timeout: Time out for creation
@@ -30,7 +30,7 @@ def get_dask_Client(timeout=30, n_workers=None, threads_per_worker=1, processes=
     :param memory_limit: Memory limit per worker (bytes e.g. 8e9)
     :return: Dask client
     """
-    scheduler = os.getenv('ARL_DASK_SCHEDULER', None)
+    scheduler = os.getenv('RASCIL_DASK_SCHEDULER', None)
     if scheduler is not None:
         print("Creating Dask Client using externally defined scheduler")
         c = Client(scheduler, timeout=timeout)
@@ -76,11 +76,11 @@ def get_dask_Client(timeout=30, n_workers=None, threads_per_worker=1, processes=
 def get_nodes():
     """ Get the nodes being used
 
-    The environment variable ARL_HOSTFILE is interpreted as file containing the nodes
+    The environment variable RASCIL_HOSTFILE is interpreted as file containing the nodes
 
     :return: List of strings
     """
-    hostfile = os.getenv('ARL_HOSTFILE', None)
+    hostfile = os.getenv('RASCIL_HOSTFILE', None)
     if hostfile is None:
         print("No hostfile specified")
         return None

@@ -1,4 +1,4 @@
-.. installation
+.. _RASCIL_install:
 
 Installation
 ============
@@ -34,6 +34,11 @@ The installation steps are:
     git lfs install
     git-lfs pull
 
+- Put the following definitions in your .bashrc::
+
+    export RASCIL=/path/to/rascil
+    export PYTHONPATH=$RASCIL:$PYTHONPATH
+
 Trouble-shooting
 ++++++++++++++++
 
@@ -55,7 +60,12 @@ Or the full set::
    conda activate rascil
    conda config --env --prepend channels astropy
 
-* :ref:`genindex`
-* :ref:`modindex`
+Installation on specific machines
++++++++++++++++++++++++++++++++++
+
+.. toctree::
+   :maxdepth: 2
+
+   installation/RASCIL_P3_install
 
 .. _feedback: mailto:realtimcornwell@gmail.com

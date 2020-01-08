@@ -19,14 +19,15 @@ from rascil.processing_components import create_image
 
 from rascil.processing_components import create_awterm_convolutionfunction, create_pswf_convolutionfunction,\
     image_gather_channels, export_image_to_fits, qa_image, advise_wide_field, create_low_test_skymodel_from_gleam, \
-    convert_blockvisibility_to_visibility, create_calibration_controls
+    convert_blockvisibility_to_visibility
+from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 
 from rascil.workflows import invert_list_rsexecute_workflow, weight_list_rsexecute_workflow, \
     predict_list_rsexecute_workflow, taper_list_rsexecute_workflow, remove_sumwt,\
     ical_list_rsexecute_workflow, simulate_list_rsexecute_workflow, \
     corrupt_list_rsexecute_workflow, predict_skymodel_list_rsexecute_workflow
 
-from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from execution_support import findNodes, get_dask_Client
 
 pp = pprint.PrettyPrinter()

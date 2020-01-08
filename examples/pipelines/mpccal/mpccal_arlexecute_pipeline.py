@@ -36,7 +36,7 @@ from rascil.workflows import invert_list_rsexecute_workflow, restore_list_rsexec
     mpccal_skymodel_list_rsexecute_workflow, predict_skymodel_list_rsexecute_workflow,\
     weight_list_serial_workflow, taper_list_serial_workflow
 
-from rascil.wrappers.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from execution_support import get_dask_Client
 
 if __name__ == '__main__':

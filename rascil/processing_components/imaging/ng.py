@@ -187,5 +187,13 @@ except ImportError:
     import warnings
     
     warnings.warn('Cannot import nifty_gridder, ng disabled', ImportWarning)
-    
-    raise RuntimeError("Cannot import nifty_gridder")
+
+    def predict_ng(bvis: Union[BlockVisibility, Visibility], model: Image, **kwargs) -> \
+            Union[BlockVisibility, Visibility]:
+        log.error("Nifty gridder not available")
+        return bvis
+
+    def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True,
+                  **kwargs) -> (Image, numpy.ndarray):
+        log.error("Nifty gridder not available")
+        return model, None

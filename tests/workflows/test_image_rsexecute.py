@@ -19,8 +19,8 @@ from rascil.processing_components.visibility.base import create_visibility
 
 from rascil.workflows.rsexecute.image.image_rsexecute import image_rsexecute_map_workflow
 from rascil.processing_components.image.operations import export_image_to_fits
-from rascil.wrappers.rsexecute.execution_support import get_dask_Client
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
 
 log = logging.getLogger(__name__)
 

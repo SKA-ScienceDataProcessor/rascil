@@ -211,7 +211,7 @@ class _rsexecuteBase():
     def close(self):
         if self._using_dask and isinstance(self._client, Client):
             if self._verbose:
-                print('arlexcute.close: closed down Dask Client')
+                print('rsexcute.close: closed down Dask Client')
             if self._client.cluster is not None:
                 self._client.cluster.close()
             self._client.close()

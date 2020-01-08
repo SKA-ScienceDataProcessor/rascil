@@ -21,7 +21,7 @@ from rascil.workflows.shared.imaging import imaging_context, remove_sumwt, sum_p
     threshold_list, sum_invert_results
 from rascil.processing_components.visibility import  convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
-from rascil.wrappers.rsexecute.execution_support import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.griddata import grid_weight_to_griddata, griddata_reweight, griddata_merge_weights
 from rascil.processing_components.griddata import create_pswf_convolutionfunction
 from rascil.processing_components.griddata import create_griddata_from_image

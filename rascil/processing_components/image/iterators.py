@@ -1,4 +1,3 @@
-#
 """
 Functions that define and manipulate images. Images are just data and a World Coordinate System.
 """
@@ -6,7 +5,7 @@ Functions that define and manipulate images. Images are just data and a World Co
 __all__ = ['image_channel_iter', 'image_null_iter', 'image_raster_iter']
 
 import logging
-import collections
+import collections.abc
 
 import numpy
 

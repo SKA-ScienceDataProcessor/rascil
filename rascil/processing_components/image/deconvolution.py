@@ -76,7 +76,7 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
     :param fractional_threshold: Fractional threshold (0.01)
     :param scales: Scales (in pixels) for multiscale ([0, 3, 10, 30])
     :param nmoment: Number of frequency moments (default 3)
-    :param findpeak: Method of finding peak in mfsclean: 'Algorithm1'|'ASKAPSoft'|'CASA'|'ARL', Default is ARL.
+    :param findpeak: Method of finding peak in mfsclean: 'Algorithm1'|'ASKAPSoft'|'CASA'|'RASCIL', Default is RASCIL.
     :return: component image, residual image
 
     See also
@@ -164,7 +164,7 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
         residual_image = create_image_from_array(residual_array, dirty.wcs, dirty.polarisation_frame)
     
     elif algorithm == 'msmfsclean' or algorithm == 'mfsmsclean' or algorithm == 'mmclean':
-        findpeak = get_parameter(kwargs, "findpeak", 'ARL')
+        findpeak = get_parameter(kwargs, "findpeak", 'RASCIL')
         
         log.info("deconvolve_cube %s: Multi-scale multi-frequency clean of each polarisation separately"
                  % prefix)

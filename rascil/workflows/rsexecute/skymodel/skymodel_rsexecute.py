@@ -17,7 +17,7 @@ from rascil.processing_components.visibility import copy_visibility, convert_blo
     convert_visibility_to_blockvisibility
 
 from rascil.workflows.serial.imaging import predict_list_serial_workflow, invert_list_serial_workflow
-from rascil.wrappers.rsexecute.execution_support import rsexecute
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger(__name__)
 

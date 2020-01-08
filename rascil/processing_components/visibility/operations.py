@@ -339,7 +339,7 @@ def convert_visibility_to_stokes(vis):
     """Convert the polarisation frame data into Stokes parameters.
 
     Args:
-    vis (obj): ARL visibility data.
+    vis (obj): RASCIL visibility data.
 
     Returns:
     vis: Converted visibility data.
@@ -358,7 +358,7 @@ def convert_blockvisibility_to_stokes(vis):
     """Convert the polarisation frame data into Stokes parameters.
 
     Args:
-    vis (obj): ARL visibility data.
+    vis (obj): RASCIL visibility data.
 
     Returns:
     vis: Converted visibility data.
@@ -377,7 +377,7 @@ def convert_visibility_to_stokesI(vis):
     """Convert the polarisation frame data into Stokes I dropping other polarisations, return new Visibility
 
     Args:
-    vis (obj): ARL visibility data.
+    vis (obj): RASCIL visibility data.
 
     Returns:
     vis: New, converted visibility data.
@@ -407,7 +407,7 @@ def convert_blockvisibility_to_stokesI(vis):
     """Convert the polarisation frame data into Stokes I dropping other polarisations, return new Visibility
 
     Args:
-    vis (obj): ARL visibility data.
+    vis (obj): RASCIL visibility data.
 
     Returns:
     vis: New, converted visibility data.

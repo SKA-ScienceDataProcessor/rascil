@@ -62,7 +62,7 @@ log = logging.getLogger(__name__)
 
 
 def rascil_path(path):
-    """Converts a path that might be relative to ARL root into an
+    """Converts a path that might be relative to RASCIL root into an
     absolute path::
 
         rascil_path('data/models/SKA1_LOW_beam.fits')

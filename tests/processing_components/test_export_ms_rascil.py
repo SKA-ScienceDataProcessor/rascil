@@ -29,7 +29,7 @@ except ImportError:
     pass
 
 @unittest.skipUnless(run_ms_tests, "requires the 'casacore' module")
-class export_ms_arl_test(unittest.TestCase):
+class export_ms_RASCIL_test(unittest.TestCase):
 
     def setUp(self):
         """Turn off all numpy warnings and create the temporary file directory."""
@@ -116,7 +116,7 @@ class export_measurementset_test_suite(unittest.TestSuite):
         unittest.TestSuite.__init__(self)
 
         loader = unittest.TestLoader()
-        self.addTests(loader.loadTestsFromTestCase(export_ms_arl_test))
+        self.addTests(loader.loadTestsFromTestCase(export_ms_RASCIL_test))
 
 if __name__ == '__main__':
     unittest.main()

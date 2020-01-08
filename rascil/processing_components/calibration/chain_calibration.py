@@ -1,46 +1,84 @@
-"""Manages the calibration context. This take a string and returns a dictionary e.g.
+""" Functions to solve for and apply chains of antenna/station gain tables.
 
-{'T': {'shape': 'scalar', 'timeslice': 'auto', 'phase_only': True, 'first_selfcal': 0},
-                'G': {'shape': 'vector', 'timeslice': 60.0, 'phase_only': False, 'first_selfcal': 0},
-                'P': {'shape': 'matrix', 'timeslice': 1e4, 'phase_only': False, 'first_selfcal': 0},
-                'B': {'shape': 'vector', 'timeslice': 1e5, 'phase_only': False, 'first_selfcal': 0},
-                'I': {'shape': 'vector', 'timeslice': 1.0, 'phase_only': True, 'first_selfcal': 0}}
+Calibration control is via a calibration_controls dictionary created by :py:func:`rascil.processing_components.calibration.chain_calibration.create_calibration_controls`. This supports the following Jones matrices::
+
+   . T - Atmospheric phase
+   . G - Electronics gain
+   . P - Polarisation
+   . B - Bandpass
+   . I - Ionosphere
+
+This is specified via a dictionary::
+
+    contexts = {'T': {'shape': 'scalar', 'timeslice': 'auto', 'phase_only': True, 'first_iteration': 0},
+                'G': {'shape': 'vector', 'timeslice': 60.0, 'phase_only': False, 'first_iteration': 0},
+                'P': {'shape': 'matrix', 'timeslice': 1e4, 'phase_only': False, 'first_iteration': 0},
+                'B': {'shape': 'vector', 'timeslice': 1e5, 'phase_only': False, 'first_iteration': 0},
+                'I': {'shape': 'vector', 'timeslice': 1.0, 'phase_only': True, 'first_iteration': 0}}
+
+Currently P and I are not supported.
+
+For example::
+
+    controls = create_calibration_controls()
+
+    controls['T']['first_selfcal'] = 1
+    controls['T']['phase_only'] = True
+    controls['T']['timeslice'] = 'auto'
+
+    controls['G']['first_selfcal'] = 3
+    controls['G']['timeslice'] = 'auto'
+
+    controls['B']['first_selfcal'] = 4
+    controls['B']['timeslice'] = 1e5
+
+    ical_list = ical_list_rsexecute_workflow(vis_list,
+                                              model_imagelist=future_model_list,
+                                              context='wstack', vis_slices=51,
+                                              scales=[0, 3, 10], algorithm='mmclean',
+                                              nmoment=3, niter=1000,
+                                              fractional_threshold=0.1,
+                                              threshold=0.1, nmajor=5, gain=0.25,
+                                              deconvolve_facets=1,
+                                              deconvolve_overlap=0,
+                                              deconvolve_taper='tukey',
+                                              timeslice='auto',
+                                              psf_support=64,
+                                              global_solution=False,
+                                              calibration_context='TGB',
+                                              do_selfcal=True)
 
 """
 
-__all__ = ['create_calibration_controls', 'calibrate_function', 'solve_calibrate_function', 'apply_calibration_function']
+__all__ = ['calibrate_chain', 'solve_calibrate_chain', 'create_calibration_controls', 'apply_calibration_chain']
 
 import logging
 
 import numpy
 
+from rascil.processing_components.visibility import convert_visibility_to_blockvisibility, convert_blockvisibility_to_visibility
+from rascil.processing_components.calibration.operations import apply_gaintable, create_gaintable_from_blockvisibility, qa_gaintable
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
-
-from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable, qa_gaintable
-from rascil.processing_components.calibration.calibration import solve_gaintable
-from rascil.processing_components.visibility.coalesce import convert_visibility_to_blockvisibility, convert_blockvisibility_to_visibility
+from rascil.processing_components.calibration.solvers import solve_gaintable
 
 log = logging.getLogger(__name__)
 
+def create_calibration_controls():
+    """Create a dictionary containing default chanin calibration controls
 
-def create_calibration_controls(**kwargs):
-    """Contains all the control information for calibration
+    The fields are
 
-    The fields are:
         T: Atmospheric phase
         G: Electronic gains
         P: Polarisation
         B: Bandpass
         I: Ionosphere
 
-    Get this dictionary and then adjust parameters as desired
+    Therefore first get this default dictionary and then adjust parameters as desired. The calibrate function takes a context string e.g. TGB. It then calibrates each of these Jones matrices in turn
 
-    Note that P and I calibration require off diagonal terms producing non-communtation of the Jones matrices. This is not handled yet.
-    
-    The calibrate function takes a context string e.g. TGB. It then calibrates each of these Jones matrices in turn.
+    Note that P and I calibration require off diagonal terms producing non-commutation of the Jones matrices. This is not handled yet.
 
-    :param kwargs:
-    :return:
+    :return: dictionary
     """
 
     # controls = {'T': {'shape': 'scalar', 'timeslice': 'auto', 'phase_only': True, 'first_selfcal': 0},
@@ -56,10 +94,10 @@ def create_calibration_controls(**kwargs):
     return controls
 
 
-def apply_calibration_function(vis, gaintables, calibration_context='T', controls=None, iteration=0, tol=1e-6,
-                               **kwargs):
-    """ Calibrate using algorithm specified by calibration_context
-    
+def apply_calibration_chain(vis, gaintables, calibration_context='T', controls=None, iteration=0, tol=1e-6,
+                            **kwargs):
+    """ Calibrate using algorithm specified by calibration_context and the calibration controls
+
     The context string can denote a sequence of calibrations e.g. TGB with different timescales.
 
     :param vis:
@@ -72,7 +110,7 @@ def apply_calibration_function(vis, gaintables, calibration_context='T', control
     """
 
     if controls is None:
-        controls = create_calibration_controls(**kwargs)
+        controls = create_calibration_controls()
 
     # Check to see if changes are required
     changes = False
@@ -81,7 +119,7 @@ def apply_calibration_function(vis, gaintables, calibration_context='T', control
             changes = True
 
     if changes:
-    
+
         isVis = isinstance(vis, Visibility)
         if isVis:
             avis = convert_visibility_to_blockvisibility(vis)
@@ -93,7 +131,7 @@ def apply_calibration_function(vis, gaintables, calibration_context='T', control
         for c in calibration_context:
             if iteration >= controls[c]['first_selfcal']:
                 avis = apply_gaintable(avis, gaintables[c], timeslice=controls[c]['timeslice'])
-            
+
         if isVis:
             return convert_blockvisibility_to_visibility(avis)
         else:
@@ -102,7 +140,7 @@ def apply_calibration_function(vis, gaintables, calibration_context='T', control
         return vis
 
 
-def calibrate_function(vis, model_vis, calibration_context='T', controls=None, iteration=0, tol=1e-8, **kwargs):
+def calibrate_chain(vis, model_vis, calibration_context='T', controls=None, iteration=0, tol=1e-8, **kwargs):
     """ Calibrate using algorithm specified by calibration_context
 
     The context string can denote a sequence of calibrations e.g. TGB with different timescales.
@@ -116,10 +154,10 @@ def calibrate_function(vis, model_vis, calibration_context='T', controls=None, i
     :return: Calibrated data_models, dict(gaintables)
     """
     gaintables = {}
-    
+
     if controls is None:
-        controls = create_calibration_controls(**kwargs)
-    
+        controls = create_calibration_controls()
+
     # Check to see if changes are required
     changes = False
     for c in calibration_context:
@@ -127,13 +165,13 @@ def calibrate_function(vis, model_vis, calibration_context='T', controls=None, i
             changes = True
 
     if changes:
-    
+
         isVis = isinstance(vis, Visibility)
         if isVis:
             avis = convert_visibility_to_blockvisibility(vis)
         else:
             avis = vis
-    
+
         isMVis = isinstance(model_vis, Visibility)
         if isMVis:
             amvis = convert_visibility_to_blockvisibility(model_vis)
@@ -151,12 +189,12 @@ def calibrate_function(vis, model_vis, calibration_context='T', controls=None, i
                                                 phase_only=controls[c]['phase_only'],
                                                 crosspol=controls[c]['shape'] == 'matrix',
                                                 tol=tol)
-                log.debug('calibrate_function: Jones matrix %s, iteration %d' % (c, iteration))
+                log.debug('calibrate_chain: Jones matrix %s, iteration %d' % (c, iteration))
                 log.debug(qa_gaintable(gaintables[c], context='Jones matrix %s, iteration %d' % (c, iteration)))
                 avis = apply_gaintable(avis, gaintables[c], inverse=True, timeslice=controls[c]['timeslice'])
             else:
-                log.debug('calibrate_function: Jones matrix %s not solved, iteration %d' % (c, iteration))
-    
+                log.debug('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
+
         if isVis:
             return convert_blockvisibility_to_visibility(avis), gaintables
         else:
@@ -165,7 +203,7 @@ def calibrate_function(vis, model_vis, calibration_context='T', controls=None, i
         return vis, gaintables
 
 
-def solve_calibrate_function(vis, model_vis, calibration_context='T', controls=None, iteration=0, tol=1e-6, **kwargs):
+def solve_calibrate_chain(vis, model_vis, calibration_context='T', controls=None, iteration=0, tol=1e-6, **kwargs):
     """ Calibrate using algorithm specified by calibration_context
 
     The context string can denote a sequence of calibrations e.g. TGB with different timescales.
@@ -179,11 +217,10 @@ def solve_calibrate_function(vis, model_vis, calibration_context='T', controls=N
     :return: Calibrated data_models, dict(gaintables)
     """
     gaintables = {}
-    
-    if controls is None:
-        controls = create_calibration_controls(**kwargs)
 
-    
+    if controls is None:
+        controls = create_calibration_controls()
+
     isVis = isinstance(vis, Visibility)
     if isVis:
         avis = convert_visibility_to_blockvisibility(vis)
@@ -195,7 +232,7 @@ def solve_calibrate_function(vis, model_vis, calibration_context='T', controls=N
         amvis = convert_visibility_to_blockvisibility(model_vis)
     else:
         amvis = model_vis
-        
+
     assert isinstance(avis, BlockVisibility), avis
 
     assert amvis.__repr__() != avis.__repr__(), "Vis and model vis are the same object: convert problem"
@@ -211,8 +248,14 @@ def solve_calibrate_function(vis, model_vis, calibration_context='T', controls=N
                                                 phase_only=controls[c]['phase_only'],
                                                 crosspol=controls[c]['shape'] == 'matrix',
                                                 tol=tol)
+                log.debug('calibrate_chain: Jones matrix %s, iteration %d' % (c, iteration))
                 log.debug(qa_gaintable(gaintables[c], context='Jones matrix %s, iteration %d' % (c, iteration)))
+                avis = apply_gaintable(avis, gaintables[c], inverse=True, timeslice=controls[c]['timeslice'])
+            else:
+                print('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
+                log.debug('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
         else:
-            log.debug('calibrate_function: Jones matrix %s not solved, iteration %d' % (c, iteration))
-                
+            print('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
+            log.debug('calibrate_chain: Jones matrix %s not solved, iteration %d' % (c, iteration))
+
     return gaintables

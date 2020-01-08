@@ -1,4 +1,4 @@
-"""Configuration definitions
+"""Configuration definitions. A Configuration definition is read from a number of different formats.
 
 """
 
@@ -22,7 +22,7 @@ def create_configuration_from_file(antfile: str, location: EarthLocation = None,
                                    names: str = "%d",
                                    diameter=35.0,
                                    rmax=None, name='') -> Configuration:
-    """ Define from a file
+    """ Define configuration from a file
 
     :param names: Antenna names
     :param antfile: Antenna file name
@@ -54,7 +54,7 @@ def create_configuration_from_SKAfile(antfile: str,
                                       mount: str = 'azel',
                                       names: str = "%d",
                                       rmax=None, name='', location=None) -> Configuration:
-    """ Define from a file
+    """ Define configuration from a file
 
     :param names: Antenna names
     :param antfile: Antenna file name
@@ -86,7 +86,7 @@ def create_configuration_from_SKAfile(antfile: str,
 def create_configuration_from_MIDfile(antfile: str, location=None,
                                       mount: str = 'azel',
                                       rmax=None, name='') -> Configuration:
-    """ Define from a file
+    """ Define configuration from a file
 
     :param names: Antenna names
     :param antfile: Antenna file name
@@ -143,7 +143,7 @@ def limit_rmax(antxyz, diameters, names, mounts, rmax):
 
 
 def create_LOFAR_configuration(antfile: str, location, rmax=1e6) -> Configuration:
-    """ Define from the LOFAR configuration file
+    """ Define configuration from the LOFAR configuration file
 
     :param antfile:
     :return: Configuration
@@ -163,7 +163,18 @@ def create_LOFAR_configuration(antfile: str, location, rmax=1e6) -> Configuratio
 
 
 def create_named_configuration(name: str = 'LOWBD2', **kwargs) -> Configuration:
-    """ Standard configurations e.g. LOWBD2, MIDBD2
+    """ Create standard configurations e.g. LOWBD2, MIDBD2
+
+    Possible configurations are::
+        LOWBD1
+        LOWBD2
+        LOWBD2-core
+        LOW == LOWR3
+        MID == MIDR5
+        ASKAP
+        LOFAR
+        VLAA
+        VLAA_north
 
     :param name: name of Configuration LOWBD2, LOWBD1, LOFAR, VLAA, ASKAP
     :param rmax: Maximum distance of station from the average (m)

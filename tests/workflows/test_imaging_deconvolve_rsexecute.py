@@ -16,8 +16,8 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.workflows.rsexecute.imaging.imaging_rsexecute import invert_list_rsexecute_workflow, \
     deconvolve_list_rsexecute_workflow, \
     residual_list_rsexecute_workflow, restore_list_rsexecute_workflow
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
-from rascil.wrappers.rsexecute.execution_support import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \

@@ -4,14 +4,13 @@
 
 __all__ = ['calibrate_list_rsexecute_workflow']
 
-from rascil.wrappers.rsexecute.execution_support import rsexecute
-from rascil.processing_components.calibration import apply_calibration_function, \
-    solve_calibrate_function
+from rascil.processing_components.calibration.chain_calibration import apply_calibration_chain, solve_calibrate_chain
 from rascil.processing_components.visibility import  convert_visibility_to_blockvisibility
 from rascil.processing_components.visibility import visibility_gather_channel
 from rascil.processing_components.visibility import integrate_visibility_by_channel, \
     divide_visibility
 
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 def calibrate_list_rsexecute_workflow(vis_list, model_vislist, calibration_context='TG', global_solution=True,
                                        **kwargs):
@@ -30,11 +29,11 @@ def calibrate_list_rsexecute_workflow(vis_list, model_vislist, calibration_conte
     """
     
     def solve(vis, modelvis=None):
-        return solve_calibrate_function(vis, modelvis, calibration_context=calibration_context, **kwargs)
+        return solve_calibrate_chain(vis, modelvis, calibration_context=calibration_context, **kwargs)
     
     def apply(vis, gt):
         assert gt is not None
-        return apply_calibration_function(vis, gt, calibration_context=calibration_context, **kwargs)
+        return apply_calibration_chain(vis, gt, calibration_context=calibration_context, **kwargs)
     
     if global_solution:
         point_vislist = [rsexecute.execute(convert_visibility_to_blockvisibility, nout=1)(v) for v in vis_list]

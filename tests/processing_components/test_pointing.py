@@ -14,7 +14,8 @@ from rascil.processing_components.calibration.pointing import create_pointingtab
 from rascil.processing_components.imaging.primary_beams import create_vp
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation.pointing import simulate_gaintable_from_pointingtable
-from rascil.processing_components.simulation import create_test_image, simulate_pointingtable
+from rascil.processing_components.simulation import create_test_image
+from rascil.processing_components.simulation.pointing import simulate_pointingtable
 from rascil.processing_components.simulation import create_test_skycomponents_from_s3
 from rascil.processing_components.skycomponent.operations import create_skycomponent
 from rascil.processing_components.visibility.base import create_blockvisibility
@@ -27,7 +28,7 @@ class TestPointing(unittest.TestCase):
     def setUp(self):
         from rascil.data_models.parameters import rascil_path
         
-        self.doplot = True
+        self.doplot = False
         
         self.midcore = create_named_configuration('MID', rmax=300.0)
         self.nants = len(self.midcore.names)

@@ -4,5 +4,5 @@
 
 __all__ = ['rsexecuteBase', 'rsexecute']
 
-from rascil.wrappers.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
 rsexecute = rsexecuteBase(use_dask=True)

@@ -1,4 +1,4 @@
-""" Comparison of sim-2.ms casa and ARL dirty images.
+""" Comparison of sim-2.ms casa and RASCIL dirty images.
 
 """
 import sys

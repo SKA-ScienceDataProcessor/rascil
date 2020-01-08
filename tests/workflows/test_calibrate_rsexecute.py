@@ -13,10 +13,10 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.workflows.rsexecute.calibration.calibration_rsexecute import calibrate_list_rsexecute_workflow
-from rascil.processing_components.calibration import  create_calibration_controls
+from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
-from rascil.wrappers.rsexecute.execution_support import rsexecuteBase
-from rascil.wrappers.rsexecute.execution_support import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
 from rascil.processing_components.simulation import ingest_unittest_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import simulate_gaintable
@@ -28,13 +28,12 @@ log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
-
 class TestCalibrateGraphs(unittest.TestCase):
     
     def setUp(self):
         client = get_dask_Client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
         global rsexecute
-        rsexecute = rsexecuteBase(use_dask=True)
+        rsexecute = rsexecuteBase(use_dask=True, verbose=False)
         rsexecute.set_client(client, verbose=False)
     
         from rascil.data_models.parameters import rascil_path
@@ -127,7 +126,8 @@ class TestCalibrateGraphs(unittest.TestCase):
     
         assert len(calibrate_list) == 2
         assert numpy.max(calibrate_list[1][0]['T'].residual) < 7e-6, numpy.max(calibrate_list[1][0]['T'].residual)
-        assert numpy.max(numpy.abs(calibrate_list[0][0].vis - self.blockvis_list[0].vis)) < 2e-6
+        err = numpy.max(numpy.abs(calibrate_list[0][0].vis - self.blockvis_list[0].vis))
+        assert err < 2e-6, err
 
     def test_calibrate_rsexecute_empty(self):
         amp_errors = {'T': 0.0, 'G': 0.0}
