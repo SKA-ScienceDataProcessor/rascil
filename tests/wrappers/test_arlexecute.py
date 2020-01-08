@@ -8,15 +8,13 @@ import unittest
 import numpy
 
 # Import the base and then make a global version
-from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger(__name__)
 
 class Testrsexecute(unittest.TestCase):
     
     def setUp(self):
-        global rsexecute
-        rsexecute = rsexecuteBase(use_dask=True)
         rsexecute.set_client(use_dask=True, verbose=False)
         
     def tearDown(self):

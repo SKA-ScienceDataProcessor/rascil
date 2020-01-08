@@ -116,11 +116,10 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
     :return: results dictionary
     """
     if use_dask:
-        client = get_dask_Client(threads_per_worker=threads_per_worker,
+        rsexecute.set_client(threads_per_worker=threads_per_worker,
                                  processes=threads_per_worker == 1,
                                  memory_limit=memory * 1024 * 1024 * 1024,
                                  n_workers=nworkers)
-        rsexecute.set_client(client)
         nodes = findNodes(rsexecute.client)
         print("Defined %d workers on %d nodes" % (nworkers, len(nodes)))
         print("Workers are: %s" % str(nodes))

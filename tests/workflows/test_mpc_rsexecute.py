@@ -17,8 +17,7 @@ from rascil.processing_components.skymodel.operations import expand_skymodel_by_
 from rascil.workflows.rsexecute.skymodel.skymodel_rsexecute import predict_skymodel_list_rsexecute_workflow, \
     invert_skymodel_list_rsexecute_workflow, crosssubtract_datamodels_skymodel_list_rsexecute_workflow
 from rascil.workflows.shared.imaging.imaging_shared import sum_predict_results
-from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
-from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_low_test_skymodel_from_gleam
 from rascil.processing_components.simulation import create_named_configuration
@@ -35,10 +34,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestMPC(unittest.TestCase):
     def setUp(self):
         
-        client = get_dask_Client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
-        global rsexecute
-        rsexecute = rsexecuteBase(use_dask=True)
-        rsexecute.set_client(client)
+        rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
         
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
@@ -46,9 +42,7 @@ class TestMPC(unittest.TestCase):
         self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def tearDown(self):
-        global rsexecute
         rsexecute.close()
-        del rsexecute
 
     def actualSetUp(self, freqwin=1, block=True, dopol=False, zerow=False):
         

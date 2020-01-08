@@ -22,8 +22,7 @@ from rascil.workflows import invert_list_rsexecute_workflow, restore_list_rsexec
     mpccal_skymodel_list_rsexecute_workflow, predict_skymodel_list_rsexecute_workflow, \
     weight_list_serial_workflow, taper_list_serial_workflow
 
-from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
-from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger(__name__)
 
@@ -35,17 +34,12 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestPipelineMPC(unittest.TestCase):
     def setUp(self):
         
-        client = get_dask_Client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
-        global rsexecute
-        rsexecute = rsexecuteBase(use_dask=True)
-        rsexecute.set_client(client)
+        rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
         
         self.persist = os.getenv("RASCIL_PERSIST", False)
 
     def tearDown(self):
-        global rsexecute
         rsexecute.close()
-        del rsexecute
 
     def progress(self, res, tl_list, gt_list, it):
         """Write progress information

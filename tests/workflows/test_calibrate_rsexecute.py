@@ -15,8 +15,7 @@ from rascil.data_models.polarisation import PolarisationFrame
 from rascil.workflows.rsexecute.calibration.calibration_rsexecute import calibrate_list_rsexecute_workflow
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
-from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
-from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.simulation import ingest_unittest_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import simulate_gaintable
@@ -31,10 +30,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestCalibrateGraphs(unittest.TestCase):
     
     def setUp(self):
-        client = get_dask_Client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
-        global rsexecute
-        rsexecute = rsexecuteBase(use_dask=True, verbose=False)
-        rsexecute.set_client(client, verbose=False)
+        rsexecute.set_client(verbose=False, memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
     
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
@@ -42,10 +38,8 @@ class TestCalibrateGraphs(unittest.TestCase):
         self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def tearDown(self):
-        global rsexecute
         rsexecute.close()
-        del rsexecute
-        
+
     def actualSetUp(self, nfreqwin=3, dospectral=True, dopol=False,
                     amp_errors=None, phase_errors=None, zerow=True):
         

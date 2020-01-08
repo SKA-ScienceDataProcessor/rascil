@@ -36,8 +36,7 @@ from rascil.workflows import invert_list_rsexecute_workflow, restore_list_rsexec
     mpccal_skymodel_list_rsexecute_workflow, predict_skymodel_list_rsexecute_workflow,\
     weight_list_serial_workflow, taper_list_serial_workflow
 
-from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
-from execution_support import get_dask_Client
+from rascil.workflows.rsexecute.execution_support import rsexecute
 
 if __name__ == '__main__':
     log = logging.getLogger()
@@ -67,8 +66,7 @@ if __name__ == '__main__':
     block_plots = args.block == 'True'
     
     if args.use_dask:
-        c = get_dask_Client(n_workers=args.nworkers, memory_limit=args.memory * 1024 * 1024 * 1024)
-        rsexecute.set_client(c)
+        rsexecute.set_client(n_workers=args.nworkers, memory_limit=args.memory * 1024 * 1024 * 1024)
     else:
         rsexecute.set_client(use_dask=False)
     #######################################################################################################

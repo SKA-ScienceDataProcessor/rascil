@@ -18,7 +18,6 @@ from rascil.workflows import continuum_imaging_list_rsexecute_workflow
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 import logging
-
 def init_logging():
     logging.basicConfig(filename='%s/ska-pipeline.log' % results_dir,
                         filemode='a',
@@ -33,7 +32,7 @@ if __name__ == '__main__':
     logging.info("Starting continuum imaging pipeline")
     
     rsexecute.set_client(use_dask=True, threads_per_worker=1, memory_limit=32 * 1024 * 1024 * 1024, n_workers=8,
-                          local_dir=dask_dir, verbose=True)
+                          local_directory=dask_dir, verbose=True)
     print(rsexecute.client)
     rsexecute.run(init_logging)
     

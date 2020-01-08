@@ -73,7 +73,6 @@ class TestPointingSimulation(unittest.TestCase):
         seed = args.seed
         basename = os.path.basename(os.getcwd())
         
-        # client = get_dask_Client()
         use_dask = False
         rsexecute.set_client(use_dask=use_dask)
         

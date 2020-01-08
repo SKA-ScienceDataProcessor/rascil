@@ -16,8 +16,7 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.workflows.rsexecute.imaging.imaging_rsexecute import invert_list_rsexecute_workflow, \
     deconvolve_list_rsexecute_workflow, \
     residual_list_rsexecute_workflow, restore_list_rsexecute_workflow
-from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
-from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
@@ -34,10 +33,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestImagingDeconvolveGraph(unittest.TestCase):
     
     def setUp(self):
-        client = get_dask_Client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
-        global rsexecute
-        rsexecute = rsexecuteBase(use_dask=True)
-        rsexecute.set_client(client, verbose=False)
+        rsexecute.set_client(verbose=False, memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
         
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
@@ -45,9 +41,7 @@ class TestImagingDeconvolveGraph(unittest.TestCase):
         self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def tearDown(self):
-        global rsexecute
         rsexecute.close()
-        del rsexecute
 
     def actualSetUp(self, add_errors=False, freqwin=7, block=False, dospectral=True, dopol=False,
                     zerow=True):
