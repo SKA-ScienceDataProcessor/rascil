@@ -23,7 +23,7 @@ from rascil.workflows import invert_list_rsexecute_workflow, restore_list_rsexec
     weight_list_serial_workflow, taper_list_serial_workflow
 
 from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
-from rascil.workflows.rsexecute.execution_support.rsexecute import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
 
 log = logging.getLogger(__name__)
 

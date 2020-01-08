@@ -20,7 +20,7 @@ from rascil.workflows.rsexecute.imaging.imaging_rsexecute import zero_list_rsexe
     restore_list_rsexecute_workflow
 from rascil.workflows.shared.imaging.imaging_shared import sum_invert_results
 from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
-from rascil.workflows.rsexecute.execution_support.rsexecute import get_dask_Client
+from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
 
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image, qa_image
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
