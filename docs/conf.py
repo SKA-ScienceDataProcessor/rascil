@@ -44,6 +44,7 @@ extensions = [
 # The following seem to be buggy
 
 #autosummary_generate = False
+
 numpydoc_show_class_members = False
 
 autodoc_member_order = 'bysource'

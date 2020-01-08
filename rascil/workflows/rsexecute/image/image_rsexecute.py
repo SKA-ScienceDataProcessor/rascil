@@ -18,7 +18,19 @@ def image_rsexecute_map_workflow(im, imfunction, facets=1, overlap=0, taper=None
     :param overlap: image_scatter_facets
     :param taper: image_scatter_facets
     :param kwargs: kwargs for imfunction
-    :return: output image
+    :return: graph for output image
+
+    For example::
+
+        rsexecute.set_client(use_dask=True)
+        model = create_test_image(frequency=frequency, phasecentre=phasecentre, cellsize=0.001,
+                                         polarisation_frame=PolarisationFrame('stokesI'))
+        def imagerooter(im, **kwargs):
+            im.data = numpy.sqrt(numpy.abs(im.data))
+            return im
+        root_graph = image_rsexecute_map_workflow(model, imagerooter, facets=16)
+        root_image = rsexecute.compute(root_graph, sync=True)
+
     """
     
     facets_list = rsexecute.execute(image_scatter_facets, nout=facets**2)(im, facets=facets, overlap=overlap,
@@ -30,11 +42,20 @@ def image_rsexecute_map_workflow(im, imfunction, facets=1, overlap=0, taper=None
 
 
 def sum_images_rsexecute(image_list, split=2):
-    """ Sum a set of images
+    """ Sum a set of images, using a tree reduction
 
     :param image_list: List of (image, sum weights) tuples
-    :param split: Split into
-    :return: image
+    :param split: Order of split i.e. 2 is binary
+    :return: graph for summed (image, sumwt)
+
+    For example, to create a list of (dirty image, sumwt) tuples and then sum all::
+
+        rsexecute.set_client(use_dask=True)
+        dirty_list = invert_list_rsexecute_workflow(vis_list,
+            template_model_imagelist=model_list, context='wstack', vis_slices=51)
+        dirty_list = sum_image_rsexecute(dirty_list)
+        dirty, sumwt = rsexecute.compute(dirty_list, sync=True)
+
     """
     def sum_images(imagelist):
         out = copy_image(imagelist[0])

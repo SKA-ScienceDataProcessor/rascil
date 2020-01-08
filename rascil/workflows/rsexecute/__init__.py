@@ -1,4 +1,6 @@
+""" Processing workflows using the processing components orchestrated using Dask (wrapped as rsexecute)
 
+"""
 
 from .calibration import *
 from .image import *

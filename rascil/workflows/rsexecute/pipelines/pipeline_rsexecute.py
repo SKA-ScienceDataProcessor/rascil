@@ -1,7 +1,8 @@
 """ Pipeline functions. SDP standard pipelines expressed as functions.
 """
 
-__all__ = ['ical_list_rsexecute_workflow', 'continuum_imaging_list_rsexecute_workflow',
+__all__ = ['ical_list_rsexecute_workflow',
+           'continuum_imaging_list_rsexecute_workflow',
            'spectral_line_imaging_list_rsexecute_workflow']
 import logging
 

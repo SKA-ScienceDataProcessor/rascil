@@ -2,11 +2,8 @@
 
 .. py:currentmodule:: rascil.workflows.rsexecute
 
-
 rsexecute
 =========
-
-rsexute workflows can be used in two modes: serially executed immediately on definition, or delayed using `Dask.delayed <http://www.dask.org>`_ Distribution is acheived by working on lists of data models, such as lists of BlockVisibilities.
 
 .. toctree::
    :maxdepth: 1
@@ -31,5 +28,7 @@ rsexute workflows can be used in two modes: serially executed immediately on def
 
 .. automodapi::    rascil.workflows.rsexecute.execution_support
    :no-inheritance-diagram:
+
+.. autoclass::    rascil.workflows.rsexecute.execution_support.rsexecute
 
 

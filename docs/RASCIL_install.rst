@@ -66,6 +66,7 @@ Installation on specific machines
 .. toctree::
    :maxdepth: 2
 
+   installation/RASCIL_CSD3_install
    installation/RASCIL_P3_install
 
 .. _feedback: mailto:realtimcornwell@gmail.com

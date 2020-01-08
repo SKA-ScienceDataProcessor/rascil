@@ -42,14 +42,31 @@ def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slic
     The visibility and image are scattered, the visibility is predicted on each part, and then the
     parts are assembled.
 
-    :param vis_list:
-    :param model_imagelist: Model used to determine image parameters
+    Note that this call can be converted to a set of rsexecute calls to the serial
+    version, using argument use_serial_predict=True
+
+    :param vis_list: list of vis (or graph)
+    :param model_imagelist: list of models (or graph)
     :param vis_slices: Number of vis slices (w stack or timeslice)
     :param facets: Number of facets (per axis)
     :param context: Type of processing e.g. 2d, wstack, timeslice or facets
     :param gcfcg: tuple containing grid correction and convolution function
     :param kwargs: Parameters for functions in components
     :return: List of vis_lists
+
+    For example::
+
+        dprepb_model = [rsexecute.execute(create_low_test_image_from_gleam)
+            (npixel=npixel, frequency=[frequency[f]], channel_bandwidth=[channel_bandwidth[f]],
+            cellsize=cellsize, phasecentre=phasecentre, polarisation_frame=PolarisationFrame("stokesI"),
+            flux_limit=3.0, applybeam=True)
+            for f, freq in enumerate(frequency)]
+
+        dprepb_model_list = rsexecute.persist(dprepb_model_list)
+        predicted_vis_list = predict_list_rsexecute_workflow(vis_list, model_imagelist=dprepb_model_list,
+            context='wstack', vis_slices=51)
+        predicted_vis_list = rsexecute.compute(predicted_vis_list , sync=True)
+
    """
     if get_parameter(kwargs, "use_serial_predict", False):
         from rascil.workflows.serial.imaging.imaging_serial import predict_list_serial_workflow
@@ -141,8 +158,11 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
                                     facets=1, vis_slices=1, gcfcf=None, **kwargs):
     """ Sum results from invert, iterating over the scattered image and vis_list
 
-    :param vis_list:
-    :param template_model_imagelist: Model used to determine image parameters
+    Note that this call can be converted to a set of rsexecute calls to the serial
+    version, using argument use_serial_invert=True
+
+    :param vis_list: list of vis (or graph)
+    :param template_model_imagelist: list of template models (or graph)
     :param dopsf: Make the PSF instead of the dirty image
     :param facets: Number of facets
     :param normalize: Normalize by sumwt
@@ -150,7 +170,20 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
     :param context: Imaging context
     :param gcfcg: tuple containing grid correction and convolution function
     :param kwargs: Parameters for functions in components
-    :return: List of (image, sumwt) tuple
+    :return: List of (image, sumwt) tuples, one per vis in vis_list
+
+    For example::
+
+        model_list = [rsexecute.execute(create_image_from_visibility)
+            (v, npixel=npixel, cellsize=cellsize, polarisation_frame=pol_frame)
+            for v in vis_list]
+
+        model_list = rsexecute.persist(model_list)
+        dirty_list = invert_list_rsexecute_workflow(vis_list, template_model_imagelist=model_list, context='wstack',
+                                                    vis_slices=51)
+        dirty_sumwt_list = rsexecute.compute(dirty_list, sync=True)
+        dirty, sumwt = dirty_sumwt_list[centre]
+
    """
     
     # Use serial invert for each element of the visibility list. This means that e.g. iteration
@@ -248,6 +281,7 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
 
 def residual_list_rsexecute_workflow(vis, model_imagelist, context='2d', gcfcf=None, **kwargs):
     """ Create a graph to calculate residual image
+
     :param vis:
     :param model_imagelist: Model used to determine image parameters
     :param context:
@@ -326,13 +360,31 @@ def restore_list_rsexecute_workflow(model_imagelist, psf_imagelist, residual_ima
 def deconvolve_list_rsexecute_workflow(dirty_list, psf_list, model_imagelist, prefix='', mask=None, **kwargs):
     """Create a graph for deconvolution, adding to the model
 
-    :param dirty_list:
-    :param psf_list:
-    :param model_imagelist:
+    Note that this call can be converted to a set of rsexecute calls to the serial
+    version, using argument use_serial_clean=True
+
+    :param dirty_list: list of dirty images (or graph)
+    :param psf_list: list of psfs (or graph)
+    :param model_imagelist: list of models (or graph)
     :param prefix: Informative prefix to log messages
     :param mask: Mask for deconvolution
-    :param kwargs: Parameters for functions in components
+    :param kwargs: Parameters for functions
     :return: graph for the deconvolution
+
+    For example::
+
+        dirty_imagelist = invert_list_rsexecute_workflow(vis_list, model_imagelist, context='2d',
+                                                          dopsf=False, normalize=True)
+        psf_imagelist = invert_list_rsexecute_workflow(vis_list, model_imagelist, context='2d',
+                                                        dopsf=True, normalize=True)
+        dirty_imagelist = rsexecute.persist(dirty_imagelist)
+        psf_imagelist = rsexecute.persist(psf_imagelist)
+        dec_imagelist = deconvolve_list_rsexecute_workflow(dirty_imagelist, psf_imagelist,
+                model_imagelist, niter=1000, fractional_threshold=0.01,
+                scales=[0, 3, 10], algorithm='mmclean', nmoment=3, nchan=freqwin,
+                threshold=0.1, gain=0.7)
+        dec_imagelist = rsexecute.persist(dec_imagelist)
+
     """
     nchan = len(dirty_list)
     # Number of moments. 1 is the sum.
@@ -476,10 +528,11 @@ def deconvolve_list_channel_rsexecute_workflow(dirty_list, psf_list, model_image
     """Create a graph for deconvolution by channels, adding to the model
 
     Does deconvolution channel by channel.
-    :param subimages: 
-    :param dirty_list:
-    :param psf_list: Must be the size of a facet
-    :param model_imagelist: Current model
+
+    :param dirty_list: list or graph of dirty images
+    :param psf_list: list or graph of psf images. The psfs must be the size of a facet
+    :param model_imagelist: list of graph of models
+    :param subimages: Number of channels to split into
     :param kwargs: Parameters for functions in components
     :return:
     """
@@ -517,6 +570,11 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
     :param weighting: Type of weighting
     :param kwargs: Parameters for functions in graphs
     :return: List of vis_graphs
+
+    For example::
+
+         vis_list = weight_list_rsexecute_workflow(vis_list, model_list, weighting='uniform')
+
    """
     centre = len(model_imagelist) // 2
     
