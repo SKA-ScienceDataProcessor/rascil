@@ -19,18 +19,14 @@ from rascil.processing_components.visibility.base import create_visibility
 
 from rascil.workflows.rsexecute.image.image_rsexecute import image_rsexecute_map_workflow
 from rascil.processing_components.image.operations import export_image_to_fits
-from rascil.workflows.rsexecute.execution_support.dask_init import get_dask_Client
-from rascil.workflows.rsexecute.execution_support.rsexecutebase import rsexecuteBase
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger(__name__)
 
 
 class TestImageGraph(unittest.TestCase):
     def setUp(self):
-        client = get_dask_Client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
-        global rsexecute
-        rsexecute = rsexecuteBase(use_dask=True)
-        rsexecute.set_client(client, verbose=False)
+        rsexecute.set_client(verbose=False, memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
 
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
@@ -49,9 +45,7 @@ class TestImageGraph(unittest.TestCase):
         self.persist = os.getenv("RASCIL_PERSIST", False)
 
     def tearDown(self):
-        global rsexecute
         rsexecute.close()
-        del rsexecute
 
     def createVis(self, config, dec=-35.0, rmax=None):
         self.config = create_named_configuration(config, rmax=rmax)
