@@ -245,6 +245,7 @@ class TestPipelineMPC(unittest.TestCase):
         
         rsexecute.close()
     
+    @unittest.skip("Not reliable on CI/CD")
     def test_mpccal_ICAL_onesource(self):
         
         self.actualSetup(nsources=1, nvoronoi=1)
