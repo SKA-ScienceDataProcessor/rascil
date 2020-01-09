@@ -29,6 +29,7 @@ rsexecute
 .. automodapi::    rascil.workflows.rsexecute.execution_support
    :no-inheritance-diagram:
 
-.. autoclass::    rascil.workflows.rsexecute.execution_support.rsexecute
+.. autoclass::    rascil.workflows.rsexecute.execution_support.rsexecute._rsexecutebase
+   :members:
 
 
