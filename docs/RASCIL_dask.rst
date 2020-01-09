@@ -82,10 +82,9 @@ Logging is difficult when using distributed processing. Here's a solution that w
     logging.info("ASKAP_simulation")
 
 To ensure that the Dask workers get the same setup, you will need to run init_logging() on each worker using the
-Client.run() function::
+rsexecute.run() function::
 
-    c=get_dask_Client()
-    c.run(init_logging)
+    rsexecute.run(init_logging)
 
 or::
 
@@ -123,10 +122,10 @@ You can start a scheduler and workers by hand. Set the environment variable RASC
 
 If you do this, remember to start the workers as well. dask-ssh is useful for this::
 
-    c=get_dask_Client(timeout=30)
+    c=get_dask_client(timeout=30)
     c.scheduler_info()
 
-get_dask_Client will look for a scheduler via the environment variable RASCIL_DASK_SCHEDULER. It that does not exist, it
+get_dask_client will look for a scheduler via the environment variable RASCIL_DASK_SCHEDULER. It that does not exist, it
  will start a Client using the default Dask approach.
 
 On darwin, each node has 16 cores, and each core has 4GB. Usually this is insufficient for RASCIL and so some cores must be

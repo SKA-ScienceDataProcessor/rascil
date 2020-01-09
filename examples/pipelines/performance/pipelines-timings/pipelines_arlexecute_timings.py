@@ -14,7 +14,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models import PolarisationFrame
 
-from rascil.processing_components import get_size
+from rascil.processing_components.util.sizeof import get_size
 from rascil.processing_components import create_image
 
 from rascil.processing_components import create_awterm_convolutionfunction, create_pswf_convolutionfunction,\
@@ -28,7 +28,6 @@ from rascil.workflows import invert_list_rsexecute_workflow, weight_list_rsexecu
     corrupt_list_rsexecute_workflow, predict_skymodel_list_rsexecute_workflow
 
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
-from execution_support import findNodes, get_dask_Client
 
 pp = pprint.PrettyPrinter()
 
@@ -120,9 +119,7 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
                                  processes=threads_per_worker == 1,
                                  memory_limit=memory * 1024 * 1024 * 1024,
                                  n_workers=nworkers)
-        nodes = findNodes(rsexecute.client)
-        print("Defined %d workers on %d nodes" % (nworkers, len(nodes)))
-        print("Workers are: %s" % str(nodes))
+        print("Defined %d workers" % (nworkers))
     else:
         rsexecute.set_client(use_dask=use_dask)
         results['nnodes'] = 1

@@ -1,14 +1,17 @@
-""" Execute wrap dask such that with the same code Dask.delayed can be replaced by immediate calculation
+""" Wrap dask such that with the same code Dask.delayed can be replaced by immediate calculation
 
 """
 
-__all__ = ['rsexecute']
+__all__ = ['rsexecute', 'get_dask_client', '_rsexecutebase']
 
+import os
 import logging
 import time
 
 from dask import delayed, optimize
-from dask.distributed import Client, wait
+from dask.distributed import wait
+from distributed import Client, LocalCluster
+
 
 # Support daliuge's delayed function, make it fail if not available but used
 try:
@@ -21,10 +24,140 @@ except ImportError:
 log = logging.getLogger(__name__)
 
 
+def get_dask_client(timeout=30, n_workers=None, threads_per_worker=1, processes=True, create_cluster=True,
+                    memory_limit=None, local_dir='.', with_file=False,
+                    scheduler_file='./scheduler.json',
+                    dashboard_address=':8787'):
+    """ Get a Dask.distributed Client to be used in rsexecute
+
+    The default operation of rsexecute.set_client is to create a set of workes on one node. Hence if you
+    want to use a cluster it is necessary to use get_dask_client.
+
+    The environment variable RASCIL_DASK_SCHEDULER is interpreted as pointing to the Dask distributed scheduler.
+    and a client using that scheduler is returned. Otherwise a client for a LocalCluster is created.
+
+    :param timeout: Time out for creation (30s)
+    :param n_workers: Number of workers (cores available)
+    :param threads_per_worker: 1
+    :param processes: Use processes instead of threads (True)
+    :param create_cluster: Create a LocalCluster (True)
+    :param memory_limit: Memory limit per worker (bytes e.g. 8e9) (None)
+    :param scheduler_file: Scheduler file for Dask ('./scheduler.json')
+    :param dashboard_address: Port used for diagnostics (':8787')
+    :return: Dask client
+    """
+    scheduler = os.getenv('RASCIL_DASK_SCHEDULER', None)
+    if scheduler is not None:
+        print("Creating Dask Client using externally defined scheduler")
+        c = Client(scheduler, timeout=timeout)
+    elif with_file:
+        print("Creating Dask Client using externally defined scheduler in file  %s" % scheduler_file)
+        c = Client(scheduler_file=scheduler_file, timeout=timeout)
+
+    elif create_cluster:
+        if n_workers is not None:
+            if memory_limit is not None:
+                cluster = LocalCluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=processes,
+                                       memory_limit=memory_limit,
+                                       dashboard_address=dashboard_address)
+            else:
+                cluster = LocalCluster(n_workers=n_workers, threads_per_worker=threads_per_worker, processes=processes,
+                                       dashboard_address=dashboard_address)
+        else:
+            if memory_limit is not None:
+                cluster = LocalCluster(threads_per_worker=threads_per_worker, processes=processes,
+                                       memory_limit=memory_limit,
+                                       dashboard_address=dashboard_address)
+            else:
+                cluster = LocalCluster(threads_per_worker=threads_per_worker, processes=processes,
+                                       dashboard_address=dashboard_address)
+
+        print("Creating LocalCluster and Dask Client")
+        c = Client(cluster)
+    else:
+        c = Client(threads_per_worker=threads_per_worker, processes=processes,
+                   memory_limit=memory_limit, local_dir=local_dir)
+
+    addr = c.scheduler_info()['address']
+    services = c.scheduler_info()['services']
+    if 'bokeh' in services.keys():
+        bokeh_addr = 'http:%s:%s' % (addr.split(':')[1], services['bokeh'])
+        print('Diagnostic pages available on port %s' % bokeh_addr)
+    if 'dashboard' in services.keys():
+        db_addr = 'http:%s:%s' % (addr.split(':')[1], services['dashboard'])
+        print('Diagnostic pages available on port %s' % db_addr)
+    return c
+
+
+def get_nodes():
+    """ Get the nodes being used
+
+    The environment variable RASCIL_HOSTFILE is interpreted as file containing the nodes
+
+    :return: List of strings
+    """
+    hostfile = os.getenv('RASCIL_HOSTFILE', None)
+    if hostfile is None:
+        print("No hostfile specified")
+        return None
+
+    import socket
+    with open(hostfile, 'r') as file:
+        nodes = [line.replace('\n', '') for line in file.readlines()]
+        print("Nodes being used are %s" % nodes)
+        nodes = [socket.gethostbyname(node) for node in nodes]
+        print("Nodes IPs are %s" % nodes)
+        return nodes
+
+
+def findNodes(c):
+    """ Find Nodes being used for this Client
+
+    """
+    return [c.scheduler_info()['workers'][name]['host'] for name in c.scheduler_info()['workers'].keys()]
+
+
 class _rsexecutebase():
+    """ Initialise rsexecute framework
+
+    A singleton of this class is created and is available globally as rsexecute. Hence it is not necessary to
+    declare an instance of _rsexecutebase.
+
+    For example::
+
+        from rascil.workflows import continuum_imaging_list_rsexecute_workflow, rsexecute
+        rsexecute.set_client(use_dask=True, threads_per_worker=1,
+            memory_limit=32 * 1024 * 1024 * 1024, n_workers=8,
+            local_dir=dask_dir, verbose=True)
+        continuum_imaging_list = continuum_imaging_list_rsexecute_workflow(vis_list,
+            model_imagelist=model_list,
+            context='wstack', vis_slices=51,
+            scales=[0, 3, 10], algorithm='mmclean',
+            nmoment=3, niter=1000,
+            fractional_threshold=0.1, threshold=0.1,
+            nmajor=5, gain=0.25,
+            psf_support=64)
+
+        deconvolved_list, residual_list, restored_list = rsexecute.compute(continuum_imaging_list,
+            sync=True)
+
+    :param use_dask: Use dask (True)
+    :param use_dlg: Use daluige (False)
+    :param verbose: Be verbose in printing messages
+    :param optimize: Optimize if using dask (True)
+    """
     _instance = None
 
     def __init__(self, use_dask=True, use_dlg=False, verbose=False, optimize=True):
+        """ Initialise rsexecute framework
+
+        A singleton of this class is created and is available globally as rsexecute
+
+        :param use_dask: Use dask (True)
+        :param use_dlg: Use daluige (False)
+        :param verbose: Be verbose in printing messages
+        :param optimize: Optimize if using dask (True)
+        """
         if bool(use_dask) and bool(use_dlg):
             raise ValueError('use_dask and use_dlg cannot be specified together')
         self._set_state(use_dask, use_dlg, None, verbose, optimize)
@@ -67,9 +200,7 @@ class _rsexecutebase():
     def set_client(self, client=None, use_dask=True, use_dlg=False, verbose=False, optim=True, **kwargs):
         """Set the Dask/DALiuGE client to be used
 
-        !!!This must be called before calling execute!!!!
-
-        If you want to customise the Client or use an externally defined Scheduler use get_dask_Client and pass it in.
+        If you want to customise the Client or use an externally defined Scheduler use get_dask_client and pass it in.
 
         :param use_dask: Use Dask?
         :param client: If None and use_dask is True, a client will be created otherwise the client is None
@@ -132,7 +263,10 @@ class _rsexecutebase():
     def persist(self, graph, **kwargs):
         """Persist graph data on workers
 
+        The graphs are placed on the workers but not computed
+
         No-op if not using_dask
+
         :param graph:
         :return:
         """
@@ -143,6 +277,8 @@ class _rsexecutebase():
 
     def scatter(self, graph, **kwargs):
         """Scatter graph data to workers
+
+        The data are placed on the workers
 
         No-op if not using_dask
         :param graph:
@@ -156,7 +292,10 @@ class _rsexecutebase():
     def gather(self, graph):
         """Gather graph from workers
 
+        The data are gathered from the workers
+
         No-op if not using_dask
+
         :param graph:
         :return:
         """
@@ -177,7 +316,7 @@ class _rsexecutebase():
             return func
 
     def optimize(self, *args, **kwargs):
-        """ Run optimisation of graphs
+        """ Run Dask optimisation of graphs
 
         Only does something when using dask
 
@@ -190,30 +329,9 @@ class _rsexecutebase():
         else:
             return args[0]
 
-    @property
-    def client(self):
-        return self._client
-
-    @property
-    def using_dask(self):
-        return self._using_dask
-
-    @property
-    def using_dlg(self):
-        return self._using_dlg
-
-    @property
-    def optimizing(self):
-        """ Apply Dask optimisations
-
-        :return:
-        """
-        return self._optimize
-
     def close(self):
         """ Close the client
 
-        :return:
         """
         if self._using_dask and isinstance(self._client, Client):
             if self._verbose:
@@ -226,6 +344,8 @@ class _rsexecutebase():
     def init_statistics(self):
         """ Initialise the profile and task stream info
 
+        rsexecute can save the Dask profile and Task Stream information for later saving
+
         :return:
         """
         self.start_time = time.time()
@@ -235,6 +355,9 @@ class _rsexecutebase():
 
     def save_statistics(self, name='dask'):
         """ Save the statistics to html files
+
+        rsexecute can save the Dask profile and Task Stream information for later saving. This
+        saves the current statistics to html files.
 
         :param name: prefix to name e.g. dask
         """
@@ -271,11 +394,46 @@ class _rsexecutebase():
 
             print_ts(task_stream)
 
+    @property
+    def client(self):
+        """ Client being used
+
+        :return: client
+        """
+        return self._client
+
+    @property
+    def using_dask(self):
+        """ Is dask being used?
+
+        :return:
+        """
+        return self._using_dask
+
+    @property
+    def using_dlg(self):
+        """ Is daluige being used?
+
+        :return:
+        """
+        return self._using_dlg
+
+    @property
+    def optimizing(self):
+        """ Is Dask optimisation being performed?
+
+        :return:
+        """
+        return self._optimize
+
 
 def rsexecutebase(*args, **kwargs):
     if _rsexecutebase._instance is None:
         _rsexecutebase._instance = _rsexecutebase(*args, **kwargs)
     return _rsexecutebase._instance
 
+
 # Any new rsexecute created by import of this file points to the only _rsexecutebase
 rsexecute = rsexecutebase(use_dask=True)
+
+
