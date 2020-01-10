@@ -4,7 +4,7 @@ Framework
 """
 __all__ = [
     'arrays',
-    'chain_calibration.py',
+    'calibration',
     'griddata',
     'fourier_transforms',
     'image',
