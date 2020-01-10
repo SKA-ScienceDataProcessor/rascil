@@ -27,4 +27,5 @@ dask-worker-space
 /docs/api
 */*/notebooks/*_files
 */*/notebooks/*.rst
+*/*/scripts/*.rst
 /docs/examples/notebooks
