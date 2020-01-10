@@ -7,8 +7,8 @@ Some example scripts are found in the directory examples/scripts.
 .. toctree::
    :maxdepth: 3
 
-
    examples/scripts/dprepb_rsexecute_pipeline.rst
+
 * :ref:`genindex`
 * :ref:`modindex`
 
