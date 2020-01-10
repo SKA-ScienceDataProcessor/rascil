@@ -60,6 +60,9 @@ prepare:
 	mkdir -p examples/notebooks/
 	cp ../examples/notebooks/*.rst examples/notebooks/
 	cp -R ../examples/notebooks/*_files examples/notebooks/
+	make -C ../examples/scripts rst
+	mkdir -p examples/scripts/
+	cp ../examples/scripts/*.rst examples/scripts/
 
 .PHONY: html
 html: prepare

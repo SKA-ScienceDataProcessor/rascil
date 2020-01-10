@@ -65,7 +65,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'RASCIL'
-copyright = '2016-2019 Tim Cornwell, Peter Wortmann, Bojan Nikolic, Feng Wang, Vlad Stolyarov'
+copyright = '2016-2020 Tim Cornwell, Peter Wortmann, Bojan Nikolic, Feng Wang, Vlad Stolyarov'
 author = 'Tim Cornwell, Peter Wortmann, Bojan Nikolic, Feng Wang, Vlad Stolyarov'
 
 # The version info for the project you're documenting, acts as replacement for
