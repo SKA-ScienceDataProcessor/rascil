@@ -20,6 +20,7 @@ RASCIL replaces the Algorithm Reference Library (ARL), which is now frozen.
 
    RASCIL_install
    RASCIL_notebooks
+   RASCIL_scripts
    RASCIL_directory
    RASCIL_api
    RASCIL_otherinfo
