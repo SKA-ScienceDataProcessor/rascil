@@ -373,7 +373,7 @@ class _rsexecutebase():
                 number = {}
                 for t in ts:
                     name = t['key'].split('-')[0]
-                    elapsed = t['startstops'][0][2] - t['startstops'][0][1]
+                    elapsed = t['startstops'][0]['stop'] - t['startstops'][0]['start']
                     if name not in summary.keys():
                         summary[name] = elapsed
                         number[name] = 1
@@ -392,7 +392,13 @@ class _rsexecutebase():
                 speedup = (total / duration)
                 print(">>> Speedup = %.2f" % speedup)
 
-            print_ts(task_stream)
+            try:
+                print_ts(task_stream)
+            except:
+                print("task stream is unintelligible")
+                import pprint
+                pp = pprint.PrettyPrinter()
+                pp.pprint(task_stream)
 
     @property
     def client(self):
