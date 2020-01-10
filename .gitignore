@@ -12,6 +12,7 @@
 dask-worker-space
 */notebooks/*_files
 */notebooks/*.rst
+*/scripts/*.rst
 *.log
 *.lock
 *.hdf5
