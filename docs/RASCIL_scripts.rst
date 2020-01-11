@@ -8,6 +8,7 @@ Some example scripts are found in the directory examples/scripts.
    :maxdepth: 3
 
    examples/scripts/dprepb_rsexecute_pipeline.rst
+   examples/scripts/compare_imaging_sim2.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

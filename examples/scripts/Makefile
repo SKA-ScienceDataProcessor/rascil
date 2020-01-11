@@ -1,5 +1,5 @@
 
-SCs = dprepb_rsexecute_pipeline.py
+SCs = dprepb_rsexecute_pipeline.py imaging_sim2.py
 
 RSTs=  $(SCs:.py=.rst)
 

@@ -1,5 +1,9 @@
 """
-This executes a DPREPB pipeline: deconvolution of calibrated data
+This executes a DPREPB pipeline: deconvolution of calibrated spectral line data. The pipeline uses Dask to
+distribute the processing. The Dask graph is constructed with the rsexecute.execute calls
+and then the actual calculation is performed by the call rsexecute.compute.
+
+For example, to run on 10 Dask workers on this node:
 
 python dprepb_rsexecute_pipeline.py --nworkers 10 --context wstack
 
@@ -8,6 +12,7 @@ python dprepb_rsexecute_pipeline.py --nworkers 10 --context wstack
 import argparse
 import logging
 
+# These are the RASCIL functions we need
 from rascil.data_models import PolarisationFrame, rascil_path
 from rascil.processing_components import create_visibility_from_ms, \
     create_visibility_from_rows, append_visibility, convert_visibility_to_stokes, \
@@ -31,9 +36,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
+    # Put the results in the test_results directory
     results_dir = rascil_path('test_results')
     dask_dir = rascil_path('test_results/dask-work-space')
 
+    # Since the processing is distributed over multiple processes we have to tell each Dask worker
+    # where to send the log messages
     def init_logging():
         logging.basicConfig(filename='%s/dprepb-pipeline.log' % results_dir,
                             filemode='a',
@@ -44,6 +52,8 @@ if __name__ == '__main__':
     log = logging.getLogger()
     logging.info("Starting Imaging pipeline")
 
+    # Set up rsexecute to use Dask. This means that all computation is delayed until an
+    # explicit rsexecute.compute call. If use_dask is False, all calls are computed immediately.
     rsexecute.set_client(use_dask=args.use_dask == 'True', threads_per_worker=args.threads,
                          n_workers=args.nworkers, local_directory=dask_dir)
     print(rsexecute.client)
@@ -72,7 +82,7 @@ if __name__ == '__main__':
     start = time.time()
 
     # Define a function to be executed by Dask to load the data, combine it, and select
-    # only the short baselines
+    # only the short baselines. We load each channel separately.
     def load_ms(c):
         v1 = create_visibility_from_ms(input_vis[0], start_chan=c, end_chan=c)[0]
         v2 = create_visibility_from_ms(input_vis[1], start_chan=c, end_chan=c)[0]
@@ -118,7 +128,8 @@ if __name__ == '__main__':
     restored_cube = rsexecute.execute(image_gather_channels, nout=1)(restored_list)
 
     # Up to this point all we have is a graph. Now we compute it and get the
-    # final restored cleaned cube
+    # final restored cleaned cube. During the compute, Dask shows diagnostic pages
+    # at http://127.0.0.1:8787
     restored_cube = rsexecute.compute(restored_cube, sync=True)
 
     # Save the cube

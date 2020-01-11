@@ -596,8 +596,6 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                     try:
                         log.debug("create_blockvisibility_from_ms: Reading channels from %d to %d" %
                                   (start_chan, end_chan))
-                        print("create_blockvisibility_from_ms: Reading channels from %d to %d (inclusive)" %
-                              (start_chan, end_chan))
                         blc = [start_chan, 0]
                         trc = [end_chan, datacol_shape[-1] - 1]
                         channum = range(start_chan, end_chan+1)
