@@ -7,6 +7,7 @@ Some example scripts are found in the directory examples/scripts.
 .. toctree::
    :maxdepth: 3
 
+   examples/scripts/imaging.rst
    examples/scripts/dprepb_rsexecute_pipeline.rst
    examples/scripts/imaging_sim2.rst
 

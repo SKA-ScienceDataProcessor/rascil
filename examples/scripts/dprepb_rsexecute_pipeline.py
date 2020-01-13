@@ -1,16 +1,12 @@
 """
-This executes a DPREPB pipeline: deconvolution of calibrated spectral line data. The pipeline uses Dask to
-distribute the processing. The Dask graph is constructed with the rsexecute.execute calls
-and then the actual calculation is performed by the call rsexecute.compute.
-
-For example, to run on 10 Dask workers on this node:
-
-python dprepb_rsexecute_pipeline.py --nworkers 10 --context wstack
+This executes a DPREPB pipeline: deconvolution of calibrated spectral line data.
 
 """
 
 import argparse
 import logging
+
+from dask.distributed import Client
 
 # These are the RASCIL functions we need
 from rascil.data_models import PolarisationFrame, rascil_path
@@ -32,6 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--context', dest='context', default='wstack',
                         help='Context: 2d|timeslice|wstack')
     parser.add_argument('--nchan', type=int, default=40, help='Number of channels to process')
+    parser.add_argument('--scheduler', type=str, default=None, help='Dask scheduler')
 
     args = parser.parse_args()
     print(args)
@@ -54,8 +51,13 @@ if __name__ == '__main__':
 
     # Set up rsexecute to use Dask. This means that all computation is delayed until an
     # explicit rsexecute.compute call. If use_dask is False, all calls are computed immediately.
-    rsexecute.set_client(use_dask=args.use_dask == 'True', threads_per_worker=args.threads,
-                         n_workers=args.nworkers, local_directory=dask_dir)
+    # If running on a cluster, create a scheduler externally and pass in the IP address
+    if args.scheduler is not None:
+        c = Client(args.scheduler)
+        rsexecute.set_client(c)
+    else:
+        rsexecute.set_client(use_dask=args.use_dask == 'True', threads_per_worker=args.threads,
+                            n_workers=args.nworkers, local_directory=dask_dir)
     print(rsexecute.client)
     rsexecute.run(init_logging)
 

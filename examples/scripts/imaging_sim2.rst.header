@@ -1,0 +1,9 @@
+.. _imaging_sim2:
+
+imaging_sim2.py
+===============
+
+This performs imaging of the measurementset sim2.ms
+
+.. code:: ipython3
+

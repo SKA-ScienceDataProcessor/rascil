@@ -1,0 +1,15 @@
+.. _dprepb_rsexecute_pipeline:
+
+dprepb_rsexecute_pipeline
+=========================
+
+This executes a DPREPB pipeline: deconvolution of calibrated spectral line data. The pipeline uses Dask to
+distribute the processing. The Dask graph is constructed with the rsexecute.execute calls
+and then the actual calculation is performed by the call rsexecute.compute.
+
+For example, to run on 10 Dask workers on this node:
+
+python dprepb_rsexecute_pipeline.py --nworkers 10 --context wstack
+
+.. code:: ipython3
+

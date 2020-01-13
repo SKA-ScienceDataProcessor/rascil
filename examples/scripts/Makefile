@@ -1,5 +1,5 @@
 
-SCs = dprepb_rsexecute_pipeline.py imaging_sim2.py
+SCs = dprepb_rsexecute_pipeline.py imaging_sim2.py imaging.py
 
 RSTs=  $(SCs:.py=.rst)
 
@@ -7,11 +7,7 @@ RSTs=  $(SCs:.py=.rst)
 rst: $(RSTs)
 
 %.rst: %.py
-	echo $< > $@
-	echo $< | sed -e 's/./=/g' >> $@
-	echo " " >> $@
-	echo ".. code:: ipython3" >> $@
-	echo " " >> $@
+	cat $@.header > $@
 	sed  's/^/     /'  $< >> $@
 
 %.html: %.rst

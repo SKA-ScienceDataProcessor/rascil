@@ -1,0 +1,10 @@
+.. _imaging:
+
+imaging.py
+==========
+
+This creates a small visibility set, makes dirty image and PSF, and then does the deconvolution. A notebook version is
+also available.
+
+.. code:: ipython3
+
