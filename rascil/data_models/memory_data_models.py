@@ -50,15 +50,15 @@ class Configuration:
         
         """Configuration object describing data for processing
 
-        :param name:
-        :param data:
-        :param location:
-        :param names:
-        :param xyz:
-        :param mount:
-        :param frame:
-        :param receptor_frame:
-        :param diameter:
+        :param name: Name of configuration e.g. 'LOWR3'
+        :param data: Data array (used in copying)
+        :param location: Location of array as an astropy EarthLocation
+        :param names: Names of the dishes/stations
+        :param xyz: Geocentric coordinates of dishes/stations
+        :param mount: Mount types of dishes/stations 'altaz' | 'xy' | 'equatorial'
+        :param frame: Reference frame of locations
+        :param receptor_frame: Receptor frame
+        :param diameter: Diameters of dishes/stations (m)
         """
         if data is None and xyz is not None:
             desc = [('names', 'U12'),
@@ -83,7 +83,7 @@ class Configuration:
         self.receptor_frame = receptor_frame
     
     def __str__(self):
-        """Default printer for Skycomponent
+        """Default printer for Configuration
 
         """
         s = "Configuration:\n"
@@ -105,24 +105,24 @@ class Configuration:
     
     @property
     def names(self):
-        """ Names of the antennas/stations"""
+        """ Names of the dishes/stations"""
         return self.data['names']
     
     @property
     def diameter(self):
-        """ diameter of antennas/stations
+        """ Diameter of dishes/stations (m)
         """
         return self.data['diameter']
     
     @property
     def xyz(self):
-        """ XYZ locations of antennas/stations
+        """ XYZ locations of dishes/stations [:,3] (m)
         """
         return self.data['xyz']
     
     @property
     def mount(self):
-        """ Mount type
+        """ Mount types of dishes/stations ('azel' | 'equatorial'
         """
         return self.data['mount']
 
@@ -142,16 +142,16 @@ class GainTable:
 
             Vobs = g_i g_j^* Vmodel
 
-        :param interval:
-        :param data:
-        :param gain: [:, nchan, nrec, nrec]
-        :param time: Centroid of solution
+        :param data: Structured data (used in copying)
+        :param gain: Complex gain [nrows, nants, nchan, nrec, nrec]
+        :param time: Centroid of solution [nrows]
         :param interval: Interval of validity
-        :param weight:
-        :param residual:
-        :param frequency:
-        :param receptor_frame:
-        :return: Gaintable
+        :param weight: Weight of gain [nrows, nchan, nrec, nrec]
+        :param residual: Residual of fit [nchan, nrec, nrec]
+        :param frequency: Frequency [nchan]
+        :param receptor_frame: Receptor frame
+        :param phasecentre: Phasecentre (SkyCoord)
+        :param configuration: Configuration
         """
         if data is None and gain is not None:
             nrec = receptor_frame.nrec
@@ -186,38 +186,58 @@ class GainTable:
     
     @property
     def time(self):
+        """ Centroid of solution [nrows]
+        """
         return self.data['time']
     
     @property
     def interval(self):
+        """ Interval of validity [nrows]
+        """
         return self.data['interval']
     
     @property
     def gain(self):
+        """ Complex gain [nrows, nants, nchan, nrec, nrec]
+        """
         return self.data['gain']
     
     @property
     def weight(self):
+        """ Weight of gain [nrows, nchan, nrec, nrec]
+
+        """
         return self.data['weight']
     
     @property
     def residual(self):
+        """ Residual of fit [nchan, nrec, nrec]
+        """
         return self.data['residual']
     
     @property
     def ntimes(self):
+        """ Number of times (i.e. rows) in this table
+        """
         return self.data['gain'].shape[0]
     
     @property
     def nants(self):
+        """ Number of dishes/stations
+        """
         return self.data['gain'].shape[1]
     
     @property
     def nchan(self):
+        """ Number of channels
+        """
         return self.data['gain'].shape[2]
     
     @property
     def nrec(self):
+        """ Number of receivers
+
+        """
         return self.receptor_frame.nrec
     
     def __str__(self):
@@ -243,19 +263,20 @@ class PointingTable:
                  weight: numpy.array = None, residual: numpy.array = None, frequency: numpy.array = None,
                  receptor_frame: ReceptorFrame = ReceptorFrame("linear"), pointing_frame: str = "local",
                  pointingcentre=None, configuration=None):
-        """ Create a pointing from arrays
+        """ Create a pointing table from arrays
 
-        :param interval:
-        :param data:
-        :param pointing: [:, nchan, nrec, 2]
-        :param nominal: [:, nchan, nrec, 2]
-        :param time: Centroid of solution
+        :param data: Structured data (used in copying)
+        :param pointing: Pointing (rad) [:, nants, nchan, nrec, 2]
+        :param nominal: Nominal pointing (rad) [:, nants, nchan, nrec, 2]
+        :param time: Centroid of solution [:]
         :param interval: Interval of validity
-        :param weight:
-        :param residual:
-        :param frequency:
-        :param receptor_frame:
-        :return: PointingTable
+        :param weight: Weight [: nants, nchan, nrec]
+        :param residual: Residual [: nants, nchan, nrec, 2]
+        :param frequency: [nchan]
+        :param receptor_frame: e.g. Receptor_frame("linear")
+        :param pointing_frame: Pointing frame
+        :param pointingcentre: SkyCoord
+        :param configuration: Configuration
         """
         if data is None and pointing is not None:
             nrec = receptor_frame.nrec
@@ -293,46 +314,65 @@ class PointingTable:
     
     @property
     def time(self):
+        """ Time (s UTC) [:]
+        """
         return self.data['time']
     
     @property
     def interval(self):
+        """ Interval of validity (s) [:]
+        """
         return self.data['interval']
     
     @property
     def nominal(self):
+        """ Nominal pointing (rad) [:, nants, nchan, nrec, 2]
+        """
         return self.data['nominal']
     
     @property
     def pointing(self):
+        """ Pointing (rad) [:, nants, nchan, nrec, 2]
+        """
         return self.data['pointing']
     
     @property
     def weight(self):
+        """ Weight [: nants, nchan, nrec]
+        """
         return self.data['weight']
     
     @property
     def residual(self):
+        """ Residual [: nants, nchan, nrec, 2]
+        """
         return self.data['residual']
     
     @property
     def ntimes(self):
+        """ Number of time (i.e. rows in table)"""
         return self.data['pointing'].shape[0]
     
     @property
     def nants(self):
+        """ Number of dishes/stations
+        """
         return self.data['pointing'].shape[1]
     
     @property
     def nchan(self):
+        """ Number of channels
+        """
         return self.data['pointing'].shape[2]
     
     @property
     def nrec(self):
+        """ Number of receptors
+        """
         return self.receptor_frame.nrec
     
     def __str__(self):
-        """Default printer for GainTable
+        """Default printer for PointingTable
 
         """
         s = "PointingTable:\n"
@@ -364,7 +404,11 @@ class Image:
     """
     
     def __init__(self, data=None, wcs=None, polarisation_frame=None):
-        """ Empty image
+        """ Create Image
+
+        :param data: Data for image
+        :param wcs: Astropy WCS object
+        :param polarisation_frame: e.g. PolarisationFrame('stokesIQUV')
         """
         self.data = data
         self.wcs = wcs
@@ -394,31 +438,45 @@ class Image:
     
     @property
     def nchan(self):
+        """ Number of channels
+        """
         return self.data.shape[0]
     
     @property
     def npol(self):
+        """ Number of polarisations
+        """
         return self.data.shape[1]
     
     @property
     def nheight(self):
+        """ Number of pixels height i.e. y
+        """
         return self.data.shape[2]
     
     @property
     def nwidth(self):
+        """ Number of pixels width i.e. x
+        """
         return self.data.shape[3]
     
     @property
     def frequency(self):
+        """ Frequency values
+        """
         w = self.wcs.sub(['spectral'])
         return w.wcs_pix2world(range(self.nchan), 0)[0]
     
     @property
     def shape(self):
+        """ Shape of data array
+        """
         return self.data.shape
     
     @property
     def phasecentre(self):
+        """ Phasecentre (from WCS)
+        """
         return SkyCoord(self.wcs.wcs.crval[0] * u.deg, self.wcs.wcs.crval[1] * u.deg)
     
     def __str__(self):
@@ -447,7 +505,12 @@ class GridData:
     """
     
     def __init__(self, data=None, grid_wcs=None, projection_wcs=None, polarisation_frame=None):
-        """ Empty image
+        """Create Griddata
+        
+        :param data: Data for griddata
+        :param grid_wcs: Astropy WCS object for the grid
+        :param projection_wcs: Astropy WCS object for the projection
+        :param polarisation_frame: Polarisation_frame e.g. PolarisationFrame('linear')
         """
         self.data = data
         self.grid_wcs = grid_wcs
@@ -478,36 +541,53 @@ class GridData:
     
     @property
     def nchan(self):
+        """ Number of channels
+        """
         return self.data.shape[0]
     
     @property
     def npol(self):
+        """ Number of polarisations
+        """
         return self.data.shape[1]
     
     @property
     def nheight(self):
+        """ Number of pixels height i.e. y
+        """
         return self.data.shape[2]
     
     @property
     def nwidth(self):
+        """ Number of pixels width i.e. x
+        """
         return self.data.shape[3]
     
     @property
     def ndepth(self):
+        """ Number of pixels deep i.e. z
+        """
         return self.data.shape[4]
     
     @property
     def frequency(self):
+        """ Frequency values
+        """
         w = self.grid_wcs.sub(['spectral'])
         return w.wcs_pix2world(range(self.nchan), 0)[0]
     
     @property
     def shape(self):
+        """ Shape of data array
+        """
         assert len(self.data.shape) == 5
         return self.data.shape
     
     @property
     def phasecentre(self):
+        """ Phasecentre (from projection WCS)
+
+        """
         return SkyCoord(self.projection_wcs.wcs.crval[0] * u.deg, self.projection_wcs.wcs.crval[1] * u.deg)
     
     def __str__(self):
@@ -523,21 +603,25 @@ class GridData:
 
 
 class ConvolutionFunction:
-    """Class to hold Gridded data for Fourier processing
+    """Class to hold Convolution function for Fourier processing
     - Has four or more coordinates: [chan, pol, z, y, x] where x can be u, l; y can be v, m; z can be w, n
 
-    The conventions for indexing in WCS and numpy are opposite.
-    - In astropy.wcs, the order is (longitude, latitude, polarisation, frequency)
-    - in numpy, the order is (frequency, polarisation, depth, latitude, longitude)
+    The cf has axes [chan, pol, z, dy, dx, y, x] where z, y, x are spatial axes in either sky or Fourier plane. The
+    order in the WCS is reversed so the grid_WCS describes UU, VV, WW, STOKES, FREQ axes
 
-    .. warning::
-        The polarisation_frame is kept in two places, the WCS and the polarisation_frame
-        variable. The latter should be considered definitive.
+    The axes UU,VV have the same physical stride as the image, The axes DUU, DVV are subsampled.
+
+    Convolution function holds the original sky plane projection in the projection_wcs.
 
     """
     
     def __init__(self, data=None, grid_wcs=None, projection_wcs=None, polarisation_frame=None):
-        """ Empty image
+        """Create ConvolutionFunction
+
+        :param data: Data for cf
+        :param grid_wcs: Astropy WCS object for the grid
+        :param projection_wcs: Astropy WCS object for the projection
+        :param polarisation_frame: Polarisation_frame e.g. PolarisationFrame('linear')
         """
         self.data = data
         self.grid_wcs = grid_wcs
@@ -568,40 +652,58 @@ class ConvolutionFunction:
     
     @property
     def nchan(self):
+        """ Number of channels
+        """
         return self.data.shape[0]
     
     @property
     def npol(self):
+        """ Number of polarisations
+        """
         return self.data.shape[1]
     
     @property
     def nheight(self):
+        """ Number of pixels height i.e. y
+        """
         return self.data.shape[2]
     
     @property
     def nwidth(self):
+        def nwidth(self):
+            """ Number of pixels width i.e. x
+            """
+
         return self.data.shape[3]
     
     @property
     def ndepth(self):
+        """ Number of pixels deep i.e. z
+        """
         return self.data.shape[4]
     
     @property
     def frequency(self):
+        """ Frequency values
+        """
         w = self.grid_wcs.sub(['spectral'])
         return w.wcs_pix2world(range(self.nchan), 0)[0]
     
     @property
     def shape(self):
+        """ Shape of data array
+        """
         assert len(self.data.shape) == 7
         return self.data.shape
     
     @property
     def phasecentre(self):
+        """ Phasecentre (from projection WCS)
+        """
         return SkyCoord(self.projection_wcs.wcs.crval[0] * u.deg, self.projection_wcs.wcs.crval[1] * u.deg)
     
     def __str__(self):
-        """Default printer for GriddedData
+        """Default printer for ConvolutionFunction
 
         """
         s = "Convolution function:\n"
@@ -642,8 +744,8 @@ class Skycomponent:
         :param name: user friendly name
         :param flux: numpy.array [nchan, npol]
         :param shape: str e.g. 'Point' 'Gaussian'
+        :param polarisation_frame: Polarisation_frame e.g. PolarisationFrame('stokesIQUV')
         :param params: numpy.array shape dependent parameters
-        :param polarisation_frame: Polarisation_frame
         """
         
         self.direction = direction
@@ -665,10 +767,14 @@ class Skycomponent:
     
     @property
     def nchan(self):
+        """ Number of channels
+        """
         return self.flux.shape[0]
     
     @property
     def npol(self):
+        """ Number of polarisations
+        """
         return self.flux.shape[1]
     
     def __str__(self):
@@ -695,7 +801,11 @@ class SkyModel:
         """ A model of the sky as an image, components, gaintable and a mask
 
         Use copy_skymodel to make a proper copy of skymodel
-
+        :param image: Image
+        :param components: List of components
+        :param gaintable: Gaintable for this skymodel
+        :param mask: Mask for the image
+        :param fixed: Is this model fixed?
         """
         if components is None:
             components = []
@@ -782,24 +892,24 @@ class Visibility:
                  blockvis=None, source='anonymous', meta=None):
         """Visibility
 
-        :param data:
-        :param frequency:
-        :param channel_bandwidth:
-        :param phasecentre:
-        :param configuration:
-        :param uvw:
-        :param time:
-        :param antenna1:
-        :param antenna2:
-        :param vis:
-        :param weight:
-        :param imaging_weight:
-        :param integration_time:
-        :param polarisation_frame:
-        :param cindex:
-        :param blockvis:
-        :param source:
-        :param meta:
+        :param data: Structured data (used in copying)
+        :param frequency: Frequency, one per row
+        :param channel_bandwidth: Channel bamdwidth, one per row
+        :param phasecentre: Phasecentre (skycoord)
+        :param configuration: Configuration
+        :param uvw: uvw coordinates [:,3]
+        :param time: Time (UTC) per row
+        :param antenna1: dish/station index
+        :param antenna2: dish/station index
+        :param vis: Complex visibility [:, npol]
+        :param weight: Weight [: npol]
+        :param imaging_weight: Imaging weight [:, npol]
+        :param integration_time: Integration time, per row
+        :param polarisation_frame: Polarisation Frame e.g. Polarisation_frame("linear")
+        :param cindex: Index of row into original block visibility
+        :param blockvis: original block visibility
+        :param source: Source name
+        :param meta: Meta info
         """
         if data is None and vis is not None:
             if imaging_weight is None:
@@ -877,74 +987,116 @@ class Visibility:
     
     @property
     def index(self):
+        """ Index into BlockVisibility"""
         return self.data['index']
     
     @property
+    def nchan(self):
+        """ Number of channels
+        """
+        return len(self.frequency)
+
+    @property
     def npol(self):
+        """ Number of polarisations
+        """
         return self.polarisation_frame.npol
     
     @property
     def nvis(self):
+        """ Number of visibilities (i.e. rows)
+        """
         return self.data['vis'].shape[0]
     
     @property
-    def uvw(self):  # In wavelengths in Visibility
+    def uvw(self):
+        """ UVW coordinates (wavelengths) [nrows, 3]
+        """
         return self.data['uvw']
     
     @property
     def u(self):
+        """ u coordinate (wavelengths) [nrows]
+        """
         return self.data['uvw'][:, 0]
     
     @property
     def v(self):
+        """ v coordinate (wavelengths) [nrows]
+        """
         return self.data['uvw'][:, 1]
     
     @property
     def w(self):
+        """ w coordinate (wavelengths) [nrows]
+        """
         return self.data['uvw'][:, 2]
     
     @property
     def uvdist(self):
+        """ uv distance (wavelengths) [nrows]
+        """
         return numpy.hypot(self.u, self.v)
     
     @property
     def uvwdist(self):
+        """ uvw distance (wavelengths) [nrows]
+        """
         return numpy.hypot(self.u, self.v, self.w)
     
     @property
     def time(self):
+        """ Time (UTC) [nrows]
+        """
         return self.data['time']
     
     @property
     def integration_time(self):
+        """ Integration time [nrows]
+        """
         return self.data['integration_time']
     
     @property
     def frequency(self):
+        """ Frequency values
+
+        """
         return self.data['frequency']
     
     @property
     def channel_bandwidth(self):
+        """ Channel bandwidth values
+        """
         return self.data['channel_bandwidth']
     
     @property
     def antenna1(self):
+        """ Antenna index
+        """
         return self.data['antenna1']
     
     @property
     def antenna2(self):
+        """ Antenna index
+        """
         return self.data['antenna2']
     
     @property
     def vis(self):
+        """Complex visibility [:, npol]
+        """
         return self.data['vis']
     
     @property
     def weight(self):
+        """Weight [: npol]
+        """
         return self.data['weight']
     
     @property
     def imaging_weight(self):
+        """  Imaging weight [:, npol]
+        """
         return self.data['imaging_weight']
 
 
@@ -973,18 +1125,20 @@ class BlockVisibility:
                  imaging_weight=None, source='anonymous', meta=dict()):
         """BlockVisibility
 
-        :param data:
-        :param frequency:
-        :param channel_bandwidth:
-        :param phasecentre:
-        :param configuration:
-        :param uvw:
-        :param time:
-        :param vis:
-        :param weight:
-        :param integration_time:
-        :param polarisation_frame:
-        :param source:
+        :param data: Structured data (used in copying)
+        :param frequency: Frequency [nchan]
+        :param channel_bandwidth: Channel bandwidth [nchan]
+        :param phasecentre: Phasecentre (SkyCoord)
+        :param configuration: Configuration
+        :param uvw: UVW coordinates (m) [:, nant, nant, 3]
+        :param time: Time (UTC) [:]
+        :param vis: Complex visibility [:, nant, nant, nchan, npol]
+        :param weight: [:, nant, nant, nchan, npol]
+        :param imaging_weight: [:, nant, nant, nchan, npol]
+        :param integration_time: Integration time [:]
+        :param polarisation_frame: Polarisation_Frame e.g. Polarisation_Frame("linear")
+        :param source: Source name
+        :param meta: Meta info
         """
         if data is None and vis is not None:
             ntimes, nants, _, nchan, npol = vis.shape
@@ -1046,67 +1200,100 @@ class BlockVisibility:
     
     @property
     def nchan(self):
+        """ Number of channels
+        """
         return self.data['vis'].shape[3]
     
     @property
     def npol(self):
+        """ Number of polarisations
+        """
         return self.data['vis'].shape[4]
     
     @property
     def nants(self):
+        """ Number of antennas
+        """
         return self.data['vis'].shape[1]
     
     @property
-    def uvw(self):  # In meters
+    def uvw(self):
+        """ UVW coordinates (metres) [nrows, nant, nant, 3]
+        """
         return self.data['uvw']
     
     @property
     def u(self):
+        """ u coordinate (metres) [nrows, nant, nant]
+        """
         return self.data['uvw'][..., 0]
     
     @property
     def v(self):
+        """ v coordinate (metres) [nrows, nant, nant]
+        """
         return self.data['uvw'][..., 1]
     
     @property
     def w(self):
+        """ w coordinate (metres) [nrows, nant, nant]
+        """
         return self.data['uvw'][..., 2]
     
     @property
     def uvdist(self):
+        """ uv distance (metres) [nrows, nant, nant]
+        """
         return numpy.hypot(self.u, self.v)
     
     @property
     def uvwdist(self):
+        """ uv distance (metres) [nrows, nant, nant]
+        """
         return numpy.hypot(self.u, self.v, self.w)
     
     @property
     def vis(self):
+        """ Complex visibility [nrows, nant, nant, ncha, npol]
+        """
         return self.data['vis']
     
     @property
     def weight(self):
+        """ Weight[nrows, nant, nant, ncha, npol]
+        """
         return self.data['weight']
-    
+
+    def imaging_weight(self):
+        """ Imaging_weight[nrows, nant, nant, ncha, npol]
+        """
+        return self.data['weight']
+
     @property
     def time(self):
+        """ Time (UTC) [nrows]
+        """
         return self.data['time']
     
     @property
     def integration_time(self):
+        """ Integration time [nrows]
+        """
         return self.data['integration_time']
     
     @property
     def nvis(self):
+        """ Number of visibilities (in total)
+        """
         return self.data.size
-    
-    @property
-    def imaging_weight(self):
-        return self.data['imaging_weight']
 
 
 class QA:
     """ Quality assessment
+
+    :param origin: str, origin e.g. "continuum_imaging_pipeline"
+    :param data: Data containing standard fields
+    :param context: Context of QA e.g. "Cycle 5"
 
     """
     
@@ -1135,15 +1322,13 @@ class QA:
 
 
 class ScienceDataModel:
-    """ Science Data Model"""
+    """ Science Data Model: not defined yet"""
     
     def __init__(self):
         pass
     
     def __str__(self):
-        """ Deflaut printer for Science Data Model
-
-        :return:
+        """ Default printer for Science Data Model
         """
         return ""
 
@@ -1152,6 +1337,10 @@ def assert_same_chan_pol(o1, o2):
     """
     Assert that two entities indexed over channels and polarisations
     have the same number of them.
+
+    :param o1: Object 1 e.g. BlockVisibility
+    :param o2: Object 1 e.g. BlockVisibility
+    :return: Bool
     """
     assert o1.npol == o2.npol, \
         "%s and %s have different number of polarisations: %d != %d" % \
@@ -1167,7 +1356,7 @@ def assert_vis_gt_compatible(vis: Union[Visibility, BlockVisibility], gt: GainTa
 
     :param vis:
     :param gt:
-    :return:
+    :return: Bool
     """
     assert vis.nchan == gt.nchan
     assert vis.npol == gt.nrec * gt.nrec

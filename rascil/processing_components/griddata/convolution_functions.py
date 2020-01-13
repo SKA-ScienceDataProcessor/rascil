@@ -38,7 +38,7 @@ def create_convolutionfunction_from_array(data: numpy.array, grid_wcs: WCS, proj
                                           polarisation_frame: PolarisationFrame) -> ConvolutionFunction:
     """ Create a convolution function from an array and wcs's
     
-    The griddata has axes [chan, pol, z, dy, dx, y, x] where z, y, x are spatial axes in either sky or Fourier plane. The
+    The cf has axes [chan, pol, z, dy, dx, y, x] where z, y, x are spatial axes in either sky or Fourier plane. The
     order in the WCS is reversed so the grid_WCS describes UU, VV, WW, STOKES, FREQ axes
     
     The axes UU,VV have the same physical stride as the image, The axes DUU, DVV are subsampled.
