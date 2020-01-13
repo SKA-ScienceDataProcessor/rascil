@@ -1,6 +1,6 @@
 #!/bin/bash
 #!
-#! Dask job script for Darwin (Sandy Bridge, ConnectX3)
+#! Dask job script for P3
 #! Tim Cornwell
 #!
 

@@ -2,7 +2,7 @@
 Developing in RASCIL
 ********************
 
-Use the SIP Coding and Documentation Guide (https://confluence.ska-sdp.org/display/SIP/Coding+and+Documentation+Guide+for+SIP)
+Use the SKA Python Coding Guidelines (http://developer.skatelescope.org/en/latest/development/python-codeguide.html)
 
 We recommend using a tool to help ensure PEP 8 compliance. PyCharm does a good job at this and other code quality
 checks.

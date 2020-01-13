@@ -1264,10 +1264,11 @@ class BlockVisibility:
         """
         return self.data['weight']
 
+    @property
     def imaging_weight(self):
         """ Imaging_weight[nrows, nant, nant, ncha, npol]
         """
-        return self.data['weight']
+        return self.data['imaging_weight']
 
     @property
     def time(self):

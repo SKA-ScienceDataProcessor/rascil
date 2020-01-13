@@ -1,4 +1,4 @@
-"""Unit tests for testing support
+""" Cluster test
 
 
 """
