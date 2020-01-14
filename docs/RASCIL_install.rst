@@ -39,6 +39,10 @@ The installation steps are:
     export RASCIL=/path/to/rascil
     export PYTHONPATH=$RASCIL:$PYTHONPATH
 
+"python setup.py install" installs an egg in the correct site-packages location so the definition of PYTHONPATH is not needed
+if you only don't intend to update or edit rascil in place. If you do intend to make changes, you will need the
+definition of PYTHONPATH.
+
 Trouble-shooting
 ++++++++++++++++
 
