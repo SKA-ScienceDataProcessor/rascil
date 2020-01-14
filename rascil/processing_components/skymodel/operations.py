@@ -24,7 +24,9 @@ log = logging.getLogger(__name__)
 
 def copy_skymodel(sm):
     """ Copy a sky model
-    
+
+    :param sm: SkyModel to be copied
+    :return: SkyModel
     """
     if sm.components is not None:
         newcomps = [copy_skycomponent(comp) for comp in sm.components]
@@ -52,11 +54,24 @@ def copy_skymodel(sm):
 
 def partition_skymodel_by_flux(sc, model, flux_threshold=-numpy.inf):
     """Partition skymodel according to flux
+
+    Bright skycomponents are put into a SkyModel as a list, and weak skycomponents
+    are inserted into SkyModel as an image.
     
-    :param sc:
-    :param model:
+    :param sc: List of skycomponents
+    :param model: Model image
     :param flux_threshold:
-    :return:
+    :return: SkyModel
+
+    For example::
+
+        fluxes = numpy.linspace(0, 1.0, 11)
+        sc = [create_skycomponent(direction=phasecentre, flux=numpy.array([[f]]), frequency=frequency,
+                                  polarisation_frame=PolarisationFrame('stokesI')) for f in fluxes]
+
+        sm = partition_skymodel_by_flux(sc, model, flux_threshold=0.31)
+        assert len(sm.components) == 7, len(sm.components)
+
     """
     brightsc = filter_skycomponents_by_flux(sc, flux_min=flux_threshold)
     weaksc = filter_skycomponents_by_flux(sc, flux_max=flux_threshold)
@@ -70,6 +85,15 @@ def partition_skymodel_by_flux(sc, model, flux_threshold=-numpy.inf):
 
 
 def show_skymodel(sms, psf_width=1.75, cm='Greys', vmax=None, vmin=None):
+    """ Show a list of SkyModels
+
+    :param sms: List of SkyModels
+    :param psf_width: Width of PSF in pixels
+    :param cm: matplotlib colormap
+    :param vmax: Maximum in image display
+    :param vmin: Minimum in image display
+    :return:
+    """
     sp = 1
     
     for ism, sm in enumerate(sms):
@@ -117,6 +141,12 @@ def initialize_skymodel_voronoi(model, comps, gt=None):
     :param comps: Skycomponents
     :param gt: Gaintable
     :return:
+
+    For example::
+
+        gaintable = create_gaintable_from_blockvisibility(block_vis)
+        mpccal_skymodel = initialize_skymodel_voronoi(model, ical_components, gaintable)
+
     """
     skymodel_images = list()
     for i, mask in enumerate(image_voronoi_iter(model, comps)):
@@ -135,9 +165,11 @@ def initialize_skymodel_voronoi(model, comps, gt=None):
 
 def calculate_skymodel_equivalent_image(sm):
     """Calculate an equivalent image for a skymodel
-    
-    :param sm:
-    :return:
+
+    Uses the image from the first skymodel as the template for the image
+
+    :param sm: List of skymodels
+    :return: Image
     """
     combined_model = copy_image(sm[0].image)
     combined_model.data[...] = 0.0
@@ -152,11 +184,11 @@ def calculate_skymodel_equivalent_image(sm):
 
 
 def update_skymodel_from_image(sm, im, damping=0.5):
-    """Update a skymodel for an image
+    """Update a skymodel for an image, applying damping factor
 
-    :param sm:
-    :param im:
-    :return:
+    :param sm: List of skymodels
+    :param im: Image
+    :return: List of SkyModels
     """
     for i, th in enumerate(sm):
         newim = copy_image(im)
@@ -170,9 +202,10 @@ def update_skymodel_from_image(sm, im, damping=0.5):
 def update_skymodel_from_gaintables(sm, gt_list, calibration_context='T', damping=0.5):
     """Update a skymodel from a list of gaintables
 
-    :param sm:
-    :param im:
-    :return:
+    :param sm: List of skymodels
+    :param gt_list: List of gain tables
+    :param calibration_context: Type of gaintable e.g. 'T', 'G'
+    :return: List of skymodels
     """
     assert len(sm) == len(gt_list)
     

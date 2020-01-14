@@ -141,17 +141,35 @@ def tukey_filter(x, r):
 
 
 def insert_function_sinc(x):
+    """ Insertion with Sinc function
+
+    :param x: 1D vector
+    :return: 1d vector
+    """
     s = numpy.zeros_like(x)
     s[x != 0.0] = numpy.sin(numpy.pi * x[x != 0.0]) / (numpy.pi * x[x != 0.0])
     return s
 
 
 def insert_function_L(x, a=5):
+    """ Insertion with Lanczos function
+
+    :param x: 1D vector
+    :param a: width
+    :return: 1d vector
+    """
     L = insert_function_sinc(x) * insert_function_sinc(x / a)
     return L
 
 
 def insert_function_pswf(x, a=5):
+    """ Insertion with PSWF 
+
+    :param x: 1D vector
+    :param a: width
+    :return: 1d vector
+    """
+
     from rascil.processing_components.fourier_transforms.fft_coordinates import grdsf
     return grdsf(abs(x) / a)[1]
 

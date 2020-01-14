@@ -39,13 +39,13 @@ def create_skycomponent(direction: SkyCoord, flux: numpy.array, frequency: numpy
         -> Skycomponent:
     """ A single Skycomponent with direction, flux, shape, and params for the shape
 
-    :param polarisation_frame:
-    :param params:
-    :param direction:
-    :param flux:
-    :param frequency:
+    :param direction: SkyCoord
+    :param flux: [nchan, npol]
+    :param frequency: [nchan]
     :param shape: 'Point' or 'Gaussian'
-    :param name:
+    :param polarisation_frame: e.g. PolarisationFrame("stokesIQUV")
+    :param params:
+    :param name: Name of component
     :return: Skycomponent
     """
     return Skycomponent(
@@ -116,9 +116,9 @@ def find_skycomponent_matches_atomic(comps_test, comps_ref, tol=1e-7):
 
     many to one is allowed.
 
-    :param tol:
-    :param comps_test:
-    :param comps_ref:
+    :param comps_test: skycomponents to test
+    :param comps_ref: reference skycomponents
+    :param tol: Tolerance in rad
     :return:
     """
     separations = find_separation_skycomponents(comps_test, comps_ref)
@@ -139,9 +139,9 @@ def find_skycomponent_matches(comps_test, comps_ref, tol=1e-7):
 
     many to one is allowed.
 
-    :param comps_test:
-    :param comps_ref:
-    :param tol: Tolerance in radians for a match
+    :param comps_test: skycomponents to test
+    :param comps_ref: reference skycomponents
+    :param tol: Tolerance in rad
     :return:
     """
     catalog_test = SkyCoord(ra=[c.direction.ra for c in comps_test],
@@ -180,8 +180,8 @@ def select_components_by_separation(home, comps, rmax=2 * numpy.pi, rmin=0.0) ->
 def select_neighbouring_components(comps, target_comps):
     """ Assign components to nearest in the target
     
-    :param comps:
-    :param target_comps:
+    :param comps: skycomponents
+    :param target_comps: Target skycomponents
     :return: Indices of components in target_comps
     """
     target_catalog = SkyCoord([c.direction.ra.rad for c in target_comps] * u.rad,
@@ -198,8 +198,8 @@ def select_neighbouring_components(comps, target_comps):
 def remove_neighbouring_components(comps, distance):
     """ Remove the faintest of a pair of components that are within a specified distance
 
-    :param comps:
-    :param target_comps:
+    :param comps: skycomponents
+    :param target_comps: Target skycomponents
     :param distance: Minimum distance
     :return: Indices of components in target_comps, selected components
     """
@@ -315,9 +315,9 @@ def find_skycomponents(im: Image, fwhm=1.0, threshold=1.0, npixels=5) -> List[Sk
 
 def apply_beam_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], beam: Image) \
         -> Union[Skycomponent, List[Skycomponent]]:
-    """ Insert a Skycomponent into an image
+    """ Apply a primary beam to a Skycomponent
 
-    :param beam:
+    :param beam: primary beam
     :param sc: SkyComponent or list of SkyComponents
     :return: List of skycomponents
     """
@@ -365,8 +365,8 @@ def apply_beam_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], beam
 def filter_skycomponents_by_index(sc, indices):
     """Filter sky components by index
 
-    :param sc:
-    :param indices:
+    :param sc: List of Skycomponents
+    :param indices: Allowed indecies
     :return:
     """
     newcomps = list()
@@ -379,9 +379,9 @@ def filter_skycomponents_by_index(sc, indices):
 def filter_skycomponents_by_flux(sc, flux_min=-numpy.inf, flux_max=numpy.inf):
     """Filter sky components by stokes I flux
 
-    :param sc:
-    :param flux_min:
-    :param flux_max:
+    :param sc: List of Skycomponents
+    :param flux_min: Minimum I flux
+    :param flux_max: Maximum I flux
     :return:
     """
     newcomps = list()
@@ -396,12 +396,12 @@ def insert_skycomponent(im: Image, sc: Union[Skycomponent, List[Skycomponent]], 
                         bandwidth=1.0, support=8) -> Image:
     """ Insert a Skycomponent into an image
     
-    :param im:
+    :param im: Image
     :param sc: SkyComponent or list of SkyComponents
     :param insert_method: '' | 'Sinc' | 'Lanczos'
     :param bandwidth: Fractional of uv plane to optimise over (1.0)
     :param support: Support of kernel (7)
-    :return: image
+    :return: Image
     """
     
     assert isinstance(im, Image)
@@ -458,10 +458,10 @@ def insert_skycomponent(im: Image, sc: Union[Skycomponent, List[Skycomponent]], 
 def voronoi_decomposition(im, comps):
     """Construct a Voronoi decomposition of a set of components
 
-    The array return contains the index into the Voronoi structure
+    The array return contains the index into the scipy.spatial.qhull.Voronoi structure
 
-    :param im:
-    :param comps:
+    :param im: Image
+    :param comps: List of Skycomponents
     :return: Voronoi structure, vertex image
     """
     
@@ -496,6 +496,7 @@ def image_voronoi_iter(im: Image, components: Skycomponent) -> collections.Itera
 
     :param im: Image
     :param components: Components to define Voronoi decomposition
+    :param generator of Images:
     """
     if len(components) == 1:
         mask = numpy.ones(im.data.shape)
@@ -513,6 +514,7 @@ def image_voronoi_iter(im: Image, components: Skycomponent) -> collections.Itera
 
 def partition_skycomponent_neighbours(comps, targets):
     """ Partition sky components by nearest target source
+    
     :param comps:
     :param targets:
     :return:

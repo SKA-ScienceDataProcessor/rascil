@@ -22,13 +22,15 @@ def create_configuration_from_file(antfile: str, location: EarthLocation = None,
                                    names: str = "%d",
                                    diameter=35.0,
                                    rmax=None, name='') -> Configuration:
-    """ Define configuration from a file
+    """ Define configuration from a text file
 
-    :param names: Antenna names
     :param antfile: Antenna file name
-    :param location:
+    :param location: Earthlocation of array
     :param mount: mount type: 'azel', 'xy', 'equatorial'
+    :param names: Antenna names e.g. "VLA%d"
     :param diameter: Effective diameter of station or antenna
+    :param rmax: Maximum distance from array centre (m)
+    :param name: Name of array
     :return: Configuration
     """
     antxyz = numpy.genfromtxt(antfile, delimiter=",")
@@ -54,13 +56,14 @@ def create_configuration_from_SKAfile(antfile: str,
                                       mount: str = 'azel',
                                       names: str = "%d",
                                       rmax=None, name='', location=None) -> Configuration:
-    """ Define configuration from a file
+    """ Define configuration from a SKA format file
 
-    :param names: Antenna names
     :param antfile: Antenna file name
-    :param location:
+    :param location: Earthlocation of array
     :param mount: mount type: 'azel', 'xy', 'equatorial'
-    :param diameter: Effective diameter of station or antenna
+    :param names: Antenna names e.g. "VLA%d"
+    :param rmax: Maximum distance from array centre (m)
+    :param name: Name of array
     :return: Configuration
     """
     antdiamlonglat = numpy.genfromtxt(antfile, usecols=[0, 1, 2], delimiter="\t")
@@ -86,11 +89,13 @@ def create_configuration_from_SKAfile(antfile: str,
 def create_configuration_from_MIDfile(antfile: str, location=None,
                                       mount: str = 'azel',
                                       rmax=None, name='') -> Configuration:
-    """ Define configuration from a file
+    """ Define configuration from a SKA MID format file
 
-    :param names: Antenna names
     :param antfile: Antenna file name
+    :param names: Antenna names
     :param mount: mount type: 'azel', 'xy'
+    :param rmax: Maximum distance from array centre (m)
+    :param name: Name of array
     :return: Configuration
     """
 
@@ -121,11 +126,11 @@ def create_configuration_from_MIDfile(antfile: str, location=None,
 def limit_rmax(antxyz, diameters, names, mounts, rmax):
     """ Select antennas with radius from centre < rmax
     
-    :param antxyz:
-    :param diameters:
-    :param names:
-    :param mounts:
-    :param rmax:
+    :param antxyz: Geocentric coordinates
+    :param diameters: diameters in metres
+    :param names: Names
+    :param mounts: Mount types
+    :param rmax: Maximum radius (m)
     :return:
     """
     if rmax is not None:
@@ -146,6 +151,8 @@ def create_LOFAR_configuration(antfile: str, location, rmax=1e6) -> Configuratio
     """ Define configuration from the LOFAR configuration file
 
     :param antfile:
+    :param location: EarthLocation
+    :param rmax: Maximum distance from array centre (m)
     :return: Configuration
     """
     antxyz = numpy.genfromtxt(antfile, skip_header=2, usecols=[1, 2, 3], delimiter=",")
