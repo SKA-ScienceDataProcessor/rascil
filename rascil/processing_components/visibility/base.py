@@ -32,6 +32,8 @@ log = logging.getLogger(__name__)
 def vis_summary(vis: Union[Visibility, BlockVisibility]):
     """Return string summarizing the Visibility
 
+    :param vis: Visibility or BlockVisibility
+    :return: string
     """
     return "%d rows, %.3f GB" % (vis.nvis, vis.size())
 
@@ -40,6 +42,9 @@ def copy_visibility(vis: Union[Visibility, BlockVisibility], zero=False) -> Unio
     """Copy a visibility
 
     Performs a deepcopy of the data array
+    :param vis: Visibility or BlockVisibility
+    :returns: Visibility or BlockVisibility
+
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     
@@ -57,7 +62,8 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
                       channel_bandwidth, phasecentre: SkyCoord,
                       weight: float, polarisation_frame=PolarisationFrame('stokesI'),
                       integration_time=1.0,
-                      zerow=False, elevation_limit=15.0 * numpy.pi / 180.0, source='unknown', meta=None) -> Visibility:
+                      zerow=False, elevation_limit=15.0 * numpy.pi / 180.0,
+                      source='unknown', meta=None) -> Visibility:
     """ Create a Visibility from Configuration, hour angles, and direction of source
 
     Note that we keep track of the integration time for BDA purposes
@@ -66,10 +72,15 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     :param times: hour angles in radians
     :param frequency: frequencies (Hz] [nchan]
     :param weight: weight of a single sample
-    :param phasecentre: phasecentre of observation
+    :param phasecentre: phasecentre of observation (SkyCoord)
     :param channel_bandwidth: channel bandwidths: (Hz] [nchan]
     :param integration_time: Integration time ('auto' or value in s)
     :param polarisation_frame: PolarisationFrame('stokesI')
+    :param integration_time: in seconds
+    :param zerow: bool - set w to zero
+    :param elevation_limit: in degrees
+    :param source: Source name
+    :param meta: Meta data as a dictionary
     :return: Visibility
     """
     assert phasecentre is not None, "Must specify phase centre"
@@ -177,10 +188,15 @@ def create_blockvisibility(config: Configuration,
     :param times: hour angles in radians
     :param frequency: frequencies (Hz] [nchan]
     :param weight: weight of a single sample
-    :param phasecentre: phasecentre of observation
+    :param phasecentre: phasecentre of observation (SkyCoord)
     :param channel_bandwidth: channel bandwidths: (Hz] [nchan]
     :param integration_time: Integration time ('auto' or value in s)
-    :param polarisation_frame:
+    :param polarisation_frame: PolarisationFrame('stokesI')
+    :param integration_time: in seconds
+    :param zerow: bool - set w to zero
+    :param elevation_limit: in degrees
+    :param source: Source name
+    :param meta: Meta data as a dictionary
     :return: BlockVisibility
     """
     assert phasecentre is not None, "Must specify phase centre"
@@ -258,10 +274,10 @@ def create_blockvisibility(config: Configuration,
 def create_visibility_from_rows(vis: Union[Visibility, BlockVisibility], rows: numpy.ndarray, makecopy=True):
     """ Create a Visibility from selected rows
 
-    :param vis: Visibility
+    :param vis: Visibility or BlockVisibility
     :param rows: Boolean array of row selction
     :param makecopy: Make a deep copy (True)
-    :return: Visibility
+    :return: Visibility or BlockVisibility
     """
     
     if rows is None or numpy.sum(rows) == 0:
@@ -298,18 +314,18 @@ def create_visibility_from_rows(vis: Union[Visibility, BlockVisibility], rows: n
             return vis
 
 
-def phaserotate_visibility(vis: Visibility, newphasecentre: SkyCoord, tangent=True, inverse=False) -> Visibility:
-    """
-    Phase rotate from the current phase centre to a new phase centre
+def phaserotate_visibility(vis: Union[Visibility, BlockVisibility], newphasecentre: SkyCoord, tangent=True,
+                           inverse=False) -> Union[Visibility, BlockVisibility]:
+    """ Phase rotate from the current phase centre to a new phase centre
 
     If tangent is False the uvw are recomputed and the visibility phasecentre is updated.
     Otherwise only the visibility phases are adjusted
 
-    :param vis: Visibility to be rotated
-    :param newphasecentre:
+    :param vis: Visibility or BlockVisibility to be rotated
+    :param newphasecentre: SkyCoord of new phasecentre
     :param tangent: Stay on the same tangent plane? (True)
     :param inverse: Actually do the opposite
-    :return: Visibility
+    :return: Visibility or BlockVisibility
     """
     l, m, n = skycoord_to_lmn(newphasecentre, vis.phasecentre)
 
@@ -396,7 +412,9 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
     Write a list of BlockVisibility's to a MS file, split by field and spectral window
 
     :param msname: File name of MS
-    :param vislist: BlockVisibility
+    :param vislist: list of BlockVisibility
+    :param source_name: Source name to use
+    :param ack: Ask casacore to acknowledge each table operation
     :return:
     """
     try:
@@ -504,7 +522,12 @@ def list_ms(msname, ack=False):
     """ List sources and data descriptors in a MeasurementSet
 
     :param msname: File name of MS
-    :return:
+    :param ack: Ask casacore to acknowledge each table operation
+    :return: sources, data descriptors
+
+    For example::
+        print(list_ms('3C277.1_avg.ms'))
+        (['1302+5748', '0319+415', '1407+284', '1252+5634', '1331+305'], [0, 1, 2, 3])
     """
     try:
         from casacore.tables import table  # pylint: disable=import-error
@@ -543,7 +566,21 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
     :param channum: range of channels e.g. range(17,32), default is None meaning all
     :param start_chan: Starting channel to read
     :param end_chan: End channel to read
-    :return:
+    :param ack: Ask casacore to acknowledge each table operation
+    :param datacolumn: MS data column to read DATA, CORRECTED_DATA, or MODEL_DATA
+    :param selected_sources: Sources to select
+    :param selected_dds: Data descriptors to select
+    :return: List of BlockVisibility
+
+    For example::
+
+        selected_sources = ['1302+5748', '1252+5634']
+        bvis_list = create_blockvisibility_from_ms('../../data/3C277.1_avg.ms', datacolumn='CORRECTED_DATA',
+                                           selected_sources=selected_sources)
+        sources = numpy.unique([bv.source for bv in bvis_list])
+        print(sources)
+        ['1252+5634' '1302+5748']
+
     """
     try:
         from casacore.tables import table  # pylint: disable=import-error

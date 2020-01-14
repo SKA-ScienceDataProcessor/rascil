@@ -18,8 +18,10 @@ A typical use might be::
 
 """
 
-__all__ = ['convert_visibility_to_blockvisibility', 'convert_blockvisibility_to_visibility',
-           'coalesce_visibility', 'decoalesce_visibility']
+__all__ = ['convert_visibility_to_blockvisibility',
+           'convert_blockvisibility_to_visibility',
+           'coalesce_visibility',
+           'decoalesce_visibility']
 
 import numpy
 
@@ -37,7 +39,8 @@ import logging
 log = logging.getLogger(__name__)
 
 
-def coalesce_visibility(vis: BlockVisibility, **kwargs) -> Visibility:
+def coalesce_visibility(vis: BlockVisibility, time_coal=0.0, frequency_coal=0.0, max_time_coal=100,
+                        max_frequency_coal=100, **kwargs) -> Visibility:
     """ Coalesce the BlockVisibility data_models. The output format is a Visibility, as needed for imaging
 
     Coalesce by baseline-dependent averaging (optional). The number of integrations averaged goes as the ratio of the
@@ -49,15 +52,14 @@ def coalesce_visibility(vis: BlockVisibility, **kwargs) -> Visibility:
     If coalescence_factor=0.0 then just a format conversion is done
 
     :param vis: BlockVisibility to be coalesced
+    :param time_coal: Number of times to coalesce
+    :param frequency_coal: Number of frequencies to coalesce
+    :param max_time_coal: Maximum number of integrations to coalesce
+    :param max_frequency_coal: Maximum number of frequency channels to coalesce
     :return: Coalesced visibility with  cindex and blockvis filled in
     """
 
     assert isinstance(vis, BlockVisibility), "vis is not a BlockVisibility: %r" % vis
-
-    time_coal = get_parameter(kwargs, 'time_coal', 0.0)
-    max_time_coal = get_parameter(kwargs, 'max_time_coal', 100)
-    frequency_coal = get_parameter(kwargs, 'frequency_coal', 0.0)
-    max_frequency_coal = get_parameter(kwargs, 'max_frequency_coal', 100)
 
     if time_coal == 0.0 and frequency_coal == 0.0:
         return convert_blockvisibility_to_visibility((vis))
@@ -86,7 +88,7 @@ def coalesce_visibility(vis: BlockVisibility, **kwargs) -> Visibility:
 
 
 def convert_blockvisibility_to_visibility(vis: BlockVisibility) -> Visibility:
-    """ Convert the BlockVisibility data with no coalescence
+    """ Convert the BlockVisibility data to Visibility with no coalescence
 
     :param vis: BlockVisibility to be converted
     :return: Visibility with  cindex and blockvis filled in
@@ -447,10 +449,10 @@ def convert_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequenc
            cintegration_time, cindex
 
 def convert_visibility_to_blockvisibility(vis: Visibility) -> BlockVisibility:
-    """ Convert a Visibility to equivalent BlockVisibility format
+    """ Convert a Visibility to BlockVisibility format
 
     :param vis: Coalesced visibility
-    :return: Visibility
+    :return: BlockVisibility
     """
     if isinstance(vis, BlockVisibility):
         return vis

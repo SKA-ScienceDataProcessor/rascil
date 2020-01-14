@@ -32,6 +32,8 @@ class TestCreateMS(unittest.TestCase):
         self.dir = rascil_path('test_results')
         
         self.persist = os.getenv("RASCIL_PERSIST", False)
+
+        self.doplot = False
     
         return
     
@@ -94,10 +96,11 @@ class TestCreateMS(unittest.TestCase):
             dirty, sumwt = invert_2d(vis, model, context='2d')
             assert (numpy.max(numpy.abs(dirty.data))) > 0.0
             assert dirty.shape == (nchan_ave, 1, 256, 256)
-            import matplotlib.pyplot as plt
-            from rascil.processing_components.image.operations import show_image
-            show_image(dirty)
-            plt.show()
+            if self.doplot:
+                import matplotlib.pyplot as plt
+                from rascil.processing_components.image.operations import show_image
+                show_image(dirty)
+                plt.show()
             if self.persist: export_image_to_fits(dirty, '%s/test_visibility_uvfits_dirty.fits' % self.dir)
 
 

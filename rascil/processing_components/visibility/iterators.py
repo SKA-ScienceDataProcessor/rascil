@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 
 
 def vis_null_iter(vis: Union[Visibility, BlockVisibility], vis_slices=1) -> numpy.ndarray:
-    """One time iterator returning true for all rows
+    """Null iterator returning true for all rows
     
     :param vis:
     :param vis_slices:

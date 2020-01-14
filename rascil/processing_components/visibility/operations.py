@@ -68,8 +68,8 @@ def sort_visibility(vis, order=None):
 def concatenate_visibility(vis_list, sort=True):
     """Concatenate a list of visibilities, with an optional sort back to index order
 
-    :param vis_list:
-    :return: Visibility
+    :param vis_list: List of vis
+    :return: Concatendated visibility
     """
     if isinstance(vis_list, Visibility) or isinstance(vis_list, BlockVisibility):
         return vis_list
@@ -96,7 +96,9 @@ def concatenate_visibility(vis_list, sort=True):
 def concatenate_blockvisibility_frequency(bvis_list):
     """Concatenate a list of BlockVisibility's in frequency
 
-    :param bvis_list:
+    The list should be in sequence of channels
+
+    :param bvis_list: List of BlockVisibility
     :return: BlockVisibility
     """
     
@@ -219,10 +221,10 @@ def remove_continuum_blockvisibility(vis: BlockVisibility, degree=1, mask=None) 
 
     Fit a polynomial in frequency of the specified degree where mask is True
   
-    :param vis:
+    :param vis: BlockVisibility
     :param degree: Degree of polynomial
-    :param mask:
-    :return:
+    :param mask: Mask of continuum
+    :return: BlockVisibility
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     
@@ -300,9 +302,9 @@ def divide_visibility(vis: BlockVisibility, modelvis: BlockVisibility):
 
 
 def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
-    """ Integrate visibility across channels, returning new visibility
+    """ Integrate visibility across all channels, returning new visibility
     
-    :param vis:
+    :param vis: BlockVisibility
     :return: BlockVisibility
     """
     
@@ -338,11 +340,8 @@ def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
 def convert_visibility_to_stokes(vis):
     """Convert the polarisation frame data into Stokes parameters.
 
-    Args:
-    vis (obj): RASCIL visibility data.
-
-    Returns:
-    vis: Converted visibility data.
+    :param vis: Visibility
+    :return: Converted visibility data.
     """
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):
@@ -357,11 +356,8 @@ def convert_visibility_to_stokes(vis):
 def convert_blockvisibility_to_stokes(vis):
     """Convert the polarisation frame data into Stokes parameters.
 
-    Args:
-    vis (obj): RASCIL visibility data.
-
-    Returns:
-    vis: Converted visibility data.
+    :param vis: Visibility
+    :return: Converted visibility data.
     """
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):
@@ -376,11 +372,8 @@ def convert_blockvisibility_to_stokes(vis):
 def convert_visibility_to_stokesI(vis):
     """Convert the polarisation frame data into Stokes I dropping other polarisations, return new Visibility
 
-    Args:
-    vis (obj): RASCIL visibility data.
-
-    Returns:
-    vis: New, converted visibility data.
+    :param vis: Visibility
+    :return: Converted visibility data.
     """
     polarisation_frame = PolarisationFrame('stokesI')
     poldef = vis.polarisation_frame
@@ -406,12 +399,9 @@ def convert_visibility_to_stokesI(vis):
 def convert_blockvisibility_to_stokesI(vis):
     """Convert the polarisation frame data into Stokes I dropping other polarisations, return new Visibility
 
-    Args:
-    vis (obj): RASCIL visibility data.
-
-    Returns:
-    vis: New, converted visibility data.
-    """
+    :param vis: Visibility
+    :return: Converted visibility data.
+   """
     polarisation_frame = PolarisationFrame('stokesI')
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):

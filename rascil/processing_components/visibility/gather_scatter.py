@@ -5,8 +5,8 @@ A typical use would be to make a sequence of snapshot visibilitys::
     for rows in vis_timeslice_iter(vt, vis_slices=vis_slices):
         visslice = create_visibility_from_rows(vt, rows)
         dirtySnapshot = create_visibility_from_visibility(visslice, npixel=512, cellsize=0.001, npol=1)
-        dirtySnapshot, sumwt = invert_2d(visslice, dirtySnapshot)
-
+        dirtySnapshot, sumwt = invert_2d(visslice, dirtySnapshot, '2d')
+        show_image(dirtySnapshot)
 
 """
 
@@ -30,7 +30,7 @@ log = logging.getLogger(__name__)
 def visibility_scatter(vis: Visibility, vis_iter, vis_slices=1) -> List[Visibility]:
     """Scatter a visibility into a list of subvisibilities
     
-    If vis_iter is over time then the type of the outvisibilities will be the same as inout
+    If vis_iter is over time then the type of the output visibilities will be the same as input
     If vis_iter is over w then the type of the output visibilities will always be Visibility
 
     :param vis: Visibility
@@ -87,26 +87,52 @@ def visibility_gather(visibility_list: List[Visibility], vis: Visibility, vis_it
 
 
 def visibility_scatter_w(vis: Visibility, vis_slices=1) -> List[Visibility]:
+    """ Scatter a Visibility over w
+
+    :param vis:
+    :param vis_slices: Number of w slices
+    :return:
+    """
     assert isinstance(vis, Visibility), vis
     return visibility_scatter(vis, vis_iter=vis_wslice_iter, vis_slices=vis_slices)
 
 def visibility_scatter_time(vis: Visibility, vis_slices=1) -> List[Visibility]:
+    """ Scatter a Visibility over time
+
+    :param vis:
+    :param vis_slices: Number of time slices
+    :return:
+    """
     return visibility_scatter(vis, vis_iter=vis_timeslice_iter, vis_slices=vis_slices)
 
 
 def visibility_gather_w(visibility_list: List[Visibility], vis: Visibility, vis_slices=1) -> Visibility:
+    """ Gather from a list of Visibility over w
+
+    :param visibility_list: List of visibility
+    :param vis: output visibility
+    :param vis_slices: Number of w slices
+    :return: Visibility
+    """
     assert isinstance(vis, Visibility), vis
     return visibility_gather(visibility_list, vis, vis_iter=vis_wslice_iter, vis_slices=vis_slices)
 
 
 def visibility_gather_time(visibility_list: List[Visibility], vis: Visibility, vis_slices=1) -> Visibility:
+    """ Gather from a list of Visibility over time
+
+    :param visibility_list: List of visibility
+    :param vis: output visibility
+    :param vis_slices: Number of time slices
+    :return: Visibility
+    """
     return visibility_gather(visibility_list, vis, vis_iter=vis_timeslice_iter, vis_slices=vis_slices)
 
 def visibility_scatter_channel(vis: BlockVisibility) -> List[BlockVisibility]:
     """ Scatter channels to separate visibilities
     
     :param vis:
-    :return:
+    :return: List of Visibility
     """
     assert isinstance(vis, BlockVisibility), vis
 
@@ -136,8 +162,8 @@ def visibility_scatter_channel(vis: BlockVisibility) -> List[BlockVisibility]:
 def visibility_gather_channel(vis_list: List[BlockVisibility], vis: BlockVisibility = None):
     """ Gather a visibility by channel
     
-    :param vis_list:
-    :param vis:
+    :param vis_list: List of Visibility
+    :param vis: Template output Visibility
     :return:
     """
     

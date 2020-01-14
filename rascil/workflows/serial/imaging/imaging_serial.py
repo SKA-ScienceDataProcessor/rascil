@@ -1,8 +1,4 @@
-"""Manages the imaging context. This take a string and returns a dictionary containing:
- * Predict function
- * Invert function
- * image_iterator function
- * vis_iterator function
+"""Workflows for imaging, including predict, invert, residual, restore, deconvolve, weight, taper, zero, subtract and sum results from invert
 
 """
 
@@ -45,7 +41,7 @@ def predict_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=
     The visibility and image are scattered, the visibility is predicted on each part, and then the
     parts are assembled.
 
-    :param vis_list:
+    :param vis_list: list of vis
     :param model_imagelist: Model used to determine image parameters
     :param vis_slices: Number of vis slices (w stack or timeslice)
     :param facets: Number of facets (per axis)
@@ -126,8 +122,8 @@ def invert_list_serial_workflow(vis_list, template_model_imagelist, dopsf=False,
                                 facets=1, vis_slices=1, context='2d', gcfcf=None, **kwargs):
     """ Sum results from invert, iterating over the scattered image and vis_list
 
-    :param vis_list:
-    :param template_model_imagelist: Model used to determine image parameters
+    :param vis_list: list of vis
+    :param template_model_imagelist: list of template models
     :param dopsf: Make the PSF instead of the dirty image
     :param facets: Number of facets
     :param normalize: Normalize by sumwt
@@ -135,7 +131,18 @@ def invert_list_serial_workflow(vis_list, template_model_imagelist, dopsf=False,
     :param context: Imaging context
     :param gcfcg: tuple containing grid correction and convolution function
     :param kwargs: Parameters for functions in components
-    :return: List of (image, sumwt) tuple
+    :return: List of (image, sumwt) tuples, one per vis in vis_list
+
+    For example::
+
+        model_list = [create_image_from_visibility
+            (v, npixel=npixel, cellsize=cellsize, polarisation_frame=pol_frame)
+            for v in vis_list]
+
+        dirty_list = invert_list_serial_workflow(vis_list, template_model_imagelist=model_list, context='wstack',
+                                                    vis_slices=51)
+        dirty, sumwt = dirty_list[centre]
+
    """
     
     if not isinstance(template_model_imagelist, collections.Iterable):
@@ -219,12 +226,12 @@ def invert_list_serial_workflow(vis_list, template_model_imagelist, dopsf=False,
 def residual_list_serial_workflow(vis, model_imagelist, context='2d', gcfcf=None, **kwargs):
     """ Create a graph to calculate residual image
 
-    :param vis:
+    :param vis: List of vis
     :param model_imagelist: Model used to determine image parameters
-    :param context:
+    :param context: Imaging context e.g. '2d', 'wstack'
     :param gcfcg: tuple containing grid correction and convolution function
     :param kwargs: Parameters for functions in components
-    :return:
+    :return: list of (image, sumwt) tuples
     """
     model_vis = zero_list_serial_workflow(vis)
     model_vis = predict_list_serial_workflow(model_vis, model_imagelist, context=context,
@@ -236,14 +243,18 @@ def residual_list_serial_workflow(vis, model_imagelist, context='2d', gcfcf=None
     return result
 
 
-def restore_list_serial_workflow(model_imagelist, psf_imagelist, residual_imagelist=None, **kwargs):
+def restore_list_serial_workflow(model_imagelist, psf_imagelist, residual_imagelist=None, restore_facets=1,
+                                     restore_overlap=0, restore_taper='tukey', **kwargs):
     """ Create a graph to calculate the restored image
 
     :param model_imagelist: Model list
     :param psf_imagelist: PSF list
     :param residual_imagelist: Residual list
     :param kwargs: Parameters for functions in components
-    :return:
+    :param restore_facets: Number of facets used per axis (used to distribute)
+    :param restore_overlap: Overlap in pixels (0 is best)
+    :param restore_taper: Type of taper between facets
+    :return: list of restored images
     """
     
     if residual_imagelist is None:
@@ -257,39 +268,29 @@ def restore_list_serial_workflow(model_imagelist, psf_imagelist, residual_imagel
         return [restore_cube(model_imagelist[i], psf_imagelist[i][0], **kwargs)
                 for i, _ in enumerate(model_imagelist)]
 
-def restore_list_serial_workflow_nosumwt(model_imagelist, psf_imagelist, residual_imagelist=None, **kwargs):
-    """ Create a graph to calculate the restored image
-
-    :param model_imagelist: Model list
-    :param psf_imagelist: PSF list (without the sumwt term)
-    :param residual_imagelist: Residual list (without the sumwt term)
-    :param kwargs: Parameters for functions in components
-    :return:
-    """
-    
-    if residual_imagelist is None:
-        residual_imagelist = []
-    
-    if len(residual_imagelist) > 0:
-        return [restore_cube(model_imagelist[i], psf_imagelist[i],
-                             residual_imagelist[i], **kwargs)
-                for i, _ in enumerate(model_imagelist)]
-    else:
-        return [restore_cube(model_imagelist[i], psf_imagelist[i], **kwargs)
-                for i, _ in enumerate(model_imagelist)]
-
-
 
 def deconvolve_list_serial_workflow(dirty_list, psf_list, model_imagelist, prefix='', mask=None, **kwargs):
     """Create a graph for deconvolution, adding to the model
 
-    :param dirty_list:
-    :param psf_list:
-    :param model_imagelist:
+    :param dirty_list: list of dirty images
+    :param psf_list: list of psfs
+    :param model_imagelist: list of models
     :param prefix: Informative prefix to log messages
     :param mask: Mask for deconvolution
-    :param kwargs: Parameters for functions in components
-    :return: (graph for the deconvolution, graph for the flat)
+    :param kwargs: Parameters for functions
+    :return: List of deconvolved images
+
+    For example::
+
+        dirty_imagelist = invert_list_serial_workflow(vis_list, model_imagelist, context='2d',
+                                                          dopsf=False, normalize=True)
+        psf_imagelist = invert_list_serial_workflow(vis_list, model_imagelist, context='2d',
+                                                        dopsf=True, normalize=True)
+        dec_imagelist = deconvolve_list_serial_workflow(dirty_imagelist, psf_imagelist,
+                model_imagelist, niter=1000, fractional_threshold=0.01,
+                scales=[0, 3, 10], algorithm='mmclean', nmoment=3, nchan=freqwin,
+                threshold=0.1, gain=0.7)
+
     """
     nchan = len(dirty_list)
     nmoment = get_parameter(kwargs, "nmoment", 0)
@@ -394,12 +395,12 @@ def deconvolve_channel_list_serial_workflow(dirty_list, psf_list, model_imagelis
     """Create a graph for deconvolution by channels, adding to the model
 
     Does deconvolution channel by channel.
-    :param subimages:
-    :param dirty_list:
-    :param psf_list: Must be the size of a facet
-    :param model_imagelist: Current model
+    :param dirty_list: List of dirty images
+    :param psf_list: List of PSFs, must be the size of a facet
+    :param model_imagelist: list of current model
+    :param subimages: Number of channels to split into
     :param kwargs: Parameters for functions in components
-    :return:
+    :return: list of updated models
     """
     
     def deconvolve_subimage(dirty, psf):
@@ -476,9 +477,9 @@ def weight_list_serial_workflow(vis_list, model_imagelist, gcfcf=None, weighting
 def taper_list_serial_workflow(vis_list, size_required):
     """Taper to desired size
     
-    :param vis_list:
-    :param size_required:
-    :return:
+    :param vis_list: List of vis
+    :param size_required: Size in radians
+    :return: List of vis
     """
     return [taper_visibility_gaussian(v, beam=size_required) for v in vis_list]
 
@@ -486,8 +487,8 @@ def taper_list_serial_workflow(vis_list, size_required):
 def zero_list_serial_workflow(vis_list):
     """ Initialise vis to zero: creates new data holders
 
-    :param vis_list:
-    :return: List of vis_lists
+    :param vis_list: List of vis
+    :return: List of vis
    """
     
     def zero(vis):
@@ -504,9 +505,9 @@ def zero_list_serial_workflow(vis_list):
 def subtract_list_serial_workflow(vis_list, model_vislist):
     """ Initialise vis to zero
 
-    :param vis_list:
+    :param vis_list: List of vis
     :param model_vislist: Model to be subtracted
-    :return: List of vis_lists
+    :return: List of vis
    """
     
     def subtract_vis(vis, model_vis):

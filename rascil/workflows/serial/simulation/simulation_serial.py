@@ -116,10 +116,10 @@ def simulate_list_serial_workflow(config='LOWBD2',
 def corrupt_list_serial_workflow(vis_list, gt_list=None, seed=None, **kwargs):
     """ Create a graph to apply gain errors to a vis_list
 
-    :param vis_list:
+    :param vis_list: List of vis
     :param gt_list: Optional gain table graph
     :param kwargs:
-    :return:
+    :return: list of vis
     """
     
     def corrupt_vis(vis, gt, **kwargs):

@@ -29,8 +29,9 @@ from rascil.processing_components.image import  deconvolve_cube, restore_cube
 from rascil.processing_components.image import image_scatter_facets, image_gather_facets, \
     image_scatter_channels, image_gather_channels
 from rascil.processing_components.image import calculate_image_frequency_moments
+from rascil.processing_components.imaging import normalize_sumwt
 from rascil.processing_components.imaging import  taper_visibility_gaussian
-from rascil.processing_components.visibility import copy_visibility
+from rascil.processing_components.visibility import copy_visibility, create_visibility_from_rows
 from rascil.processing_components.visibility import visibility_scatter, visibility_gather
 
 log = logging.getLogger(__name__)
@@ -282,12 +283,12 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
 def residual_list_rsexecute_workflow(vis, model_imagelist, context='2d', gcfcf=None, **kwargs):
     """ Create a graph to calculate residual image
 
-    :param vis:
+    :param vis: List of vis (or graph)
     :param model_imagelist: Model used to determine image parameters
-    :param context:
+    :param context: Imaging context e.g. '2d', 'wstack'
     :param gcfcg: tuple containing grid correction and convolution function
     :param kwargs: Parameters for functions in components
-    :return:
+    :return: list of (image, sumwt) tuples or graph
     """
     model_vis = zero_list_rsexecute_workflow(vis)
     model_vis = predict_list_rsexecute_workflow(model_vis, model_imagelist, context=context,
@@ -303,14 +304,14 @@ def restore_list_rsexecute_workflow(model_imagelist, psf_imagelist, residual_ima
                                      restore_overlap=0, restore_taper='tukey', **kwargs):
     """ Create a graph to calculate the restored image
 
-    :param model_imagelist: Model list
-    :param psf_imagelist: PSF list
-    :param residual_imagelist: Residual list
+    :param model_imagelist: Model list (or graph)
+    :param psf_imagelist: PSF list (or graph)
+    :param residual_imagelist: Residual list (or graph)
     :param kwargs: Parameters for functions in components
     :param restore_facets: Number of facets used per axis (used to distribute)
     :param restore_overlap: Overlap in pixels (0 is best)
-    :param restore_taper: Type of taper.
-    :return:
+    :param restore_taper: Type of taper between facets
+    :return: list of restored images (or graph)
     """
     assert len(model_imagelist) == len(psf_imagelist)
     if residual_imagelist is not None:
@@ -534,7 +535,7 @@ def deconvolve_list_channel_rsexecute_workflow(dirty_list, psf_list, model_image
     :param model_imagelist: list of graph of models
     :param subimages: Number of channels to split into
     :param kwargs: Parameters for functions in components
-    :return:
+    :return: list of updated models (or graphs)
     """
     
     def deconvolve_subimage(dirty, psf):
@@ -640,9 +641,9 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
 def taper_list_rsexecute_workflow(vis_list, size_required):
     """Taper to desired size
     
-    :param vis_list:
-    :param size_required:
-    :return:
+    :param vis_list: List of vis (or graph)
+    :param size_required: Size in radians
+    :return: List of vis (or graph)
     """
     result = [rsexecute.execute(taper_visibility_gaussian, nout=1)(v, beam=size_required) for v in vis_list]
     return rsexecute.optimize(result)
@@ -651,8 +652,8 @@ def taper_list_rsexecute_workflow(vis_list, size_required):
 def zero_list_rsexecute_workflow(vis_list):
     """ Initialise vis to zero: creates new data holders
 
-    :param vis_list:
-    :return: List of vis_lists
+    :param vis_list: List of vis (or graph)
+    :return: List of vis (or graph)
    """
     
     def zero(vis):
@@ -670,9 +671,9 @@ def zero_list_rsexecute_workflow(vis_list):
 def subtract_list_rsexecute_workflow(vis_list, model_vislist):
     """ Initialise vis to zero
 
-    :param vis_list:
-    :param model_vislist: Model to be subtracted
-    :return: List of vis_lists
+    :param vis_list: List of vis (or graph)
+    :param model_vislist: Model to be subtracted (or graph)
+    :return: List of vis or graph
    """
     
     def subtract_vis(vis, model_vis):

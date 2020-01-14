@@ -3,10 +3,11 @@
 .. py:currentmodule:: rascil.workflows.serial
 
 
-Serial
+serial
 ======
 
-Serial workflows are executed immediately, and should produce the same results as rsexecute workflows.
+Serial workflows are executed immediately, and should produce the same results as rsexecute workflows to within numerical
+precision.
 
 For example::
 

@@ -66,7 +66,7 @@ def simulate_list_rsexecute_workflow(config='LOWBD2',
     :param polarisation_frame: def PolarisationFrame("stokesI")
     :param order: 'time' or 'frequency' or 'both' or None: def 'frequency'
     :param format: 'blockvis' or 'vis': def 'blockvis'
-    :return: vis_list with different frequencies in different elements
+    :return: graph of vis_list with different frequencies in different elements
     """
     if format == 'vis':
         create_vis = create_visibility
@@ -132,10 +132,10 @@ def simulate_list_rsexecute_workflow(config='LOWBD2',
 def corrupt_list_rsexecute_workflow(vis_list, gt_list=None, seed=None, **kwargs):
     """ Create a graph to apply gain errors to a vis_list
 
-    :param vis_list:
+    :param vis_list: List of vis (or graph)
     :param gt_list: Optional gain table graph
     :param kwargs:
-    :return:
+    :return: list of vis (or graph)
     """
     
     def corrupt_vis(vis, gt, **kwargs):
@@ -168,11 +168,11 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
     The visibility difference for a set of components for error and no error gaintables
     are calculated and the residual images constructed
 
-    :param sub_bvis_list:
-    :param sub_components:
-    :param sub_model_list:
-    :param no_error_gt_list:
-    :param error_gt_list:
+    :param sub_bvis_list: List of vis (or graph)
+    :param sub_components: List of components (or graph)
+    :param sub_model_list: List of models (or graph)
+    :param no_error_gt_list: List of gaintables for no error (or graph)
+    :param error_gt_list: List of gaintables for error (or graph)
     :return:
     """
     error_sm_list = [[
@@ -226,6 +226,23 @@ def create_pointing_errors_gaintable_rsexecute_workflow(sub_bvis_list, sub_compo
                                                          use_radec=False, pointing_error=0.0, static_pointing_error=None,
                                                          global_pointing_error=None, time_series='', time_series_type='',
                                                          seed=None, pointing_directory=None, show=False, basename=''):
+    """ Create gaintable for pointing errors
+
+    :param sub_bvis_list: List of vis (or graph)
+    :param sub_components: List of components (or graph)
+    :param sub_vp_list: List of model voltage patterns (or graph)
+    :param use_radec: Use RADEC coordinate (False)
+    :param pointing_error: rms pointing error
+    :param static_pointing_error: static pointing error
+    :param global_pointing_error: global pointing error
+    :param time_series: Time series PSD file
+    :param time_series_type: Type of time series 'wind'|''
+    :param seed: Random number seed
+    :param pointing_directory: Location of pointing files
+    :param show: Plot the results
+    :param basename: Base name for the plots
+    :return: (list of error-free gaintables, list of error gaintables) or graph
+    """
     if global_pointing_error is None:
         global_pointing_error = [0.0, 0.0]
     
@@ -284,6 +301,18 @@ def create_pointing_errors_gaintable_rsexecute_workflow(sub_bvis_list, sub_compo
 
 def create_surface_errors_gaintable_rsexecute_workflow(band, sub_bvis_list, sub_components, vp_directory, use_radec=False,
                                                         elevation_sampling=5.0, show=False, basename=''):
+    """ Create gaintable for surface errors
+    :param band: B1, B2 or Ku
+    :param sub_bvis_list: List of vis (or graph)
+    :param sub_components: List of components (or graph)
+    :param vp_directory: Location of voltage patterns
+    :param use_radec: Use RADEC coordinate (False)
+    :param elevation_sampling: Sampling in elevation (degrees)
+    :param show: Plot the results
+    :param basename: Base name for the plots
+    :return: (list of error-free gaintables, list of error gaintables) or graph
+     """
+
     def get_band_vp(band, el):
         
         if band == 'B1':
@@ -340,10 +369,9 @@ def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, t
                                                        shared_directory):
     """ Create the standard MID simulation
     
-    :param band:
-    :param rmax:
-    :param ra:
-    :param declination:
+    :param band: B1, B2, or Ku
+    :param rmax: Maximum distance from array centre
+    :param phasecentre: Phase centre (SkyCoord)
     :param time_range:
     :param time_chunk:
     :param integration_time:

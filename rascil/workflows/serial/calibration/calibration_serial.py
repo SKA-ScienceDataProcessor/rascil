@@ -19,12 +19,12 @@ def calibrate_list_serial_workflow(vis_list, model_vislist, calibration_context=
     self-calibrated. The resulting gaintable is then effectively scattered out for application to each visibility
     set. If global solution is false then the solutions are performed locally.
 
-    :param vis_list:
-    :param model_vislist:
+    :param vis_list: list of visibilities
+    :param model_vislist: list of model visibilities
     :param calibration_context: String giving terms to be calibrated e.g. 'TGB'
     :param global_solution: Solve for global gains
     :param kwargs: Parameters for functions in components
-    :return:
+    :return: list of calibrated vis, list of dictionaries of gaintables
     """
 
     def solve(vis, modelvis=None):

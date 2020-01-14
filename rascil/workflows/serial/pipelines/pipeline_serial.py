@@ -2,7 +2,8 @@
 completeness. Use rsexecute versions pipelines/components.py for speed.
 """
 
-__all__ = ['ical_list_serial_workflow', 'continuum_imaging_list_serial_workflow',
+__all__ = ['ical_list_serial_workflow',
+           'continuum_imaging_list_serial_workflow',
            'spectral_line_imaging_list_serial_workflow']
 
 from rascil.data_models.parameters import get_parameter
@@ -19,9 +20,11 @@ def ical_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=1, 
                               gcfcf=None, calibration_context='TG', do_selfcal=True, **kwargs):
     """Run ICAL pipeline
 
-    :param vis_list:
-    :param model_imagelist:
+    :param vis_list: List of vis
+    :param model_imagelist:  list of models
     :param context: imaging context e.g. '2d'
+    :param vis_slices: Number of visibility slices (time or w)
+    :param facets: Number of facets on each x,y axis
     :param calibration_context: Sequence of calibration steps e.g. TGB
     :param do_selfcal: Do the selfcalibration?
     :param kwargs: Parameters for functions in components
@@ -105,9 +108,11 @@ def continuum_imaging_list_serial_workflow(vis_list, model_imagelist, context, g
 
     Same as ICAL but with no selfcal.
 
-    :param vis_list:
-    :param model_imagelist:
+    :param vis_list: List of vis
+    :param model_imagelist: List of models
     :param context: Imaging context
+    :param vis_slices: Number of visibility slices (time or w)
+    :param facets: Number of facets on each x,y axis
     :param kwargs: Parameters for functions in components
     :return:
     """
@@ -150,10 +155,12 @@ def spectral_line_imaging_list_serial_workflow(vis_list, model_imagelist, contex
 
     Uses the continuum imaging rsexecute pipeline after subtraction of a continuum model
 
-    :param vis_list: List of visibility components
-    :param model_imagelist: Spectral line model graph
+    :param vis_list: List of vis
+    :param model_imagelist: list of Spectral line model
     :param continuum_model_imagelist: Continuum model list
     :param context: Imaging context
+    :param vis_slices: Number of visibility slices (time or w)
+    :param facets: Number of facets on each x,y axis
     :param kwargs: Parameters for functions in components
     :return: (deconvolved model, residual, restored)
     """

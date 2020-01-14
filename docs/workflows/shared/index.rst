@@ -3,8 +3,10 @@
 .. py:currentmodule:: rascil.workflows.shared
 
 
-Shared
+shared
 ======
+
+Functions that are comment to both rsexecute and serial.
 
 .. toctree::
    :maxdepth: 1

@@ -16,14 +16,14 @@ def fit_visibility(vis, sc, tol=1e-6, niter=20, verbose=False, method='trust-exa
     
     Uses the scipy.optimize.minimize function.
     
-    :param vis:
+    :param vis: Visibility
     :param sc: Initial component
     :param tol: Tolerance of fit
     :param niter: Number of iterations
     :param verbose:
     :param method: 'CG', 'BFGS', 'Powell', 'trust-ncg', 'trust-exact', 'trust-krylov': default 'trust-exact'
     :param kwargs:
-    :return: component, convergence info as a dictionary
+    :return: Skycomponent, convergence info as a dictionary
     """
     
     assert vis.polarisation_frame.type == 'stokesI', "Currently restricted to stokesI"

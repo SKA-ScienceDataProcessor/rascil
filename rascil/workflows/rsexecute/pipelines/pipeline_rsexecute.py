@@ -22,9 +22,11 @@ def ical_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slices=
                                   gcfcf=None, calibration_context='TG', do_selfcal=True, **kwargs):
     """Create graph for ICAL pipeline
 
-    :param vis_list:
-    :param model_imagelist:
+    :param vis_list: List of vis (or graph)
+    :param model_imagelist:  list of models (or graph)
     :param context: imaging context e.g. '2d'
+    :param vis_slices: Number of visibility slices (time or w)
+    :param facets: Number of facets on each x,y axis
     :param calibration_context: Sequence of calibration steps e.g. TGB
     :param do_selfcal: Do the selfcalibration?
     :param kwargs: Parameters for functions in components
@@ -119,8 +121,8 @@ def continuum_imaging_list_rsexecute_workflow(vis_list, model_imagelist, context
     
     Same as ICAL but with no selfcal.
     
-    :param vis_list:
-    :param model_imagelist:
+    :param vis_list: List of vis (or graph)
+    :param model_imagelist: List of models (or graph)
     :param context: Imaging context
     :param kwargs: Parameters for functions in components
     :return:
@@ -163,12 +165,14 @@ def spectral_line_imaging_list_rsexecute_workflow(vis_list, model_imagelist, con
 
     Uses the continuum imaging rsexecute pipeline after subtraction of a continuum model
     
-    :param vis_list: List of visibility components
-    :param model_imagelist: Spectral line model graph
-    :param continuum_model_imagelist: Continuum model list
+    :param vis_list: List of vis (or graph)
+    :param model_imagelist: List of Spectral line model (or graph)
+    :param continuum_model_imagelist: Continuum model list (or graph)
     :param context: Imaging context
+    :param vis_slices: Number of visibility slices (time or w)
+    :param facets: Number of facets on each x,y axis
     :param kwargs: Parameters for functions in components
-    :return: (deconvolved model, residual, restored)
+    :return: list of (deconvolved model, residual, restored) or graph
     """
     if continuum_model_imagelist is not None:
         vis_list = predict_list_rsexecute_workflow(vis_list, continuum_model_imagelist, context=context, gcfcf=gcfcf,
