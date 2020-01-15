@@ -25,7 +25,7 @@ unittests:
     - pip install -r requirements.txt -r requirements-test.txt
   script:
     - pip install pytest pytest-xdist pytest-cov
-    - py.test -n 4 tests --verbose --cov=rascil --cov-report=html:coverage
+    - py.test -n 3 tests --verbose --cov=rascil --cov-report=html:coverage
   artifacts:
     paths:
       - coverage
