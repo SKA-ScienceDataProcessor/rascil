@@ -87,6 +87,7 @@ def qa_flagtable(ft: FlagTable, context=None) -> QA:
     aflags = numpy.abs(ft.flags)
     data = {'maxabs': numpy.max(aflags),
             'minabs': numpy.min(aflags),
+            'mean': numpy.mean(aflags),
             'sum': numpy.sum(aflags),
             'medianabs': numpy.median(aflags)}
     qa = QA(origin='qa_flagtable',
