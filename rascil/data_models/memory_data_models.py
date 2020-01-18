@@ -12,6 +12,7 @@ __all__ = ['Configuration',
            'SkyModel',
            'Visibility',
            'BlockVisibility',
+           'FlagTable',
            'QA',
            'ScienceDataModel',
            'assert_same_chan_pol',
@@ -1287,6 +1288,97 @@ class BlockVisibility:
         """ Number of visibilities (in total)
         """
         return self.data.size
+
+
+class FlagTable:
+    """ Flag table class
+
+    Flags, time, integration_time, frequency, channel_bandwidth, pol,
+    in a numpy structured array.
+
+    The configuration is also an attribute
+    """
+
+    def __init__(self, data=None, flags=None, frequency=None, channel_bandwidth=None,
+                 configuration=None, time=None, integration_time=None):
+        """FlagTable
+
+        :param data: Structured data (used in copying)
+        :param frequency: Frequency [nchan]
+        :param channel_bandwidth: Channel bandwidth [nchan]
+        :param configuration: Configuration
+        :param time: Time (UTC) [ntimes]
+        :param flags: Flags [ntimes, nant, nant, nchan]
+        :param integration_time: Integration time [ntimes]
+        """
+        if data is None and flags is not None:
+            ntimes, nants, _, nchan = flags.shape
+            assert len(frequency) == nchan
+            assert len(channel_bandwidth) == nchan
+            desc = [('time', 'f8'),
+                    ('integration_time', 'f8'),
+                    ('flags', 'i8', (nants, nants, nchan))]
+            data = numpy.zeros(shape=[ntimes], dtype=desc)
+            data['time'] = time  # MJD in seconds
+            data['integration_time'] = integration_time  # seconds
+            data['flags'] = flags
+
+        self.data = data  # numpy structured array
+        self.frequency = frequency
+        self.channel_bandwidth = channel_bandwidth
+        self.configuration = configuration  # Antenna/station configuration
+
+    def __str__(self):
+        """Default printer for FlagTable
+
+        """
+        s = "FlagTable:\n"
+        s += "\tNumber of integrations: %s\n" % len(self.time)
+        s += "\tFlags shape: %s\n" % str(self.flags.shape)
+        s += "\tNumber of channels: %d\n" % len(self.frequency)
+        s += "\tFrequency: %s\n" % self.frequency
+        s += "\tChannel bandwidth: %s\n" % self.channel_bandwidth
+        s += "\tConfiguration: %s\n" % self.configuration.name
+
+        return s
+
+    def size(self):
+        """ Return size in GB
+        """
+        size = 0
+        for col in self.data.dtype.fields.keys():
+            size += self.data[col].nbytes
+        return size / 1024.0 / 1024.0 / 1024.0
+
+    @property
+    def nchan(self):
+        """ Number of channels
+        """
+        return self.data['flags'].shape[-1]
+
+    @property
+    def nants(self):
+        """ Number of antennas
+        """
+        return self.data['vis'].shape[1]
+
+    @property
+    def flags(self):
+        """ Flags [nrows, nant, nant, nchan]
+        """
+        return self.data['flags']
+
+    @property
+    def time(self):
+        """ Time (UTC) [nrows]
+        """
+        return self.data['time']
+
+    @property
+    def integration_time(self):
+        """ Integration time [nrows]
+        """
+        return self.data['integration_time']
 
 
 class QA:
