@@ -17,6 +17,7 @@ An explicit sync is required in both cases
 """
 
 __all__ = ['BufferGainTable',
+           'BufferFlagTable',
            'BufferPointingTable',
            'BufferImage',
            'BufferGridData',
@@ -30,7 +31,7 @@ import logging
 
 from rascil.data_models.data_model_helpers import buffer_data_model_to_memory, memory_data_model_to_buffer
 from rascil.data_models.memory_data_models import Image, BlockVisibility, SkyModel, GainTable, GridData, \
-    ConvolutionFunction, PointingTable
+    ConvolutionFunction, PointingTable, FlagTable
 
 log = logging.getLogger(__name__)
 
@@ -176,7 +177,7 @@ class BufferGainTable(BufferDataModel):
     """Buffer version of memory data model GainTable
 
     """
-    
+
     def __init__(self, json_buffer, json_model, mdm=None):
         """
 
@@ -186,6 +187,22 @@ class BufferGainTable(BufferDataModel):
         """
         BufferDataModel.__init__(self, json_buffer, json_model, mdm)
         self.assert_type(GainTable)
+
+
+class BufferFlagTable(BufferDataModel):
+    """Buffer version of memory data model FlagTable
+
+    """
+
+    def __init__(self, json_buffer, json_model, mdm=None):
+        """
+
+        :param json_buffer: JSON description of buffer
+        :param json_model: JSON descriptiomn of model
+        :return: Image
+        """
+        BufferDataModel.__init__(self, json_buffer, json_model, mdm)
+        self.assert_type(FlagTable)
 
 
 class BufferPointingTable(BufferDataModel):

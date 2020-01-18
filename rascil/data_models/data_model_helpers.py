@@ -312,12 +312,10 @@ def convert_hdf_to_flagtable(f):
     :return:
     """
     assert f.attrs['RASCIL_data_model'] == "FlagTable", "Not a FlagTable"
-    polarisation_frame = PolarisationFrame(f.attrs['polarisation_frame'])
     frequency = f.attrs['frequency']
     channel_bandwidth = f.attrs['channel_bandwidth']
     data = numpy.array(f['data'])
-    vis = FlagTable(data=data, polarisation_frame=polarisation_frame,
-                          frequency=frequency, channel_bandwidth=channel_bandwidth)
+    vis = FlagTable(data=data, frequency=frequency, channel_bandwidth=channel_bandwidth)
     vis.configuration = convert_configuration_from_hdf(f)
     return vis
 
@@ -976,6 +974,8 @@ def memory_data_model_to_buffer(model, jbuff, dm):
         return export_skymodel_to_hdf5(model, name)
     elif dm["data_model"] == "GainTable":
         return export_gaintable_to_hdf5(model, name)
+    elif dm["data_model"] == "FlagTable":
+        return export_flagtable_to_hdf5(model, name)
     elif dm["data_model"] == "PointingTable":
         return export_pointingtable_to_hdf5(model, name)
     else:
@@ -1005,6 +1005,8 @@ def buffer_data_model_to_memory(jbuff, dm):
         return import_skymodel_from_hdf5(name)
     elif dm["data_model"] == "GainTable":
         return import_gaintable_from_hdf5(name)
+    elif dm["data_model"] == "FlagTable":
+        return import_flagtable_from_hdf5(name)
     elif dm["data_model"] == "PointingTable":
         return import_pointingtable_from_hdf5(name)
     elif dm["data_model"] == "GridData":
