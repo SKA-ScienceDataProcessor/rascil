@@ -296,7 +296,7 @@ def divide_visibility(vis: BlockVisibility, modelvis: BlockVisibility):
         x = x.reshape((nrows, nants, nants, nchan, nrec * nrec))
         xwt = xwt.reshape((nrows, nants, nants, nchan, nrec * nrec))
     
-    pointsource_vis = BlockVisibility(data=None, frequency=vis.frequency, channel_bandwidth=vis.channel_bandwidth,
+    pointsource_vis = BlockVisibility(data=None, flags=vis.flags, frequency=vis.frequency, channel_bandwidth=vis.channel_bandwidth,
                                       phasecentre=vis.phasecentre, configuration=vis.configuration,
                                       uvw=vis.uvw, time=vis.time, integration_time=vis.integration_time, vis=x,
                                       weight=xwt, source=vis.source, meta=vis.meta)
@@ -323,6 +323,7 @@ def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
                              uvw=vis.uvw,
                              time=vis.time,
                              vis=numpy.zeros(vis_shape, dtype='complex'),
+                             flags=numpy.zeros(vis_shape, dtype='int'),
                              weight=numpy.zeros(vis_shape, dtype='float'),
                              imaging_weight=numpy.zeros(vis_shape, dtype='float'),
                              integration_time=vis.integration_time,
@@ -331,6 +332,7 @@ def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
                              meta=vis.meta)
     
     newvis.data['vis'][..., 0, :] = numpy.sum(vis.data['vis'] * vis.flagged_weight, axis=-2)
+    newvis.data['flags'][..., 0, :] = numpy.sum(vis.flags, axis=-2)
     newvis.data['weight'][..., 0, :] = numpy.sum(vis.flagged_weight, axis=-2)
     newvis.data['imaging_weight'][..., 0, :] = numpy.sum(vis.flagged_imaging_weight, axis=-2)
     mask = newvis.flagged_weight > 0.0
