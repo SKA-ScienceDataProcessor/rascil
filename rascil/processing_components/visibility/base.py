@@ -107,6 +107,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     nrows = nbaselines * ntimes * nch
     nrowsperintegration = nbaselines * nch
     rvis = numpy.zeros([nrows, npol], dtype='complex')
+    rflags = numpy.ones([nrows, npol], dtype='int')
     rweight = weight * numpy.ones([nrows, npol])
     rtimes = numpy.zeros([nrows])
     rfrequency = numpy.zeros([nrows])
@@ -135,7 +136,8 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
                     rantenna1[row:row + nch] = a1
                     rantenna2[row:row + nch] = a2
                     rweight[row:row+nch,...] = 1.0
-                
+                    rflags[row:row+nch,...] = 0
+
                     # Loop over all frequencies and polarisations
                     for ch in range(nch):
                         # noinspection PyUnresolvedReferences
@@ -150,7 +152,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     assert row == nrows
     rintegration_time = numpy.full_like(rtimes, integration_time)
     vis = Visibility(uvw=ruvw, time=rtimes, antenna1=rantenna1, antenna2=rantenna2,
-                     frequency=rfrequency, vis=rvis,
+                     frequency=rfrequency, vis=rvis, flags=rflags,
                      weight=rweight, imaging_weight=rweight,
                      integration_time=rintegration_time, channel_bandwidth=rchannel_bandwidth,
                      polarisation_frame=polarisation_frame, source=source, meta=meta)
@@ -205,7 +207,6 @@ def create_blockvisibility(config: Configuration,
         polarisation_frame = correlate_polarisation(config.receptor_frame)
     
     latitude = config.location.geodetic[1].to('rad').value
-    nch = len(frequency)
     ants_xyz = config.data['xyz']
     nants = len(config.data['names'])
 
@@ -229,8 +230,10 @@ def create_blockvisibility(config: Configuration,
         log.info('create_visibility: created %d times' % (ntimes))
     
     npol = polarisation_frame.npol
-    visshape = [ntimes, nants, nants, nch, npol]
+    nchan = len(frequency)
+    visshape = [ntimes, nants, nants, nchan, npol]
     rvis = numpy.zeros(visshape, dtype='complex')
+    rflags = numpy.ones(visshape, dtype='int')
     rweight = weight * numpy.ones(visshape)
     rimaging_weight = numpy.ones(visshape)
     rtimes = numpy.zeros([ntimes])
@@ -247,6 +250,7 @@ def create_blockvisibility(config: Configuration,
         if elevation_limit is None or (elevation > elevation_limit):
             rtimes[itime] = ha * 43200.0 / numpy.pi
             rweight[itime, ...] = 1.0
+            rflags[itime, ...] = 0
 
             # Loop over all pairs of antennas. Note that a2>a1
             for a1 in range(nants):
@@ -260,7 +264,7 @@ def create_blockvisibility(config: Configuration,
     if zerow:
         ruvw[..., 2] = 0.0
     vis = BlockVisibility(uvw=ruvw, time=rtimes, frequency=frequency, vis=rvis, weight=rweight,
-                          imaging_weight=rimaging_weight,
+                          imaging_weight=rimaging_weight, flags=rflags,
                           integration_time=rintegration_time, channel_bandwidth=rchannel_bandwidth,
                           polarisation_frame=polarisation_frame, source=source, meta=meta)
     vis.phasecentre = phasecentre
@@ -637,6 +641,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                         trc = [end_chan, datacol_shape[-1] - 1]
                         channum = range(start_chan, end_chan+1)
                         ms_vis = ms.getcolslice(datacolumn, blc=blc, trc=trc)
+                        ms_flags = ms.getcolslice('FLAG', blc=blc, trc=trc)
                         ms_weight = ms.getcol('WEIGHT')
                     except IndexError:
                         raise IndexError("channel number exceeds max. within ms")
@@ -647,6 +652,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                         channum = range(channels)
                         ms_vis = ms.getcol(datacolumn)[:, channum, :]
                         ms_weight = ms.getcol('WEIGHT')
+                        ms_flags = ms.getcol('FLAG')
                         channum = range(channels)
                     except IndexError:
                         raise IndexError("channel number exceeds max. within ms")
@@ -655,6 +661,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                 channum = range(channels)
                 try:
                     ms_vis = ms.getcol(datacolumn)[:, channum, :]
+                    ms_flags = ms.getcol('FLAG')[:, channum, :]
                     ms_weight = ms.getcol('WEIGHT')[:, :]
                 except IndexError:
                     raise IndexError("channel number exceeds max. within ms")
@@ -728,6 +735,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             
             bv_times = numpy.zeros([ntimes])
             bv_vis = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('complex')
+            bv_flags = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('int')
             bv_weight = numpy.zeros([ntimes, nants, nants, nchan, npol])
             bv_imaging_weight = numpy.zeros([ntimes, nants, nants, nchan, npol])
             bv_uvw = numpy.zeros([ntimes, nants, nants, 3])
@@ -737,6 +745,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                 time_index = time_index_row[row]
                 bv_times[time_index] = time[row]
                 bv_vis[time_index, antenna2[row], antenna1[row], ...] = ms_vis[row, ...]
+                bv_flags[time_index, antenna2[row], antenna1[row], ...] = ms_flags[row, ...]
                 bv_weight[time_index, antenna2[row], antenna1[row], :, ...] = ms_weight[row, numpy.newaxis, ...]
                 bv_imaging_weight[time_index, antenna2[row], antenna1[row], :, ...] = ms_weight[row, numpy.newaxis, ...]
                 bv_uvw[time_index, antenna2[row], antenna1[row], :] = uvw[row, :]
@@ -747,6 +756,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                                             frequency=cfrequency,
                                             channel_bandwidth=cchannel_bandwidth,
                                             vis=bv_vis,
+                                            flags = bv_flags,
                                             weight=bv_weight,
                                             integration_time = bv_integration_time,
                                             imaging_weight=bv_imaging_weight,
@@ -924,6 +934,7 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
         vis_list = list()
         for spw_index in range(nspw):
             bv_vis = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('complex')
+            bv_flags = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('int')
             bv_weight = numpy.zeros([ntimes, nants, nants, nchan, npol])
             bv_uvw = numpy.zeros([ntimes, nants, nants, 3])     
             for time_index , time in enumerate(bv_times):
@@ -942,7 +953,7 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
                                             time=bv_times,
                                             frequency=freq[spw_index][channum],
                                             channel_bandwidth=freq_delt[channum],
-                                            vis=bv_vis,
+                                            vis=bv_vis, flags=bv_flags,
                                             weight=bv_weight,
                                             imaging_weight= bv_weight,
                                             configuration=configuration,

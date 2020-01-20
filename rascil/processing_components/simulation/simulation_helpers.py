@@ -58,8 +58,7 @@ def find_times_above_elevation_limit(start_times, end_times, location, phasecent
     return valid_start_times
 
 
-def plot_visibility(vis_list, ax=None, title='Visibility',
-                    y='amp', x='uvdist', **kwargs):
+def plot_visibility(vis_list, ax=None, title='Visibility', y='amp', x='uvdist', **kwargs):
     """ Standard plot of visibility
 
     :param vis_list:

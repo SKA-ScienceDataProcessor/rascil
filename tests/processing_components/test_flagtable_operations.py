@@ -26,6 +26,7 @@ class TestFlagTableOperations(unittest.TestCase):
         # Define the component and give it some spectral behaviour
         f = numpy.array([100.0, 20.0, -10.0, 1.0])
         self.flux = numpy.array([f, 0.8 * f, 0.6 * f])
+        self.polarisation_frame = PolarisationFrame("linear")
 
         # The phase centre is absolute and the component is specified relative (for now).
         # This means that the component should end up at the position phasecentre+compredirection
@@ -39,7 +40,7 @@ class TestFlagTableOperations(unittest.TestCase):
         bvis = create_blockvisibility(self.lowcore, self.times, self.frequency,
                                      channel_bandwidth=self.channel_bandwidth,
                                      phasecentre=self.phasecentre,
-                                     polarisation_frame=PolarisationFrame("linear"),
+                                     polarisation_frame=self.polarisation_frame,
                                      weight=1.0)
         ft = create_flagtable_from_blockvisibility(bvis)
         assert len(ft.data) == len(bvis.data)
@@ -47,7 +48,8 @@ class TestFlagTableOperations(unittest.TestCase):
     def test_create_flagtable_from_rows(self):
         bvis = create_blockvisibility(self.lowcore, self.times, self.frequency,
                                      channel_bandwidth=self.channel_bandwidth,
-                                     phasecentre=self.phasecentre, weight=1.0)
+                                      polarisation_frame=self.polarisation_frame,
+                                      phasecentre=self.phasecentre, weight=1.0)
         ft = create_flagtable_from_blockvisibility(bvis)
         rows = ft.time > 150.0
         ft = create_flagtable_from_blockvisibility(bvis)

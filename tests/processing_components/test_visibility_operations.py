@@ -50,7 +50,7 @@ class TestVisibilityOperations(unittest.TestCase):
                                      weight=1.0)
         self.vis = predict_skycomponent_visibility(self.vis, self.comp)
         flux, weight = sum_visibility(self.vis, self.comp.direction)
-        assert numpy.max(numpy.abs(flux - self.flux)) < 1e-7
+        assert numpy.max(numpy.abs(flux - self.flux)) < 1e-7, flux
         
 
     def test_create_visibility1(self):

@@ -51,9 +51,7 @@ def create_flagtable_from_blockvisibility(bvis: BlockVisibility, **kwargs) -> Fl
     :param kwargs:
     :return:
     """
-    ntimes, nant, _, nchan, npol = bvis.vis.shape
-    flags = numpy.zeros([ntimes, nant, nant, nchan]).astype(('int'))
-    return FlagTable(flags=flags, frequency=bvis.frequency, channel_bandwidth=bvis.channel_bandwidth,
+    return FlagTable(flags=bvis.flags, frequency=bvis.frequency, channel_bandwidth=bvis.channel_bandwidth,
                      configuration=bvis.configuration, time=bvis.time,
                      integration_time=bvis.integration_time)
 

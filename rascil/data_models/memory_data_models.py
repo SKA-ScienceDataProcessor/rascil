@@ -887,7 +887,7 @@ class Visibility:
     def __init__(self,
                  data=None, frequency=None, channel_bandwidth=None,
                  phasecentre=None, configuration=None, uvw=None,
-                 time=None, antenna1=None, antenna2=None, vis=None,
+                 time=None, antenna1=None, antenna2=None, vis=None, flags=None,
                  weight=None, imaging_weight=None, integration_time=None,
                  polarisation_frame=PolarisationFrame('stokesI'), cindex=None,
                  blockvis=None, source='anonymous', meta=None):
@@ -903,6 +903,7 @@ class Visibility:
         :param antenna1: dish/station index
         :param antenna2: dish/station index
         :param vis: Complex visibility [:, npol]
+        :param flags: Flags [:, npol]
         :param weight: Weight [: npol]
         :param imaging_weight: Imaging weight [:, npol]
         :param integration_time: Integration time, per row
@@ -932,6 +933,7 @@ class Visibility:
                     ('antenna1', 'i8'),
                     ('antenna2', 'i8'),
                     ('vis', 'c16', (npol,)),
+                    ('flags', 'i8', (npol,)),
                     ('weight', 'f8', (npol,)),
                     ('imaging_weight', 'f8', (npol,))]
             data = numpy.zeros(shape=[nvis], dtype=desc)
@@ -944,6 +946,7 @@ class Visibility:
             data['antenna1'] = antenna1
             data['antenna2'] = antenna2
             data['vis'] = vis
+            data['flags'] = flags
             data['weight'] = weight
             data['imaging_weight'] = imaging_weight
         
@@ -967,10 +970,11 @@ class Visibility:
         s += "\tSource: %s\n" % self.source
         s += "\tNumber of visibilities: %s\n" % self.nvis
         s += "\tNumber of channels: %d\n" % len(ufrequency)
-        s += "\tFrequency: %s\n" % ufrequency
-        s += "\tChannel bandwidth: %s\n" % uchannel_bandwidth
+        s += "\tFrequency: %s\n" % str(ufrequency)
+        s += "\tChannel bandwidth: %s\n" % str(uchannel_bandwidth)
         s += "\tNumber of polarisations: %s\n" % self.npol
         s += "\tVisibility shape: %s\n" % str(self.vis.shape)
+        s += "\tNumber flags: %s\n" % numpy.sum(self.flags)
         s += "\tPolarisation Frame: %s\n" % self.polarisation_frame.type
         s += "\tPhasecentre: %s\n" % self.phasecentre
         s += "\tConfiguration: %s\n" % self.configuration.name
@@ -1060,7 +1064,6 @@ class Visibility:
     @property
     def frequency(self):
         """ Frequency values
-
         """
         return self.data['frequency']
     
@@ -1081,24 +1084,42 @@ class Visibility:
         """ Antenna index
         """
         return self.data['antenna2']
-    
+
     @property
     def vis(self):
         """Complex visibility [:, npol]
         """
         return self.data['vis']
-    
+
+    @property
+    def flags(self):
+        """flags [:, npol]
+        """
+        return self.data['flags']
+
     @property
     def weight(self):
         """Weight [: npol]
         """
         return self.data['weight']
-    
+
+    @property
+    def flagged_weight(self):
+        """Weight [: npol]
+        """
+        return self.data['weight'] * (1 - self.data['flags'])
+
     @property
     def imaging_weight(self):
         """  Imaging weight [:, npol]
         """
         return self.data['imaging_weight']
+
+    @property
+    def flagged_imaging_weight(self):
+        """  Flagged Imaging weight [:, npol]
+        """
+        return self.data['imaging_weight'] * (1 - self.data['flags'])
 
 
 class BlockVisibility:
@@ -1122,8 +1143,9 @@ class BlockVisibility:
                  data=None, frequency=None, channel_bandwidth=None,
                  phasecentre=None, configuration=None, uvw=None,
                  time=None, vis=None, weight=None, integration_time=None,
+                 flags=None,
                  polarisation_frame=PolarisationFrame('stokesI'),
-                 imaging_weight=None, source='anonymous', meta=dict()):
+                 imaging_weight=None, source='anonymous', meta=None):
         """BlockVisibility
 
         :param data: Structured data (used in copying)
@@ -1134,6 +1156,7 @@ class BlockVisibility:
         :param uvw: UVW coordinates (m) [:, nant, nant, 3]
         :param time: Time (UTC) [:]
         :param vis: Complex visibility [:, nant, nant, nchan, npol]
+        :param flags: Flags [:, nant, nant, nchan]
         :param weight: [:, nant, nant, nchan, npol]
         :param imaging_weight: [:, nant, nant, nchan, npol]
         :param integration_time: Integration time [:]
@@ -1141,6 +1164,8 @@ class BlockVisibility:
         :param source: Source name
         :param meta: Meta info
         """
+        if meta is None:
+            meta = dict()
         if data is None and vis is not None:
             ntimes, nants, _, nchan, npol = vis.shape
             assert vis.shape == weight.shape
@@ -1151,6 +1176,7 @@ class BlockVisibility:
                     ('time', 'f8'),
                     ('integration_time', 'f8'),
                     ('vis', 'c16', (nants, nants, nchan, npol)),
+                    ('flags', 'i8', (nants, nants, nchan, npol)),
                     ('weight', 'f8', (nants, nants, nchan, npol)),
                     ('imaging_weight', 'f8', (nants, nants, nchan, npol))]
             data = numpy.zeros(shape=[ntimes], dtype=desc)
@@ -1159,6 +1185,7 @@ class BlockVisibility:
             data['time'] = time  # MJD in seconds
             data['integration_time'] = integration_time  # seconds
             data['vis'] = vis
+            data['flags'] = flags
             data['weight'] = weight
             data['imaging_weight'] = imaging_weight
         
@@ -1181,6 +1208,7 @@ class BlockVisibility:
         s += "\tNumber of visibilities: %s\n" % self.nvis
         s += "\tNumber of integrations: %s\n" % len(self.time)
         s += "\tVisibility shape: %s\n" % str(self.vis.shape)
+        s += "\tNumber of flags: %s\n" % str(numpy.sum(self.flags))
         s += "\tNumber of channels: %d\n" % len(self.frequency)
         s += "\tFrequency: %s\n" % self.frequency
         s += "\tChannel bandwidth: %s\n" % self.channel_bandwidth
@@ -1252,13 +1280,19 @@ class BlockVisibility:
         """ uv distance (metres) [nrows, nant, nant]
         """
         return numpy.hypot(self.u, self.v, self.w)
-    
+
     @property
     def vis(self):
         """ Complex visibility [nrows, nant, nant, ncha, npol]
         """
         return self.data['vis']
-    
+
+    @property
+    def flags(self):
+        """ Flags [nrows, nant, nant, nchan]
+        """
+        return self.data['flags']
+
     @property
     def weight(self):
         """ Weight[nrows, nant, nant, ncha, npol]
@@ -1266,10 +1300,22 @@ class BlockVisibility:
         return self.data['weight']
 
     @property
+    def flagged_weight(self):
+        """Weight [: npol]
+        """
+        return self.data['weight'] * (1 - self.data['flags'])
+
+    @property
     def imaging_weight(self):
         """ Imaging_weight[nrows, nant, nant, ncha, npol]
         """
         return self.data['imaging_weight']
+
+    @property
+    def flagged_imaging_weight(self):
+        """ Flagged Imaging_weight[nrows, nant, nant, ncha, npol]
+        """
+        return self.data['imaging_weight'] * (1 - self.data['flags'])
 
     @property
     def time(self):
@@ -1300,7 +1346,8 @@ class FlagTable:
     """
 
     def __init__(self, data=None, flags=None, frequency=None, channel_bandwidth=None,
-                 configuration=None, time=None, integration_time=None):
+                 configuration=None, time=None, integration_time=None,
+                 polarisation_frame=None):
         """FlagTable
 
         :param data: Structured data (used in copying)
@@ -1312,12 +1359,12 @@ class FlagTable:
         :param integration_time: Integration time [ntimes]
         """
         if data is None and flags is not None:
-            ntimes, nants, _, nchan = flags.shape
+            ntimes, nants, _, nchan, npol = flags.shape
             assert len(frequency) == nchan
             assert len(channel_bandwidth) == nchan
             desc = [('time', 'f8'),
                     ('integration_time', 'f8'),
-                    ('flags', 'i8', (nants, nants, nchan))]
+                    ('flags', 'i8', (nants, nants, nchan, npol))]
             data = numpy.zeros(shape=[ntimes], dtype=desc)
             data['time'] = time  # MJD in seconds
             data['integration_time'] = integration_time  # seconds
@@ -1326,6 +1373,7 @@ class FlagTable:
         self.data = data  # numpy structured array
         self.frequency = frequency
         self.channel_bandwidth = channel_bandwidth
+        self.polarisation_frame = polarisation_frame
         self.configuration = configuration  # Antenna/station configuration
 
     def __str__(self):
@@ -1338,6 +1386,8 @@ class FlagTable:
         s += "\tNumber of channels: %d\n" % len(self.frequency)
         s += "\tFrequency: %s\n" % self.frequency
         s += "\tChannel bandwidth: %s\n" % self.channel_bandwidth
+        s += "\tNumber of polarisations: %s\n" % self.npol
+        s += "\tPolarisation Frame: %s\n" % self.polarisation_frame.type
         s += "\tConfiguration: %s\n" % self.configuration.name
 
         return s
@@ -1349,6 +1399,12 @@ class FlagTable:
         for col in self.data.dtype.fields.keys():
             size += self.data[col].nbytes
         return size / 1024.0 / 1024.0 / 1024.0
+
+    @property
+    def npol(self):
+        """ Number of polarisations
+        """
+        return self.data['flags'].shape[-1]
 
     @property
     def nchan(self):

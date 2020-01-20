@@ -134,7 +134,7 @@ try:
         nrows, nants, _, vnchan, vnpol = vis.shape
         uvw = sbvis.uvw.reshape([nrows * nants * nants, 3])
         ms = vis.reshape([nrows * nants * nants, vnchan, vnpol])
-        wgt = sbvis.imaging_weight.reshape([nrows * nants * nants, vnchan, vnpol])
+        wgt = sbvis.flagged_imaging_weight.reshape([nrows * nants * nants, vnchan, vnpol])
         
         if dopsf:
             ms[...] = 1.0 + 0.0j
