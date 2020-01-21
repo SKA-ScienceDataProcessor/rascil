@@ -1092,6 +1092,12 @@ class Visibility:
         return self.data['vis']
 
     @property
+    def flagged_vis(self):
+        """Flagged complex visibility [:, npol]
+        """
+        return self.data['vis'] * (1 - self.flags)
+
+    @property
     def flags(self):
         """flags [:, npol]
         """
@@ -1286,6 +1292,12 @@ class BlockVisibility:
         """ Complex visibility [nrows, nant, nant, ncha, npol]
         """
         return self.data['vis']
+
+    @property
+    def flagged_vis(self):
+        """Flagged complex visibility [nrows, nant, nant, ncha, npol]
+        """
+        return self.data['vis'] * (1 - self.flags)
 
     @property
     def flags(self):

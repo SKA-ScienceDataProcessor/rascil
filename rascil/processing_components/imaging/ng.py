@@ -132,12 +132,13 @@ try:
         freq = sbvis.frequency  # frequency, Hz
         
         nrows, nants, _, vnchan, vnpol = vis.shape
+        flags = sbvis.flags.reshape([nrows * nants * nants, vnchan, vnpol])
         uvw = sbvis.uvw.reshape([nrows * nants * nants, 3])
-        ms = vis.reshape([nrows * nants * nants, vnchan, vnpol])
+        ms =  sbvis.flagged_vis.reshape([nrows * nants * nants, vnchan, vnpol])
         wgt = sbvis.flagged_imaging_weight.reshape([nrows * nants * nants, vnchan, vnpol])
         
         if dopsf:
-            ms[...] = 1.0 + 0.0j
+            ms[...] = (1 - flags).astype('complex')
         
         if epsilon > 5.0e-6:
             ms = ms.astype("c8")

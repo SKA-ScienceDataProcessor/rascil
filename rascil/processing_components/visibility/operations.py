@@ -121,12 +121,11 @@ def concatenate_blockvisibility_frequency(bvis_list):
     for ibv, bvis in enumerate(bvis_list):
         schan = echan
         echan = schan + len(bvis.frequency)
-        vis[..., schan:echan, :] = bvis.vis[...]
-        weight[..., schan:echan, :] = bvis.weight[...]
         flags[..., schan:echan, :] = bvis.flags[...]
+        vis[..., schan:echan, :] = bvis.flagged_vis[...]
+        weight[..., schan:echan, :] = bvis.flagged_weight[...]
         imaging_weight[..., schan:echan, :] = bvis.flagged_imaging_weight[...]
-        vis[..., schan:echan, :] = bvis.vis[...]
-    
+
     return BlockVisibility(vis=vis, flags=flags, weight=weight, imaging_weight=imaging_weight, uvw=uvw, time=time,
                            integration_time=integration_time, frequency=frequency, channel_bandwidth=channel_bandwidth,
                            polarisation_frame=bvis_list[0].polarisation_frame, source=bvis_list[0].source,
@@ -331,8 +330,11 @@ def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
                              source=vis.source,
                              meta=vis.meta)
     
-    newvis.data['vis'][..., 0, :] = numpy.sum(vis.data['vis'] * vis.flagged_weight, axis=-2)
     newvis.data['flags'][..., 0, :] = numpy.sum(vis.flags, axis=-2)
+    newvis.data['flags'][newvis.data['flags']<nchan] = 0
+    newvis.data['flags'][newvis.data['flags']>1] = 1
+
+    newvis.data['vis'][..., 0, :] = numpy.sum(vis.data['vis'] * vis.flagged_weight, axis=-2)
     newvis.data['weight'][..., 0, :] = numpy.sum(vis.flagged_weight, axis=-2)
     newvis.data['imaging_weight'][..., 0, :] = numpy.sum(vis.flagged_imaging_weight, axis=-2)
     mask = newvis.flagged_weight > 0.0
