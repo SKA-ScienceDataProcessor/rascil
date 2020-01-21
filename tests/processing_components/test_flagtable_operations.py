@@ -43,6 +43,7 @@ class TestFlagTableOperations(unittest.TestCase):
                                      polarisation_frame=self.polarisation_frame,
                                      weight=1.0)
         ft = create_flagtable_from_blockvisibility(bvis)
+        print(ft)
         assert len(ft.data) == len(bvis.data)
 
     def test_create_flagtable_from_rows(self):

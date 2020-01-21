@@ -107,7 +107,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     nrows = nbaselines * ntimes * nch
     nrowsperintegration = nbaselines * nch
     rvis = numpy.zeros([nrows, npol], dtype='complex')
-    rflags = numpy.ones([nrows, npol], dtype='int')
+    rflags = numpy.zeros([nrows, npol], dtype='int')
     rweight = weight * numpy.ones([nrows, npol])
     rtimes = numpy.zeros([nrows])
     rfrequency = numpy.zeros([nrows])
@@ -233,7 +233,7 @@ def create_blockvisibility(config: Configuration,
     nchan = len(frequency)
     visshape = [ntimes, nants, nants, nchan, npol]
     rvis = numpy.zeros(visshape, dtype='complex')
-    rflags = numpy.ones(visshape, dtype='int')
+    rflags = numpy.zeros(visshape, dtype='int')
     rweight = weight * numpy.ones(visshape)
     rimaging_weight = numpy.ones(visshape)
     rtimes = numpy.zeros([ntimes])

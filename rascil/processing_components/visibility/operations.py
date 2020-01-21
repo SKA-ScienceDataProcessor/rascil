@@ -113,7 +113,7 @@ def concatenate_blockvisibility_frequency(bvis_list):
     uvw = bvis_list[0].uvw
     integration_time = bvis_list[0].integration_time
     vis = numpy.zeros([nvis, nants, nants, nchan, npol], dtype='complex')
-    flags = numpy.ones([nvis, nants, nants, nchan, npol], dtype='int')
+    flags = numpy.zeros([nvis, nants, nants, nchan, npol], dtype='int')
     weight = numpy.ones([nvis, nants, nants, nchan, npol])
     imaging_weight = numpy.ones([nvis, nants, nants, nchan, npol])
     

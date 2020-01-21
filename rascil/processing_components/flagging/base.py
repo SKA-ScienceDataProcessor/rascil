@@ -53,7 +53,8 @@ def create_flagtable_from_blockvisibility(bvis: BlockVisibility, **kwargs) -> Fl
     """
     return FlagTable(flags=bvis.flags, frequency=bvis.frequency, channel_bandwidth=bvis.channel_bandwidth,
                      configuration=bvis.configuration, time=bvis.time,
-                     integration_time=bvis.integration_time)
+                     integration_time=bvis.integration_time,
+                     polarisation_frame=bvis.polarisation_frame)
 
 
 def create_flagtable_from_rows(ft: FlagTable, rows: numpy.ndarray):
