@@ -368,11 +368,11 @@ def convert_blockvisibility_to_stokes(vis):
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):
         vis.data['vis'] = convert_linear_to_stokes(vis.data['vis'], polaxis=4)
-        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
+        vis.flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
         vis.polarisation_frame = PolarisationFrame('stokesIQUV')
     elif poldef == PolarisationFrame('circular'):
         vis.data['vis'] = convert_circular_to_stokes(vis.data['vis'], polaxis=4)
-        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
+        vis.flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
         vis.polarisation_frame = PolarisationFrame('stokesIQUV')
     return vis
 
