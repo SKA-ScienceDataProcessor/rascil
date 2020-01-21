@@ -289,7 +289,7 @@ def divide_visibility(vis: BlockVisibility, modelvis: BlockVisibility):
                     for chan in range(nchan):
                         ovis = numpy.matrix(vis.vis[row, ant2, ant1, chan].reshape([2, 2]))
                         mvis = numpy.matrix(modelvis.vis[row, ant2, ant1, chan].reshape([2, 2]))
-                        wt = numpy.matrix(vis.flagged_weight[row, ant2, ant1, chan].reshape([2, 2]))
+                        wt = numpy.matrix(vis.weight[row, ant2, ant1, chan].reshape([2, 2]))
                         x[row, ant2, ant1, chan] = numpy.matmul(numpy.linalg.inv(mvis), ovis)
                         xwt[row, ant2, ant1, chan] = numpy.dot(mvis, numpy.multiply(wt, mvis.H)).real
         x = x.reshape((nrows, nants, nants, nchan, nrec * nrec))
