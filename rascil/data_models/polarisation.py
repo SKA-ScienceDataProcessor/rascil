@@ -132,13 +132,15 @@ def polmatrixmultiply(cm, vec, polaxis=1):
         # e.g. if polaxis=2 1000, 3, 4 becomes 4, 1000, 3
         result = numpy.tensordot(cm, vec, axes=(1, polaxis))
         permut = list(range(len(vec.shape)))
-        assert polaxis < 4 and polaxis > 0, "Error in polarisation conversion logic"
+        assert polaxis < 5 and polaxis > 0, "Error in polarisation conversion logic"
         if polaxis == 1:
             permut[0], permut[1] = permut[1], permut[0]
         elif polaxis == 2:
             permut[0], permut[1], permut[2] = permut[1], permut[2], permut[0]
         elif polaxis == 3:
-            permut[0], permut[1], permut[2] = permut[1], permut[2], permut[0]
+            permut[0], permut[1], permut[2], permut[3] = permut[1], permut[2], permut[3], permut[0]
+        elif polaxis == 4:
+            permut[0], permut[1], permut[2], permut[3], permut[4] = permut[1], permut[2], permut[3], permut[4], permut[0]
         transposed = numpy.transpose(result, axes=permut)
         assert transposed.shape == vec.shape
         return transposed

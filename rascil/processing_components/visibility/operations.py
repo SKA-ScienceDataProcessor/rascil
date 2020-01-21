@@ -366,9 +366,11 @@ def convert_blockvisibility_to_stokes(vis):
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):
         vis.data['vis'] = convert_linear_to_stokes(vis.data['vis'], polaxis=4)
+        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
         vis.polarisation_frame = PolarisationFrame('stokesIQUV')
     elif poldef == PolarisationFrame('circular'):
         vis.data['vis'] = convert_circular_to_stokes(vis.data['vis'], polaxis=4)
+        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
         vis.polarisation_frame = PolarisationFrame('stokesIQUV')
     return vis
 
@@ -383,10 +385,12 @@ def convert_visibility_to_stokesI(vis):
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):
         vis_data = convert_linear_to_stokesI(vis.data['vis'])
+        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
         vis_weight = (vis.flagged_weight[..., 0] + vis.flagged_weight[..., 3])[..., numpy.newaxis]
         vis_imaging_weight = (vis.flagged_imaging_weight[..., 0] + vis.flagged_imaging_weight[..., 3])[..., numpy.newaxis]
     elif poldef == PolarisationFrame('circular'):
         vis_data = convert_circular_to_stokesI(vis.data['vis'])
+        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
         vis_weight = (vis.flagged_weight[..., 0] + vis.flagged_weight[..., 3])[..., numpy.newaxis]
         vis_imaging_weight = (vis.flagged_imaging_weight[..., 0] + vis.flagged_imaging_weight[..., 3])[..., numpy.newaxis]
     else:
@@ -394,7 +398,7 @@ def convert_visibility_to_stokesI(vis):
     
     return Visibility(frequency=vis.frequency, channel_bandwidth=vis.channel_bandwidth,
                       phasecentre=vis.phasecentre, configuration=vis.configuration, uvw=vis.uvw,
-                      time=vis.time, antenna1=vis.antenna1, antenna2=vis.antenna2, vis=vis_data,
+                      time=vis.time, antenna1=vis.antenna1, antenna2=vis.antenna2, vis=vis_data, flags=vis_flags,
                       weight=vis_weight, imaging_weight=vis_imaging_weight, integration_time=vis.integration_time,
                       polarisation_frame=polarisation_frame, cindex=vis.cindex,
                       blockvis=vis.blockvis, source=vis.source, meta=vis.meta)
@@ -410,10 +414,12 @@ def convert_blockvisibility_to_stokesI(vis):
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):
         vis_data = convert_linear_to_stokesI(vis.data['vis'])
+        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
         vis_weight = (vis.flagged_weight[..., 0] + vis.flagged_weight[..., 3])[..., numpy.newaxis]
         vis_imaging_weight = (vis.flagged_imaging_weight[..., 0] + vis.flagged_imaging_weight[..., 3])[..., numpy.newaxis]
     elif poldef == PolarisationFrame('circular'):
         vis_data = convert_circular_to_stokesI(vis.data['vis'])
+        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[..., numpy.newaxis]
         vis_weight = (vis.flagged_weight[..., 0] + vis.flagged_weight[..., 3])[..., numpy.newaxis]
         vis_imaging_weight = (vis.flagged_imaging_weight[..., 0] + vis.flagged_imaging_weight[..., 3])[..., numpy.newaxis]
     else:
@@ -421,6 +427,6 @@ def convert_blockvisibility_to_stokesI(vis):
     
     return BlockVisibility(frequency=vis.frequency, channel_bandwidth=vis.channel_bandwidth,
                            phasecentre=vis.phasecentre, configuration=vis.configuration, uvw=vis.uvw,
-                           time=vis.time, vis=vis_data,
+                           time=vis.time, vis=vis_data, flags=vis_flags,
                            weight=vis_weight, imaging_weight=vis_imaging_weight, integration_time=vis.integration_time,
                            polarisation_frame=polarisation_frame, source=vis.source, meta=vis.meta)
