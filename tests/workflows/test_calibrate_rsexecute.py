@@ -120,7 +120,7 @@ class TestCalibrateGraphs(unittest.TestCase):
     
         assert len(calibrate_list) == 2
         assert numpy.max(calibrate_list[1][0]['T'].residual) < 7e-6, numpy.max(calibrate_list[1][0]['T'].residual)
-        err = numpy.max(numpy.abs(calibrate_list[0][0].vis - self.blockvis_list[0].vis))
+        err = numpy.max(numpy.abs(calibrate_list[0][0].flagged_vis - self.blockvis_list[0].flagged_vis))
         assert err < 2e-6, err
 
     def test_calibrate_rsexecute_empty(self):
@@ -160,7 +160,7 @@ class TestCalibrateGraphs(unittest.TestCase):
 
         assert len(calibrate_list) == 2
         assert numpy.max(calibrate_list[1][0]['T'].residual) < 7e-6, numpy.max(calibrate_list[1][0]['T'].residual)
-        err = numpy.max(numpy.abs(calibrate_list[0][0].vis - self.blockvis_list[0].vis))
+        err = numpy.max(numpy.abs(calibrate_list[0][0].flagged_vis - self.blockvis_list[0].flagged_vis))
         assert err < 2e-6, err
 
     def test_calibrate_rsexecute_global_empty(self):
