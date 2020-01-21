@@ -125,8 +125,8 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, vis_slic
             # The shape of the mueller matrix is
             ntimes, nant, nchan, nrec, _ = gain.shape
             
-            original = vis.flagged_vis[rows]
-            originalwt = vis.flagged_weight[rows]
+            original = vis.vis[rows]
+            originalwt = vis.weight[rows]
             applied = copy.deepcopy(original)
             appliedwt = copy.deepcopy(originalwt)
             for time in range(ntimes):

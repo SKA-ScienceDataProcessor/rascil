@@ -226,7 +226,7 @@ def griddata_reweight(vis, griddata, cf):
     pu_grid, pu_offset, pv_grid, pv_offset, pwg_grid, pwg_fraction, pwc_grid, pwc_fraction, pfreq_grid = \
         convolution_mapping(vis, griddata, cf)
     _, _, _, _, _, gv, gu = cf.shape
-    coords = zip(vis.flagged_imaging_weight, pfreq_grid, pu_grid, pv_grid, pwg_grid)
+    coords = zip(vis.imaging_weight, pfreq_grid, pu_grid, pv_grid, pwg_grid)
     
     for vwt, chan, xx, yy, zzg in coords:
         if numpy.real(griddata.data[chan, :, zzg, yy, xx]).all() > 0.0:
