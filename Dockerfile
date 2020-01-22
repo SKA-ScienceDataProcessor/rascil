@@ -62,8 +62,10 @@ RUN mkdir -p /rascil/test_results && \
 # We share in the rascil data here
 #VOLUME ["/rascil/data", "/rascil/tmp"]
 
+RUN ls -lt /rascil/entrypoint.sh
+
 # Use entrypoint script to create a user on the fly and avoid running as root.
-COPY build/lib/rascil/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY /rascil/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]

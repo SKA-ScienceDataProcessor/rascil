@@ -10,6 +10,7 @@ name: rascil_env
 channels:
   - astropy
   - defaults
+  - conda-forge
 dependencies:
   - numpy
   - scipy
@@ -29,9 +30,9 @@ dependencies:
   - reproject
   - numba
   - pip
+  - python-casacore
+  - pyfftw
   - pip:
     - seqfile
     - aotools
-    - python-casacore
-    - pyfftw
 
