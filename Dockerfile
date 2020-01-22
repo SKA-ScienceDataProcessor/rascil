@@ -26,35 +26,25 @@ RUN \
             python3-software-properties build-essential curl wget fonts-liberation ca-certificates libcfitsio-dev libffi-dev && \
     apt-get install -y git-lfs && \
     git lfs install && \
-    apt-get install -y $PYTHON-dev $PYTHON-tk flake8 $PYTHON-nose \
-            virtualenv virtualenvwrapper && \
+    apt-get install -y $PYTHON-dev $PYTHON-tk && \
     apt-get install -y graphviz && \
     apt-get install -y nodejs npm && \
+    apt-get install -y gosu && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 RUN git clone -b feature_docker https://github.com/SKA-ScienceDataProcessor/rascil.git
 
-RUN ls /rascil
-
 # runtime specific environment
 ENV PYTHONPATH /rascil:/rascil/rascil_env
 ENV RASCIL /rascil
 
-RUN touch "${HOME}/.bash_profile"
-
-RUN conda init bash
-
 # run setup
 RUN \
     cd /rascil && \
-    conda env create -f environment.yml && \
-    conda activate rascil_env && \
-    conda config --env --prepend channels astropy && \
+    pip install -r requirements.txt && \
     $PYTHON setup.py build && \
     $PYTHON setup.py install
-
-RUN conda init bash
 
 # create space for libs
 RUN mkdir -p /rascil/test_results && \
@@ -63,10 +53,19 @@ RUN mkdir -p /rascil/test_results && \
 # We share in the rascil data here
 #VOLUME ["/rascil/data", "/rascil/tmp"]
 
-RUN ls -lt /rascil/entrypoint.sh
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        cron \
+        gosu \
+    && rm -rf /var/lib/apt/lists/*
+    
+RUN chmod a+x /rascil/entrypoint.sh
 
 # Use entrypoint script to create a user on the fly and avoid running as root.
-COPY /rascil/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN \
+    cd /rascil && \
+    cp entrypoint.sh /usr/local/bin/entrypoint.sh
+
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
