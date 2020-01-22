@@ -14,8 +14,8 @@ LABEL \
       org.skatelescope.version="0.1.0" \
       org.skatelescope.website="http://github.com/SKA-ScienceDataProcessor/rascil/"
 
-ENV PATH=/rascil/venv/bin:$PATH \
-    VIRTUAL_ENV=/rascil/venv \
+ENV PATH=/rascil/rascil_env/bin:$PATH \
+    VIRTUAL_ENV=/rascil/rascil_env \
     HOME=/root \
     DEBIAN_FRONTEND=noninteractive
 
@@ -36,36 +36,34 @@ RUN \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-RUN mkdir -p /rascil
-
-WORKDIR /rascil
-RUN virtualenv -p $PYTHON ${VIRTUAL_ENV}
-
-RUN git clone https://github.com/SKA-ScienceDataProcessor/rascil.git
+RUN git clone -b feature_docker https://github.com/SKA-ScienceDataProcessor/rascil.git
 
 RUN ls /rascil
 
 # runtime specific environment
-ENV PYTHONPATH /rascil
+ENV PYTHONPATH /rascil:/rascil/rascil_env
 ENV RASCIL /rascil
 
 RUN touch "${HOME}/.bash_profile"
 
 # run setup
 RUN \
-    cd /rascil/rascil && \
+    cd /rascil && \
+    conda env create -f environment.yml && \
+    conda activate rascil_env && \
+    conda config --env --prepend channels astropy && \
     $PYTHON setup.py build && \
     $PYTHON setup.py install
 
 # create space for libs
-RUN mkdir -p /rascil/test_data /rascil/test_results && \
-    chmod 777 /rascil /rascil/test_data /rascil/test_results
+RUN mkdir -p /rascil/test_results && \
+    chmod 777 /rascil /rascil/test_results
 
 # We share in the rascil data here
-VOLUME ["/rascil/data", "/rascil/tmp"]
+#VOLUME ["/rascil/data", "/rascil/tmp"]
 
 # Use entrypoint script to create a user on the fly and avoid running as root.
-COPY /rascil/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY build/lib/rascil/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
