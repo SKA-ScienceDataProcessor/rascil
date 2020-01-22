@@ -24,9 +24,6 @@ RUN \
     apt-get update -y && \
     apt-get install -y software-properties-common pkg-config dirmngr \
             python3-software-properties build-essential curl wget fonts-liberation ca-certificates libcfitsio-dev libffi-dev && \
-    add-apt-repository -y ppa:git-core/ppa && \
-    curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | bash && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 6B05F25D762E3157 && \
     apt-get install -y git-lfs && \
     git lfs install && \
     apt-get install -y $PYTHON-dev $PYTHON-tk flake8 $PYTHON-nose \
@@ -46,6 +43,8 @@ ENV RASCIL /rascil
 
 RUN touch "${HOME}/.bash_profile"
 
+RUN conda init bash
+
 # run setup
 RUN \
     cd /rascil && \
@@ -54,6 +53,8 @@ RUN \
     conda config --env --prepend channels astropy && \
     $PYTHON setup.py build && \
     $PYTHON setup.py install
+
+RUN conda init bash
 
 # create space for libs
 RUN mkdir -p /rascil/test_results && \
