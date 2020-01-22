@@ -5,14 +5,14 @@ ARG PYTHON=python3
 ARG PIP=pip3
 
 LABEL \
-      author="Piers Harding <piers.harding@catalyst.net.nz>" \
-      description="ARL reference image" \
+      author="Tim Cornwell <realtimcornwell@gmail.com>" \
+      description="RASCIL reference image" \
       license="Apache2.0" \
-      registry="library/piersharding/arl" \
+      registry="library/timcornwell/rascil" \
       vendor="Catalyst" \
       org.skatelescope.team="Systems Team" \
       org.skatelescope.version="0.1.0" \
-      org.skatelescope.website="http://github.com/SKA-ScienceDataProcessor/algorithm-reference-library/"
+      org.skatelescope.website="http://github.com/SKA-ScienceDataProcessor/rascil/"
 
 # Set environment variables for pipenv execution:
 #
@@ -57,6 +57,8 @@ RUN \
 RUN if [ ! -f /usr/bin/node ]; then ln -s /usr/bin/nodejs /usr/bin/node ; fi && \
     node --version
 
+RUN mkdir -p /src
+
 # sort out pip and python for 3.x
 RUN cd /src; wget https://bootstrap.pypa.io/get-pip.py && $PYTHON get-pip.py; \
     rm -rf /root/.cache
@@ -67,9 +69,9 @@ RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.18.0/tini 
     mv tini /usr/local/bin/tini && \
     chmod +x /usr/local/bin/tini
 
-RUN mkdir -p /arl
+RUN mkdir -p /rascil
 
-WORKDIR /arl
+WORKDIR /rascil
 RUN virtualenv -p $PYTHON ${VIRTUAL_ENV}
 
 # Install pipenv into the new virtual environment
@@ -80,7 +82,7 @@ RUN pip install pipenv; rm -rf /root/.cache
 COPY Pipfile /src/Pipfile
 COPY Pipfile.lock /src/Pipfile.lock
 
-# Install ARL dependencies into the virtual environment.
+# Install RASCIL dependencies into the virtual environment.
 RUN cd /src; pipenv install --dev; rm -rf /root/.cache
 
 
@@ -92,9 +94,9 @@ RUN jupyter nbextensions_configurator enable --system
 
 # runtime specific environment
 ENV JENKINS_URL 1
-ENV PYTHONPATH /arl
-ENV ARL /arl
-ENV JUPYTER_PATH /rascil/examples/arl
+ENV PYTHONPATH /rascil
+ENV RASCIL /rascil
+ENV JUPYTER_PATH /rascil/examples/notebookd
 
 RUN touch "${HOME}/.bash_profile"
 
@@ -105,17 +107,14 @@ COPY . /rascil/
 
 # run setup
 RUN \
-    cd /arl && \
+    cd /rascil && \
     $PYTHON setup.py build && \
     $PYTHON setup.py install && \
-    cp ./build/lib.*/*.so . && \
-    cd /rascil/workflows/ffiwrapped/serial && \
-    make && \
-    $PIP install mpi4py
+    cp ./build/lib.*/*.so . 
 
 # create space for libs
 RUN mkdir -p /rascil/test_data /rascil/test_results && \
-    chmod 777 /arl /rascil/test_data /rascil/test_results
+    chmod 777 /rascil /rascil/test_data /rascil/test_results
 
 COPY --chown="1000:100" ./docker/jupyter_notebook_config.py "${HOME}/.jupyter/"
 COPY ./docker/notebook.sh /usr/local/bin/
