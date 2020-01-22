@@ -1,5 +1,5 @@
 # Universal image for running Notebook, Dask pipelines, libs, and lint checkers
-ARG BASE_IMAGE=ubuntu:18.04
+ARG BASE_IMAGE=daskdev/dask
 FROM $BASE_IMAGE
 ARG PYTHON=python3
 ARG PIP=pip3
@@ -14,25 +14,8 @@ LABEL \
       org.skatelescope.version="0.1.0" \
       org.skatelescope.website="http://github.com/SKA-ScienceDataProcessor/rascil/"
 
-# Set environment variables for pipenv execution:
-#
-# * LC_ALL and LANG: Pipenv (specifically, its Click dependency) exits with an
-#   error unless the language encoding is set.
-# * PIPENV_TIMEOUT: increased Pipenv timeout as locking dependencies takes
-#   *forever* inside a Docker container.
-# * PATH: puts virtualenv python/pip/pipenv first on path
-# * VIRTUAL_ENV: for completeness. This environment variable would have been
-#   set by 'source /venv/bin/activate'
-# * PIPENV_VERBOSITY: hides warning about pipenv running inside a virtualenv.
-# * PIPENV_NOSPIN: disables animated spinner for cleaner CI logs
-#
-ENV LC_ALL=C.UTF-8 \
-    LANG=C.UTF-8 \
-    PIPENV_TIMEOUT=900 \
-    PATH=/rascil/venv/bin:$PATH \
+ENV PATH=/rascil/venv/bin:$PATH \
     VIRTUAL_ENV=/rascil/venv \
-    PIPENV_VERBOSITY=-1 \
-    PIPENV_NOSPIN=1 \
     HOME=/root \
     DEBIAN_FRONTEND=noninteractive
 
@@ -53,82 +36,36 @@ RUN \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-# node node is linked to nodejs
-RUN if [ ! -f /usr/bin/node ]; then ln -s /usr/bin/nodejs /usr/bin/node ; fi && \
-    node --version
-
-RUN mkdir -p /src
-
-# sort out pip and python for 3.x
-RUN cd /src; wget https://bootstrap.pypa.io/get-pip.py && $PYTHON get-pip.py; \
-    rm -rf /root/.cache
-
-# Install Tini
-RUN wget --quiet https://github.com/krallin/tini/releases/download/v0.18.0/tini && \
-    echo "12d20136605531b09a2c2dac02ccee85e1b874eb322ef6baf7561cd93f93c855 *tini" | sha256sum -c - && \
-    mv tini /usr/local/bin/tini && \
-    chmod +x /usr/local/bin/tini
-
 RUN mkdir -p /rascil
 
 WORKDIR /rascil
 RUN virtualenv -p $PYTHON ${VIRTUAL_ENV}
 
-# Install pipenv into the new virtual environment
-RUN pip install pipenv; rm -rf /root/.cache
+RUN git clone https://github.com/SKA-ScienceDataProcessor/rascil.git
 
-# Copy the Pipfile and frozen hashes (Pipfile.lock) across to the image so
-# that pipenv knows what to install
-COPY Pipfile /src/Pipfile
-COPY Pipfile.lock /src/Pipfile.lock
-
-# Install RASCIL dependencies into the virtual environment.
-RUN cd /src; pipenv install --dev; rm -rf /root/.cache
-
-
-# Add and install Jupyter dependencies
-RUN $PIP install bokeh && $PIP install pytest; $PIP install jupyter_nbextensions_configurator; $PIP install jupyter_contrib_nbextensions; rm -rf /root/.cache
-RUN $PIP install -U pylint; rm -rf /root/.cache
-RUN jupyter contrib nbextension install --system --symlink
-RUN jupyter nbextensions_configurator enable --system
+RUN ls /rascil
 
 # runtime specific environment
-ENV JENKINS_URL 1
 ENV PYTHONPATH /rascil
 ENV RASCIL /rascil
-ENV JUPYTER_PATH /rascil/examples/notebookd
 
 RUN touch "${HOME}/.bash_profile"
 
-# Bundle app source
-# COPY limited by /.dockerignore
-COPY ./docker/boot.sh ./Makefile ./setup.py /rascil/
-COPY . /rascil/
-
 # run setup
 RUN \
-    cd /rascil && \
+    cd /rascil/rascil && \
     $PYTHON setup.py build && \
-    $PYTHON setup.py install && \
-    cp ./build/lib.*/*.so . 
+    $PYTHON setup.py install
 
 # create space for libs
 RUN mkdir -p /rascil/test_data /rascil/test_results && \
     chmod 777 /rascil /rascil/test_data /rascil/test_results
 
-COPY --chown="1000:100" ./docker/jupyter_notebook_config.py "${HOME}/.jupyter/"
-COPY ./docker/notebook.sh /usr/local/bin/
-COPY ./docker/start-dask-scheduler.sh /usr/local/bin/
-COPY ./docker/start-dask-worker.sh /usr/local/bin
-
 # We share in the rascil data here
 VOLUME ["/rascil/data", "/rascil/tmp"]
 
-# Expose Jupyter and Bokeh ports
-EXPOSE  8888 8786 8787 8788 8789
-
-# Setup the entrypoint or environment
-ENTRYPOINT ["tini", "--"]
-
-# Run - default is notebook
-CMD ["/rascil/boot.sh"]
+# Use entrypoint script to create a user on the fly and avoid running as root.
+COPY /rascil/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["/bin/bash"]
