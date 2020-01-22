@@ -168,7 +168,7 @@ def visibility_gather_channel(vis_list: List[BlockVisibility], vis: BlockVisibil
     :return:
     """
     
-    cols = ['vis', 'weight']
+    cols = ['vis', 'weight', 'imaging_weight', 'flags']
     
     if vis is None:
         
@@ -186,7 +186,7 @@ def visibility_gather_channel(vis_list: List[BlockVisibility], vis: BlockVisibil
                               uvw=vis_list[0].uvw,
                               time=vis_list[0].time,
                               vis=numpy.zeros(vis_shape, dtype=vis_list[0].vis.dtype),
-                              flags=numpy.ones(vis_shape, dtype=vis_list[0].flags.dtype),
+                              flags=numpy.zeros(vis_shape, dtype=vis_list[0].flags.dtype),
                               weight=numpy.ones(vis_shape, dtype=vis_list[0].weight.dtype),
                               imaging_weight=numpy.ones(vis_shape, dtype=vis_list[0].weight.dtype),
                               integration_time=vis_list[0].integration_time,
