@@ -28,7 +28,6 @@ RUN \
     git lfs install && \
     apt-get install -y $PYTHON-dev $PYTHON-tk && \
     apt-get install -y graphviz && \
-    apt-get install -y nodejs npm && \
     apt-get install -y gosu && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
@@ -44,28 +43,18 @@ RUN \
     cd /rascil && \
     pip install -r requirements.txt && \
     $PYTHON setup.py build && \
-    $PYTHON setup.py install
-
-# create space for libs
-RUN mkdir -p /rascil/test_results && \
+    $PYTHON setup.py install && \
+    mkdir -p /rascil/test_results && \
     chmod 777 /rascil /rascil/test_results
 
 # We share in the rascil data here
-#VOLUME ["/rascil/data", "/rascil/tmp"]
-
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        cron \
-        gosu \
-    && rm -rf /var/lib/apt/lists/*
-    
-RUN chmod a+x /rascil/entrypoint.sh
-
+VOLUME ["/rascil/data", "/rascil/tmp"]
 # Use entrypoint script to create a user on the fly and avoid running as root.
+
 RUN \
     cd /rascil && \
-    cp entrypoint.sh /usr/local/bin/entrypoint.sh
+    cp entrypoint.sh /usr/local/bin/entrypoint.sh && \
+    chmod +x /usr/local/bin/entrypoint.sh
 
-RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
