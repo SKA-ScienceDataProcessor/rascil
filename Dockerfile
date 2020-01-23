@@ -24,8 +24,6 @@ RUN \
     apt-get update -y && \
     apt-get install -y software-properties-common pkg-config dirmngr \
             python3-software-properties build-essential curl wget fonts-liberation ca-certificates libcfitsio-dev libffi-dev && \
-    apt-get install -y git-lfs && \
-    git lfs install && \
     apt-get install -y $PYTHON-dev $PYTHON-tk && \
     apt-get install -y graphviz && \
     apt-get install -y gosu && \
