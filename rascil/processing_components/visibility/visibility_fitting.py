@@ -39,7 +39,7 @@ def fit_visibility(vis, sc, tol=1e-6, niter=20, verbose=False, method='trust-exa
         vobs = vis.vis
         p = numpy.exp( -2j * numpy.pi * (u * l + v * m))
         vres = vobs - S * p
-        J = numpy.sum(vis.weight * (vres * numpy.conjugate(vres)).real)
+        J = numpy.sum(vis.flagged_weight * (vres * numpy.conjugate(vres)).real)
         return J
 
 
@@ -53,8 +53,8 @@ def fit_visibility(vis, sc, tol=1e-6, niter=20, verbose=False, method='trust-exa
         vobs = vis.vis
         p = numpy.exp( -2j * numpy.pi * (u * l + v * m))
         vres = vobs - S * p
-        Vrp = vres * numpy.conjugate(p) * vis.weight
-        J = numpy.sum(vis.weight * (vres * numpy.conjugate(vres)).real)
+        Vrp = vres * numpy.conjugate(p) * vis.flagged_weight
+        J = numpy.sum(vis.flagged_weight * (vres * numpy.conjugate(vres)).real)
         gradJ = numpy.array([- 2.0 * numpy.sum(Vrp.real),
                              + 4.0 * numpy.pi * S * numpy.sum(u * Vrp.imag),
                              + 4.0 * numpy.pi * S * numpy.sum(v * Vrp.imag)])
@@ -68,7 +68,7 @@ def fit_visibility(vis, sc, tol=1e-6, niter=20, verbose=False, method='trust-exa
         u = vis.u[:, numpy.newaxis]
         v = vis.v[:, numpy.newaxis]
         w = vis.w[:, numpy.newaxis]
-        wt = vis.weight
+        wt = vis.flagged_weight
 
         vobs = vis.vis
         p = numpy.exp( -2j * numpy.pi * (u * l + v * m))

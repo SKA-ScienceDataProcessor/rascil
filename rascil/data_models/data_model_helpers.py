@@ -13,6 +13,8 @@ __all__ = ['convert_earthlocation_to_string',
            'convert_hdf_to_visibility',
            'convert_blockvisibility_to_hdf',
            'convert_hdf_to_blockvisibility',
+           'convert_flagtable_to_hdf',
+           'convert_hdf_to_flagtable',
            'export_visibility_to_hdf5',
            'import_visibility_from_hdf5',
            'export_blockvisibility_to_hdf5',
@@ -57,10 +59,14 @@ __all__ = ['convert_earthlocation_to_string',
            'convert_hdf_to_visibility',
            'convert_blockvisibility_to_hdf',
            'convert_hdf_to_blockvisibility',
+           'convert_flagtable_to_hdf',
+           'convert_hdf_to_flagtable',
            'export_visibility_to_hdf5',
            'import_visibility_from_hdf5',
            'export_blockvisibility_to_hdf5',
            'import_blockvisibility_from_hdf5',
+           'export_flagtable_to_hdf5',
+           'import_flagtable_from_hdf5',
            'convert_gaintable_to_hdf',
            'convert_hdf_to_gaintable',
            'export_gaintable_to_hdf5',
@@ -103,7 +109,7 @@ from astropy.units import Quantity
 from astropy.wcs import WCS
 
 from rascil.data_models import Visibility, BlockVisibility, Configuration, GridData, \
-    GainTable, SkyModel, Skycomponent, Image, GridData, ConvolutionFunction, PointingTable
+    GainTable, SkyModel, Skycomponent, Image, GridData, ConvolutionFunction, PointingTable, FlagTable
 from rascil.data_models.polarisation import PolarisationFrame, ReceptorFrame
 
 def convert_earthlocation_to_string(el: EarthLocation):
@@ -242,7 +248,7 @@ def convert_blockvisibility_to_hdf(vis: BlockVisibility, f):
     :return:
     """
     assert isinstance(vis, BlockVisibility)
-    
+
     f.attrs['RASCIL_data_model'] = 'BlockVisibility'
     f.attrs['nvis'] = vis.nvis
     f.attrs['npol'] = vis.npol
@@ -278,6 +284,38 @@ def convert_hdf_to_blockvisibility(f):
                           phasecentre=phasecentre, frequency=frequency,
                           channel_bandwidth=channel_bandwidth, source=source,
                           meta=meta)
+    vis.configuration = convert_configuration_from_hdf(f)
+    return vis
+
+
+def convert_flagtable_to_hdf(ft: FlagTable, f):
+    """ Convert flagtable to HDF
+
+    :param ft:
+    :param f: HDF root
+    :return:
+    """
+    assert isinstance(ft, FlagTable)
+
+    f.attrs['RASCIL_data_model'] = 'FlagTable'
+    f.attrs['frequency'] = ft.frequency
+    f.attrs['channel_bandwidth'] = ft.channel_bandwidth
+    f['data'] = ft.data
+    f = convert_configuration_to_hdf(ft.configuration, f)
+    return f
+
+
+def convert_hdf_to_flagtable(f):
+    """ Convert HDF root to flagtable
+
+    :param f:
+    :return:
+    """
+    assert f.attrs['RASCIL_data_model'] == "FlagTable", "Not a FlagTable"
+    frequency = f.attrs['frequency']
+    channel_bandwidth = f.attrs['channel_bandwidth']
+    data = numpy.array(f['data'])
+    vis = FlagTable(data=data, frequency=frequency, channel_bandwidth=channel_bandwidth)
     vis.configuration = convert_configuration_from_hdf(f)
     return vis
 
@@ -323,7 +361,7 @@ def export_blockvisibility_to_hdf5(vis, filename):
     :param filename:
     :return:
     """
-    
+
     if not isinstance(vis, collections.Iterable):
         vis = [vis]
     with h5py.File(filename, 'w') as f:
@@ -341,7 +379,7 @@ def import_blockvisibility_from_hdf5(filename):
     :param filename:
     :return: If only one then a BlockVisibility, otherwise a list of BlockVisibility's
     """
-    
+
     with h5py.File(filename, 'r') as f:
         nvislist = f.attrs['number_data_models']
         vislist = [convert_hdf_to_blockvisibility(f['BlockVisibility%d' % i]) for i in range(nvislist)]
@@ -349,6 +387,41 @@ def import_blockvisibility_from_hdf5(filename):
             return vislist[0]
         else:
             return vislist
+
+
+def export_flagtable_to_hdf5(ft, filename):
+    """ Export a FlagTable to HDF5 format
+
+    :param ft:
+    :param filename:
+    :return:
+    """
+
+    if not isinstance(ft, collections.Iterable):
+        ft = [ft]
+    with h5py.File(filename, 'w') as f:
+        f.attrs['number_data_models'] = len(ft)
+        for i, v in enumerate(ft):
+            assert isinstance(v, FlagTable)
+            vf = f.create_group('FlagTable%d' % i)
+            convert_flagtable_to_hdf(v, vf)
+        f.flush()
+
+
+def import_flagtable_from_hdf5(filename):
+    """Import a FlagTable from HDF5 format
+
+    :param filename:
+    :return: If only one then a FlagTable, otherwise a list of FlagTable's
+    """
+
+    with h5py.File(filename, 'r') as f:
+        nftlist = f.attrs['number_data_models']
+        ftlist = [convert_hdf_to_flagtable(f['FlagTable%d' % i]) for i in range(nftlist)]
+        if nftlist == 1:
+            return ftlist[0]
+        else:
+            return ftlist
 
 
 def convert_gaintable_to_hdf(gt: GainTable, f):
@@ -901,6 +974,8 @@ def memory_data_model_to_buffer(model, jbuff, dm):
         return export_skymodel_to_hdf5(model, name)
     elif dm["data_model"] == "GainTable":
         return export_gaintable_to_hdf5(model, name)
+    elif dm["data_model"] == "FlagTable":
+        return export_flagtable_to_hdf5(model, name)
     elif dm["data_model"] == "PointingTable":
         return export_pointingtable_to_hdf5(model, name)
     else:
@@ -930,6 +1005,8 @@ def buffer_data_model_to_memory(jbuff, dm):
         return import_skymodel_from_hdf5(name)
     elif dm["data_model"] == "GainTable":
         return import_gaintable_from_hdf5(name)
+    elif dm["data_model"] == "FlagTable":
+        return import_flagtable_from_hdf5(name)
     elif dm["data_model"] == "PointingTable":
         return import_pointingtable_from_hdf5(name)
     elif dm["data_model"] == "GridData":

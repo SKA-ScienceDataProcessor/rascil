@@ -11,7 +11,7 @@ import numpy
 from astropy.coordinates import SkyCoord
 
 from rascil.data_models.buffer_data_models import BufferImage, BufferBlockVisibility, BufferGainTable, BufferSkyModel, \
-    BufferConvolutionFunction, BufferGridData, BufferPointingTable
+    BufferConvolutionFunction, BufferGridData, BufferPointingTable, BufferFlagTable
 from rascil.data_models.memory_data_models import Skycomponent, SkyModel, BlockVisibility
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.griddata.operations import create_griddata_from_image
@@ -22,7 +22,7 @@ from rascil.processing_components.imaging.base import predict_skycomponent_visib
 from rascil.processing_components.simulation import simulate_gaintable, create_test_image
 from rascil.processing_components.simulation.pointing import simulate_pointingtable
 from rascil.processing_components.simulation import create_named_configuration
-from rascil.processing_components.visibility.base import create_blockvisibility
+from rascil.processing_components import create_blockvisibility, create_flagtable_from_blockvisibility
 
 
 class TestBufferDataModelHelpers(unittest.TestCase):
@@ -79,7 +79,7 @@ class TestBufferDataModelHelpers(unittest.TestCase):
                                           weight=1.0)
         gt = create_gaintable_from_blockvisibility(self.vis, timeslice='auto')
         gt = simulate_gaintable(gt, phase_error=1.0, amplitude_error=0.1)
-    
+
         config = {"buffer": {"directory": self.dir},
                   "gaintable": {"name": "test_buffergaintable.hdf", "data_model": "GainTable"}}
         bdm = BufferGainTable(config["buffer"], config["gaintable"], gt)
@@ -87,9 +87,28 @@ class TestBufferDataModelHelpers(unittest.TestCase):
         new_bdm = BufferGainTable(config["buffer"], config["gaintable"])
         new_bdm.sync()
         newgt = bdm.memory_data_model
-    
+
         assert gt.data.shape == newgt.data.shape
         assert numpy.max(numpy.abs(gt.gain - newgt.gain)) < 1e-15
+
+    def test_readwriteflagtable(self):
+        self.vis = create_blockvisibility(self.midcore, self.times, self.frequency,
+                                          channel_bandwidth=self.channel_bandwidth,
+                                          phasecentre=self.phasecentre,
+                                          polarisation_frame=PolarisationFrame("linear"),
+                                          weight=1.0)
+        ft = create_flagtable_from_blockvisibility(self.vis, timeslice='auto')
+
+        config = {"buffer": {"directory": self.dir},
+                  "flagtable": {"name": "test_bufferflagtable.hdf", "data_model": "FlagTable"}}
+        bdm = BufferFlagTable(config["buffer"], config["flagtable"], ft)
+        bdm.sync()
+        new_bdm = BufferFlagTable(config["buffer"], config["flagtable"])
+        new_bdm.sync()
+        newft = bdm.memory_data_model
+
+        assert ft.data.shape == newft.data.shape
+        assert numpy.max(numpy.abs(ft.flags - newft.flags)) < 1e-15
 
     def test_readwritepointingtable(self):
         self.vis = create_blockvisibility(self.midcore, self.times, self.frequency,

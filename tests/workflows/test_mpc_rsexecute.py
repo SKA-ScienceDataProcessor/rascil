@@ -46,11 +46,11 @@ class TestMPC(unittest.TestCase):
 
     def actualSetUp(self, freqwin=1, block=True, dopol=False, zerow=False):
         
-        self.npixel = 768
+        self.npixel = 512
         self.low = create_named_configuration('LOWBD2', rmax=550.0)
         self.freqwin = freqwin
         self.blockvis_list = list()
-        self.ntimes = 5
+        self.ntimes = 3
         self.cellsize = 0.0005
         # Choose the interval so that the maximum change in w is smallish
         integration_time = numpy.pi * (24 / (12 * 60))

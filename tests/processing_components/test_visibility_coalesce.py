@@ -14,7 +14,7 @@ from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.imaging.base import create_image_from_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.coalesce import coalesce_visibility, decoalesce_visibility, \
-    convert_blockvisibility_to_visibility
+    convert_blockvisibility_to_visibility, convert_visibility_to_blockvisibility
 from rascil.processing_components.visibility.base import create_blockvisibility, create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 from rascil.processing_components.imaging.weighting import weight_visibility
@@ -117,7 +117,7 @@ class TestCoalesce(unittest.TestCase):
             cvisslice = convert_blockvisibility_to_visibility(visslice)
             assert numpy.min(cvisslice.frequency) == numpy.min(self.frequency)
             assert numpy.min(cvisslice.frequency) > 0.0
-            dvisslice = decoalesce_visibility(cvisslice)
+            dvisslice = convert_visibility_to_blockvisibility(cvisslice)
             assert dvisslice.nvis == visslice.nvis
 
 

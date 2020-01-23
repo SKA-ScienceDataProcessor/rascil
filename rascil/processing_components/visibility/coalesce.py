@@ -64,12 +64,12 @@ def coalesce_visibility(vis: BlockVisibility, time_coal=0.0, frequency_coal=0.0,
     if time_coal == 0.0 and frequency_coal == 0.0:
         return convert_blockvisibility_to_visibility((vis))
 
-    cvis, cuvw, cwts, cimwt, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, cintegration_time, cindex \
-        = average_in_blocks(vis.data['vis'], vis.data['uvw'], vis.data['weight'], vis.data['imaging_weight'],
+    cvis, cflags, cuvw, cwts, cimwt, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, cintegration_time, cindex \
+        = average_in_blocks(vis.data['vis'], vis.data['flags'], vis.data['uvw'], vis.data['weight'], vis.data['imaging_weight'],
                             vis.time, vis.integration_time,
                             vis.frequency, vis.channel_bandwidth, time_coal, max_time_coal,
                             frequency_coal, max_frequency_coal)
-    coalesced_vis = Visibility(uvw=cuvw, time=ctime, frequency=cfrequency,
+    coalesced_vis = Visibility(uvw=cuvw, flags=cflags, time=ctime, frequency=cfrequency,
                                channel_bandwidth=cchannel_bandwidth,
                                phasecentre=vis.phasecentre, antenna1=ca1, antenna2=ca2, vis=cvis,
                                weight=cwts, imaging_weight=cimwt,
@@ -96,11 +96,11 @@ def convert_blockvisibility_to_visibility(vis: BlockVisibility) -> Visibility:
 
     assert isinstance(vis, BlockVisibility), "vis is not a BlockVisibility: %r" % vis
 
-    cvis, cuvw, cwts, cimaging_wts, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, cintegration_time, cindex \
-        = convert_blocks(vis.data['vis'], vis.data['uvw'], vis.data['weight'], vis.data['imaging_weight'],
+    cvis, cflags, cuvw, cwts, cimaging_wts, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, cintegration_time, cindex \
+        = convert_blocks(vis.data['vis'], vis.data['flags'], vis.data['uvw'], vis.data['weight'], vis.data['imaging_weight'],
                          vis.time, vis.integration_time,
                          vis.frequency, vis.channel_bandwidth)
-    converted_vis = Visibility(uvw=cuvw, time=ctime, frequency=cfrequency,
+    converted_vis = Visibility(uvw=cuvw, flags=cflags, time=ctime, frequency=cfrequency,
                                channel_bandwidth=cchannel_bandwidth,
                                phasecentre=vis.phasecentre, antenna1=ca1, antenna2=ca2, vis=cvis,
                                weight=cwts, imaging_weight=cimaging_wts,
@@ -138,6 +138,7 @@ def decoalesce_visibility(vis: Visibility, **kwargs) -> BlockVisibility:
     assert numpy.max(vis.cindex) < vis.vis.shape[0], "Incorrect template used in decoalescing"
     for i in range(dvis.size // npol):
         decomp_vis.data['vis'].flat[i:i + npol] = vis.data['vis'][vis.cindex[i]]
+        decomp_vis.data['flags'].flat[i:i + npol] = vis.data['flags'][vis.cindex[i]]
         decomp_vis.data['weight'].flat[i:i + npol] = vis.data['weight'][vis.cindex[i]]
         decomp_vis.data['imaging_weight'].flat[i:i + npol] = vis.data['imaging_weight'][vis.cindex[i]]
 
@@ -148,11 +149,12 @@ def decoalesce_visibility(vis: Visibility, **kwargs) -> BlockVisibility:
     return decomp_vis
 
 
-def average_in_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequency, channel_bandwidth,
+def average_in_blocks(vis, flags, uvw, wts, imaging_wts, times, integration_time, frequency, channel_bandwidth,
                       time_coal=1.0, max_time_coal=100, frequency_coal=1.0, max_frequency_coal=100):
     """ Average visibility in blocks
     
     :param vis:
+    :param flags:
     :param uvw:
     :param wts:
     :param imaging_wts:
@@ -186,7 +188,10 @@ def average_in_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequ
     # alltpwtsgrid = numpy.sum(allpwtsgrid, axis=0)
 
     # Optimized
-    allpwtsgrid = numpy.einsum('ijklm->ijkl', wts, optimize=True)
+    assert wts.shape == flags.shape
+    flagwts = wts
+    flagwts[flags > 0] = 0.0
+    allpwtsgrid = numpy.einsum('ijklm->ijkl', flagwts, optimize=True)
     allcpwtsgrid = numpy.einsum('ijkl->ijk', allpwtsgrid, optimize=True)
     alltpwtsgrid = numpy.einsum('ijkl->jkl', allpwtsgrid, optimize=True)
 
@@ -221,7 +226,7 @@ def average_in_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequ
     # uvdist = numpy.sqrt(numpy.einsum('ijkm,ijkm->ijk', uvw, uvw, optimize=True))
     uvdist_max = numpy.sqrt(numpy.max(uvdist, axis=0))
 
-    allpwtsgrid_bool = numpy.einsum('ijklm->jk', wts, optimize=True)
+    allpwtsgrid_bool = numpy.einsum('ijklm->jk', flagwts, optimize=True)
     mask = numpy.where(uvdist_max > 0.)
     mask0 = numpy.where(uvdist_max <= 0.)
     time_average[mask] = numpy.round((time_coal * uvmax / uvdist_max[mask]))
@@ -261,6 +266,7 @@ def average_in_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequ
     cfrequency = numpy.zeros([cnvis])
     cchannel_bandwidth = numpy.zeros([cnvis])
     cvis = numpy.zeros([cnvis, npol], dtype='complex')
+    cflags = numpy.zeros([cnvis, npol], dtype='int')
     cwts = numpy.zeros([cnvis, npol])
     cimwts = numpy.zeros([cnvis, npol])
     cuvw = numpy.zeros([cnvis, 3])
@@ -282,6 +288,7 @@ def average_in_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequ
     # this index to extract the coalesced value that a given input element contributes towards.
 
     visstart = 0
+    nrows = 0
     for a2 in ua:
         for a1 in ua:
             nrows = time_chunk_len[a2, a1] * frequency_chunk_len[a2, a1]
@@ -319,7 +326,12 @@ def average_in_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequ
                                          (time_average[a2, a1], frequency_average[a2, a1]))
                 cvis[rows, pol], cwts[rows, pol] = result[0].flatten(), result[1].flatten()
 
-            # Now do the imaging weights
+            for pol in range(npol):
+                result = average_chunks2(wts[:, a2, a1, :, pol], wts[:, a2, a1, :, pol],
+                                         (time_average[a2, a1], frequency_average[a2, a1]))
+                cwts[rows, pol] = result[0].flatten()
+                cflags[rows, pol][cwts[rows, pol] <= 0.0] = 1
+
             for pol in range(npol):
                 result = average_chunks2(imaging_wts[:, a2, a1, :, pol], wts[:, a2, a1, :, pol],
                                          (time_average[a2, a1], frequency_average[a2, a1]))
@@ -330,13 +342,14 @@ def average_in_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequ
     assert cnvis == visstart, "Mismatch between number of rows in coalesced visibility %d and index %d" % \
                               (cnvis, visstart)
 
-    return cvis, cuvw, cwts, cimwts, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, cintegration_time, cindex
+    return cvis, cflags, cuvw, cwts, cimwts, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, cintegration_time, cindex
 
 
-def convert_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequency, channel_bandwidth):
+def convert_blocks(vis, flags, uvw, wts, imaging_wts, times, integration_time, frequency, channel_bandwidth):
     """ Convert with no averaging
     
     :param vis:
+    :param flags:
     :param uvw:
     :param wts:
     :param imaging_wts:
@@ -387,6 +400,7 @@ def convert_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequenc
     mask_rowgrid = numpy.zeros_like(rowgrid, dtype='bool')
     mask_uvw = numpy.zeros_like(uvw, dtype='bool')
     mask_vis = numpy.zeros_like(vis, dtype='bool')
+    mask_flags = numpy.zeros_like(flags, dtype='bool')
     mask_wts = numpy.zeros_like(wts, dtype='bool')
     mask_imaging_wts = numpy.zeros_like(imaging_wts, dtype='bool')
     # Now go through, chunking up the various arrays. Everything is converted into an array with
@@ -419,6 +433,7 @@ def convert_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequenc
         for a2 in range(a1 + 1, nant):
             mask_uvw[:, a2, a1, :] = True
             mask_vis[:, a2, a1, :, :] = True
+            mask_flags[:, a2, a1, :, :] = True
             mask_wts[:, a2, a1, :, :] = True
             mask_imaging_wts[:, a2, a1, :, :] = True
             mask_rowgrid[:, a2, a1, :] = True
@@ -443,9 +458,10 @@ def convert_blocks(vis, uvw, wts, imaging_wts, times, integration_time, frequenc
 
     cvis = vis[mask_vis].reshape(-1, npol)
     cwts = wts[mask_wts].reshape(-1, npol)
+    cflags = flags[mask_flags].reshape(-1, npol)
     cimaging_weights = imaging_wts[mask_imaging_wts].reshape(-1, npol)
 
-    return cvis, cuvw, cwts, cimaging_weights, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, \
+    return cvis, cflags, cuvw, cwts, cimaging_weights, ctime, cfrequency, cchannel_bandwidth, ca1, ca2, \
            cintegration_time, cindex
 
 def convert_visibility_to_blockvisibility(vis: Visibility) -> BlockVisibility:

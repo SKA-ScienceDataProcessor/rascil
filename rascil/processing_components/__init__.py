@@ -6,6 +6,7 @@ __all__ = [
     'arrays',
     'calibration',
     'griddata',
+    'flagging',
     'fourier_transforms',
     'image',
     'imaging',
@@ -15,8 +16,11 @@ __all__ = [
     'util',
     'visibility']
 
+from .arrays import *
 from .calibration import *
 from .griddata import *
+from .flagging import *
+from .fourier_transforms import *
 from .image import *
 from .imaging import *
 from .simulation import *

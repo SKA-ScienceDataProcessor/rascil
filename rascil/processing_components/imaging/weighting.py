@@ -62,9 +62,9 @@ def taper_visibility_gaussian(vis: Visibility, beam=None) -> Visibility:
     uvdistsq = vis.u ** 2 + vis.v ** 2
     # See http://mathworld.wolfram.com/FourierTransformGaussian.html
     scale_factor = numpy.pi ** 2 * beam ** 2 / (4.0 * numpy.log(2.0))
-    prior = vis.imaging_weight[:, :]
+    prior = vis.flagged_imaging_weight[:, :]
     wt = numpy.exp(-scale_factor * uvdistsq)
-    vis.data['imaging_weight'][:, :] = vis.imaging_weight[:, :] * wt[:, numpy.newaxis]
+    vis.data['imaging_weight'][:, :] = vis.flagged_imaging_weight[:, :] * wt[:, numpy.newaxis]
     
     return vis
 
@@ -93,7 +93,7 @@ def taper_visibility_tukey(vis: Visibility, tukey=0.1) -> Visibility:
     uvdistmax = numpy.max(uvdist)
     uvdist /= uvdistmax
     wt = numpy.array([tukey_filter(uv, tukey) for uv in uvdist])
-    vis.data['imaging_weight'][:, :] = vis.imaging_weight[:, :] * wt[:, numpy.newaxis]
+    vis.data['imaging_weight'][:, :] = vis.flagged_imaging_weight[:, :] * wt[:, numpy.newaxis]
     
     return vis
 
