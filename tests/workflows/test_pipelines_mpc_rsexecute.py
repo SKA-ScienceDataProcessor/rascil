@@ -36,7 +36,7 @@ class TestPipelineMPC(unittest.TestCase):
         
         rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, dashboard_address=None)
         
-        self.persist = os.getenv("RASCIL_PERSIST", True)
+        self.persist = os.getenv("RASCIL_PERSIST", False)
 
     def tearDown(self):
         rsexecute.close()
