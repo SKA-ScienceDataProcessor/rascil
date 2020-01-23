@@ -10,7 +10,7 @@ LABEL \
       license="Apache2.0" \
       registry="library/timcornwell/rascil" \
       vendor="Catalyst" \
-      org.skatelescope.team="Systems Team" \
+      org.skatelescope.team="SKAO SIM Team" \
       org.skatelescope.version="0.1.0" \
       org.skatelescope.website="http://github.com/SKA-ScienceDataProcessor/rascil/"
 
@@ -38,7 +38,7 @@ ENV RASCIL /rascil
 # run setup
 RUN \
     cd /rascil && \
-    pip install -r requirements.txt && \
+    pip install -r requirements-base.txt && \
     $PYTHON setup.py build && \
     $PYTHON setup.py install && \
     mkdir -p /rascil/test_results && \
