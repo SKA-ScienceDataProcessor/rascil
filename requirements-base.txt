@@ -4,15 +4,12 @@ bokeh
 dask
 distributed
 h5py
-jupyter
-jupyter_contrib_nbextensions
 matplotlib
 numba
 numpy
 paramiko
 photutils
 python-casacore
-pyfftw
 reproject
 scikit-image
 scipy

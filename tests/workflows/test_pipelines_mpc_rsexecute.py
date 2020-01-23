@@ -36,7 +36,7 @@ class TestPipelineMPC(unittest.TestCase):
         
         rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
         
-        self.persist = os.getenv("RASCIL_PERSIST", False)
+        self.persist = os.getenv("RASCIL_PERSIST", True)
 
     def tearDown(self):
         rsexecute.close()
@@ -77,7 +77,7 @@ class TestPipelineMPC(unittest.TestCase):
         
         nfreqwin = 1
         ntimes = 3
-        self.rmax = 2500.0
+        self.rmax = 300.0
         dec = -40.0 * u.deg
         frequency = [1e8]
         channel_bandwidth = [0.1e8]
@@ -102,7 +102,7 @@ class TestPipelineMPC(unittest.TestCase):
         advice = advise_wide_field(vis, guard_band_image=2.0, delA=0.02)
         
         cellsize = advice['cellsize']
-        npixel = advice['npixels2']
+        npixel = 512
         
         small_model = create_image_from_visibility(
             blockvis,
@@ -245,7 +245,6 @@ class TestPipelineMPC(unittest.TestCase):
         
         rsexecute.close()
     
-    @unittest.skip("Not reliable on CI/CD")
     def test_mpccal_ICAL_onesource(self):
         
         self.actualSetup(nsources=1, nvoronoi=1)

@@ -76,7 +76,7 @@ done
 echo "Scheduler and workers now running"
 
 #! We need to tell dask Client (inside python) where the scheduler is running
-export ARL_DASK_SCHEDULER=${scheduler}:8786
+export RASCIL_DASK_SCHEDULER=${scheduler}:8786
 echo "Scheduler is running at ${scheduler}"
 
 CMD="python cluster_test_image.py | tee cluster_test_image.log"
