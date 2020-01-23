@@ -42,7 +42,8 @@ RUN \
     $PYTHON setup.py build && \
     $PYTHON setup.py install && \
     mkdir -p /rascil/test_results && \
-    chmod 777 /rascil /rascil/test_results
+    chmod 777 /rascil /rascil/test_results && \
+    rm -rf /root/.cache/pip
 
 # We share in the rascil data here
 VOLUME ["/rascil/data", "/rascil/tmp"]
