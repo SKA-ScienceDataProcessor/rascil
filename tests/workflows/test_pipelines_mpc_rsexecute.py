@@ -34,7 +34,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestPipelineMPC(unittest.TestCase):
     def setUp(self):
         
-        rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
+        rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, dashboard_address=None)
         
         self.persist = os.getenv("RASCIL_PERSIST", False)
 
@@ -70,8 +70,6 @@ class TestPipelineMPC(unittest.TestCase):
     
     def actualSetup(self, nsources=None, nvoronoi=None):
         
-        n_workers = 8
-        
         # Set up the observation: 10 minutes at transit, with 10s integration.
         # Skip 5/6 points to avoid outstation redundancy
         
@@ -102,7 +100,7 @@ class TestPipelineMPC(unittest.TestCase):
         advice = advise_wide_field(vis, guard_band_image=2.0, delA=0.02)
         
         cellsize = advice['cellsize']
-        npixel = advice['npixels2']
+        npixel = 512
         
         small_model = create_image_from_visibility(
             blockvis,
@@ -160,7 +158,7 @@ class TestPipelineMPC(unittest.TestCase):
         
         self.all_skymodel_noniso_vis = convert_blockvisibility_to_visibility(blockvis)
         
-        ngroup = n_workers
+        ngroup = 8
         future_vis = rsexecute.scatter(self.all_skymodel_noniso_vis)
         chunks = [gleam_skymodel_noniso[i:i + ngroup] for i in range(0, len(gleam_skymodel_noniso), ngroup)]
         for chunk in chunks:
@@ -205,12 +203,12 @@ class TestPipelineMPC(unittest.TestCase):
         future_theta_list = rsexecute.scatter(self.theta_list)
         result = mpccal_skymodel_list_rsexecute_workflow(future_vis, future_model, future_theta_list,
                                                           mpccal_progress=progress,
-                                                          nmajor=10,
+                                                          nmajor=5,
                                                           context='2d',
                                                           algorithm='hogbom',
                                                           scales=[0, 3, 10],
-                                                          fractional_threshold=0.3, threshold=0.05,
-                                                          gain=0.1, niter=1000, psf_support=512,
+                                                          fractional_threshold=0.15, threshold=0.05,
+                                                          gain=0.1, niter=1000, psf_support=256,
                                                           deconvolve_facets=8, deconvolve_overlap=16,
                                                           deconvolve_taper='tukey')
         
@@ -233,8 +231,8 @@ class TestPipelineMPC(unittest.TestCase):
         
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
         
-        assert recovered_mpccal_components[0].name == 'Segment 5', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.318399477857547) < 1e-7, \
+        assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.612348112597726) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
         
         newscreen = create_empty_image_like(self.screen)
@@ -245,7 +243,6 @@ class TestPipelineMPC(unittest.TestCase):
         
         rsexecute.close()
     
-    @unittest.skip("Not reliable on CI/CD")
     def test_mpccal_ICAL_onesource(self):
         
         self.actualSetup(nsources=1, nvoronoi=1)
@@ -262,13 +259,15 @@ class TestPipelineMPC(unittest.TestCase):
         future_theta_list = rsexecute.scatter(self.theta_list)
         result = mpccal_skymodel_list_rsexecute_workflow(future_vis, future_model, future_theta_list,
                                                           mpccal_progress=progress,
-                                                          nmajor=10,
+                                                          nmajor=5,
                                                           context='2d',
                                                           algorithm='hogbom',
                                                           scales=[0, 3, 10],
-                                                          fractional_threshold=0.3, threshold=0.01,
-                                                          gain=0.1, niter=1000, psf_support=256)
-        
+                                                          fractional_threshold=0.15, threshold=0.05,
+                                                          gain=0.1, niter=1000, psf_support=256,
+                                                          deconvolve_facets=8, deconvolve_overlap=16,
+                                                          deconvolve_taper='tukey')
+
         (self.theta_list, residual) = rsexecute.compute(result, sync=True)
         
         combined_model = calculate_skymodel_equivalent_image(self.theta_list)
@@ -289,7 +288,7 @@ class TestPipelineMPC(unittest.TestCase):
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
         
         assert recovered_mpccal_components[0].name == 'Segment 0', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 1.2373939075803901) < 1e-6, \
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 1.146297038191757) < 1e-6, \
             recovered_mpccal_components[0].flux[0, 0]
         
         newscreen = create_empty_image_like(self.screen)
@@ -320,8 +319,10 @@ class TestPipelineMPC(unittest.TestCase):
                                                           context='2d',
                                                           algorithm='hogbom',
                                                           scales=[0, 3, 10],
-                                                          fractional_threshold=0.3, threshold=0.2,
-                                                          gain=0.1, niter=1000, psf_support=256)
+                                                          fractional_threshold=0.15, threshold=0.05,
+                                                          gain=0.1, niter=1000, psf_support=256,
+                                                          deconvolve_facets=8, deconvolve_overlap=16,
+                                                          deconvolve_taper='tukey')
     
         (self.theta_list, residual) = rsexecute.compute(result, sync=True)
     
@@ -342,8 +343,8 @@ class TestPipelineMPC(unittest.TestCase):
     
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
     
-        assert recovered_mpccal_components[0].name == 'Segment 9', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.7246326327167365) < 1e-7, \
+        assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.835580859892073) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
     
         newscreen = create_empty_image_like(self.screen)
@@ -369,13 +370,15 @@ class TestPipelineMPC(unittest.TestCase):
         future_model = rsexecute.scatter(model)
         future_theta_list = rsexecute.scatter(self.theta_list)
         result = mpccal_skymodel_list_rsexecute_workflow(future_vis, future_model, future_theta_list,
-                                                          mpccal_progress=progress, window='no_edge',
+                                                          mpccal_progress=progress,
                                                           nmajor=5,
                                                           context='2d',
                                                           algorithm='hogbom',
                                                           scales=[0, 3, 10],
-                                                          fractional_threshold=0.3, threshold=0.2,
-                                                          gain=0.1, niter=1000, psf_support=256)
+                                                          fractional_threshold=0.15, threshold=0.05,
+                                                          gain=0.1, niter=1000, psf_support=256,
+                                                          deconvolve_facets=8, deconvolve_overlap=16,
+                                                          deconvolve_taper='tukey')
     
         (self.theta_list, residual) = rsexecute.compute(result, sync=True)
     
@@ -396,8 +399,8 @@ class TestPipelineMPC(unittest.TestCase):
     
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
     
-        assert recovered_mpccal_components[0].name == 'Segment 9', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.724632632716737) < 1e-7, \
+        assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.835580859892073) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
     
         newscreen = create_empty_image_like(self.screen)
@@ -428,9 +431,9 @@ class TestPipelineMPC(unittest.TestCase):
                                                           context='2d',
                                                           algorithm='hogbom',
                                                           scales=[0, 3, 10],
-                                                          fractional_threshold=0.3, threshold=0.2,
+                                                          fractional_threshold=0.15, threshold=0.05,
                                                           gain=0.1, niter=1000, psf_support=256,
-                                                          deconvolve_facets=8, deconvolve_overlap=8,
+                                                          deconvolve_facets=8, deconvolve_overlap=16,
                                                           deconvolve_taper='tukey')
     
         (self.theta_list, residual) = rsexecute.compute(result, sync=True)
@@ -452,8 +455,8 @@ class TestPipelineMPC(unittest.TestCase):
     
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
     
-        assert recovered_mpccal_components[0].name == 'Segment 8', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.773751416364857) < 1e-7, \
+        assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.835580859892073) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
     
         newscreen = create_empty_image_like(self.screen)

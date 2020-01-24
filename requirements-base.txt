@@ -1,0 +1,16 @@
+aotools
+astropy
+bokeh
+dask
+distributed
+h5py
+matplotlib
+numba
+numpy
+paramiko
+photutils
+python-casacore
+reproject
+scikit-image
+scipy
+seqfile
