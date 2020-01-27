@@ -11,15 +11,15 @@ If images constructed from slices in w are added after applying a w-dependent im
 
 __all__ = ['predict_wstack_single', 'invert_wstack_single']
 
+import logging
+
 import numpy
 
-from rascil.data_models.memory_data_models import Visibility, Image, BlockVisibility
-
+from rascil.data_models.memory_data_models import Visibility, Image
 from rascil.processing_components.image.operations import copy_image, create_w_term_like, image_is_canonical
-from rascil.processing_components.visibility.base import copy_visibility
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
+from rascil.processing_components.visibility.base import copy_visibility
 
-import logging
 log = logging.getLogger(__name__)
 
 

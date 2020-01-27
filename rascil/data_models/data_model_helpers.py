@@ -108,7 +108,7 @@ from astropy.coordinates import SkyCoord, EarthLocation
 from astropy.units import Quantity
 from astropy.wcs import WCS
 
-from rascil.data_models import Visibility, BlockVisibility, Configuration, GridData, \
+from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Configuration,  \
     GainTable, SkyModel, Skycomponent, Image, GridData, ConvolutionFunction, PointingTable, FlagTable
 from rascil.data_models.polarisation import PolarisationFrame, ReceptorFrame
 
@@ -813,7 +813,7 @@ def convert_hdf_to_skymodel(f):
 def convert_griddata_to_hdf(gd: GridData, f):
     """ Convert Griddata to HDF
 
-    :param im: GridData
+    :param gd: GridData
     :param f: HDF root
     :return:
     """
@@ -882,7 +882,7 @@ def import_griddata_from_hdf5(filename):
 def convert_convolutionfunction_to_hdf(cf: ConvolutionFunction, f):
     """ Convert Griddata to HDF
 
-    :param im: ConvolutionFunction
+    :param cf: ConvolutionFunction
     :param f: HDF root
     :return:
     """

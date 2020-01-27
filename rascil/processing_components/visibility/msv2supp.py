@@ -2,19 +2,7 @@
 # MeasurementSets V2 Reference Codes Based on Python-casacore
 #
 
-import os
-import gc
-import re
-import glob
-import math
 import numpy
-import shutil
-import scipy
-from scipy.constants import speed_of_light
-from datetime import datetime
-from collections import OrderedDict
-
-from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Configuration
 
 __version__ = '0.1'
 __revision__ = '$Rev$'

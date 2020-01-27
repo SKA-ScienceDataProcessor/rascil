@@ -162,8 +162,7 @@ def corrupt_list_rsexecute_workflow(vis_list, gt_list=None, seed=None, **kwargs)
 
 
 def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_components, sub_model_list,
-                                                           no_error_gt_list, error_gt_list,
-                                                          context='2d'):
+                                                           no_error_gt_list, error_gt_list, context='2d'):
     """Calculate residual image corresponding to a set of gaintables
 
     The visibility difference for a set of components for error and no error gaintables

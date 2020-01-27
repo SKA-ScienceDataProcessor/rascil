@@ -285,9 +285,7 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
 
     If polarisation_frame is not stokesI then the image will a polarised axis but the values will be zero.
 
-    :param npixel: Number of pixels
     :param polarisation_frame: Polarisation frame (default PolarisationFrame("stokesI"))
-    :param cellsize: cellsize in radians
     :param frequency:
     :param channel_bandwidth: Channel width (Hz)
     :param phasecentre: phasecentre (SkyCoord)
@@ -775,7 +773,7 @@ def create_unittest_components(model, flux, applypb=False, telescope='LOW', npix
                                scale=1.0, single=False, symmetric=False, angular_scale=1.0):
     # Fill the visibility with exactly computed point sources.
 
-    if npixel == None:
+    if npixel is None:
         _, _, _, npixel = model.data.shape
     spacing_pixels = int(scale * npixel) // 4
     log.info('Spacing in pixels = %s' % spacing_pixels)

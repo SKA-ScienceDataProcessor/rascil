@@ -210,7 +210,7 @@ def create_vp_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
         
         d2r = numpy.pi / 180.0
         scale = d2r * numpy.abs(beam.wcs.sub(2).wcs.cdelt[0])
-        xx, yy = numpy.meshgrid(scale * (range(nx) - cx), scale * (range(ny) - cy))
+        xx, yy = numpy.meshgrid(scale * (numpy.arange(nx) - cx), scale * (numpy.arange(ny) - cy))
         # Radius of each cell in radians
         rr = numpy.sqrt(xx ** 2 + yy ** 2)
         
@@ -271,7 +271,7 @@ def create_vp_generic_numeric(model, pointingcentre=None, diameter=15.0, blockag
         scalex = xfr.wcs.sub(2).wcs.cdelt[0] * wavelength
         scaley = xfr.wcs.sub(2).wcs.cdelt[1] * wavelength
         # xx, yy in metres
-        xx, yy = numpy.meshgrid(scalex * (range(pnx) - cx), scaley * (range(pny) - cy))
+        xx, yy = numpy.meshgrid(scalex * (numpy.arange(pnx) - cx), scaley * (numpy.arange(pny) - cy))
         
         # rr in metres
         rr = numpy.sqrt(xx**2 + yy**2)
@@ -282,7 +282,7 @@ def create_vp_generic_numeric(model, pointingcentre=None, diameter=15.0, blockag
         if pointingcentre is not None:
             # Correct for pointing centre
             pcx, pcy = pointingcentre.to_pixel(padded_beam.wcs, origin=0)
-            pxx, pyy = numpy.meshgrid((range(pnx) - cx), (range(pny) - cy))
+            pxx, pyy = numpy.meshgrid((numpy.arange(pnx) - cx), (numpy.arange(pny) - cy))
             phase = 2 * numpy.pi * ((pcx - cx) * pxx / float(pnx) + (pcy - cy) * pyy / float(pny))
             for pol in range(npol):
                 xfr.data[chan, pol, ...] *= numpy.exp(1j * phase)

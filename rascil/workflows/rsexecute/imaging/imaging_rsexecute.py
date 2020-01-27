@@ -16,23 +16,22 @@ import numpy
 
 from rascil.data_models.memory_data_models import Image, Visibility, BlockVisibility
 from rascil.data_models.parameters import get_parameter
-from rascil.processing_components.image.operations import copy_image, create_empty_image_like
-from rascil.workflows.shared.imaging import imaging_context, remove_sumwt, sum_predict_results, \
-    threshold_list, sum_invert_results
-from rascil.processing_components.visibility import  convert_blockvisibility_to_visibility, \
-    convert_visibility_to_blockvisibility
-from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
-from rascil.processing_components.griddata import grid_weight_to_griddata, griddata_reweight, griddata_merge_weights
-from rascil.processing_components.griddata import create_pswf_convolutionfunction
 from rascil.processing_components.griddata import create_griddata_from_image
-from rascil.processing_components.image import  deconvolve_cube, restore_cube
+from rascil.processing_components.griddata import create_pswf_convolutionfunction
+from rascil.processing_components.griddata import grid_weight_to_griddata, griddata_reweight, griddata_merge_weights
+from rascil.processing_components.image import calculate_image_frequency_moments
+from rascil.processing_components.image import deconvolve_cube, restore_cube
 from rascil.processing_components.image import image_scatter_facets, image_gather_facets, \
     image_scatter_channels, image_gather_channels
-from rascil.processing_components.image import calculate_image_frequency_moments
-from rascil.processing_components.imaging import normalize_sumwt
-from rascil.processing_components.imaging import  taper_visibility_gaussian
-from rascil.processing_components.visibility import copy_visibility, create_visibility_from_rows
+from rascil.processing_components.image.operations import copy_image, create_empty_image_like
+from rascil.processing_components.imaging import taper_visibility_gaussian
+from rascil.processing_components.visibility import convert_blockvisibility_to_visibility, \
+    convert_visibility_to_blockvisibility
+from rascil.processing_components.visibility import copy_visibility
 from rascil.processing_components.visibility import visibility_scatter, visibility_gather
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
+from rascil.workflows.shared.imaging import imaging_context, remove_sumwt, sum_predict_results, \
+    threshold_list, sum_invert_results
 
 log = logging.getLogger(__name__)
 
@@ -700,8 +699,7 @@ def sum_invert_results_rsexecute(image_list, split=2):
     """
     if len(image_list) > split:
         centre = len(image_list) // split
-        result = [sum_invert_results_rsexecute(image_list[:centre])]
-        result.append(sum_invert_results_rsexecute(image_list[centre:]))
+        result = [sum_invert_results_rsexecute(image_list[:centre]), sum_invert_results_rsexecute(image_list[centre:])]
         return rsexecute.execute(sum_invert_results, nout=2)(result)
     else:
         return rsexecute.execute(sum_invert_results, nout=2)(image_list)

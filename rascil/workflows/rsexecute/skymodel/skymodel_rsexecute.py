@@ -1,14 +1,15 @@
 
 __all__ = ['predict_skymodel_list_rsexecute_workflow', 'predict_skymodel_list_compsonly_rsexecute_workflow',
            'crosssubtract_datamodels_skymodel_list_rsexecute_workflow',
-           'convolve_skymodel_list_rsexecute_workflow']
+           'convolve_skymodel_list_rsexecute_workflow', 'invert_skymodel_list_rsexecute_workflow']
 
 import logging
 
 import numpy
 
-from rascil.data_models import Image, GainTable, Visibility, SkyModel, ConvolutionFunction, BlockVisibility
-from rascil.processing_components import copy_image
+from rascil.data_models.memory_data_models import Image, GainTable, Visibility, SkyModel, \
+    ConvolutionFunction, BlockVisibility
+from rascil.processing_components.image import copy_image
 
 from rascil.processing_components.calibration import apply_gaintable
 from rascil.processing_components.imaging import predict_skycomponent_visibility

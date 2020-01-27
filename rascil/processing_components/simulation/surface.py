@@ -11,9 +11,9 @@ from scipy.interpolate import RectBivariateSpline
 
 from rascil.data_models.memory_data_models import BlockVisibility
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
+from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
-from rascil.processing_components.util.coordinate_support import hadec_to_azel, azel_to_hadec
 
 log = logging.getLogger(__name__)
 
@@ -103,7 +103,7 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
                                        + 1j * imag_splines[ivp](pixloc[1], pixloc[0])
                                 antgain[ant] += vp_coeffs[ant, ivp] * gain
                                 number_good += 1
-                            except:
+                            except (ValueError, AssertionError):
                                 number_bad += 1
                                 antgain[ant] = 0.0
                                 
@@ -163,7 +163,7 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
                             antgain[ant] += vp_coeffs[ant, ivp] * gain
                             antwt[ant] = 1.0
                             number_good += 1
-                        except:
+                        except (ValueError, AssertionError):
                             number_bad += 1
                             antgain[ant] = 1e15
                             antwt[ant] = 0.0

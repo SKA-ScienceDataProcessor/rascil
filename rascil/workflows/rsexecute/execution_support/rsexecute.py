@@ -20,6 +20,8 @@ try:
 except ImportError:
     def dlg_delayed(*args, **kwargs):
         raise Exception("daliuge is not available")
+    def dlg_compute(*args, **kwargs):
+        pass
 
 log = logging.getLogger(__name__)
 
@@ -394,7 +396,7 @@ class _rsexecutebase():
 
             try:
                 print_ts(task_stream)
-            except:
+            except  ValueError:
                 print("task stream is unintelligible")
                 import pprint
                 pp = pprint.PrettyPrinter()

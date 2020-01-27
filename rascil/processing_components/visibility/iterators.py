@@ -60,7 +60,7 @@ def vis_timeslice_iter(vis: Union[Visibility, BlockVisibility], vis_slices=None)
         yield rows
 
 
-def vis_timeslices(vis: Visibility, timeslice='auto') -> int:
+def vis_timeslices(vis: Union[Visibility, BlockVisibility], timeslice='auto') -> int:
     """ Calculate number of time slices in a visibility
 
     :param vis: Visibility

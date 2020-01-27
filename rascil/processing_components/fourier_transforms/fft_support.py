@@ -17,6 +17,7 @@ try:
 
     pyfftw_exists = True
 except ImportError:
+    pyfftw = None
     pyfftw_exists = False
 
 
@@ -31,7 +32,7 @@ def fft(a):
     :return: `uv` grid
     """
 
-    if pyfftw_exists == False:
+    if not pyfftw_exists:
         if (len(a.shape) == 4):
             return numpy.fft.fftshift(numpy.fft.fft2(numpy.fft.ifftshift(a, axes=[2, 3])), axes=[2, 3])
         if (len(a.shape) == 5):
@@ -64,7 +65,7 @@ def ifft(a):
     :param a: `uv` grid to transform
     :return: an image in `lm` coordinate space
     """
-    if pyfftw_exists == False:
+    if not pyfftw_exists:
         if (len(a.shape) == 4):
             return numpy.fft.fftshift(numpy.fft.ifft2(numpy.fft.ifftshift(a, axes=[2, 3])), axes=[2, 3])
         elif (len(a.shape) == 5):

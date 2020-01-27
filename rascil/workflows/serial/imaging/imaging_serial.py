@@ -103,12 +103,12 @@ def predict_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=
             sub_vis_lists = visibility_scatter(sub_vis_list, vis_iter, vis_slices)
             
             # Loop over sub visibility
-            for sub_vis_list in sub_vis_lists:
+            for sub_sub_vis_list in sub_vis_lists:
                 facet_vis_results = list()
                 # Loop over facets
                 for facet_list in facet_lists:
                     # Predict visibility for this subvisibility from this facet
-                    facet_vis_list = predict_ignore_none(sub_vis_list, facet_list,
+                    facet_vis_list = predict_ignore_none(sub_sub_vis_list, facet_list,
                                                          None)
                     facet_vis_results.append(facet_vis_list)
                 # Sum the current sub-visibility over all facets

@@ -16,7 +16,7 @@ import astropy.constants as constants
 
 from rascil.data_models.memory_data_models import Skycomponent, BlockVisibility
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components import create_image
+from rascil.processing_components.image import create_image
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.image.operations import show_image
 from rascil.processing_components.imaging.primary_beams import create_pb
@@ -66,6 +66,10 @@ def plot_visibility(vis_list, ax=None, title='Visibility', y='amp', x='uvdist', 
     :param kwargs:
     :return:
     """
+    if ax is None:
+        fig, ax = plt.subplots(111)
+        ax = ax[0]
+
     for ivis, vis in enumerate(vis_list):
         if y == 'amp':
             yvalue = numpy.abs(vis.vis[...,0,0].flat)
@@ -86,6 +90,9 @@ def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV cov
     :param kwargs:
     :return:
     """
+    if ax is None:
+        fig, ax = plt.subplots(111)
+        ax = ax[0]
     
     for ivis, vis in enumerate(vis_list):
         u = numpy.array(vis.u[...].flat)
@@ -288,8 +295,6 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
                                polarisation_frame=PolarisationFrame(
                                    "stokesI"))
         pb = create_pb(pbmodel, "MID_GAUSS", pointingcentre=phasecentre, use_local=False)
-        pb_feko = create_pb(pbmodel, pbtype, pointingcentre=phasecentre, use_local=True)
-        pb.data = pb_feko.data[:, 0, ...][:, numpy.newaxis, ...]
         pb_applied_components = [copy_skycomponent(c) for c in original_components]
         pb_applied_components = apply_beam_to_skycomponent(pb_applied_components, pb)
         filtered_components = []
