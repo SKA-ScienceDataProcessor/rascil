@@ -10,6 +10,7 @@ Some example scripts are found in the directory examples/scripts.
    examples/scripts/imaging.rst
    examples/scripts/dprepb_rsexecute_pipeline.rst
    examples/scripts/imaging_sim2.rst
+   examples/scripts/primary_beam_zernikes.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

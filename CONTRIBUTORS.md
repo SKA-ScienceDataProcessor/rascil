@@ -1,5 +1,5 @@
-ARL contributors
-================
+RASCIL contributors
+===================
 
 * **[Tim Cornwell](http://github.com/timcornwell)**
 

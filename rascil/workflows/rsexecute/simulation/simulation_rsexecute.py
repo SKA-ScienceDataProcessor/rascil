@@ -173,6 +173,7 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
     :param sub_model_list: List of models (or graph)
     :param no_error_gt_list: List of gaintables for no error (or graph)
     :param error_gt_list: List of gaintables for error (or graph)
+    :param context: Imaging context e.g. '2d' or 'ng'
     :return:
     """
     error_sm_list = [[
@@ -217,7 +218,7 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
     
     dirty_list = list()
     for vis in error_vis_list:
-        result = invert_list_rsexecute_workflow(vis, sub_model_list, '2d')
+        result = invert_list_rsexecute_workflow(vis, sub_model_list, context=context)
         dirty_list.append(rsexecute.execute(sum_images)(result))
     
     return dirty_list

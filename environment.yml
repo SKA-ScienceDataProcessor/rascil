@@ -3,13 +3,14 @@
 # Create it using:
 #
 #   conda env create -f environment.yml 
-#   conda activate rascil
+#   conda activate rascil_env
 #   conda config --env --prepend channels astropy
 #
-name: rascil
+name: rascil_env
 channels:
   - astropy
   - defaults
+  - conda-forge
 dependencies:
   - numpy
   - scipy
@@ -27,10 +28,11 @@ dependencies:
   - astropy
   - photutils
   - reproject
-  - python-casacore
-  - pyfftw
   - numba
   - pip
+  - python-casacore
+  - pyfftw
   - pip:
     - seqfile
     - aotools
+
