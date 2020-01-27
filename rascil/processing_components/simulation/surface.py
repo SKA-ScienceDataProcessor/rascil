@@ -103,7 +103,7 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
                                        + 1j * imag_splines[ivp](pixloc[1], pixloc[0])
                                 antgain[ant] += vp_coeffs[ant, ivp] * gain
                                 number_good += 1
-                            except ValueError:
+                            except (ValueError, AssertionError):
                                 number_bad += 1
                                 antgain[ant] = 0.0
                                 
@@ -163,7 +163,7 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
                             antgain[ant] += vp_coeffs[ant, ivp] * gain
                             antwt[ant] = 1.0
                             number_good += 1
-                        except ValueError:
+                        except (ValueError, AssertionError):
                             number_bad += 1
                             antgain[ant] = 1e15
                             antwt[ant] = 0.0

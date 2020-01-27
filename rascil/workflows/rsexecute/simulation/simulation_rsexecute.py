@@ -162,7 +162,7 @@ def corrupt_list_rsexecute_workflow(vis_list, gt_list=None, seed=None, **kwargs)
 
 
 def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_components, sub_model_list,
-                                                           no_error_gt_list, error_gt_list):
+                                                           no_error_gt_list, error_gt_list, context='2d'):
     """Calculate residual image corresponding to a set of gaintables
 
     The visibility difference for a set of components for error and no error gaintables
@@ -188,12 +188,12 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
     no_error_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for bvis in sub_bvis_list]
     no_error_bvis_list = [
         predict_skymodel_list_compsonly_rsexecute_workflow(no_error_bvis_list[ibv], no_error_sm_list[ibv],
-                                                            context='2d', docal=True)
+                                                            context=context, docal=True)
         for ibv, bvis in enumerate(no_error_bvis_list)]
     
     error_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for bvis in sub_bvis_list]
     error_bvis_list = [predict_skymodel_list_compsonly_rsexecute_workflow(error_bvis_list[ibv], error_sm_list[ibv],
-                                                                           context='2d', docal=True)
+                                                                           context=context, docal=True)
                        for ibv, bvis in enumerate(error_bvis_list)]
     
     # Inner nest is bvis per skymodels, outer is over vis's. Calculate residual visibility
