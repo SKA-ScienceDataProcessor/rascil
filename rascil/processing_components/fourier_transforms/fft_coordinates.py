@@ -8,7 +8,7 @@ e.g. for convolution kernels odd image sizes are preferred.
 
 """
 
-__all__ = ['w_beam', 'grdsf']
+__all__ = ['w_beam', 'grdsf', 'coordinates']
 
 import logging
 
@@ -123,7 +123,7 @@ def w_beam(npixel, field_of_view, w, cx=None, cy=None, remove_shift=False):
     """ W beam, the fresnel diffraction pattern arising from non-coplanar baselines
     
     :param npixel: Size of the grid in pixels
-    :param field_w_beamof_view: Field of view
+    :param field_of_view: Field of view
     :param w: Baseline distance to the projection plane
     :param cx: location of delay centre def :npixel//2
     :param cy: location of delay centre def :npixel//2

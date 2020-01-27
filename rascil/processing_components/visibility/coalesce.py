@@ -23,18 +23,14 @@ __all__ = ['convert_visibility_to_blockvisibility',
            'coalesce_visibility',
            'decoalesce_visibility']
 
-import numpy
+import logging
 
+import numpy
 from astropy import constants
 
-from rascil.processing_components.util.array_functions import average_chunks, average_chunks2
-
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
-from rascil.data_models.parameters import get_parameter
-
+from rascil.processing_components.util.array_functions import average_chunks, average_chunks2
 from rascil.processing_components.visibility.base import vis_summary, copy_visibility
-
-import logging
 
 log = logging.getLogger(__name__)
 

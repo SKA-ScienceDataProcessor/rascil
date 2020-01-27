@@ -1,6 +1,7 @@
 import numpy
 
-from rascil.data_models import Image, Visibility, PolarisationFrame
+from rascil.data_models.memory_data_models import Image, Visibility
+from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.image.operations import image_is_canonical
 
 __all__ = ['get_rowmap', 'get_polarisation_map', 'get_frequency_map']

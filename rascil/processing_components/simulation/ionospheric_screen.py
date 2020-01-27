@@ -87,7 +87,7 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
                     pixloc = screen.wcs.wcs_world2pix([worldloc], 0)[0].astype('int')
                     scr[ant] = scale * screen.data[pixloc[3], pixloc[2], pixloc[1], pixloc[0]]
                     number_good += 1
-                except:
+                except ValueError:
                     number_bad += 1
                     scr[ant] = 0.0
             
@@ -199,7 +199,7 @@ def plot_gaintable_on_screen(vis, gaintables, height=3e5, gaintable_slices=None,
     Screen axes are ['XX', 'YY', 'TIME', 'FREQ']
 
     :param vis:
-    :param sc: Sky components for which pierce points are needed
+    :param gaintables:
     :param height: Height (in m) of screen above telescope e.g. 3e5
     :param scale: Multiply the screen by this factor
     :return: gridded screen image, weights image

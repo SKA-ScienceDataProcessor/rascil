@@ -20,6 +20,8 @@ try:
 except ImportError:
     def dlg_delayed(*args, **kwargs):
         raise Exception("daliuge is not available")
+    def dlg_compute(*args, **kwargs):
+        pass
 
 log = logging.getLogger(__name__)
 
@@ -158,6 +160,9 @@ class _rsexecutebase():
         :param verbose: Be verbose in printing messages
         :param optimize: Optimize if using dask (True)
         """
+        self._client = None
+        self.start_time = time.time()
+        self.start_time = time.time()
         if bool(use_dask) and bool(use_dlg):
             raise ValueError('use_dask and use_dlg cannot be specified together')
         self._set_state(use_dask, use_dlg, None, verbose, optimize)
@@ -222,7 +227,6 @@ class _rsexecutebase():
             self._set_state(True, False, client, verbose, optim)
             self._client.profile()
             self._client.get_task_stream()
-            self.start_time = time.time()
 
         elif use_dlg:
             self._set_state(False, True, client, verbose, optim)
@@ -339,7 +343,6 @@ class _rsexecutebase():
             if self._client.cluster is not None:
                 self._client.cluster.close()
             self._client.close()
-            self._client = None
 
     def init_statistics(self):
         """ Initialise the profile and task stream info
@@ -348,7 +351,6 @@ class _rsexecutebase():
 
         :return:
         """
-        self.start_time = time.time()
         if self._using_dask:
             self._client.profile()
             self._client.get_task_stream()
@@ -394,7 +396,7 @@ class _rsexecutebase():
 
             try:
                 print_ts(task_stream)
-            except:
+            except  ValueError:
                 print("task stream is unintelligible")
                 import pprint
                 pp = pprint.PrettyPrinter()
@@ -432,11 +434,15 @@ class _rsexecutebase():
         """
         return self._optimize
 
+    @property
+    def instance(self):
+        return self._instance
+
 
 def rsexecutebase(*args, **kwargs):
-    if _rsexecutebase._instance is None:
+    if _rsexecutebase.instance is None:
         _rsexecutebase._instance = _rsexecutebase(*args, **kwargs)
-    return _rsexecutebase._instance
+    return _rsexecutebase.instance
 
 
 # Any new rsexecute created by import of this file points to the only _rsexecutebase

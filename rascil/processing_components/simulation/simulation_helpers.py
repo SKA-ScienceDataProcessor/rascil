@@ -16,7 +16,7 @@ import astropy.constants as constants
 
 from rascil.data_models.memory_data_models import Skycomponent, BlockVisibility
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components import create_image
+from rascil.processing_components.image import create_image
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.image.operations import show_image
 from rascil.processing_components.imaging.primary_beams import create_pb

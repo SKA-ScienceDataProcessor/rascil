@@ -14,7 +14,7 @@ from rascil.data_models.memory_data_models import Image
 import logging
 log = logging.getLogger(__name__)
 
-from rascil.processing_components.image.operations import create_empty_image_like, image_is_canonical
+from rascil.processing_components.image.operations import create_empty_image_like
 
 
 def image_gradients(im: Image):

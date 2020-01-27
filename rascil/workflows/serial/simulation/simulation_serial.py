@@ -9,16 +9,14 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
+from rascil.data_models.memory_data_models import Visibility
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.data_models.memory_data_models import  Visibility, BlockVisibility
-
-
 from rascil.processing_components.calibration import apply_gaintable, create_gaintable_from_blockvisibility
-from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.simulation import create_named_configuration
-from rascil.processing_components.visibility import create_blockvisibility, create_visibility
-from rascil.processing_components.visibility import  convert_blockvisibility_to_visibility, \
+from rascil.processing_components.simulation import simulate_gaintable
+from rascil.processing_components.visibility import convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
+from rascil.processing_components.visibility import create_blockvisibility, create_visibility
 
 log = logging.getLogger(__name__)
 

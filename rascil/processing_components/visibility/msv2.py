@@ -3,18 +3,17 @@
 # Ver 0.1
 #
 
-import os
 import gc
 import glob
-import numpy
-import shutil
 import logging
+import os
+import shutil
+
+import numpy
 from astropy.time import Time
 
-from rascil.processing_components.visibility.msv2supp import cmp_to_total, STOKES_CODES, NUMERIC_STOKES, merge_baseline, \
-    geo_to_ecef, get_eci_transform
-
-from rascil.processing_components.visibility.msv2fund import Stand, Observatory, Antenna, Frequency, MS_UVData, BaseData
+from rascil.processing_components.visibility.msv2fund import MS_UVData, BaseData
+from rascil.processing_components.visibility.msv2supp import STOKES_CODES, geo_to_ecef, get_eci_transform
 
 log = logging.getLogger(__name__)
 

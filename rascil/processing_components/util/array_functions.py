@@ -5,7 +5,6 @@
 __all__ = ['average_chunks', 'average_chunks2', 'tukey_filter', 'insert_array',
            'insert_function_L', 'insert_function_pswf', 'insert_function_sinc']
 
-
 # import numba
 import numpy
 
@@ -33,21 +32,21 @@ def average_chunks_jit(arr, wts, chunksize):
         fullsize = nchunks + 1
     else:
         fullsize = nchunks
-    
+
     chunks = numpy.empty(fullsize, dtype=arr.dtype)
     weights = numpy.empty(fullsize, dtype=wts.dtype)
-    
+
     for place in range(nchunks):
         chunks[place] = numpy.sum(
             wts[place * chunksize:(place + 1) * chunksize] * arr[place * chunksize:(place + 1) * chunksize])
         weights[place] = numpy.sum(wts[place * chunksize:(place + 1) * chunksize])
-    
+
     if extra > 0:
         chunks[-1] = numpy.sum(wts[(len(arr) - extra):len(arr)] * arr[(len(arr) - extra):len(arr)])
         weights[-1] = numpy.sum(wts[(len(arr) - extra):len(arr)])
-    
+
     chunks[weights > 0.0] = chunks[weights > 0.0] / weights[weights > 0.0]
-    
+
     return chunks, weights
 
 
@@ -76,13 +75,13 @@ def average_chunks(arr, wts, chunksize):
 
     # Codes optimized
 
-    mask = numpy.zeros(((len(arr)-1)//chunksize + 1, arr.shape[0]), dtype=bool)
-    for enumerate_id,i in enumerate(range(0, len(arr), chunksize)):
-        mask[enumerate_id,i:i+chunksize]=1
-    chunks = mask.dot(wts*arr)
+    mask = numpy.zeros(((len(arr) - 1) // chunksize + 1, arr.shape[0]), dtype=bool)
+    for enumerate_id, i in enumerate(range(0, len(arr), chunksize)):
+        mask[enumerate_id, i:i + chunksize] = 1
+    chunks = mask.dot(wts * arr)
     weights = mask.dot(wts)
     # chunks[weights > 0.0] = chunks[weights > 0.0] / weights[weights > 0.0]
-    numpy.putmask(chunks, weights>0.0, chunks/weights)
+    numpy.putmask(chunks, weights > 0.0, chunks / weights)
 
     return chunks, weights
 
@@ -101,25 +100,25 @@ def average_chunks2(arr, wts, chunksize):
     #    assert arr.shape == wts.shape, "Shapes of arrays must be the same"
     # It is possible that there is a dangling null axis on wts
     wts = wts.reshape(arr.shape)
-    
+
     l0 = len(average_chunks(arr[:, 0], wts[:, 0], chunksize[0])[0])
     l1 = len(average_chunks(arr[0, :], wts[0, :], chunksize[1])[0])
-    
+
     tempchunks = numpy.zeros([arr.shape[0], l1], dtype=arr.dtype)
     tempwt = numpy.zeros([arr.shape[0], l1])
-    
+
     tempchunks *= tempwt
     for i in range(arr.shape[0]):
         result = average_chunks(arr[i, :], wts[i, :], chunksize[1])
         tempchunks[i, :], tempwt[i, :] = result[0].flatten(), result[1].flatten()
-    
+
     chunks = numpy.zeros([l0, l1], dtype=arr.dtype)
     weights = numpy.zeros([l0, l1])
-    
+
     for i in range(l1):
         result = average_chunks(tempchunks[:, i], tempwt[:, i], chunksize[0])
         chunks[:, i], weights[:, i] = result[0].flatten(), result[1].flatten()
-    
+
     return chunks, weights
 
 
@@ -193,16 +192,16 @@ def insert_array(im, x, y, flux, bandwidth=1.0, support=7, insert_function=inser
     fracy = y - inty
     gridx = numpy.arange(-support, support)
     gridy = numpy.arange(-support, support)
-    
+
     insert = numpy.outer(insert_function(bandwidth * (gridy - fracy)),
                          insert_function(bandwidth * (gridx - fracx)))
-    
+
     insertsum = numpy.sum(insert)
     assert insertsum > 0, "Sum of interpolation coefficients %g" % insertsum
     insert = insert / insertsum
-    
+
     for chan in range(nchan):
         for pol in range(npol):
             im[chan, pol, inty - support:inty + support, intx - support:intx + support] += flux[chan, pol] * insert
-    
+
     return im

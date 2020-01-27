@@ -92,7 +92,6 @@ def create_configuration_from_MIDfile(antfile: str, location=None,
     """ Define configuration from a SKA MID format file
 
     :param antfile: Antenna file name
-    :param names: Antenna names
     :param mount: mount type: 'azel', 'xy'
     :param rmax: Maximum distance from array centre (m)
     :param name: Name of array

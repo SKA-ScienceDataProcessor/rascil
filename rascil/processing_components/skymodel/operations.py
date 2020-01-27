@@ -13,7 +13,7 @@ import numpy
 from astropy.wcs.utils import skycoord_to_pixel
 
 from rascil.data_models.memory_data_models import SkyModel, GainTable
-from rascil.processing_components import copy_image
+from rascil.processing_components.image import copy_image
 from rascil.processing_components.calibration.operations import copy_gaintable
 from rascil.processing_components.image.operations import smooth_image
 from rascil.processing_components.skycomponent.base import copy_skycomponent

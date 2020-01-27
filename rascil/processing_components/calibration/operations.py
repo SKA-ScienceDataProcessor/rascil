@@ -10,10 +10,12 @@ __all__ = ['gaintable_summary', 'gaintable_plot', 'qa_gaintable', 'apply_gaintab
 import copy
 import logging
 
+from typing import Union
+
 import numpy.linalg
 
-from rascil.data_models import GainTable, BlockVisibility, QA, assert_vis_gt_compatible
-from rascil.data_models import ReceptorFrame
+from rascil.data_models.memory_data_models import GainTable, BlockVisibility, QA, assert_vis_gt_compatible
+from rascil.data_models.polarisation import ReceptorFrame
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 
 log = logging.getLogger(__name__)
@@ -201,7 +203,8 @@ def copy_gaintable(gt: GainTable, zero=False):
     return newgt
 
 
-def create_gaintable_from_rows(gt: GainTable, rows: numpy.ndarray, makecopy=True) -> GainTable:
+def create_gaintable_from_rows(gt: GainTable, rows: numpy.ndarray, makecopy=True) \
+        -> Union[GainTable, None]:
     """ Create a GainTable from selected rows
 
     :param gt: GainTable

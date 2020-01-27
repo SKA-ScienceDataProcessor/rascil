@@ -24,27 +24,25 @@ __all__ = ['shift_vis_to_image', 'normalize_sumwt', 'predict_2d', 'invert_2d', '
 
 import collections
 import logging
-from typing import List, Union, Tuple
+from typing import List, Union
 
 import numpy
-from astropy import constants as constants
-from astropy import units as units
-from astropy import wcs
+import astropy.constants as constants
+import astropy.units as units
+import astropy.wcs as wcs
 from astropy.wcs.utils import pixel_to_skycoord
 
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image, Skycomponent, assert_same_chan_pol
 from rascil.data_models.parameters import get_parameter
 from rascil.data_models.polarisation import convert_pol_frame, PolarisationFrame
-
-from rascil.processing_components.image import create_image_from_array
-from rascil.processing_components.imaging.imaging_params import get_frequency_map
-from rascil.processing_components.util.coordinate_support import simulate_point, skycoord_to_lmn
-
-from rascil.processing_components.griddata.kernels  import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
     fft_griddata_to_image, fft_image_to_griddata, \
     degrid_visibility_from_griddata
+from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.operations import create_griddata_from_image
+from rascil.processing_components.image import create_image_from_array
+from rascil.processing_components.imaging.imaging_params import get_frequency_map
+from rascil.processing_components.util.coordinate_support import simulate_point, skycoord_to_lmn
 from rascil.processing_components.visibility.base import copy_visibility, phaserotate_visibility
 
 log = logging.getLogger(__name__)
@@ -437,6 +435,7 @@ def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversa
             import pyfftw
             best = pyfftw.next_fast_len(n)
         except ImportError:
+            pyfftw = None
             number = numpy.array([2, 3, 4, 5])
             ex = numpy.ceil(numpy.log(n) / numpy.log(number)).astype('int')
             best = min(numpy.power(number[:], ex[:]))

@@ -11,12 +11,13 @@ import logging
 import numpy
 from scipy.interpolate import RectBivariateSpline
 
-from rascil.data_models import PointingTable, rascil_path
 from rascil.data_models.memory_data_models import BlockVisibility
+from rascil.data_models.memory_data_models import PointingTable
+from rascil.data_models.parameters import rascil_path
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
+from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
-from rascil.processing_components.util.coordinate_support import hadec_to_azel, azel_to_hadec
 
 log = logging.getLogger(__name__)
 
@@ -103,7 +104,7 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                         gain = real_spline.ev(pixloc[1], pixloc[0]) + 1j * imag_spline(pixloc[1], pixloc[0])
                         antgain[ant] = 1.0 / (scale * gain)
                         number_good += 1
-                    except:
+                    except ValueError:
                         number_bad += 1
                         antgain[ant] = 0.0
 
@@ -163,7 +164,7 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                         antgain[ant] = 1.0 / (scale * gain)
                         antwt[ant] = 1.0
                         number_good += 1
-                    except:
+                    except ValueError:
                         number_bad += 1
                         antgain[ant] = 1e15
                         antwt[ant] = 0.0
@@ -241,7 +242,8 @@ def simulate_pointingtable_from_timeseries(pt, type='wind', time_series_type='pr
 
     :param pt: Pointing table to be filled
     :param type: Type of pointing: 'tracking' or 'wind'
-    :param pointing_file: Name of pointing file
+    :param time_series_type: Type of wind condition precision|standard|degraded
+    :param pointing_directory: Name of pointing file directory
     :param reference_pointing: Use reference pointing?
     :return:
     """
@@ -394,7 +396,9 @@ def simulate_pointingtable_from_timeseries(pt, type='wind', time_series_type='pr
             regular_freq = numpy.append(regular_freq, mirror_regular_freq[::-1])
 
             # add a 0 Fourier term
-            z_axis_values = numpy.append(0 + 0 * 1j, z_axis_values)
+            zav = z_axis_values
+            z_axis_values = numpy.zeros([len(zav)+1]).astype('complex')
+            z_axis_values[1:] = zav
 
             # perform inverse fft
             ts = numpy.fft.ifft(z_axis_values)

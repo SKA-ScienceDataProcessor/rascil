@@ -17,6 +17,7 @@ try:
 
     pyfftw_exists = True
 except ImportError:
+    pyfftw = None
     pyfftw_exists = False
 
 

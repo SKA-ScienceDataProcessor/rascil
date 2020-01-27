@@ -17,15 +17,16 @@ __all__ = ['simulate_DTV', 'create_propagators', 'calculate_averaged_correlation
            'simulate_rfi_block', 'calculate_station_correlation_rfi']
 
 
+import astropy.units as u
 import numpy
 from astropy import constants
-import astropy.units as u
 from astropy.coordinates import SkyCoord
 
 from rascil.processing_components.util.array_functions import average_chunks2
 from rascil.processing_components.util.compass_bearing import calculate_initial_compass_bearing
-from rascil.processing_components.util.coordinate_support import skycoord_to_lmn, azel_to_hadec, hadec_to_azel
-from rascil.processing_components.visibility.base import simulate_point
+from rascil.processing_components.util.coordinate_support import simulate_point
+from rascil.processing_components.util.coordinate_support import skycoord_to_lmn, azel_to_hadec
+
 
 def simulate_DTV(frequency, times, power=50e3, timevariable=False, frequency_variable=False):
     """ Calculate DTV sqrt(power) as a function of time and frequency
@@ -123,10 +124,6 @@ def calculate_averaged_correlation(correlation, time_width, channel_width):
 def simulate_rfi_block(bvis, emitter_location, emitter_power=5e4, attenuation=1.0, use_pole=False):
     """ Simulate RFI block
 
-    :param config: RASCIL telescope Configuration
-    :param times: observation times (hour angles)
-    :param frequency: frequencies
-    :param phasecentre:
     :param emitter_location: EarthLocation of emitter
     :param emitter_power: Power of emitter
     :param attenuation: Attenuation to be applied to signal

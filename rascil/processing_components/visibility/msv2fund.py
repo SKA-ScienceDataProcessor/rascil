@@ -2,16 +2,13 @@
 # MeasurementSets V2 Reference Codes Based on Python-casacore
 #
 
+import logging
 import re
-import numpy
 from datetime import datetime
 
-from rascil.processing_components.visibility.msv2supp import cmp_to_total, STOKES_CODES, NUMERIC_STOKES, merge_baseline, \
-    geo_to_ecef, get_eci_transform
+import numpy
 
-from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Configuration
-
-import logging
+from rascil.processing_components.visibility.msv2supp import cmp_to_total, STOKES_CODES, NUMERIC_STOKES, merge_baseline
 
 log = logging.getLogger(__name__)
 
@@ -391,7 +388,8 @@ try:
                 else:
                     return self.name
 
-        def parse_time(self, ref_time):
+        @staticmethod
+        def parse_time(ref_time):
             """
             Given a time as either a integer, float, string, or datetime object,
             convert it to a string in the formation 'YYYY-MM-DDTHH:MM:SS'.

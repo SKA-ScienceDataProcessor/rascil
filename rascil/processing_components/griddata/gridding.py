@@ -20,7 +20,7 @@ import numpy.testing
 from rascil.data_models.memory_data_models import Visibility
 from rascil.processing_components.griddata.operations import copy_griddata
 from rascil.processing_components.visibility.base import copy_visibility
-from rascil.processing_components.image.operations import ifft, fft
+from rascil.processing_components.fourier_transforms import ifft, fft
 from rascil.processing_components.image.operations import create_image_from_array
 
 log = logging.getLogger(__name__)
@@ -31,7 +31,8 @@ def convolution_mapping(vis, griddata, cf, channel_tolerance=1e-8):
     
     :param vis:
     :param griddata:
-    :param cf_griddata:
+    :param cf:
+    :param channel_tolerance:
     :return:
     """
     
@@ -107,7 +108,6 @@ def grid_visibility_to_griddata(vis, griddata, cf):
     :param vis: Visibility to be gridded
     :param griddata: GridData
     :param cf: Convolution function
-    :param kwargs:
     :return: GridData
     """
     
@@ -143,7 +143,6 @@ def grid_visibility_to_griddata_fast(vis, griddata, cf, gcf):
 
     :param vis: Visibility to be gridded
     :param griddata: GridData
-    :param kwargs:
     :return: GridData
     """
     assert isinstance(vis, Visibility), vis
@@ -168,7 +167,6 @@ def grid_weight_to_griddata(vis, griddata, cf):
 
     :param vis: Visibility to be gridded
     :param griddata: GridData
-    :param kwargs:
     :return: GridData
     """
     assert isinstance(vis, Visibility), vis
@@ -220,7 +218,6 @@ def griddata_reweight(vis, griddata, cf):
 
     :param vis: Visibility to be reweighted
     :param griddata: GridData, sumwt
-    :param kwargs:
     :return: GridData
     """
     pu_grid, pu_offset, pv_grid, pv_offset, pwg_grid, pwg_fraction, pwc_grid, pwc_fraction, pfreq_grid = \

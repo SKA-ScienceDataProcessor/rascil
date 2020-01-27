@@ -8,10 +8,12 @@ __all__ = ['create_pointingtable_from_rows', 'create_pointingtable_from_blockvis
 import copy
 import logging
 
+from typing import Union
+
 import numpy.linalg
 
 from rascil.data_models.memory_data_models import PointingTable, BlockVisibility, QA
-from rascil.data_models.memory_data_models import ReceptorFrame
+from rascil.data_models.polarisation import ReceptorFrame
 
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 
@@ -115,7 +117,8 @@ def copy_pointingtable(pt: PointingTable, zero=False):
     return newpt
 
 
-def create_pointingtable_from_rows(pt: PointingTable, rows: numpy.ndarray, makecopy=True) -> PointingTable:
+def create_pointingtable_from_rows(pt: PointingTable, rows: numpy.ndarray, makecopy=True) \
+        -> Union[PointingTable, None]:
     """ Create a PointingTable from selected rows
 
     :param pt: PointingTable

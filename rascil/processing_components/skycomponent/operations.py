@@ -199,7 +199,6 @@ def remove_neighbouring_components(comps, distance):
     """ Remove the faintest of a pair of components that are within a specified distance
 
     :param comps: skycomponents
-    :param target_comps: Target skycomponents
     :param distance: Minimum distance
     :return: Indices of components in target_comps, selected components
     """
@@ -491,12 +490,12 @@ def voronoi_decomposition(im, comps):
     return vor, vertex_image
 
 
-def image_voronoi_iter(im: Image, components: Skycomponent) -> collections.Iterable:
+def image_voronoi_iter(im: Image, components: list) -> collections.Iterable:
     """Iterate through Voronoi decomposition, returning a generator yielding fullsize images
 
     :param im: Image
     :param components: Components to define Voronoi decomposition
-    :param generator of Images:
+    :returns: generator of Images
     """
     if len(components) == 1:
         mask = numpy.ones(im.data.shape)

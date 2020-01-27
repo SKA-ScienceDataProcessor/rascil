@@ -285,9 +285,7 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
 
     If polarisation_frame is not stokesI then the image will a polarised axis but the values will be zero.
 
-    :param npixel: Number of pixels
     :param polarisation_frame: Polarisation frame (default PolarisationFrame("stokesI"))
-    :param cellsize: cellsize in radians
     :param frequency:
     :param channel_bandwidth: Channel width (Hz)
     :param phasecentre: phasecentre (SkyCoord)

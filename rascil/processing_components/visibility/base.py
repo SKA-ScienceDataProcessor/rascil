@@ -14,7 +14,7 @@ import re
 from typing import Union
 
 import numpy
-from astropy import constants as constants
+import astropy.constants as constants
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -46,7 +46,7 @@ def copy_visibility(vis: Union[Visibility, BlockVisibility], zero=False) -> Unio
 
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
-    
+
     newvis = copy.copy(vis)
     newvis.data = numpy.copy(vis.data)
     if isinstance(vis, Visibility):
@@ -83,10 +83,10 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     :return: Visibility
     """
     assert phasecentre is not None, "Must specify phase centre"
-    
+
     if polarisation_frame is None:
         polarisation_frame = correlate_polarisation(config.receptor_frame)
-    
+
     latitude = config.location.geodetic[1].to('rad').value
 
     nch = len(frequency)
@@ -95,12 +95,12 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     nbaselines = int(nants * (nants - 1) / 2)
     ntimes = 0
     for iha, ha in enumerate(times):
-    
+
         # Calculate the positions of the antennas as seen for this hour angle
         # and declination
         _, elevation = hadec_to_azel(ha, phasecentre.dec.rad, latitude)
         if elevation_limit is None or (elevation > elevation_limit):
-            ntimes +=1
+            ntimes += 1
 
     npol = polarisation_frame.npol
     nrows = nbaselines * ntimes * nch
@@ -114,13 +114,13 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     rantenna1 = numpy.zeros([nrows], dtype='int')
     rantenna2 = numpy.zeros([nrows], dtype='int')
     ruvw = numpy.zeros([nrows, 3])
-    
+
     n_flagged = 0
 
     # Do each hour angle in turn
     row = 0
     for iha, ha in enumerate(times):
-        
+
         # Calculate the positions of the antennas as seen for this hour angle
         # and declination
         _, elevation = hadec_to_azel(ha, phasecentre.dec.rad, latitude)
@@ -134,8 +134,8 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
                 for a2 in range(a1 + 1, nants):
                     rantenna1[row:row + nch] = a1
                     rantenna2[row:row + nch] = a2
-                    rweight[row:row+nch,...] = 1.0
-                    rflags[row:row+nch,...] = 0
+                    rweight[row:row + nch, ...] = 1.0
+                    rflags[row:row + nch, ...] = 0
 
                     # Loop over all frequencies and polarisations
                     for ch in range(nch):
@@ -145,7 +145,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
                         rfrequency[row] = frequency[ch]
                         rchannel_bandwidth[row] = channel_bandwidth[ch]
                         row += 1
-    
+
     if zerow:
         ruvw[..., 2] = 0.0
     assert row == nrows
@@ -161,7 +161,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     assert isinstance(vis, Visibility), "vis is not a Visibility: %r" % vis
     if elevation_limit is not None:
         log.info('create_visibility: flagged %d/%d visibilities below elevation limit %f (rad)' %
-                (n_flagged, vis.nvis, elevation_limit))
+                 (n_flagged, vis.nvis, elevation_limit))
     else:
         log.info('create_visibility: created %d visibilities' % (vis.nvis))
 
@@ -201,10 +201,10 @@ def create_blockvisibility(config: Configuration,
     :return: BlockVisibility
     """
     assert phasecentre is not None, "Must specify phase centre"
-    
+
     if polarisation_frame is None:
         polarisation_frame = correlate_polarisation(config.receptor_frame)
-    
+
     latitude = config.location.geodetic[1].to('rad').value
     ants_xyz = config.data['xyz']
     nants = len(config.data['names'])
@@ -212,22 +212,22 @@ def create_blockvisibility(config: Configuration,
     ntimes = 0
     n_flagged = 0
     for iha, ha in enumerate(times):
-    
+
         # Calculate the positions of the antennas as seen for this hour angle
         # and declination
         _, elevation = hadec_to_azel(ha, phasecentre.dec.rad, latitude)
         if elevation_limit is None or (elevation > elevation_limit):
-            ntimes +=1
+            ntimes += 1
         else:
             n_flagged += 1
 
     assert ntimes > 0, "No unflagged points"
     if elevation_limit is not None:
         log.info('create_visibility: flagged %d/%d times below elevation limit %f (rad)' %
-                (n_flagged, ntimes, elevation_limit))
+                 (n_flagged, ntimes, elevation_limit))
     else:
         log.info('create_visibility: created %d times' % (ntimes))
-    
+
     npol = polarisation_frame.npol
     nchan = len(frequency)
     visshape = [ntimes, nants, nants, nchan, npol]
@@ -237,11 +237,11 @@ def create_blockvisibility(config: Configuration,
     rimaging_weight = numpy.ones(visshape)
     rtimes = numpy.zeros([ntimes])
     ruvw = numpy.zeros([ntimes, nants, nants, 3])
-    
+
     # Do each hour angle in turn
     itime = 0
     for iha, ha in enumerate(times):
-        
+
         # Calculate the positions of the antennas as seen for this hour angle
         # and declination
         ant_pos = xyz_to_uvw(ants_xyz, ha, phasecentre.dec.rad)
@@ -257,7 +257,7 @@ def create_blockvisibility(config: Configuration,
                     ruvw[itime, a2, a1, :] = (ant_pos[a2, :] - ant_pos[a1, :])
                     ruvw[itime, a1, a2, :] = (ant_pos[a1, :] - ant_pos[a2, :])
             itime += 1
-    
+
     rintegration_time = numpy.full_like(rtimes, integration_time)
     rchannel_bandwidth = channel_bandwidth
     if zerow:
@@ -282,14 +282,14 @@ def create_visibility_from_rows(vis: Union[Visibility, BlockVisibility], rows: n
     :param makecopy: Make a deep copy (True)
     :return: Visibility or BlockVisibility
     """
-    
+
     if rows is None or numpy.sum(rows) == 0:
         return None
-    
+
     assert len(rows) == vis.nvis, "Length of rows does not agree with length of visibility"
-    
+
     if isinstance(vis, Visibility):
-        
+
         if makecopy:
             newvis = copy_visibility(vis)
             if vis.cindex is not None and len(rows) == len(vis.cindex):
@@ -306,14 +306,14 @@ def create_visibility_from_rows(vis: Union[Visibility, BlockVisibility], rows: n
                 vis.cindex = vis.cindex[rows]
             return vis
     else:
-        
+
         if makecopy:
             newvis = copy_visibility(vis)
             newvis.data = copy.deepcopy(vis.data[rows])
             return newvis
         else:
             vis.data = copy.deepcopy(vis.data[rows])
-            
+
             return vis
 
 
@@ -341,15 +341,15 @@ def phaserotate_visibility(vis: Union[Visibility, BlockVisibility], newphasecent
 
     if isinstance(vis, Visibility):
         phasor = simulate_point(newvis.uvw, l, m)
-        
+
         if len(newvis.vis.shape) > len(phasor.shape):
             phasor = phasor[:, numpy.newaxis]
-        
+
         if inverse:
             newvis.data['vis'] *= phasor
         else:
             newvis.data['vis'] *= numpy.conj(phasor)
-        
+
         # To rotate UVW, rotate into the global XYZ coordinate system and back. We have the option of
         # staying on the tangent plane or not. If we stay on the tangent then the raster will
         # join smoothly at the edges. If we change the tangent then we will have to reproject to get
@@ -368,7 +368,7 @@ def phaserotate_visibility(vis: Union[Visibility, BlockVisibility], newphasecent
         return newvis
 
     elif isinstance(vis, BlockVisibility):
-        
+
         k = numpy.array(vis.frequency) / constants.c.to('m s^-1').value
 
         uvw = vis.uvw[..., numpy.newaxis] * k
@@ -381,7 +381,7 @@ def phaserotate_visibility(vis: Union[Visibility, BlockVisibility], newphasecent
             newvis.data['vis'] *= phasor
         else:
             newvis.data['vis'] *= numpy.conj(phasor)
-        
+
         # To rotate UVW, rotate into the global XYZ coordinate system and back. We have the option of
         # staying on the tangent plane or not. If we stay on the tangent then the raster will
         # join smoothly at the edges. If we change the tangent then we will have to reproject to get
@@ -423,10 +423,11 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
     try:
         import casacore.tables.tableutil as pt
         from casacore.tables import (makescacoldesc, makearrcoldesc, table, maketabdesc, tableexists, tableiswritable,
-                             tableinfo, tablefromascii, tabledelete, makecoldesc, msconcat, removeDerivedMSCal,
-                             taql, tablerename, tablecopy, tablecolumn, addDerivedMSCal, removeImagingColumns,
-                             addImagingColumns, required_ms_desc, tabledefinehypercolumn, default_ms, makedminfo,
-                             default_ms_subtable)
+                                     tableinfo, tablefromascii, tabledelete, makecoldesc, msconcat, removeDerivedMSCal,
+                                     taql, tablerename, tablecopy, tablecolumn, addDerivedMSCal, removeImagingColumns,
+                                     addImagingColumns, required_ms_desc, tabledefinehypercolumn, default_ms,
+                                     makedminfo,
+                                     default_ms_subtable)
         from rascil.processing_components.visibility.msv2fund import Antenna, Stand
     except ModuleNotFoundError:
         raise ModuleNotFoundError("casacore is not installed")
@@ -438,7 +439,7 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
 
     # log.debug("create_blockvisibility_from_ms: %s" % str(tab.info()))
     # Start the table
-    tbl = msv2.Ms(msname, ref_time=0, source_name= source_name, if_delete=True)
+    tbl = msv2.Ms(msname, ref_time=0, source_name=source_name, if_delete=True)
     if source_name is None:
         source_name = 'RASCIL'
     for vis in vis_list:
@@ -447,16 +448,18 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
         nchan = vis.nchan
         nants = vis.nants
         if vis.polarisation_frame.type == 'linear':
-            polarization = ['XX','XY','YX','YY']
+            polarization = ['XX', 'XY', 'YX', 'YY']
         elif vis.polarisation_frame.type == 'stokesI':
             polarization = ['XX']
         elif vis.polarisation_frame.type == 'circular':
-            polarization = ['RR','RL','LR','LL']
+            polarization = ['RR', 'RL', 'LR', 'LL']
         elif vis.polarisation_frame.type == 'stokesIQUV':
-            polarization = ['I','Q','U','V']
+            polarization = ['I', 'Q', 'U', 'V']
+        else:
+            raise ValueError("Unknown visibility polarisation %s" % (vis.polarisation_frame.type))
         # Current RASCIL supports I
         tbl.set_stokes(polarization)
-        tbl.set_frequency(vis.frequency,vis.channel_bandwidth)
+        tbl.set_frequency(vis.frequency, vis.channel_bandwidth)
         n_ant = len(vis.configuration.xyz)
 
         antennas = []
@@ -496,16 +499,16 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
 
         time_last = time[0]
         time_index = 0
-        for row,_ in enumerate(time):
+        for row, _ in enumerate(time):
             # MS has shape [row, npol, nchan]
             # BV has shape [ntimes, nants, nants, nchan, npol]
             bl = 0
             for i in range(0, n_ant - 1):
                 for j in range(i + 1, n_ant):
-                    ms_vis[row, bl,...] = bv_vis[row, j, i, ...]
+                    ms_vis[row, bl, ...] = bv_vis[row, j, i, ...]
                     # bv_weight[time_index, antenna2[row], antenna1[row], :, ...] = ms_weight[row, numpy.newaxis, ...]
                     # bv_imaging_weight[time_index, antenna2[row], antenna1[row], :, ...] = ms_weight[row, numpy.newaxis, ...]
-                    ms_uvw[row,bl,:] = bv_uvw[row, j, i, :]
+                    ms_uvw[row, bl, :] = bv_uvw[row, j, i, :]
                     bl += 1
 
         # ms_vis = numpy.zeros([ntimes*vis.nants*vis.nants, vis.nchan, vis.npol]).astype('complex')
@@ -513,11 +516,12 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
         for ntime, time in enumerate(vis.data['time']):
             for ipol, pol in enumerate(polarization):
                 if int_time[ntime] is not None:
-                    tbl.add_data_set(time, int_time[ntime], blList, ms_vis[ntime, ..., ipol], pol=pol, source=source_name,
+                    tbl.add_data_set(time, int_time[ntime], blList, ms_vis[ntime, ..., ipol], pol=pol,
+                                     source=source_name,
                                      phasecentre=vis.phasecentre, uvw=ms_uvw[ntime, :, :])
                 else:
                     tbl.add_data_set(time, 0, blList, ms_vis[ntime, ..., ipol], pol=pol,
-                                     source=source_name, phasecentre = vis.phasecentre, uvw=ms_uvw[ntime, :, :])
+                                     source=source_name, phasecentre=vis.phasecentre, uvw=ms_uvw[ntime, :, :])
     tbl.write()
 
 
@@ -540,15 +544,15 @@ def list_ms(msname, ack=False):
         from rascil.processing_components.visibility import msv2
     except ModuleNotFoundError:
         raise ModuleNotFoundError("cannot import msv2")
-    
+
     tab = table(msname, ack=ack)
     log.debug("list_ms: %s" % str(tab.info()))
-    
+
     fieldtab = table('%s/FIELD' % msname, ack=False)
     sources = fieldtab.getcol('NAME')
-    
+
     dds = list(numpy.unique(tab.getcol('DATA_DESC_ID')))
-    
+
     return sources, dds
 
 
@@ -606,19 +610,19 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
         for field, source in enumerate(sources):
             if source in selected_sources: fields.append(field)
         assert len(fields) > 0, "No sources selected"
-        
+
     if selected_dds is None:
         dds = numpy.unique(tab.getcol('DATA_DESC_ID'))
     else:
         dds = selected_dds
-        
+
     log.debug("create_blockvisibility_from_ms: Reading unique fields %s, unique data descriptions %s" % (
         str(fields), str(dds)))
     vis_list = list()
     for field in fields:
         ftab = table(msname, ack=ack).query('FIELD_ID==%d' % field, style='')
         for dd in dds:
-            meta = {'MSV2':{'FIELD_ID': field, 'DATA_DESC_ID':dd}}
+            meta = {'MSV2': {'FIELD_ID': field, 'DATA_DESC_ID': dd}}
             ms = ftab.query('DATA_DESC_ID==%d' % dd, style='')
             assert ms.nrows() > 0, "Empty selection for FIELD_ID=%d and DATA_DESC_ID=%d" % (field, dd)
             log.debug("create_blockvisibility_from_ms: Found %d rows" % (ms.nrows()))
@@ -638,7 +642,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                                   (start_chan, end_chan))
                         blc = [start_chan, 0]
                         trc = [end_chan, datacol_shape[-1] - 1]
-                        channum = range(start_chan, end_chan+1)
+                        channum = range(start_chan, end_chan + 1)
                         ms_vis = ms.getcolslice(datacolumn, blc=blc, trc=trc)
                         ms_flags = ms.getcolslice('FLAG', blc=blc, trc=trc)
                         ms_weight = ms.getcol('WEIGHT')
@@ -670,12 +674,12 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             antenna2 = ms.getcol('ANTENNA2')
             integration_time = ms.getcol('INTERVAL')
 
-#            time = Time((time-integration_time/2.0)/86400+ 2400000.5,format='jd',scale='utc').utc.value
+            #            time = Time((time-integration_time/2.0)/86400+ 2400000.5,format='jd',scale='utc').utc.value
             time = (otime - integration_time / 2.0)
 
-            start_time = numpy.min(time)/86400.0
-            end_time = numpy.max(time)/86400.0
-            
+            start_time = numpy.min(time) / 86400.0
+            end_time = numpy.max(time) / 86400.0
+
             log.debug("create_blockvisibility_from_ms: Observation from %s to %s" %
                       (Time(start_time, format='mjd').iso, Time(end_time, format='mjd').iso))
 
@@ -684,7 +688,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             cfrequency = spwtab.getcol('CHAN_FREQ')[dd][channum]
             cchannel_bandwidth = spwtab.getcol('CHAN_WIDTH')[dd][channum]
             nchan = cfrequency.shape[0]
-            
+
             # Get polarisation info
             npol = 4
             poltab = table('%s/POLARIZATION' % msname, ack=False)
@@ -701,8 +705,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                 polarisation_frame = PolarisationFrame('stokesI')
             else:
                 raise KeyError("Polarisation not understood: %s" % str(corr_type))
-            
-            
+
             # Get configuration
             anttab = table('%s/ANTENNA' % msname, ack=False)
             nants = anttab.nrows()
@@ -731,7 +734,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                 time_index_row[row] = time_index
 
             ntimes = time_index + 1
-            
+
             bv_times = numpy.zeros([ntimes])
             bv_vis = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('complex')
             bv_flags = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('int')
@@ -755,9 +758,9 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                                             frequency=cfrequency,
                                             channel_bandwidth=cchannel_bandwidth,
                                             vis=bv_vis,
-                                            flags = bv_flags,
+                                            flags=bv_flags,
                                             weight=bv_weight,
-                                            integration_time = bv_integration_time,
+                                            integration_time=bv_integration_time,
                                             imaging_weight=bv_imaging_weight,
                                             configuration=configuration,
                                             phasecentre=phasecentre,
@@ -767,7 +770,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
     return vis_list
 
 
-def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=None,  ack=False):
+def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=None, ack=False):
     """ Minimal MS to BlockVisibility converter
 
     The MS format is much more general than the RASCIL BlockVisibility so we cut many corners. This requires casacore to be
@@ -803,6 +806,7 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
     :param antnum: the number of antenna
     :return:
     """
+
     def ParamDict(hdul):
         "Return the dictionary of the random parameters"
 
@@ -814,18 +818,17 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
         columns are entered as a list.
         """
 
-        pre=re.compile(r"PTYPE(?P<i>\d+)")
-        res={}
-        for k,v in hdul.header.items():
-            m=pre.match(k)
-            if m :
-                vu=v.upper()
+        pre = re.compile(r"PTYPE(?P<i>\d+)")
+        res = {}
+        for k, v in hdul.header.items():
+            m = pre.match(k)
+            if m:
+                vu = v.upper()
                 if vu in res:
-                    res[ vu ] = [ res[vu], int(m.group("i")) ]
+                    res[vu] = [res[vu], int(m.group("i"))]
                 else:
-                    res[ vu ] = int(m.group("i"))
+                    res[vu] = int(m.group("i"))
         return res
-
 
     # Open the file
     with fits.open(fitsname) as hdul:
@@ -840,12 +843,12 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
         channels = hdul[0].header['NAXIS4']
         freq = numpy.zeros([nspw, channels])
         # Read Frequency or IF
-        freqhdulname="AIPS FQ"
-        sdhu  = hdul.index_of(freqhdulname)
+        freqhdulname = "AIPS FQ"
+        sdhu = hdul.index_of(freqhdulname)
         if_freq = hdul[sdhu].data['IF FREQ'].ravel()
         for i in range(nspw):
-            temp = numpy.array([if_freq[i] + freq_ref+delt_freq* ff for ff in range(channels)])
-            freq[i,:] = temp[:]
+            temp = numpy.array([if_freq[i] + freq_ref + delt_freq * ff for ff in range(channels)])
+            freq[i, :] = temp[:]
         freq_delt = numpy.ones(channels) * delt_freq
         if channum is None:
             channum = range(channels)
@@ -853,24 +856,24 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
         primary = hdul[0].data
         # Read time
         bvtimes = Time(hdul[0].data['DATE'], hdul[0].data['_DATE'], format='jd')
-        bv_times  = numpy.unique(bvtimes.jd)
-        ntimes   = len(bv_times)
+        bv_times = numpy.unique(bvtimes.jd)
+        ntimes = len(bv_times)
 
-                # # Get Antenna
+        # # Get Antenna
         # blin = hdul[0].data['BASELINE']
-        antennahdulname="AIPS AN"
-        adhu  = hdul.index_of(antennahdulname)
+        antennahdulname = "AIPS AN"
+        adhu = hdul.index_of(antennahdulname)
         try:
             antenna_name = hdul[adhu].data['ANNAME']
-            antenna_name = antenna_name.encode('ascii','ignore')
-        except:
+            antenna_name = antenna_name.encode('ascii', 'ignore')
+        except ValueError:
             antenna_name = None
 
         antenna_xyz = hdul[adhu].data['STABXYZ']
-        antenna_mount =  hdul[adhu].data['MNTSTA']
+        antenna_mount = hdul[adhu].data['MNTSTA']
         try:
             antenna_diameter = hdul[adhu].data['DIAMETER']
-        except:
+        except ValueError:
             antenna_diameter = None
         # To reading some UVFITS with wrong numbers of antenna
         if antnum is not None:
@@ -900,34 +903,35 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
         elif numpy.array_equal(corr_type, [-5, -6, -7, -8]):
             polarisation_frame = PolarisationFrame('linear')
         else:
-            raise KeyError("Polarisation not understood: %s" % str(corr_type))            
+            raise KeyError("Polarisation not understood: %s" % str(corr_type))
 
         configuration = Configuration(name='', data=None, location=None,
-                                        names=antenna_name, xyz=antenna_xyz, mount=antenna_mount, frame=None,
-                                        receptor_frame=polarisation_frame,
-                                        diameter=antenna_diameter)       
+                                      names=antenna_name, xyz=antenna_xyz, mount=antenna_mount, frame=None,
+                                      receptor_frame=polarisation_frame,
+                                      diameter=antenna_diameter)
 
         # Get RA and DEC
         phase_center_ra_degrees = numpy.float(hdul[0].header['CRVAL6'])
         phase_center_dec_degrees = numpy.float(hdul[0].header['CRVAL7'])
 
         # Get phasecentres
-        phasecentre = SkyCoord(ra=phase_center_ra_degrees * u.deg, dec=phase_center_dec_degrees * u.deg, frame='icrs', equinox='J2000')
-                    
+        phasecentre = SkyCoord(ra=phase_center_ra_degrees * u.deg, dec=phase_center_dec_degrees * u.deg, frame='icrs',
+                               equinox='J2000')
+
         # Get UVW
-        d=ParamDict(hdul[0])
+        d = ParamDict(hdul[0])
         if "UU" in d:
-            uu = hdul[0].data['UU'] 
-            vv = hdul[0].data['VV'] 
-            ww = hdul[0].data['WW'] 
+            uu = hdul[0].data['UU']
+            vv = hdul[0].data['VV']
+            ww = hdul[0].data['WW']
         else:
-            uu = hdul[0].data['UU---SIN'] 
+            uu = hdul[0].data['UU---SIN']
             vv = hdul[0].data['VV---SIN']
-            ww = hdul[0].data['WW---SIN'] 
+            ww = hdul[0].data['WW---SIN']
         _vis = hdul[0].data['DATA']
 
-        #_vis.shape = (nchan, ntimes, (nants*(nants-1)//2 ), npol, -1)
-        #self.vis = -(_vis[...,0] * 1.j + _vis[...,1])
+        # _vis.shape = (nchan, ntimes, (nants*(nants-1)//2 ), npol, -1)
+        # self.vis = -(_vis[...,0] * 1.j + _vis[...,1])
         row = 0
         nchan = len(channum)
         vis_list = list()
@@ -935,30 +939,36 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
             bv_vis = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('complex')
             bv_flags = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('int')
             bv_weight = numpy.zeros([ntimes, nants, nants, nchan, npol])
-            bv_uvw = numpy.zeros([ntimes, nants, nants, 3])     
-            for time_index , time in enumerate(bv_times):
-                #restfreq = freq[channel_index] 
-                for antenna1 in range(nants-1):
+            bv_uvw = numpy.zeros([ntimes, nants, nants, 3])
+            for time_index, time in enumerate(bv_times):
+                # restfreq = freq[channel_index]
+                for antenna1 in range(nants - 1):
                     for antenna2 in range(antenna1 + 1, nants):
                         for channel_no, channel_index in enumerate(channum):
                             for pol_index in range(npol):
-                                bv_vis[time_index, antenna2, antenna1, channel_no,pol_index] = complex(_vis[row,:,:,spw_index,channel_index, pol_index ,0],_vis[row,:,:,spw_index,channel_index,pol_index ,1])
-                                bv_weight[time_index, antenna2, antenna1, channel_no, pol_index] = _vis[row,:,:,spw_index,channel_index,pol_index ,2]
-                        bv_uvw[time_index, antenna2, antenna1, 0] = uu[row]* constants.c.value
-                        bv_uvw[time_index, antenna2, antenna1, 1] = vv[row]* constants.c.value
-                        bv_uvw[time_index, antenna2, antenna1, 2] = ww[row]* constants.c.value
-                        row += 1 
+                                bv_vis[time_index, antenna2, antenna1, channel_no, pol_index] = complex(
+                                    _vis[row, :, :, spw_index, channel_index, pol_index, 0],
+                                    _vis[row, :, :, spw_index, channel_index, pol_index, 1])
+                                bv_weight[time_index, antenna2, antenna1, channel_no, pol_index] = _vis[row, :, :,
+                                                                                                   spw_index,
+                                                                                                   channel_index,
+                                                                                                   pol_index, 2]
+                        bv_uvw[time_index, antenna2, antenna1, 0] = uu[row] * constants.c.value
+                        bv_uvw[time_index, antenna2, antenna1, 1] = vv[row] * constants.c.value
+                        bv_uvw[time_index, antenna2, antenna1, 2] = ww[row] * constants.c.value
+                        row += 1
             vis_list.append(BlockVisibility(uvw=bv_uvw,
                                             time=bv_times,
                                             frequency=freq[spw_index][channum],
                                             channel_bandwidth=freq_delt[channum],
                                             vis=bv_vis, flags=bv_flags,
                                             weight=bv_weight,
-                                            imaging_weight= bv_weight,
+                                            imaging_weight=bv_weight,
                                             configuration=configuration,
                                             phasecentre=phasecentre,
                                             polarisation_frame=polarisation_frame))
     return vis_list
+
 
 def create_visibility_from_uvfits(fitsname, channum=None, ack=False, antnum=None):
     """ Minimal UVFITS to BlockVisibility converter
