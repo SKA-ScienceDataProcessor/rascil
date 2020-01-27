@@ -775,7 +775,7 @@ def create_unittest_components(model, flux, applypb=False, telescope='LOW', npix
                                scale=1.0, single=False, symmetric=False, angular_scale=1.0):
     # Fill the visibility with exactly computed point sources.
 
-    if npixel == None:
+    if npixel is None:
         _, _, _, npixel = model.data.shape
     spacing_pixels = int(scale * npixel) // 4
     log.info('Spacing in pixels = %s' % spacing_pixels)

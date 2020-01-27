@@ -8,13 +8,12 @@ __all__ = ['vis_summary', 'copy_visibility', 'create_visibility', 'create_visibi
            'create_visibility_from_ms', 'create_visibility_from_uvfits',
            'list_ms']
 
-import os
 import copy
 import logging
+import re
 from typing import Union
 
 import numpy
-import re
 from astropy import constants as constants
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -23,8 +22,8 @@ from astropy.time import Time
 
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Configuration
 from rascil.data_models.polarisation import PolarisationFrame, ReceptorFrame, correlate_polarisation
-from rascil.processing_components.util.coordinate_support import xyz_to_uvw, uvw_to_xyz, skycoord_to_lmn, simulate_point, \
-    hadec_to_azel
+from rascil.processing_components.util.coordinate_support import xyz_to_uvw, uvw_to_xyz, skycoord_to_lmn, \
+    simulate_point, hadec_to_azel
 
 log = logging.getLogger(__name__)
 
@@ -416,7 +415,7 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None, ack=False):
     Write a list of BlockVisibility's to a MS file, split by field and spectral window
 
     :param msname: File name of MS
-    :param vislist: list of BlockVisibility
+    :param vis_list: list of BlockVisibility
     :param source_name: Source name to use
     :param ack: Ask casacore to acknowledge each table operation
     :return:

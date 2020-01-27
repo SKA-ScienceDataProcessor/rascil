@@ -66,6 +66,10 @@ def plot_visibility(vis_list, ax=None, title='Visibility', y='amp', x='uvdist', 
     :param kwargs:
     :return:
     """
+    if ax is None:
+        fig, ax = plt.subplots(111)
+        ax = ax[0]
+
     for ivis, vis in enumerate(vis_list):
         if y == 'amp':
             yvalue = numpy.abs(vis.vis[...,0,0].flat)
@@ -86,6 +90,9 @@ def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV cov
     :param kwargs:
     :return:
     """
+    if ax is None:
+        fig, ax = plt.subplots(111)
+        ax = ax[0]
     
     for ivis, vis in enumerate(vis_list):
         u = numpy.array(vis.u[...].flat)
@@ -288,8 +295,6 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
                                polarisation_frame=PolarisationFrame(
                                    "stokesI"))
         pb = create_pb(pbmodel, "MID_GAUSS", pointingcentre=phasecentre, use_local=False)
-        pb_feko = create_pb(pbmodel, pbtype, pointingcentre=phasecentre, use_local=True)
-        pb.data = pb_feko.data[:, 0, ...][:, numpy.newaxis, ...]
         pb_applied_components = [copy_skycomponent(c) for c in original_components]
         pb_applied_components = apply_beam_to_skycomponent(pb_applied_components, pb)
         filtered_components = []

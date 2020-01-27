@@ -17,7 +17,6 @@ from rascil.processing_components.calibration.operations import create_gaintable
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 from rascil.processing_components.util.coordinate_support import hadec_to_azel, azel_to_hadec
-from rascil.processing_components.simulation.testing_support import log
 
 log = logging.getLogger(__name__)
 
@@ -47,15 +46,15 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
         assert isinstance(vis, BlockVisibility)
         assert vp.wcs.wcs.ctype[0] == 'AZELGEO long', vp.wcs.wcs.ctype[0]
         assert vp.wcs.wcs.ctype[1] == 'AZELGEO lati', vp.wcs.wcs.ctype[1]
-        
+
         assert vis.configuration.mount[0] == 'azel', "Mount %s not supported yet" % vis.configuration.mount[0]
-    
+
         # The time in the Visibility is hour angle in seconds!
         number_bad = 0
         number_good = 0
-        
+
         latitude = vis.configuration.location.lat.rad
-    
+
         r2d = 180.0 / numpy.pi
         s2r = numpy.pi / 43200.0
         # For each hourangle, we need to calculate the location of a component
@@ -68,10 +67,10 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
             assert numpy.sum(pt_rows) > 0
             pointing_ha = pt.pointing[pt_rows]
             har = s2r * ha
-            
+
             # Calculate the az el for this hourangle and the phasecentre declination
             azimuth_centre, elevation_centre = hadec_to_azel(har, vis.phasecentre.dec.rad, latitude)
-    
+
             for icomp, comp in enumerate(sc):
                 antgain = numpy.zeros([nant], dtype='complex')
                 # Calculate the location of the component in AZELGEO, then add the pointing offset
@@ -79,21 +78,21 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                 hacomp = comp.direction.ra.rad - vis.phasecentre.ra.rad + har
                 deccomp = comp.direction.dec.rad
                 azimuth_comp, elevation_comp = hadec_to_azel(hacomp, deccomp, latitude)
-                
+
                 for ant in range(nant):
-        
+
                     wcs_azel = vp.wcs.deepcopy()
-        
-                    az_comp = (azimuth_centre   + pointing_ha[0, ant, 0, 0, 0]/numpy.cos(elevation_centre))*r2d
-                    el_comp = (elevation_centre + pointing_ha[0, ant, 0, 0, 1])*r2d
-                    
+
+                    az_comp = (azimuth_centre + pointing_ha[0, ant, 0, 0, 0] / numpy.cos(elevation_centre)) * r2d
+                    el_comp = (elevation_centre + pointing_ha[0, ant, 0, 0, 1]) * r2d
+
                     # We use WCS sensible coordinate handling by labelling the axes misleadingly
                     wcs_azel.wcs.crval[0] = az_comp
                     wcs_azel.wcs.crval[1] = el_comp
                     wcs_azel.wcs.ctype[0] = 'RA---SIN'
                     wcs_azel.wcs.ctype[1] = 'DEC--SIN'
-    
-                    worldloc = [azimuth_comp*r2d, elevation_comp*r2d,
+
+                    worldloc = [azimuth_comp * r2d, elevation_comp * r2d,
                                 vp.wcs.wcs.crval[2], vp.wcs.wcs.crval[3]]
                     try:
                         pixloc = wcs_azel.sub(2).wcs_world2pix([worldloc[:2]], 1)[0]
@@ -107,22 +106,22 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                     except:
                         number_bad += 1
                         antgain[ant] = 0.0
-                
+
                 gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, numpy.newaxis, numpy.newaxis]
                 gaintables[icomp].phasecentre = comp.direction
     else:
         assert isinstance(vis, BlockVisibility)
         assert vp.wcs.wcs.ctype[0] == 'RA---SIN', vp.wcs.wcs.ctype[0]
         assert vp.wcs.wcs.ctype[1] == 'DEC--SIN', vp.wcs.wcs.ctype[1]
-        
+
         # The time in the Visibility is hour angle in seconds!
         number_bad = 0
         number_good = 0
-    
+
         d2r = numpy.pi / 180.0
         ra_centre = vp.wcs.wcs.crval[0] * d2r
         dec_centre = vp.wcs.wcs.crval[1] * d2r
-    
+
         r2d = 180.0 / numpy.pi
         s2r = numpy.pi / 43200.0
         # For each hourangle, we need to calculate the location of a component
@@ -133,8 +132,7 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
             ha = numpy.average(v.time)
             pt_rows = (pt.time == ha)
             pointing_ha = pt.pointing[pt_rows]
-            har = s2r * ha
-        
+
             for icomp, comp in enumerate(sc):
                 antgain = numpy.zeros([nant], dtype='complex')
                 antwt = numpy.zeros([nant])
@@ -144,15 +142,15 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                 dec_comp = comp.direction.dec.rad
                 for ant in range(nant):
                     wcs_azel = vp.wcs.deepcopy()
-                    ra_pointing = (ra_centre + pointing_ha[0, ant, 0, 0, 0]/numpy.cos(dec_centre)) * r2d
+                    ra_pointing = (ra_centre + pointing_ha[0, ant, 0, 0, 0] / numpy.cos(dec_centre)) * r2d
                     dec_pointing = (dec_centre + pointing_ha[0, ant, 0, 0, 1]) * r2d
-                
+
                     # We use WCS sensible coordinate handling by labelling the axes misleadingly
                     wcs_azel.wcs.crval[0] = ra_pointing
                     wcs_azel.wcs.crval[1] = dec_pointing
                     wcs_azel.wcs.ctype[0] = 'RA---SIN'
                     wcs_azel.wcs.ctype[1] = 'DEC--SIN'
-                
+
                     worldloc = [ra_comp * r2d, dec_comp * r2d,
                                 vp.wcs.wcs.crval[2], vp.wcs.wcs.crval[3]]
                     try:
@@ -361,7 +359,7 @@ def simulate_pointingtable_from_timeseries(pt, type='wind', time_series_type='pr
         # join
         regular_axis_values = numpy.append(regular_axis_values1, regular_axis_values2)
 
-        M0 = len(regular_axis_values)
+        m0 = len(regular_axis_values)
 
         #  check rms of resampled PSD
         # df = regular_freq[1:]-regular_freq[:-1]
@@ -397,23 +395,20 @@ def simulate_pointingtable_from_timeseries(pt, type='wind', time_series_type='pr
 
             # add a 0 Fourier term
             z_axis_values = numpy.append(0 + 0 * 1j, z_axis_values)
-            regular_freq = numpy.append(0, regular_freq)
 
             # perform inverse fft
             ts = numpy.fft.ifft(z_axis_values)
 
             # set up and check scalings
-            N = len(ts)
             Dt = pt.interval[0]
             ts = numpy.real(ts)
-            ts *= M0  # the result is scaled by number of points in the signal, so multiply - real part - by this
+            ts *= m0  # the result is scaled by number of points in the signal, so multiply - real part - by this
 
             # The output of the iFFT will be a random time series on the finite
             # (bounded, limited) time interval t = 0 to tmax = (N-1) X Dt, #
             # where Dt = 1 / (2 X Fmax)
 
             # scale to time interval
-            times = numpy.arange(ntimes) * Dt
 
             # Convert from arcsec to radians
             ts *= numpy.pi / (180.0 * 3600.0)

@@ -8,7 +8,7 @@ e.g. for convolution kernels odd image sizes are preferred.
 
 """
 
-__all__ = ['w_beam']
+__all__ = ['w_beam', 'grdsf']
 
 import logging
 
@@ -64,7 +64,7 @@ def coordinates2Offset(npixel: int, cx: int, cy: int, quadrant=False):
         cx = npixel // 2
     if cy is None:
         cy = npixel // 2
-    if quadrant == False:
+    if not quadrant:
         mg = numpy.mgrid[0:npixel, 0:npixel]
     else:
         # If npixel is even, we should create a grid with npixel//2+1
