@@ -1,0 +1,9 @@
+.. _primary_beam_zernikes:
+
+primary_beam_zernikes
+=====================
+
+This creates primary beams from a numeric model, including randomly chosen Zernike terms.
+
+.. code:: ipython3
+
