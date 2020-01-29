@@ -1,4 +1,3 @@
-.. _rascil_scripts:
 
 Running scripts
 ===============
@@ -18,3 +17,4 @@ Some example scripts are found in the directory examples/scripts.
 
 .. _feedback: mailto:realtimcornwell@gmail.com
 
+.. _rascil_scripts:
