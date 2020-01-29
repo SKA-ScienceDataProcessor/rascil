@@ -6,9 +6,9 @@ docker-compose provides a simple way to create a local cluster of a Dask schedul
 To scale to e.g. 4 dask workers::
 
     cd docker
-    docker-compose --scale workers=4 up
+    docker-compose --scale worker=4 up
 
-To connect to the cluster::
+The scheduler and 4 worker should now be running. To connect to the cluster, run the following into another window::
 
     docker run -it --network host timcornwell/rascil-full
 
@@ -23,9 +23,13 @@ If the RASCIL data is already locally available then the images can be built wit
 different compose file. This assumes that the environment variable RASCIL_DATA points to the
 data::
 
-    docker-compose --file docker-compose-no-data.yml up --scale workers=4
+    docker-compose --file docker-compose-no-data.yml up --scale worker=4
+
+The scheduler and 4 worker should now be running. To connect to the cluster, run the following into another window::
+
     docker run -it --network host timcornwell/rascil-full
 
 Then at the docker prompt, do::
 
     python cluster_tests/ritoy/cluster_test_ritoy.py localhost:8786
+
