@@ -1,0 +1,21 @@
+version: "3.1"
+
+services:
+  scheduler:
+    build:
+      context: rascil-full
+      dockerfile: Dockerfile
+    image: timcornwell/rascil-full
+    hostname: dask-scheduler
+    ports:
+      - "8786:8786"
+      - "8787:8787"
+    command: ["dask-scheduler", "--local-directory", "/rascil/dask-worker-space"]
+
+  worker:
+    build:
+      context: rascil-full
+      dockerfile: Dockerfile
+    image: timcornwell/rascil-full
+    hostname: dask-worker
+    command: ["dask-worker", "--local-directory", "//rascil/dask-worker-space", "tcp://scheduler:8786"]

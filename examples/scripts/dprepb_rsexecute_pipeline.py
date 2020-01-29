@@ -33,9 +33,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
     print(args)
 
-    # Put the results in the test_results directory
-    results_dir = rascil_path('test_results')
-    dask_dir = rascil_path('test_results/dask-work-space')
+    # Put the results in current directory
+    results_dir = './'
+    dask_dir = './dask-work-space'
 
     # Since the processing is distributed over multiple processes we have to tell each Dask worker
     # where to send the log messages
