@@ -2,75 +2,30 @@
 Running RASCIL under docker
 ***************************
 
-Using docker-compose
---------------------
-docker-compose provides a simple way to create a cluster. To scale to e.g. 4 dask workers::
+docker-compose provides a simple way to create a local cluster of a Dask scheduler and a number of workers.
+To scale to e.g. 4 dask workers::
 
     cd docker
     docker-compose --scale workers=4 up
 
-To connect to the cluster and run a test program::
+To connect to the cluster::
 
     docker run -it --network host timcornwell/rascil-full
 
-Then at the docker prompt, do::
+Then at the docker prompt, we can run a test program in python. This test program takes the
+address of the scheduler on the command line. Hence the command at the docker command line::
 
     python cluster_tests/ritoy/cluster_test_ritoy.py localhost:8786
 
 The diagnostics page should be at http://127.0.0.1:8787
 
-Using docker build and run
---------------------------
+If the RASCIL data is already locally available then the images can be built without data using a slightly
+different compose file. This assumes that the environment variable RASCIL_DATA points to the
+data::
 
-To build::
+    docker-compose --file docker-compose-no-data.yml up --scale workers=4
+    docker run -it --network host timcornwell/rascil-full
 
-    cd docker/rascil-full
-    docker image build -t timcornwell:rascil-full
+Then at the docker prompt, do::
 
-To run interactively::
-
-    docker run -it  timcornwell/rascil-full
-    rascil@a31557a2c30d:/$ python
-    Python 3.7.4 (default, Aug 13 2019, 20:35:49)
-    [GCC 7.3.0] :: Anaconda, Inc. on linux
-    Type "help", "copyright", "credits" or "license" for more information.
-    >>> import rascil
-    >>>
-
-To run an example script::
-
-    docker run timcornwell/rascil-full python examples/scripts/imaging.py
-
-Dask can be run internally to a single container made from the image timcornwell/rascil-full. To make the
-Dask diagnostics viewable on http://localhost:8787 add the port mapping::
-
-    docker run -p 8787:8787  timcornwell/rascil-full python examples/scripts/dprepb_rsexecute_pipeline.py
-
-This image created from docker-full/Dockerfile is quite large, partially because of the data files included. If the
-RASCIL data files are already available. Then you can build the base version::
-
-    cd docker/rascil-minimal
-    docker image build -t timcornwell:rascil-minimal
-
-To run interactively, for example if the RASCIL data is in your current working directory::
-
-    docker run -it -v $PWD/data:/rascil/data timcornwell/rascil-minimal
-    rascil@a31557a2c30d:/$ python
-    Python 3.7.4 (default, Aug 13 2019, 20:35:49)
-    [GCC 7.3.0] :: Anaconda, Inc. on linux
-    Type "help", "copyright", "credits" or "license" for more information.
-    >>> import rascil
-    >>>
-
-
-To run an example script::
-
-    docker run -v $PWD/data:/rascil/data timcornwell/rascil-base python rascil/examples/scripts/imaging.py
-
-Dask can be run internally to a single container made from the image timcornwell/rascil-base. To make the
-Dask diagnostics viewable on http://localhost:8787 add the port mapping::
-
-    docker run -p 8787:8787 -v $PWD/data:/rascil/data timcornwell/rascil-base python rascil/examples/scripts/dprepb_rsexecute_pipeline.py
-
-
-
+    python cluster_tests/ritoy/cluster_test_ritoy.py localhost:8786

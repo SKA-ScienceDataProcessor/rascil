@@ -6,7 +6,7 @@ services:
       context: rascil-no-data
       dockerfile: Dockerfile
     image: timcornwell/rascil-no-data
-    volumes: ["${RASCIL}/data:/rascil/data"]
+    volumes: ["${RASCIL_DATA}:/rascil/data"]
     hostname: dask-scheduler
     ports:
       - "8786:8786"
@@ -18,6 +18,6 @@ services:
       context: rascil-no-data
       dockerfile: Dockerfile
     image: timcornwell/rascil-no-data
-    volumes: ["${RASCIL}/data:/rascil/data"]
+    volumes: ["${RASCIL_DATA}:/rascil/data"]
     hostname: dask-worker
     command: ["dask-worker", "--local-directory", "//rascil/dask-worker-space", "tcp://scheduler:8786"]

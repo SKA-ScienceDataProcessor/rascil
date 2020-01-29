@@ -24,6 +24,8 @@ WORKDIR /rascil
 RUN mkdir -p /rascil/dask-worker-space && \
     chmod 777 /rascil/dask-worker-space
 
+RUN rm -rf /rascil/data
+
 # Install Python package dependencies,
 # run setup (may not be required, as we've added /rascil to the PYTHONPATH)
 # and clear pip cache. Use a single RUN statement to avoid multiple layers.
