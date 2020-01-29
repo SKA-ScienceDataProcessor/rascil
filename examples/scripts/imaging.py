@@ -20,7 +20,7 @@ log = logging.getLogger()
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))
 
-results_dir = rascil_path('test_results')
+results_dir = './'
 
 # Construct LOW core configuration
 lowr3 = create_named_configuration('LOWBD2', rmax=750.0)

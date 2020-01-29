@@ -13,13 +13,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 # This will clone into (and create) a directory at /rascil
 RUN git lfs install && \
-    git clone https://github.com/SKA-ScienceDataProcessor/rascil.git
-
-# Create scratch directories and set permissions on them.
-# (Hopefully we can do without these lines eventually.)
-RUN rm -rf /rascil/test_results
-RUN mkdir -p  /rascil/test_results && \
-    chmod 777 /rascil /rascil/test_results
+    git clone -b docker-original https://github.com/SKA-ScienceDataProcessor/rascil.git
 
 # Set runtime environment variables.
 ENV PYTHONPATH=/rascil:$PYTHONPATH

@@ -20,7 +20,7 @@ log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
 if __name__ == '__main__':
-    results_dir = rascil_path('test_results')
+    results_dir = './'
 
     bvt = create_blockvisibility_from_ms(rascil_path('data/vis/sim-2.ms'), start_chan=35, end_chan=39)[0]
     bvt.configuration.diameter[...] = 35.0
