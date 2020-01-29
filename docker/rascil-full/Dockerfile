@@ -27,7 +27,7 @@ WORKDIR /rascil
 # and clear pip cache. Use a single RUN statement to avoid multiple layers.
 #
 # Perhaps think about using a requirements-minimal.txt instead if possible?
-RUN pip install -r requirements-base.txt && \
+RUN pip install -r docker/rascil-full requirements.txt && \
     python setup.py build && python setup.py install && \
     rm -rf /root/.cache
 

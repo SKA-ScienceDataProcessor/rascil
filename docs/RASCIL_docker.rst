@@ -53,6 +53,7 @@ Dask diagnostics viewable on http://localhost:8787 add the port mapping::
 
     docker run -p 8787:8787 -v $PWD/data:/rascil/data timcornwell/rascil-base python rascil/examples/scripts/dprepb_rsexecute_pipeline.py
 
+To scale to e.g. 4 workers::
 
-
+    docker-compose --scale workers=4 up
 
