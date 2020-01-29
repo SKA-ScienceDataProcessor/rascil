@@ -13,7 +13,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 # This will clone into (and create) a directory at /rascil
 RUN git lfs install && \
-    git clone -b feature_docker https://github.com/SKA-ScienceDataProcessor/rascil.git
+    git clone https://github.com/SKA-ScienceDataProcessor/rascil.git
 
 # Create scratch directories and set permissions on them.
 # (Hopefully we can do without these lines eventually.)
