@@ -21,12 +21,15 @@ ENV RASCIL=/rascil
 # Change to the RASCIL root directory to run the commands below.
 WORKDIR /rascil
 
+RUN mkdir -p /rascil/dask-worker-space && \
+    chmod 777 /rascil/dask-worker-space
+
 # Install Python package dependencies,
 # run setup (may not be required, as we've added /rascil to the PYTHONPATH)
 # and clear pip cache. Use a single RUN statement to avoid multiple layers.
 #
 # Perhaps think about using a requirements-minimal.txt instead if possible?
-RUN pip install -r requirements-base.txt && \
+RUN pip install -r docker/rascil-minimal/requirements.txt && \
     python setup.py build && python setup.py install && \
     rm -rf /root/.cache
 

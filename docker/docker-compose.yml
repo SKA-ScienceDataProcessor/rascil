@@ -10,7 +10,7 @@ services:
     ports:
       - "8786:8786"
       - "8787:8787"
-    command: ["dask-scheduler"]
+    command: ["dask-scheduler", "--local-directory", "/rascil/dask-worker-space"]
 
   worker:
     build:
@@ -18,4 +18,4 @@ services:
       dockerfile: Dockerfile
     image: timcornwell/rascil-full
     hostname: dask-worker
-    command: ["dask-worker", "tcp://scheduler:8786"]
+    command: ["dask-worker", "--local-directory", "//rascil/dask-worker-space", "tcp://scheduler:8786"]

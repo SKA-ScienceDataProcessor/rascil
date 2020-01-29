@@ -31,18 +31,22 @@ if __name__ == '__main__':
     start=time.time()
     
     # Process nchunks each of length len_chunk 2d points, making a psf of size shape
-    len_chunk = 16384*8
-    nchunks = 256*4
-    nreduce = 16*4
-    shape=[1024, 1024]
+    len_chunk = 16384 * 4
+    nchunks = 256
+    nreduce = 16
+    shape=[512, 512]
     skip = 1
 
     # We pass in the scheduler from the invoking script
     if len(sys.argv) > 1:
         scheduler = sys.argv[1]
         client = Client(scheduler)
+        print("Using scheduler %s" % str(scheduler))
     else:
-        client = Client()
+        print("Creating scheduler and 4 workers")
+        client = Client(n_workers=4, threads_per_worker=1)
+
+    print(client)
         
     sparse_graph_list = [delayed(init_sparse)(len_chunk) for i in range(nchunks)]
     psf_graph_list = [delayed(grid_and_invert_data)(s, shape) for s in sparse_graph_list]
