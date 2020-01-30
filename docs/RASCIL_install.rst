@@ -5,6 +5,20 @@ Installation
 
 RASCIL can be run on a Linux or macos machine or cluster of machines. At least 16GB physical memory is necessary to run the full test suite. In general more memory is better. RASCIL uses Dask for multi-processing and can make good use of multi-core and multi-node machines.
 
+Installation via docker
++++++++++++++++++++++++
+
+If you are familar with docker, an easy approach is to use our docker scripts:
+
+.. toctree::
+   :maxdepth: 2
+
+   installation/RASCIL_docker
+
+
+Installation via git clone
+++++++++++++++++++++++++++
+
 Installation should be straightforward. We strongly recommend the use of a python virtual environment.
 
 RASCIL requires python 3.6 or 3.7. It has not yet been tested for 3.8.
@@ -43,6 +57,25 @@ The installation steps are:
 if you only don't intend to update or edit rascil in place. If you do intend to make changes, you will need the
 definition of PYTHONPATH.
 
+Installation via conda
+++++++++++++++++++++++
+
+An alternative to the use of pip in the above sequence is to use Anaconda https://www.anaconda.com. The environment is defined in the conda environment file environment.yml::
+
+   conda env create -f environment.yml
+   conda activate rascil
+   conda config --env --prepend channels astropy
+
+
+Installation on specific machines
++++++++++++++++++++++++++++++++++
+
+.. toctree::
+   :maxdepth: 2
+
+   installation/RASCIL_CSD3_install
+   installation/RASCIL_P3_install
+
 Trouble-shooting
 ++++++++++++++++
 
@@ -58,19 +91,7 @@ Or the full set::
 - Ensure that pip is up-to-date. If not, some strange install errors may occur.
 - Check that the contents of the data directories have plausible contents. If gif-lfs has not been run successfully then the data files will just containe meta data, leading to strange run-time errors.
 - There may be some dependencies that require either conda (or brew install on a mac).
-- An alternative to the use of pip is to use Anaconda https://www.anaconda.com. The environment is defined in the conda environment file environment.yml::
 
-   conda env create -f environment.yml
-   conda activate rascil
-   conda config --env --prepend channels astropy
 
-Installation on specific machines
-+++++++++++++++++++++++++++++++++
-
-.. toctree::
-   :maxdepth: 2
-
-   installation/RASCIL_CSD3_install
-   installation/RASCIL_P3_install
 
 .. _feedback: mailto:realtimcornwell@gmail.com

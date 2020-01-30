@@ -12,7 +12,6 @@ Other information
    RASCIL_converting_from_ARL
    RASCIL_documenting
    RASCIL_dask
-   RASCIL_docker
    RASCIL_Fourier_processing
    RASCIL_SDP
 

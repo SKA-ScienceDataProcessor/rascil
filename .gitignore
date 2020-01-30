@@ -29,3 +29,11 @@ dask-worker-space
 */*/notebooks/*.rst
 */*/scripts/*.rst
 /docs/examples/notebooks
+
+examples/ska_simulations/surface_simulation.rst
+
+examples/ska_simulations/pointing_simulation.rst
+
+docs/examples/ska_simulations/pointing_simulation.rst
+
+docs/examples/ska_simulations/surface_simulation.rst

@@ -22,12 +22,16 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Benchmark pipelines in numpy and dask')
     parser.add_argument('--use_dask', type=str, default='True', help='Use Dask?')
     parser.add_argument('--nworkers', type=int, default=4, help='Number of workers')
-    parser.add_argument('--threads', type=int, default=1, help='Number of threads per worker')
-    parser.add_argument('--memory', dest='memory', default=8, help='Memory per worker (GB)')
-    parser.add_argument('--npixel', type=int, default=512, help='Number of pixels per axis')
+    parser.add_argument('--threads', type=int, default=1,
+                        help='Number of threads per worker')
+    parser.add_argument('--memory', dest='memory', default=8,
+                        help='Memory per worker (GB)')
+    parser.add_argument('--npixel', type=int, default=512,
+                        help='Number of pixels per axis')
     parser.add_argument('--context', dest='context', default='wstack',
                         help='Context: 2d|timeslice|wstack')
-    parser.add_argument('--nchan', type=int, default=40, help='Number of channels to process')
+    parser.add_argument('--nchan', type=int, default=40,
+                        help='Number of channels to process')
     parser.add_argument('--scheduler', type=str, default=None, help='Dask scheduler')
 
     args = parser.parse_args()
@@ -37,6 +41,7 @@ if __name__ == '__main__':
     results_dir = './'
     dask_dir = './dask-work-space'
 
+
     # Since the processing is distributed over multiple processes we have to tell each Dask worker
     # where to send the log messages
     def init_logging():
@@ -45,6 +50,7 @@ if __name__ == '__main__':
                             format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
                             datefmt='%H:%M:%S',
                             level=logging.INFO)
+
 
     log = logging.getLogger()
     logging.info("Starting Imaging pipeline")
@@ -56,8 +62,9 @@ if __name__ == '__main__':
         c = Client(args.scheduler)
         rsexecute.set_client(c)
     else:
-        rsexecute.set_client(use_dask=args.use_dask == 'True', threads_per_worker=args.threads,
-                            n_workers=args.nworkers, local_directory=dask_dir)
+        rsexecute.set_client(use_dask=args.use_dask == 'True',
+                             threads_per_worker=args.threads,
+                             n_workers=args.nworkers, local_directory=dask_dir)
     print(rsexecute.client)
     rsexecute.run(init_logging)
 
@@ -81,7 +88,9 @@ if __name__ == '__main__':
     input_vis = [rascil_path('data/vis/sim-1.ms'), rascil_path('data/vis/sim-2.ms')]
 
     import time
+
     start = time.time()
+
 
     # Define a function to be executed by Dask to load the data, combine it, and select
     # only the short baselines. We load each channel separately.
@@ -93,6 +102,7 @@ if __name__ == '__main__':
         vf.configuration.diameter[...] = 35.0
         rows = vis_select_uvrange(vf, 0.0, uvmax=uvmax)
         return create_visibility_from_rows(vf, rows)
+
 
     # Construct the graph to load the data and persist the graph on the Dask cluster.
     vis_list = [rsexecute.execute(load_ms)(c) for c in range(nchan)]
@@ -106,13 +116,16 @@ if __name__ == '__main__':
     model_list = rsexecute.persist(model_list)
 
     # Construct the graphs to make the dirty image and psf, and persist these to the cluster
-    dirty_list = invert_list_rsexecute_workflow(vis_list, template_model_imagelist=model_list,
+    dirty_list = invert_list_rsexecute_workflow(vis_list,
+                                                template_model_imagelist=model_list,
                                                 context=context,
                                                 vis_slices=vis_slices)
-    psf_list = invert_list_rsexecute_workflow(vis_list, template_model_imagelist=model_list,
+    psf_list = invert_list_rsexecute_workflow(vis_list,
+                                              template_model_imagelist=model_list,
                                               context=context,
                                               dopsf=True,
                                               vis_slices=vis_slices)
+
 
     # Construct the graphs to do the clean and restoration, and gather the channel images
     # into one image. Persist the graph on the cluster
@@ -123,6 +136,7 @@ if __name__ == '__main__':
                                    algorithm='hogbom-complex')
         r = restore_cube(c, p[0], resid)
         return r
+
 
     restored_list = [rsexecute.execute(deconvolve)(dirty_list[c], psf_list[c],
                                                    model_list[c])

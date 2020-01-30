@@ -38,7 +38,8 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.autosummary',
     'sphinx_automodapi.automodapi',
-    'sphinx_automodapi.smart_resolver'
+    'sphinx_automodapi.smart_resolver',
+    'sphinxarg.ext'
 ]
 
 # The following seem to be buggy
