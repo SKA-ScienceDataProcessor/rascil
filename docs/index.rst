@@ -1,4 +1,4 @@
-.. Documentation master
+.. _documentation_master:
 
 .. toctree::
 
@@ -19,8 +19,7 @@ RASCIL replaces the Algorithm Reference Library (ARL), which is now frozen.
    :maxdepth: 2
 
    RASCIL_install
-   RASCIL_notebooks
-   RASCIL_scripts
+   RASCIL_examples
    RASCIL_directory
    RASCIL_api
    RASCIL_otherinfo

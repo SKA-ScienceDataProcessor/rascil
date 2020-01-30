@@ -1,0 +1,17 @@
+.. _ska_pointing_simulation:
+
+SKA dish pointing error simulations
+===================================
+
+This calculates the change in a dirty image caused by wind-induced pointing errors:
+
+    - The sky can be a point source at the half power point or a realistic sky constructed from S3-SEX catalog.
+    - The observation is by MID over a range of hour angles
+    - Processing can be divided into chunks of time (default 1800s)
+    - Dask is used to distribute the processing over a number of workers.
+    - Various plots are produced, The primary output is a csv file containing information about the statistics of the residual images.
+
+
+The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-pointing
+
+The python script is:

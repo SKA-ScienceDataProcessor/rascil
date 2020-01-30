@@ -63,6 +63,9 @@ prepare:
 	make -C ../examples/scripts rst
 	mkdir -p examples/scripts/
 	cp ../examples/scripts/*.rst examples/scripts/
+	make -C ../examples/ska_simulations rst
+	mkdir -p examples/ska_simulations/
+	cp ../examples/ska_simulations/*.rst examples/ska_simulations/
 
 .PHONY: html
 html: prepare
