@@ -1,7 +1,7 @@
 .. _ska_surface_simulation:
 
-SKA dish surface simulation
-===========================
+SKA dish surface simulations
+============================
 
 This measures the change in a MID dirty image introduced by gravity-induced primary beam errors:
 
@@ -14,6 +14,6 @@ This measures the change in a MID dirty image introduced by gravity-induced prim
 
 Running this script requires large data sets that are currently only available on P3.
 
-The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-surface
+The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-surface, and the simulation results are summarised in a SKA internal report: SKA‐TEL‐SKO‐0001639, "Simulation of SKA1 Systematic Results".
 
 The python script is:

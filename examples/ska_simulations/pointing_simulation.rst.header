@@ -12,6 +12,6 @@ This calculates the change in a dirty image caused by wind-induced pointing erro
     - Various plots are produced, The primary output is a csv file containing information about the statistics of the residual images.
 
 
-The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-pointing
+The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-pointing, and the simulation results are summarised in a SKA internal report: SKA‐TEL‐SKO‐0001639, "Simulation of SKA1 Systematic Results".
 
 The python script is:
