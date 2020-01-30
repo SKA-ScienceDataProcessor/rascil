@@ -80,7 +80,7 @@ rm -rf worker-*
 export RASCIL_DASK_SCHEDULER=${scheduler}:8786
 echo "Scheduler is running at ${scheduler}"
 
-CMD="python ../surface_simulation_elevation.py --context s3sky --rmax 1e5 --flux_limit 0.003 \
+CMD="python surface_simulation.py --context s3sky --rmax 1e5 --flux_limit 0.003 \
 --show False --elevation_sampling 1.0 --declination -45 \
 --vp_directory /mnt/storage-ssd/tim/Code/sim-mid-surface/beams/interpolated/ \
 --band B2 --pbtype MID_FEKO_B2  --integration_time 120 --use_agg True \

@@ -96,6 +96,8 @@ def cli_parser():
     par.add_argument('--shared_directory', type=str, default=default_shared_path,
                      help='Location of configuration files (default is RASCIL data/configurations)')
     # Dask parameters; matched to P3
+    par.add_argument('--serial', type=str, default='False',
+                     help='Use serial processing (very slow)')
     par.add_argument('--nthreads', type=int, default=1,
                      help='Number of threads per Dask worker')
     par.add_argument('--memory', type=int, default=64,
@@ -179,11 +181,11 @@ if __name__ == '__main__':
             rsexecute.set_client(client=client)
         else:
             client = get_dask_client()
-    rsexecute.set_client(client=client)
+            rsexecute.set_client(client=client)
 
-    actualnworkers = len(rsexecute.client.scheduler_info()['workers'])
-    nworkers = actualnworkers
-    print("Using %s Dask workers" % nworkers)
+        actualnworkers = len(rsexecute.client.scheduler_info()['workers'])
+        nworkers = actualnworkers
+        print("Using %s Dask workers" % nworkers)
 
     time_started = time.time()
 

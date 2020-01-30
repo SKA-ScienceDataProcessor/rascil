@@ -99,6 +99,8 @@ def cli_parser():
     par.add_argument('--shared_directory', type=str, default=default_shared_path,
                      help='Location of configuration files (default is RASCIL data/configurations)')
     # Dask parameters; matched to P3
+    par.add_argument('--serial', type=str, default='False',
+                     help='Use serial processing (very slow)')
     par.add_argument('--nthreads', type=int, default=1,
                      help='Number of threads per Dask worker')
     par.add_argument('--memory', type=int, default=64,
@@ -107,6 +109,8 @@ def cli_parser():
     # Simulation parameters
     par.add_argument('--time_chunk', type=float, default=1800.0,
                      help="Chunking of time for simulation (s)")
+    par.add_argument('--seed', type=int, default=5231870,
+                     help="Random number seed")
     par.add_argument('--time_series', type=str, default='wind',
                      help="Type of time series: wind or random")
     par.add_argument('--global_pe', type=float, nargs=2, default=[0.0, 0.0],
@@ -199,10 +203,9 @@ if __name__ == '__main__':
             client = get_dask_client()
             rsexecute.set_client(client=client)
 
-        print(rsexecute.client)
-    actualnworkers = len(rsexecute.client.scheduler_info()['workers'])
-    nworkers = actualnworkers
-    print("Using %s Dask workers" % nworkers)
+        actualnworkers = len(rsexecute.client.scheduler_info()['workers'])
+        nworkers = actualnworkers
+        print("Using %s Dask workers" % nworkers)
 
     time_started = time.time()
 
