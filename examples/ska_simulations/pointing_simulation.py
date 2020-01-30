@@ -444,6 +444,8 @@ if __name__ == '__main__':
 
         a2r = numpy.pi / (3600.0 * 180.0)
 
+        rsexecute.init_statistics()
+
         if time_series == '':
             global_pointing_error = global_pe
             static_pointing_error = static_pe * scenario
@@ -531,6 +533,8 @@ if __name__ == '__main__':
     processing_rate = ntotal / (nworkers * (time.time() - time_started))
     print(
         "Processing rate of time-baseline-component-scenario = %g per worker-second" % processing_rate)
+
+    rsexecute.save_statistics(name='pointing_simulation')
 
     for result in results:
         result["processing_rate"] = processing_rate
