@@ -3,24 +3,35 @@
 SKA dish pointing error simulations
 ===================================
 
-This calculates the change in a dirty image caused by wind-induced pointing errors:
+This calculates the change in a MID dirty image caused by wind-induced pointing errors:
 
     - The sky can be a point source at the half power point or a realistic sky constructed from S3-SEX catalog.
     - The observation is by MID over a range of hour angles
+    - For each band, there are voltage pattern models at elevations 90, 45, and 15 degrees. These have been interpolated in elevation to a scale of 1 degree.
+    - The visibility is calculated by Direct Fourier transform after having applied the antenna voltage beam for the given interpolated elevation.
     - Processing can be divided into chunks of time (default 1800s)
+    - The noise level is measured by calculating the change in a small field dirty image induced by the pointing errors.
     - Dask is used to distribute the processing over a number of workers.
-    - Various plots are produced, The primary output is a csv file containing information about the statistics of the residual images.
+    - Various plots can be produced, The primary output is a csv file containing information about the statistics of the residual images.
 
 
-The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-pointing
+The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-pointing, and the simulation results are summarised in a SKA internal report: SKA‐TEL‐SKO‐0001639, "Simulation of SKA1 Systematic Results".
+
+Command line arguments
+++++++++++++++++++++++
+
+.. argparse::
+   :filename: ../examples/ska_simulations/pointing_simulation.py
+   :func: cli_parser
+   :prog: pointing_simulation.py
 
 The python script is:
 
 .. code:: python
 
-     """Simulation of the effect of errors on MID observations
+     """Simulation of the effect of pointing errors on MID observations
      
-     This measures the change in a dirty imagethe induced by various errors:
+     This measures the change in a dirty image induced by various errors:
          - The sky can be a point source at the half power point or a realistic sky constructed from S3-SEX catalog.
          - The observation is by MID over a range of hour angles
          - Processing can be divided into chunks of time (default 1800s)
@@ -30,40 +41,31 @@ The python script is:
      
      """
      import csv
+     import logging
      import os
      import socket
      import sys
      import time
      
+     import numpy
      import seqfile
+     from astropy import units as u
+     from astropy.coordinates import SkyCoord
      
      from rascil.data_models.parameters import rascil_path
-     
-     results_dir = rascil_path('test_results')
-     
-     import numpy
-     
-     from astropy.coordinates import SkyCoord
-     from astropy import units as u
-     
      from rascil.data_models.polarisation import PolarisationFrame
-     
      from rascil.processing_components import plot_azel, \
          plot_uvcoverage, find_pb_width_null, create_simulation_components, \
          convert_blockvisibility_to_visibility, \
          convert_visibility_to_blockvisibility, show_image, qa_image, export_image_to_fits, \
-         create_vp, \
-         create_image_from_visibility, advise_wide_field
-     
+         create_vp, create_image_from_visibility, advise_wide_field
      from rascil.workflows import invert_list_rsexecute_workflow, \
          sum_invert_results_rsexecute, weight_list_rsexecute_workflow, \
          calculate_residual_from_gaintables_rsexecute_workflow, \
          create_pointing_errors_gaintable_rsexecute_workflow, \
          create_standard_mid_simulation_rsexecute_workflow, sum_invert_results
-     
-     from workflows.rsexecute.execution_support.rsexecute import rsexecute, get_dask_client
-     
-     import logging
+     from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute, \
+         get_dask_client
      
      log = logging.getLogger()
      log.setLevel(logging.INFO)
@@ -75,87 +77,92 @@ The python script is:
      
      pp = pprint.PrettyPrinter()
      
+     
+     def cli_parser():
+         # Get command line inputs
+         import argparse
+     
+         par = argparse.ArgumentParser(
+             description='Distributed simulation of pointing induced errors for SKA-MID')
+         par.add_argument('--context', type=str, default='singlesource',
+                          help='Type of sky: s3sky or singlesource or null')
+         par.add_argument('--imaging_context', type=str, default='2d',
+                          help='Type of imaging transforms to use: 2d or ng')
+     
+         # Observation definition
+         par.add_argument('--ra', type=float, default=+15.0,
+                          help='Right ascension of target source (degrees)')
+         par.add_argument('--declination', type=float, default=-45.0,
+                          help='Declination  of target source (degrees)')
+         par.add_argument('--frequency', type=float, default=1.36e9,
+                          help='Frequency of observation (Hz)')
+         par.add_argument('--rmax', type=float, default=1e5,
+                          help='Maximum distance of dish from array centre (m)')
+         par.add_argument('--band', type=str, default='B2', help="Band: B1, B2 or Ku")
+         par.add_argument('--integration_time', type=float, default=600,
+                          help='Duration of single integration (s)')
+         par.add_argument('--time_range', type=float, nargs=2, default=[-6.0, 6.0],
+                          help='Hour angle of observation (hours)')
+         par.add_argument('--npixel', type=int, default=512,
+                          help='Number of pixels in dirty image used for statistics')
+         par.add_argument('--use_natural', type=str, default='False',
+                          help='Use natural weighting?')
+         par.add_argument('--snapshot', type=str, default='False', help='Do snapshot only?')
+         par.add_argument('--opposite', type=str, default='False',
+                          help='Move source to opposite side of pointing centre')
+         par.add_argument('--offset_dir', type=float, nargs=2, default=[1.0, 0.0],
+                          help='Multipliers for null offset')
+         par.add_argument('--pbradius', type=float, default=2.0,
+                          help='Radius of s3sky sources to include (in HWHM)')
+         par.add_argument('--pbtype', type=str, default='MID',
+                          help='Primary beam model: MID, MID_GAUSS, MID_FEKO_B1, MID_FEKO_B2, MID_FEKO_Ku')
+         par.add_argument('--flux_limit', type=float, default=1.0,
+                          help='Flux limit in selecting sources for s3sky (Jy)')
+         # Control parameters
+         par.add_argument('--show', type=str, default='False', help='Show images?')
+         par.add_argument('--export_images', type=str, default='False',
+                          help='Export images in fits format?')
+         par.add_argument('--use_agg', type=str, default="True",
+                          help='Use Agg matplotlib backend?')
+         par.add_argument('--use_radec', type=str, default="False",
+                          help='Calculate primary beams in RADEC?')
+         default_shared_path = rascil_path("data/configurations")
+         par.add_argument('--shared_directory', type=str, default=default_shared_path,
+                          help='Location of configuration files (default is RASCIL data/configurations)')
+         # Dask parameters; matched to P3
+         par.add_argument('--nthreads', type=int, default=1,
+                          help='Number of threads per Dask worker')
+         par.add_argument('--memory', type=int, default=64,
+                          help='Memory per Dask worker (GB)')
+         par.add_argument('--nworkers', type=int, default=16, help='Number of Dask workers')
+         # Simulation parameters
+         par.add_argument('--time_chunk', type=float, default=1800.0,
+                          help="Chunking of time for simulation (s)")
+         par.add_argument('--time_series', type=str, default='wind',
+                          help="Type of time series: wind or random")
+         par.add_argument('--global_pe', type=float, nargs=2, default=[0.0, 0.0],
+                          help='Scale (arcsec) for random global pointing error (same for all dishes and time)')
+         par.add_argument('--static_pe', type=float, nargs=2, default=[0.0, 0.0],
+                          help='Scale (arcsec) for random static errors (same for all time)')
+         par.add_argument('--dynamic_pe', type=float, default=1.0,
+                          help='Scale (arcsec) for random dynamic errors (varies with time and dish)')
+         par.add_argument('--pointing_file', type=str, default=None, help="Pointing file")
+         par.add_argument('--pointing_directory', type=str,
+                          default=rascil_path('data/models'),
+                          help='Location of wind-induced pointing files')
+         return par
+     
+     
      if __name__ == '__main__':
      
-         print(" ")
-         print("Distributed simulation of errors for SKA-MID")
-         print("--------------------------------------------")
-         print(" ")
+         start_epoch = time.asctime()
+         log.info(
+             "\nDistributed simulation of pointing-induced errors for SKA-MID\nStarted at %s\n" % start_epoch)
      
          memory_use = dict()
      
          # Get command line inputs
-         import argparse
-     
-         parser = argparse.ArgumentParser(description='Simulate pointing errors')
-         parser.add_argument('--context', type=str, default='singlesource',
-                             help='s3sky or singlesource or null')
-     
-         # Observation definition
-         parser.add_argument('--ra', type=float, default=+15.0,
-                             help='Right ascension (degrees)')
-         parser.add_argument('--declination', type=float, default=-45.0,
-                             help='Declination (degrees)')
-         parser.add_argument('--frequency', type=float, default=1.36e9, help='Frequency')
-         parser.add_argument('--rmax', type=float, default=1e5,
-                             help='Maximum distance of station from centre (m)')
-         parser.add_argument('--band', type=str, default='B2', help="Band")
-         parser.add_argument('--integration_time', type=float, default=600,
-                             help='Integration time (s)')
-         parser.add_argument('--time_range', type=float, nargs=2, default=[-6.0, 6.0],
-                             help='Time range in hours')
-     
-         parser.add_argument('--npixel', type=int, default=512,
-                             help='Number of pixels in image')
-         parser.add_argument('--use_natural', type=str, default='False',
-                             help='Use natural weighting?')
-     
-         parser.add_argument('--snapshot', type=str, default='False', help='Do snapshot only?')
-         parser.add_argument('--opposite', type=str, default='False',
-                             help='Move source to opposite side of pointing centre')
-         parser.add_argument('--offset_dir', type=float, nargs=2, default=[1.0, 0.0],
-                             help='Multipliers for null offset')
-         parser.add_argument('--pbradius', type=float, default=2.0,
-                             help='Radius of sources to include (in HWHM)')
-         parser.add_argument('--pbtype', type=str, default='MID',
-                             help='Primary beam model: MID or MID_GAUSS')
-         parser.add_argument('--seed', type=int, default=18051955, help='Random number seed')
-         parser.add_argument('--flux_limit', type=float, default=1.0, help='Flux limit (Jy)')
-     
-         # Control parameters
-         parser.add_argument('--show', type=str, default='False', help='Show images?')
-         parser.add_argument('--export_images', type=str, default='False',
-                             help='Export images in fits format?')
-         parser.add_argument('--use_agg', type=str, default="True",
-                             help='Use Agg matplotlib backend?')
-         parser.add_argument('--use_radec', type=str, default="False",
-                             help='Calculate in RADEC (false)?')
-         parser.add_argument('--shared_directory', type=str, default='../../shared/',
-                             help='Location of configuration files')
-     
-         # Dask parameters
-         parser.add_argument('--nnodes', type=int, default=1, help='Number of nodes')
-         parser.add_argument('--nthreads', type=int, default=4, help='Number of threads')
-         parser.add_argument('--memory', type=int, default=8, help='Memory per worker (GB)')
-         parser.add_argument('--nworkers', type=int, default=8, help='Number of workers')
-         parser.add_argument('--serial', type=str, default='False',
-                             help='Use serial processing?')
-     
-         # Simulation parameters
-         parser.add_argument('--time_chunk', type=float, default=1800.0,
-                             help="Time for a chunk (s)")
-         parser.add_argument('--time_series', type=str, default='wind',
-                             help="Type of time series")
-         parser.add_argument('--global_pe', type=float, nargs=2, default=[0.0, 0.0],
-                             help='Global pointing error')
-         parser.add_argument('--static_pe', type=float, nargs=2, default=[0.0, 0.0],
-                             help='Multipliers for static errors')
-         parser.add_argument('--dynamic_pe', type=float, default=1.0,
-                             help='Multiplier for dynamic errors')
-         parser.add_argument('--pointing_file', type=str, default=None, help="Pointing file")
-         parser.add_argument('--pointing_directory', type=str,
-                             default='../../pointing_error_models/PSD_data/',
-                             help='Location of pointing files')
+         parser = cli_parser()
      
          args = parser.parse_args()
          pp.pprint(vars(args))
@@ -199,7 +206,6 @@ The python script is:
          show = args.show == 'True'
          context = args.context
          nworkers = args.nworkers
-         nnodes = args.nnodes
          threads_per_worker = args.nthreads
          memory = args.memory
          serial = args.serial == "True"
@@ -284,9 +290,13 @@ The python script is:
          if show:
              vis_list = rsexecute.compute(vis_graph, sync=True)
              plot_uvcoverage(vis_list, title=basename)
+             plt.savefig('uvcoverage.png')
+             plt.show(block=False)
      
              bvis_list = rsexecute.compute(bvis_graph, sync=True)
              plot_azel(bvis_list, title=basename)
+             plt.savefig('azel.png')
+             plt.show(block=False)
      
          # Now construct the components
          original_components, offset_direction = create_simulation_components(context,
@@ -322,7 +332,7 @@ The python script is:
          print("    There are %d separate visibility time chunks being processed" % len(
              future_vis_list))
          print("    The integration time within each chunk is %.1f (s)" % integration_time)
-         print("    There are a total of %d integrations" % ntimes)
+         print("    There are a total of %d integrations per chunk" % ntimes)
          print("    There are %d baselines" % nbaselines)
          print("    There are %d components" % len(original_components))
          print("    %d scenario(s) will be tested" % len(scenarios))
@@ -362,8 +372,8 @@ The python script is:
              del bvis_list
      
          print("Inverting to get PSF")
-         psf_list = invert_list_rsexecute_workflow(future_vis_list, future_psf_list, '2d',
-                                                   dopsf=True)
+         psf_list = invert_list_rsexecute_workflow(future_vis_list, future_psf_list,
+                                                   args.imaging_context, dopsf=True)
          psf_list = rsexecute.compute(psf_list, sync=True)
          psf, sumwt = sum_invert_results(psf_list)
          print("PSF sumwt ", sumwt)
@@ -485,7 +495,6 @@ The python script is:
                                                                          pointing_error=a2r * pointing_error,
                                                                          static_pointing_error=a2r * static_pointing_error,
                                                                          global_pointing_error=a2r * global_pointing_error,
-                                                                         seeds=seeds,
                                                                          show=show,
                                                                          basename=basename)
      
@@ -503,7 +512,6 @@ The python script is:
                                                                          use_radec=use_radec,
                                                                          time_series=time_series,
                                                                          time_series_type=scenario,
-                                                                         seeds=seeds,
                                                                          show=show,
                                                                          basename=basename)
      
@@ -618,6 +626,10 @@ The python script is:
              plt.tight_layout()
              plt.savefig(plotfile)
              plt.show(block=False)
+     
+         log.info("\nDistributed simulation of pointing-induced errors for SKA-MID")
+         log.info("Started at  %s" % start_epoch)
+         log.info("Finished at %s" % time.asctime())
 
 The shell script to run is:
 

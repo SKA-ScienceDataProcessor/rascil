@@ -1,20 +1,31 @@
 .. _ska_surface_simulation:
 
-SKA dish surface simulation
-===========================
+SKA dish surface simulations
+============================
 
 This measures the change in a MID dirty image introduced by gravity-induced primary beam errors:
 
     - The sky can be a point source at the half power point or a realistic sky constructed from S3-SEX catalog.
     - The observation is by MID over a range of hour angles
+    - The visibility is calculated by Direct Fourier transform after having applied the antenna voltage beam for the pointing error for each dish.
     - Processing can be divided into chunks of time (default 1800s)
+    - The noise level is measured by calculating the change in a small field dirty image induced by the pointing errors.
     - Dask is used to distribute the processing over a number of workers.
-    - Various plots are produced, The primary output is a csv file containing information about the statistics of the residual image.
+    - Various plots can be produced, The primary output is a csv file containing information about the statistics of the residual images.
 
 
-Running this script requires large data sets that are currently only available on P3.
+Running this script requires interpolated primary beams that are currently only available on P3.
 
-The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-surface
+The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-surface, and the simulation results are summarised in a SKA internal report: SKA‐TEL‐SKO‐0001639, "Simulation of SKA1 Systematic Results".
+
+Command line arguments
+++++++++++++++++++++++
+
+.. argparse::
+   :filename: ../examples/ska_simulations/surface_simulation.py
+   :func: cli_parser
+   :prog: surface_simulation.py
+
 
 The python script is:
 
@@ -68,6 +79,72 @@ The python script is:
      
      pp = pprint.PrettyPrinter()
      
+     
+     def cli_parser():
+         # Get command line inputs
+         import argparse
+     
+         par = argparse.ArgumentParser(
+             description='Distributed simulation of dish deformation errors for SKA-MID')
+         par.add_argument('--context', type=str, default='singlesource',
+                          help='Type of sky: s3sky or singlesource or null')
+         par.add_argument('--imaging_context', type=str, default='2d',
+                          help='Type of imaging transforms to use: 2d or ng')
+     
+         # Observation definition
+         par.add_argument('--ra', type=float, default=+15.0,
+                          help='Right ascension of target source (degrees)')
+         par.add_argument('--declination', type=float, default=-45.0,
+                          help='Declination  of target source (degrees)')
+         par.add_argument('--frequency', type=float, default=1.36e9,
+                          help='Frequency of observation (Hz)')
+         par.add_argument('--rmax', type=float, default=1e5,
+                          help='Maximum distance of dish from array centre (m)')
+         par.add_argument('--band', type=str, default='B2', help="Band: B1, B2 or Ku")
+         par.add_argument('--integration_time', type=float, default=600,
+                          help='Duration of single integration (s)')
+         par.add_argument('--time_range', type=float, nargs=2, default=[-6.0, 6.0],
+                          help='Hour angle of observation (hours)')
+         par.add_argument('--npixel', type=int, default=512,
+                          help='Number of pixels in dirty image used for statistics')
+         par.add_argument('--use_natural', type=str, default='False',
+                          help='Use natural weighting?')
+         par.add_argument('--offset_dir', type=float, nargs=2, default=[1.0, 0.0],
+                          help='Multipliers for null offset')
+         par.add_argument('--pbradius', type=float, default=2.0,
+                          help='Radius of s3sky sources to include (in HWHM)')
+         par.add_argument('--pbtype', type=str, default='MID',
+                          help='Primary beam model: MID, MID_GAUSS, MID_FEKO_B1, MID_FEKO_B2, MID_FEKO_Ku')
+         par.add_argument('--flux_limit', type=float, default=1.0,
+                          help='Flux limit in selecting sources for s3sky (Jy)')
+         # Control parameters
+         par.add_argument('--show', type=str, default='False', help='Show images?')
+         par.add_argument('--export_images', type=str, default='False',
+                          help='Export images in fits format?')
+         par.add_argument('--use_agg', type=str, default="True",
+                          help='Use Agg matplotlib backend?')
+         par.add_argument('--use_radec', type=str, default="False",
+                          help='Calculate primary beams in RADEC?')
+         default_shared_path = rascil_path("data/configurations")
+         par.add_argument('--shared_directory', type=str, default=default_shared_path,
+                          help='Location of configuration files (default is RASCIL data/configurations)')
+         # Dask parameters; matched to P3
+         par.add_argument('--nthreads', type=int, default=1,
+                          help='Number of threads per Dask worker')
+         par.add_argument('--memory', type=int, default=64,
+                          help='Memory per Dask worker (GB)')
+         par.add_argument('--nworkers', type=int, default=16, help='Number of Dask workers')
+         # Simulation parameters
+         par.add_argument('--time_chunk', type=float, default=1800.0,
+                          help="Time for a chunk (s)")
+         par.add_argument('--elevation_sampling', type=float, default=1.0,
+                          help='Elevation sampling 1 deg or coarser (deg)')
+         par.add_argument('--vp_directory', type=str,
+                          default='/mnt/storage-ssd/tim/Code/sim-mid-surface/beams/interpolated/',
+                          help='Directory for interpolated beams (default in on P3)')
+         return par
+     
+     
      if __name__ == '__main__':
      
          start_epoch = time.asctime()
@@ -77,69 +154,7 @@ The python script is:
          memory_use = dict()
      
          # Get command line inputs
-         import argparse
-     
-         parser = argparse.ArgumentParser(
-             description='Distributed simulation of dish deformation errors for SKA-MID')
-         parser.add_argument('--context', type=str, default='singlesource',
-                             help='s3sky or singlesource or null')
-     
-         parser.add_argument('--imaging_context', type=str, default='2d', help='2d or ng')
-     
-         # Observation definition
-         parser.add_argument('--ra', type=float, default=+15.0,
-                             help='Right ascension (degrees)')
-         parser.add_argument('--declination', type=float, default=-45.0,
-                             help='Declination (degrees)')
-         parser.add_argument('--frequency', type=float, default=1.36e9, help='Frequency')
-         parser.add_argument('--rmax', type=float, default=1e5,
-                             help='Maximum distance of station from centre (m)')
-     
-         parser.add_argument('--band', type=str, default='B2', help="Band")
-         parser.add_argument('--integration_time', type=float, default=600,
-                             help='Integration time (s)')
-         parser.add_argument('--time_range', type=float, nargs=2, default=[-6.0, 6.0],
-                             help='Time range in hours')
-     
-         parser.add_argument('--npixel', type=int, default=512,
-                             help='Number of pixels in image')
-         parser.add_argument('--use_natural', type=str, default='False',
-                             help='Use natural weighting?')
-     
-         parser.add_argument('--offset_dir', type=float, nargs=2, default=[1.0, 0.0],
-                             help='Multipliers for null offset')
-         parser.add_argument('--pbradius', type=float, default=2.0,
-                             help='Radius of sources to include (in HWHM)')
-         parser.add_argument('--pbtype', type=str, default='MID',
-                             help='Primary beam model: MID or MID_GAUSS')
-         parser.add_argument('--flux_limit', type=float, default=1.0, help='Flux limit (Jy)')
-     
-         # Control parameters
-         parser.add_argument('--show', type=str, default='False', help='Show images?')
-         parser.add_argument('--export_images', type=str, default='False',
-                             help='Export images in fits format?')
-         parser.add_argument('--use_agg', type=str, default="True",
-                             help='Use Agg matplotlib backend?')
-         parser.add_argument('--use_radec', type=str, default="False",
-                             help='Calculate in RADEC (false)?')
-         default_shared_path = rascil_path("data/configurations")
-         parser.add_argument('--shared_directory', type=str, default=default_shared_path,
-                             help='Location of configuration files')
-     
-         # Dask parameters; matched to P3
-         parser.add_argument('--nnodes', type=int, default=1, help='Number of nodes')
-         parser.add_argument('--nthreads', type=int, default=1, help='Number of threads')
-         parser.add_argument('--memory', type=int, default=64, help='Memory per worker (GB)')
-         parser.add_argument('--nworkers', type=int, default=16, help='Number of workers')
-     
-         # Simulation parameters
-         parser.add_argument('--time_chunk', type=float, default=1800.0,
-                             help="Time for a chunk (s)")
-         parser.add_argument('--elevation_sampling', type=float, default=1.0,
-                             help='Elevation sampling (deg)')
-         parser.add_argument('--vp_directory', type=str,
-                             default='/mnt/storage-ssd/tim/Code/sim-mid-surface/beams/interpolated/',
-                             help='Directory for beams')
+         parser = cli_parser()
      
          args = parser.parse_args()
          pp.pprint(vars(args))
@@ -175,21 +190,30 @@ The python script is:
          show = args.show == 'True'
          context = args.context
          nworkers = args.nworkers
-         nnodes = args.nnodes
          threads_per_worker = args.nthreads
          memory = args.memory
+         serial = args.serial == "True"
      
          basename = os.path.basename(os.getcwd())
      
-         # Setup dask. If an external scheduler is defined we use that. Otherwise we construct
-         # a LocalCluster
-         client = get_dask_client(threads_per_worker=threads_per_worker,
-                                  processes=threads_per_worker == 1,
-                                  memory_limit=memory * 1024 * 1024 * 1024,
-                                  n_workers=nworkers)
+         if serial:
+             print("Will use serial processing")
+             use_serial_invert = True
+             use_serial_predict = True
+             rsexecute.set_client(use_dask=False)
+             print(rsexecute.client)
+             nworkers = 1
+         else:
+             print("Will use dask processing")
+             if nworkers > 0:
+                 client = get_dask_client(n_workers=nworkers,
+                                          memory_limit=memory * 1024 * 1024 * 1024,
+                                          threads_per_worker=threads_per_worker)
+                 rsexecute.set_client(client=client)
+             else:
+                 client = get_dask_client()
          rsexecute.set_client(client=client)
-         # n_workers is only relevant if we are using LocalCluster (i.e. a single node) otherwise
-         # we need to read the actual number of workers
+     
          actualnworkers = len(rsexecute.client.scheduler_info()['workers'])
          nworkers = actualnworkers
          print("Using %s Dask workers" % nworkers)
@@ -335,10 +359,10 @@ The python script is:
          psf, sumwt = sum_invert_results(psf_list)
          print("PSF sumwt ", sumwt)
          if export_images:
-             export_image_to_fits(psf, 'PSF_arl.fits')
+             export_image_to_fits(psf, 'PSF_rascil.fits')
          if show:
              show_image(psf, cm='gray_r', title='%s PSF' % basename, vmin=-0.01, vmax=0.1)
-             plt.savefig('PSF_arl.png')
+             plt.savefig('PSF_rascil.png')
              plt.show(block=False)
          del psf_list
          del future_psf_list

@@ -3,15 +3,26 @@
 SKA dish pointing error simulations
 ===================================
 
-This calculates the change in a dirty image caused by wind-induced pointing errors:
+This calculates the change in a MID dirty image caused by wind-induced pointing errors:
 
     - The sky can be a point source at the half power point or a realistic sky constructed from S3-SEX catalog.
     - The observation is by MID over a range of hour angles
+    - For each band, there are voltage pattern models at elevations 90, 45, and 15 degrees. These have been interpolated in elevation to a scale of 1 degree.
+    - The visibility is calculated by Direct Fourier transform after having applied the antenna voltage beam for the given interpolated elevation.
     - Processing can be divided into chunks of time (default 1800s)
+    - The noise level is measured by calculating the change in a small field dirty image induced by the pointing errors.
     - Dask is used to distribute the processing over a number of workers.
-    - Various plots are produced, The primary output is a csv file containing information about the statistics of the residual images.
+    - Various plots can be produced, The primary output is a csv file containing information about the statistics of the residual images.
 
 
 The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-pointing, and the simulation results are summarised in a SKA internal report: SKA‐TEL‐SKO‐0001639, "Simulation of SKA1 Systematic Results".
+
+Command line arguments
+++++++++++++++++++++++
+
+.. argparse::
+   :filename: ../examples/ska_simulations/pointing_simulation.py
+   :func: cli_parser
+   :prog: pointing_simulation.py
 
 The python script is:
