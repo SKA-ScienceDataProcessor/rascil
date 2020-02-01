@@ -7,12 +7,13 @@ LABEL author="Tim Cornwell <realtimcornwell@gmail.com>" \
 # Install required system packages.
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    gosu && \
+    git-lfs gosu && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # This will clone into (and create) a directory at /rascil
-RUN git clone  -b docker-original https://github.com/SKA-ScienceDataProcessor/rascil.git
+# The data directory will not be loaded correctly until LFS is enabled
+RUN git clone https://github.com/SKA-ScienceDataProcessor/rascil.git
 
 # Set runtime environment variables.
 ENV PYTHONPATH=/rascil:$PYTHONPATH
@@ -23,8 +24,6 @@ WORKDIR /rascil
 
 RUN mkdir -p /rascil/dask-worker-space && \
     chmod 777 /rascil/dask-worker-space
-
-RUN rm -rf /rascil/data
 
 # Install Python package dependencies,
 # run setup (may not be required, as we've added /rascil to the PYTHONPATH)
