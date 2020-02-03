@@ -1,16 +1,12 @@
 aotools
 astropy
 h5py
-jupyter
-jupyter_contrib_nbextensions
-jupyter-server-proxy
 matplotlib
 numba
 numpy
 paramiko
 photutils
 python-casacore
-graphviz
 pyfftw
 reproject
 scikit-image
