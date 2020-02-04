@@ -2,7 +2,11 @@
 
 """
 
+import logging
+
 from rascil.data_models import rascil_path
+
+log = logging.getLogger(__file__)
 
 __all__ = ['check_data_directory']
 
@@ -13,7 +17,8 @@ def check_data_directory(verbose=False):
     with open(canary, "r") as f:
         first = f.read(1)
         if first == "version https://git-lfs.github.com/spec/v1":
-            raise ValueError("The data directory has not been installed correctly - perhaps git-lfs is needed")
+            log.warning("The data directory is not available - perhaps git-lfs is needed")
+            print("The data directory is not available - perhaps git-lfs is needed")
         else:
             if verbose: print("The data directory appears to have been installed correctly")
 
