@@ -1,4 +1,4 @@
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 LABEL author="Tim Cornwell <realtimcornwell@gmail.com>" \
       description="RASCIL reference image" \
@@ -10,12 +10,8 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y && apt-get install -y \
     ca-certificates \
     gosu git \
-    libfftw3-dev libboost-dev libboost-date-time-dev \
-    libboost-filesystem-dev libboost-system-dev libboost-signals-dev \
-    libboost-python-dev libboost-numpy-dev \
-    libboost-thread-dev libxml2-dev liblapack-dev libcfitsio-dev libgtkmm-3.0-dev \
+    libxml2-dev liblapack-dev libcfitsio-dev libgtkmm-3.0-dev \
     cmake g++ build-essential gfortran libpng-dev casacore-dev \
-    cython \
     python3 python3-dev python3-pip python3-setuptools && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
@@ -33,7 +29,6 @@ WORKDIR /rascil
 
 RUN mkdir -p /rascil/dask-worker-space && \
     chmod 777 /rascil/dask-worker-space
-
 
 # run setup (may not be required, as we've added /rascil to the PYTHONPATH)
 # and clear pip cache. Use a single RUN statement to avoid multiple layers.
