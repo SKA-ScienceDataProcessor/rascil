@@ -69,7 +69,9 @@ from rascil.processing_components.skycomponent.operations import create_skycompo
 from rascil.processing_components.visibility.base import create_blockvisibility, create_visibility
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
+from rascil.processing_components.util.installation_checks import check_data_directory
 
+check_data_directory()
 log = logging.getLogger(__name__)
 
 
@@ -88,6 +90,8 @@ def create_test_image(canonical=True, cellsize=None, frequency=None, channel_ban
     :param polarisation_frame: Polarisation frame
     :return: Image
     """
+    check_data_directory()
+
     if frequency is None:
         frequency = [1e8]
     im = import_image_from_fits(rascil_path("data/models/M31.MOD"))
@@ -165,6 +169,7 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
     :param flux_limit: Minimum flux (Jy)
     :return: Image
     """
+    check_data_directory()
 
     ras = []
     decs = []
@@ -293,6 +298,7 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
     :param flux_limit: Minimum flux (Jy)
     :return: Image
     """
+    check_data_directory()
 
     ras = []
     decs = []
@@ -393,6 +399,7 @@ def create_low_test_image_from_gleam(npixel=512, polarisation_frame=Polarisation
     :return: Image
 
     """
+    check_data_directory()
 
     if phasecentre is None:
         phasecentre = SkyCoord(ra=+15.0 * u.deg, dec=-35.0 * u.deg, frame='icrs', equinox='J2000')
@@ -465,6 +472,7 @@ def create_low_test_skymodel_from_gleam(npixel=512, polarisation_frame=Polarisat
     :return: SkyModel
 
     """
+    check_data_directory()
 
     if phasecentre is None:
         phasecentre = SkyCoord(ra=+15.0 * u.deg, dec=-35.0 * u.deg, frame='icrs', equinox='J2000')
@@ -533,6 +541,7 @@ def create_low_test_skycomponents_from_gleam(flux_limit=0.1, polarisation_frame=
     :param radius: Radius of sources selected around phasecentre (default 1.0 rad)
     :return: List of Skycomponents
     """
+    check_data_directory()
 
     fitsfile = rascil_path("data/models/GLEAM_EGC.fits")
 

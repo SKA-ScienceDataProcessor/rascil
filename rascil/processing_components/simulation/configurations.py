@@ -12,6 +12,7 @@ from astropy.coordinates import EarthLocation
 from rascil.processing_components.util.coordinate_support import xyz_at_latitude
 from rascil.data_models.memory_data_models import Configuration
 from rascil.data_models.parameters import rascil_path, get_parameter
+from rascil.processing_components.util.installation_checks import check_data_directory
 
 import logging
 
@@ -33,6 +34,8 @@ def create_configuration_from_file(antfile: str, location: EarthLocation = None,
     :param name: Name of array
     :return: Configuration
     """
+    check_data_directory()
+
     antxyz = numpy.genfromtxt(antfile, delimiter=",")
     assert antxyz.shape[1] == 3, ("Antenna array has wrong shape %s" % antxyz.shape)
     latitude = location.geodetic[1].to(u.rad).value
@@ -66,6 +69,8 @@ def create_configuration_from_SKAfile(antfile: str,
     :param name: Name of array
     :return: Configuration
     """
+    check_data_directory()
+
     antdiamlonglat = numpy.genfromtxt(antfile, usecols=[0, 1, 2], delimiter="\t")
     
     assert antdiamlonglat.shape[1] == 3, ("Antenna array has wrong shape %s" % antdiamlonglat.shape)
@@ -97,6 +102,8 @@ def create_configuration_from_MIDfile(antfile: str, location=None,
     :param name: Name of array
     :return: Configuration
     """
+    check_data_directory()
+
 
     # X Y Z Diam Station
     # 9.36976 35.48262 1052.99987 13.50 M001
@@ -154,6 +161,8 @@ def create_LOFAR_configuration(antfile: str, location, rmax=1e6) -> Configuratio
     :param rmax: Maximum distance from array centre (m)
     :return: Configuration
     """
+    check_data_directory()
+
     antxyz = numpy.genfromtxt(antfile, skip_header=2, usecols=[1, 2, 3], delimiter=",")
     nants = antxyz.shape[0]
     assert antxyz.shape[1] == 3, "Antenna array has wrong shape %s" % antxyz.shape
@@ -196,6 +205,8 @@ def create_named_configuration(name: str = 'LOWBD2', **kwargs) -> Configuration:
     100000.0    512
     """
     
+    check_data_directory()
+
     if name == 'LOWBD2':
         location = EarthLocation(lon="116.76444824", lat="-26.824722084", height=300.0)
         log.info("create_named_configuration: %s\n\t%s\n\t%s" % (name, location.geocentric, location.geodetic))
