@@ -1,4 +1,4 @@
-""" Functions for ionospheric modelling: see
+""" Functions for tropospheric and ionospheric modelling: see
 `SDP Memo 97 <http://ska-sdp.org/sites/default/files/attachments/direction_dependent_self_calibration_in_arl_-_signed.pdf>`_
 
 
@@ -7,7 +7,7 @@
 __all__ = ['find_pierce_points', 'create_gaintable_from_screen', 'grid_gaintable_to_screen',
            'calculate_sf_from_screen', 'plot_gaintable_on_screen']
 
-import astropy.units as u
+import astropy.units as units
 import numpy
 from astropy.coordinates import SkyCoord
 
@@ -26,7 +26,8 @@ log = logging.getLogger(__name__)
 def find_pierce_points(station_locations, ha, dec, phasecentre, height):
     """Find the pierce points for a flat screen at specified height
 
-    A pierce point is where the line of site from a station to a source passes through a thin screen
+    A pierce point is where the line of site from a station or dish to a source passes
+    through a thin screen
     
     :param station_locations: station locations [:3]
     :param ha: Hour angle
@@ -45,7 +46,9 @@ def find_pierce_points(station_locations, ha, dec, phasecentre, height):
     return pierce_points
 
 
-def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, scale=1.0, **kwargs):
+def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, scale=1.0,
+                                 conditions='precision', type_atmosphere='ionosphere',
+                                 **kwargs):
     """ Create gaintables from a screen calculated using ARatmospy
 
     Screen axes are ['XX', 'YY', 'TIME', 'FREQ']
@@ -54,51 +57,56 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
     :param sc: Sky components for which pierce points are needed
     :param screen:
     :param height: Height (in m) of screen above telescope e.g. 3e5
+    :param conditions: Type of conditions 'precision'|'standard'|'degraded'
+    :param type_atmosphere: 'ionosphere' or 'troposphere'
     :param scale: Multiply the screen by this factor
     :return:
     """
     assert isinstance(vis, BlockVisibility)
     
     station_locations = vis.configuration.xyz
-    
-    # Convert to TEC
-    # phase = image[pixel] * -8.44797245e9 / frequency
+
+    r0 = {'precision':9, 'standard':3, 'degraded':1}[conditions]
+    scale = numpy.power(r0, -5.0/3.0)
+    if type_atmosphere == 'troposphere':
+        screen_to_phase = scale
+    else:
+        screen_to_phase = - scale * 8.44797245e9 / numpy.array(vis.frequency)
+
     nant = station_locations.shape[0]
     t2r = numpy.pi / 43200.0
     gaintables = [create_gaintable_from_blockvisibility(vis, **kwargs) for i in sc]
     
     # The time in the Visibility is hour angle in seconds!
+    number_bad = 0
+    number_good = 0
+
     for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
         v = create_visibility_from_rows(vis, rows)
         ha = numpy.average(v.time)
-        tec2phase = - 8.44797245e9 / numpy.array(vis.frequency)
-
-        number_bad = 0
-        number_good = 0
-
         for icomp, comp in enumerate(sc):
-            pp = find_pierce_points(station_locations, (comp.direction.ra.rad + t2r * ha) * u.rad, comp.direction.dec,
+            pp = find_pierce_points(station_locations, (comp.direction.ra.rad + t2r * ha) * units.rad, comp.direction.dec,
                                     height=height, phasecentre=vis.phasecentre)
             scr = numpy.zeros([nant])
             for ant in range(nant):
                 pp0 = pp[ant][0:2]
-                worldloc = [pp0[0], pp0[1], ha, 1e8]
+                # Using narrow band approach - we should loop over frequency
+                worldloc = [pp0[0], pp0[1], ha, numpy.average(vis.frequency)]
                 try:
                     pixloc = screen.wcs.wcs_world2pix([worldloc], 0)[0].astype('int')
-                    scr[ant] = scale * screen.data[pixloc[3], pixloc[2], pixloc[1], pixloc[0]]
+                    scr[ant] = screen_to_phase * screen.data[pixloc[3], pixloc[2], pixloc[1], pixloc[0]]
                     number_good += 1
-                except ValueError:
+                except (ValueError, IndexError):
                     number_bad += 1
                     scr[ant] = 0.0
             
-            scr = scr[:, numpy.newaxis] * tec2phase[numpy.newaxis, :]
             # axes of gaintable.gain are time, ant, nchan, nrec
-            gaintables[icomp].gain[iha, :, :, :] = numpy.exp(1j * scr[..., numpy.newaxis, numpy.newaxis])
+            gaintables[icomp].gain[iha, :, :, :] = numpy.exp(1j * scr)[..., numpy.newaxis, numpy.newaxis, numpy.newaxis]
             gaintables[icomp].phasecentre = comp.direction
         
-        if number_bad > 0:
-            log.warning("create_gaintable_from_screen: %d pierce points are inside the screen image" % (number_good))
-            log.warning("create_gaintable_from_screen: %d pierce points are outside the screen image" % (number_bad))
+    if number_bad > 0:
+        log.warning("create_gaintable_from_screen: %d pierce points are inside the atmospheric screen image" % (number_good))
+        log.warning("create_gaintable_from_screen: %d pierce points are outside the atmospheric screen image" % (number_bad))
 
     return gaintables
 
@@ -136,7 +144,7 @@ def grid_gaintable_to_screen(vis, gaintables, screen, height=3e5, gaintable_slic
             ha = numpy.average(gt.time)
 
             pp = find_pierce_points(station_locations,
-                                    (gt.phasecentre.ra.rad + t2r * ha) * u.rad,
+                                    (gt.phasecentre.ra.rad + t2r * ha) * units.rad,
                                     gt.phasecentre.dec,
                                     height=height,
                                     phasecentre=vis.phasecentre)
@@ -221,7 +229,7 @@ def plot_gaintable_on_screen(vis, gaintables, height=3e5, gaintable_slices=None,
             ha = numpy.average(gt.time)
             
             pp = find_pierce_points(station_locations,
-                                    (gt.phasecentre.ra.rad + t2r * ha) * u.rad,
+                                    (gt.phasecentre.ra.rad + t2r * ha) * units.rad,
                                     gt.phasecentre.dec,
                                     height=height,
                                     phasecentre=vis.phasecentre)

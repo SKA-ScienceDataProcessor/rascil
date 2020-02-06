@@ -231,6 +231,7 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
     
     # If we are doing facets, we need to create the gcf for each image
     if gcfcf is None and facets == 1:
+        assert len(template_model_imagelist)>0
         gcfcf = [rsexecute.execute(create_pswf_convolutionfunction)(template_model_imagelist[0])]
     
     # Loop over all vis_lists independently

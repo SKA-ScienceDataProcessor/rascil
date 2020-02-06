@@ -90,10 +90,7 @@ def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV cov
     :param kwargs:
     :return:
     """
-    if ax is None:
-        fig, ax = plt.subplots(111)
-        ax = ax[0]
-    
+
     for ivis, vis in enumerate(vis_list):
         u = numpy.array(vis.u[...].flat)
         v = numpy.array(vis.v[...].flat)
@@ -105,11 +102,11 @@ def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV cov
             k = vis.frequency / constants.c
             u = u * k
             v = v * k
-        ax.plot(u, v, '.', color='b', markersize=0.2)
-        ax.plot(-u, -v, '.', color='b', markersize=0.2)
-    ax.set_xlabel('U (wavelengths)')
-    ax.set_ylabel('V (wavelengths)')
-    ax.set_title(title)
+        plt.plot(u.value, v.value, '.', color='b', markersize=0.2)
+        plt.plot(-u.value, -v.value, '.', color='b', markersize=0.2)
+    plt.xlabel('U (wavelengths)')
+    plt.ylabel('V (wavelengths)')
+    plt.title(title)
 
 
 def plot_azel(bvis_list, plot_file='azel.png', **kwargs):
@@ -141,7 +138,7 @@ def plot_azel(bvis_list, plot_file='azel.png', **kwargs):
     plt.show(block=False)
 
 
-def plot_gaintable(gt_list, title='', plot_file='gaintable.png', **kwargs):
+def plot_gaintable(gt_list, title='', value='amp', plot_file='gaintable.png', **kwargs):
     """ Standard plot of gain table
     
     :param gt_list:
@@ -153,7 +150,12 @@ def plot_gaintable(gt_list, title='', plot_file='gaintable.png', **kwargs):
     plt.clf()
     for gt in gt_list:
         amp = numpy.abs(gt[0].gain[:, 0, 0, 0, 0])
-        plt.plot(gt[0].time[amp > 0.0], 1.0 / amp[amp > 0.0], '.')
+        if value=='phase':
+            y = numpy.angle(gt[0].gain[:, 0, 0, 0, 0])
+            plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.')
+        else:
+            y = amp
+            plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.')
     plt.title(title)
     plt.xlabel('Time (s)')
     plt.savefig(plot_file)
