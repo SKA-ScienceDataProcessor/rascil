@@ -45,7 +45,7 @@ class TestImagingNG(unittest.TestCase):
 
         self.verbosity = 0
     
-    def actualSetUp(self, freqwin=1, block=True, dospectral=True, dopol=False, zerow=False, do_shift=False):
+    def actualSetUp(self, freqwin=1, block=True, dospectral=True, dopol=False, zerow=False):
         
         self.npixel = 512
         self.low = create_named_configuration('LOWBD2', rmax=750.0)
@@ -86,7 +86,7 @@ class TestImagingNG(unittest.TestCase):
                                                    zerow=zerow)
         
         self.vis = convert_blockvisibility_to_visibility(self.blockvis)
-        
+
         self.model = create_unittest_model(self.vis, self.image_pol, npixel=self.npixel, nchan=freqwin)
         
         self.components = create_unittest_components(self.model, flux)
@@ -94,7 +94,8 @@ class TestImagingNG(unittest.TestCase):
         self.model = insert_skycomponent(self.model, self.components)
         
         self.blockvis = predict_skycomponent_visibility(self.blockvis, self.components)
-        
+        self.vis = predict_skycomponent_visibility(self.vis, self.components)
+
         # Calculate the model convolved with a Gaussian.
         
         self.cmodel = smooth_image(self.model)
@@ -202,6 +203,61 @@ class TestImagingNG(unittest.TestCase):
     def test_invert_ng_spec_pol(self):
         self.actualSetUp(dospectral=True, freqwin=5, dopol=True)
         self._invert_base(name='invert_spec_pol', positionthreshold=2.0, check_components=False)
+
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_predict_as_vis(self):
+        self.actualSetUp(dospectral=False, freqwin=1, dopol=False)
+
+        from rascil.processing_components.imaging.ng import predict_ng, invert_ng
+        original_vis = copy_visibility(self.vis)
+        vis = predict_ng(self.vis, self.model, verbosity=self.verbosity)
+        vis.data['vis'] = vis.data['vis'] - original_vis.data['vis']
+        dirty = invert_ng(vis, self.model, dopsf=False, normalize=True,
+                          verbosity=self.verbosity)
+
+        # import matplotlib.pyplot as plt
+        # from rascil.processing_components.image.operations import show_image
+        # npol = dirty[0].shape[1]
+        # for pol in range(npol):
+        #     plt.clf()
+        #     show_image(dirty[0], pol=pol)
+        #     plt.show(block=False)
+
+        name = 'predict_as_vis'
+        if self.persist: export_image_to_fits(dirty[0],
+                                              '%s/test_imaging_ng_%s_residual.fits' %
+                                              (self.dir, name))
+
+        # assert numpy.max(numpy.abs(dirty[0].data)), "Residual image is empty"
+
+        fluxthreshold = 0.7
+        maxabs = numpy.max(numpy.abs(dirty[0].data))
+        assert maxabs < fluxthreshold, "Error %.3f greater than fluxthreshold %.3f " % (
+        maxabs, fluxthreshold)
+
+    def test_invert_as_vis(self):
+        self.actualSetUp(dospectral=False, freqwin=1, dopol=False)
+        from rascil.processing_components.imaging.ng import invert_ng
+        dirty = invert_ng(self.vis, self.model, normalize=True,
+                          verbosity=self.verbosity)
+
+        name = 'invert_as_vis'
+        if self.persist: export_image_to_fits(dirty[0],
+                                              '%s/test_imaging_ng_%s_dirty.fits' %
+                                              (self.dir, name))
+        # import matplotlib.pyplot as plt
+        # from rascil.processing_components.image.operations import show_image
+        # npol = dirty[0].shape[1]
+        # for pol in range(npol):
+        #     plt.clf()
+        #     show_image(dirty[0], pol=pol)
+        #     plt.show(block=False)
+
+        assert numpy.max(numpy.abs(dirty[0].data)), "Image is empty"
+
+        fluxthreshold = 1.0
+        positionthreshold = 1.0
+        self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
 
 
 if __name__ == '__main__':
