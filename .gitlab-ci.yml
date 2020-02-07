@@ -27,7 +27,8 @@ unittests:
     - pip install pytest pytest-xdist pytest-cov
     - py.test -n 4 tests/data_models --verbose --cov=rascil --cov-report=html:coverage --durations=30
     - py.test -n 4 tests/processing_components --verbose --cov=rascil --cov-report=html:coverage --durations=30
-    - py.test tests/workflows --verbose --cov=rascil --cov-report=html:coverage --durations=30
+    - py.test -n 4 tests/workflows/*serial.py --verbose --cov=rascil --cov-report=html:coverage --durations=30
+    - py.test tests/workflows/*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30
   artifacts:
     paths:
       - coverage
