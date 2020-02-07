@@ -235,6 +235,7 @@ class TestImagingNG(unittest.TestCase):
         assert maxabs < fluxthreshold, "Error %.3f greater than fluxthreshold %.3f " % (
         maxabs, fluxthreshold)
 
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_as_vis(self):
         self.actualSetUp(dospectral=False, freqwin=1, dopol=False)
         from rascil.processing_components.imaging.ng import invert_ng
