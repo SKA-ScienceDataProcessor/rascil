@@ -73,7 +73,7 @@ class TestPrimaryBeams(unittest.TestCase):
             # ax.axis('off')
 
         # plt.savefig("zernikes.png")
-        # plt.show()
+        # plt.show(block=False)
 
 if __name__ == '__main__':
     unittest.main()

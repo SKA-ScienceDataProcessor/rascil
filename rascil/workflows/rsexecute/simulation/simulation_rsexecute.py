@@ -358,7 +358,7 @@ def calculate_selfcal_residual_from_gaintables_rsexecute_workflow(sub_bvis_list,
 
 
 def create_atmospheric_errors_gaintable_rsexecute_workflow(sub_bvis_list, sub_components,
-                                                           conditions='', screen=None,
+                                                           r0=5e3, screen=None,
                                                            height=3e5,
                                                            type_atmosphere='iono',
                                                            show=False, basename='',
@@ -367,7 +367,7 @@ def create_atmospheric_errors_gaintable_rsexecute_workflow(sub_bvis_list, sub_co
 
     :param sub_bvis_list: List of vis (or graph)
     :param sub_components: List of components (or graph)
-    :param conditions: Type of conditions 'precision'|'standard'|'degraded'
+    :param r0: r0 in m
     :param screen:
     :param height: Height (in m) of screen above telescope e.g. 3e5
     :param type_atmosphere: 'ionosphere' or 'troposhere'
@@ -380,7 +380,7 @@ def create_atmospheric_errors_gaintable_rsexecute_workflow(sub_bvis_list, sub_co
 
     error_gt_list = [
         rsexecute.execute(create_gaintable_from_screen)(vis, sub_components,
-                                                        conditions=conditions,
+                                                        r0=r0,
                                                         screen=screen, height=height,
                                                         type_atmosphere=type_atmosphere)
         for ivis, vis in enumerate(sub_bvis_list)]
@@ -392,10 +392,10 @@ def create_atmospheric_errors_gaintable_rsexecute_workflow(sub_bvis_list, sub_co
     if show:
         tmp_gt_list = rsexecute.compute(error_gt_list, sync=True)
 
-        plot_file = 'gaintable_%s.png' % conditions
+        plot_file = 'gaintable_%s.png' % r0
 
         plot_gaintable(tmp_gt_list, title="%s: dish 0 gain phase, %s" % (
-            basename, conditions), value='phase', plot_file=plot_file)
+            basename, r0), value='phase', plot_file=plot_file)
 
     return no_error_gt_list, error_gt_list
 

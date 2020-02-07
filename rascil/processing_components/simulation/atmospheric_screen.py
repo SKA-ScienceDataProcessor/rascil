@@ -47,7 +47,7 @@ def find_pierce_points(station_locations, ha, dec, phasecentre, height):
 
 
 def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, scale=1.0,
-                                 conditions='precision', type_atmosphere='ionosphere',
+                                 r0=5e3, type_atmosphere='ionosphere',
                                  **kwargs):
     """ Create gaintables from a screen calculated using ARatmospy
 
@@ -57,7 +57,7 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
     :param sc: Sky components for which pierce points are needed
     :param screen:
     :param height: Height (in m) of screen above telescope e.g. 3e5
-    :param conditions: Type of conditions 'precision'|'standard'|'degraded'
+    :param r0: r0 in meters
     :param type_atmosphere: 'ionosphere' or 'troposphere'
     :param scale: Multiply the screen by this factor
     :return:
@@ -66,8 +66,7 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
     
     station_locations = vis.configuration.xyz
 
-    r0 = {'precision':9, 'standard':3, 'degraded':1}[conditions]
-    scale = numpy.power(r0, -5.0/3.0)
+    scale = numpy.power(r0/5000.0, -5.0/3.0)
     if type_atmosphere == 'troposphere':
         screen_to_phase = scale
     else:

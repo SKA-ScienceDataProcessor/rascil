@@ -68,7 +68,7 @@ class TestPointing(unittest.TestCase):
             plt.xlabel('Time (s)')
             plt.ylabel('Nominal (rad)')
             plt.title("Nominal pointing for %s" % (type))
-            plt.show()
+            plt.show(block=False)
     
             for reference_pointing in [False, True]:
                 pt = simulate_pointingtable_from_timeseries(pt, type=type, reference_pointing=reference_pointing)
@@ -82,7 +82,7 @@ class TestPointing(unittest.TestCase):
                 plt.xlabel('Time (s)')
                 plt.ylabel('Pointing (arcsec)')
                 plt.title("Pointing for %s, reference pointing %s" % (type, reference_pointing))
-                plt.show()
+                plt.show(block=False)
                 
                 vp = create_vp(self.model, 'MID')
                 gt = simulate_gaintable_from_pointingtable(self.vis, component, pt, vp)
@@ -93,7 +93,7 @@ class TestPointing(unittest.TestCase):
                 plt.xlabel('Time (s)')
                 plt.ylabel('Gain')
                 plt.title("Gain for %s, reference pointing %s" % (type, reference_pointing))
-                plt.show()
+                plt.show(block=False)
 
 
 if __name__ == '__main__':

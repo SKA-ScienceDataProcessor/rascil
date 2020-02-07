@@ -64,7 +64,7 @@ class TestPipelineMPC(unittest.TestCase):
         # plt.xlim([-numpy.pi, numpy.pi])
         # plt.ylim([-numpy.pi, numpy.pi])
         plt.title("MPCCal iteration%d: Change in phase" % (it))
-        plt.show()
+        plt.show(block=False)
         
         return tl_list
     

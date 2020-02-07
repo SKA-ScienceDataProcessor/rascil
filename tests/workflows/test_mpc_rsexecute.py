@@ -124,7 +124,7 @@ class TestMPC(unittest.TestCase):
                 amp = numpy.abs(v.vis[:, 0])
                 plt.plot(uvr, amp, '.')
                 plt.title(str(i))
-                plt.show()
+                plt.show(block=False)
             
             plotvis(0, vobs)
     
@@ -150,7 +150,7 @@ class TestMPC(unittest.TestCase):
             import matplotlib.pyplot as plt
             from rascil.processing_components.image.operations import show_image
             show_image(results[0][0], title='Dirty image, no cross-subtraction', vmax=0.1, vmin=-0.01)
-            plt.show()
+            plt.show(block=False)
     
     def test_crosssubtract_datamodel(self):
         self.actualSetUp(zerow=True)
@@ -180,7 +180,7 @@ class TestMPC(unittest.TestCase):
             import matplotlib.pyplot as plt
             from rascil.processing_components.image.operations import show_image
             show_image(results[0][0], title='Dirty image after cross-subtraction', vmax=0.1, vmin=-0.01)
-            plt.show()
+            plt.show(block=False)
 
 
 if __name__ == '__main__':

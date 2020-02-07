@@ -11,7 +11,7 @@ Simulation
 .. automodapi::    rascil.processing_components.simulation.configurations
    :no-inheritance-diagram:
 
-.. automodapi::    rascil.processing_components.simulation.ionospheric_screen
+.. automodapi::    rascil.processing_components.atmospheric_screen
    :no-inheritance-diagram:
 
 .. automodapi::    rascil.processing_components.simulation.noise
