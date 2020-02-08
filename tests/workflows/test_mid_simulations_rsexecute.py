@@ -238,10 +238,11 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--vp_directory', type=str, default=rascil_path('data/models/interpolated'),
                             help='Location of pointing files')
 
-        args = parser.parse_args()
-        
+        args = parser.parse_args([])
+
         return args
 
+    @unittest.skip("Needs reworking")
     def test_wind(self):
     
         error_dirty, sumwt = self.simulation(self.get_args(), 'wind')
@@ -252,10 +253,11 @@ class TestPointingSimulation(unittest.TestCase):
         numpy.testing.assert_almost_equal(qa.data['min'], -3.836051633637655e-06, 12)
         numpy.testing.assert_almost_equal(qa.data['rms'], 5.840397284050296e-07, 12)
 
+    @unittest.skip("Needs reworking")
     def test_random(self):
     
         error_dirty, sumwt = self.simulation(self.get_args(), '')
-    
+
         qa = qa_image(error_dirty)
     
         numpy.testing.assert_almost_equal(qa.data['max'], 2.2055849698035616e-06, 12)
