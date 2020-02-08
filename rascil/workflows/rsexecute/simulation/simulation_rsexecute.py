@@ -345,8 +345,11 @@ def calculate_selfcal_residual_from_gaintables_rsexecute_workflow(sub_bvis_list,
             error_bvis = apply_gaintable(error_bvis, gt)
         if residual:
             error_bvis.data['vis'] = error_bvis.data['vis'] - no_error_bvis.data['vis']
-        error_vis = convert_blockvisibility_to_visibility(error_bvis)
-        return error_vis
+        if context != "ng":
+            error_vis = convert_blockvisibility_to_visibility(error_bvis)
+            return error_vis
+        else:
+            return error_bvis
 
     error_vis_list = [rsexecute.execute(selfcal_convert)(error_bvis_list[ibv],
                                                          no_error_bvis_list[ibv])
