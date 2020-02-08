@@ -19,8 +19,7 @@ from rascil.data_models.parameters import get_parameter
 from rascil.data_models.polarisation import convert_pol_frame
 from rascil.processing_components.image.operations import copy_image, image_is_canonical
 from rascil.processing_components.imaging.base import shift_vis_to_image, normalize_sumwt
-from rascil.processing_components.visibility import copy_visibility, \
-    convert_blockvisibility_to_visibility, convert_visibility_to_blockvisibility
+from rascil.processing_components.visibility.base import copy_visibility
 
 log = logging.getLogger(__name__)
 
@@ -38,28 +37,22 @@ try:
         :return: resulting BlockVisibility (in place works)
         """
 
-        if model is None:
-            return bvis
-
-        is_visibility = isinstance(bvis, Visibility)
-
+        assert isinstance(bvis, BlockVisibility), bvis
         assert image_is_canonical(model)
 
-        if is_visibility:
-            abvis = convert_visibility_to_blockvisibility(bvis)
-        else:
-            abvis = bvis
+        if model is None:
+            return bvis
 
         nthreads = get_parameter(kwargs, "threads", 4)
         epsilon = get_parameter(kwargs, "epsilon", 1e-12)
         do_wstacking = get_parameter(kwargs, "do_wstacking", True)
         verbosity = get_parameter(kwargs, "verbosity", 2)
         
-        newbvis = copy_visibility(abvis, zero=True)
+        newbvis = copy_visibility(bvis, zero=True)
         
         # Extracting data from BlockVisibility
-        freq = abvis.frequency  # frequency, Hz
-        nrows, nants, _, vnchan, vnpol = abvis.vis.shape
+        freq = bvis.frequency  # frequency, Hz
+        nrows, nants, _, vnchan, vnpol = bvis.vis.shape
         
         uvw = newbvis.data['uvw'].reshape([nrows * nants * nants, 3])
         vis = newbvis.data['vis'].reshape([nrows * nants * nants, vnchan, vnpol])
@@ -100,14 +93,10 @@ try:
         newbvis.data['vis'] = vis.reshape([nrows, nants, nants, vnchan, vnpol])
 
         # Now we can shift the visibility from the image frame to the original visibility frame
-        if is_visibility:
-            newvis = convert_blockvisibility_to_visibility(newbvis)
-            return shift_vis_to_image(newvis, model, tangent=True, inverse=True)
-        else:
-            return shift_vis_to_image(newbvis, model, tangent=True, inverse=True)
+        return shift_vis_to_image(newbvis, model, tangent=True, inverse=True)
 
     
-    def invert_ng(bvis: Union[BlockVisibility, Visibility], model: Image, dopsf: bool = False, normalize: bool = True,
+    def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True,
                   **kwargs) -> (Image, numpy.ndarray):
         """ Invert using nifty-gridder module
         
@@ -126,12 +115,7 @@ try:
         """
         assert image_is_canonical(model)
 
-        if isinstance(bvis, Visibility):
-            abvis = convert_visibility_to_blockvisibility(bvis)
-        else:
-            abvis = bvis
-
-        assert isinstance(abvis, BlockVisibility), abvis
+        assert isinstance(bvis, BlockVisibility), bvis
 
         im = copy_image(model)
 
@@ -140,10 +124,10 @@ try:
         do_wstacking = get_parameter(kwargs, "do_wstacking", True)
         verbosity = get_parameter(kwargs, "verbosity", 0)
         
-        sbvis = copy_visibility(abvis)
+        sbvis = copy_visibility(bvis)
         sbvis = shift_vis_to_image(sbvis, im, tangent=True, inverse=False)
 
-        vis = abvis.vis
+        vis = bvis.vis
         
         freq = sbvis.frequency  # frequency, Hz
         
@@ -173,7 +157,7 @@ try:
         im.data[...] = 0.0
         sumwt = numpy.zeros([nchan, npol])
         
-        ms = convert_pol_frame(ms, abvis.polarisation_frame, im.polarisation_frame, polaxis=2)
+        ms = convert_pol_frame(ms, bvis.polarisation_frame, im.polarisation_frame, polaxis=2)
         # There's a latent problem here with the weights.
         # wgt = numpy.real(convert_pol_frame(wgt, bvis.polarisation_frame, im.polarisation_frame, polaxis=2))
 
@@ -210,8 +194,7 @@ except ImportError:
         log.error("Nifty gridder not available")
         return bvis
 
-    def invert_ng(bvis: Union[BlockVisibility, Visibility], model: Image,
-                  dopsf: bool = False, normalize: bool = True,
+    def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True,
                   **kwargs) -> (Image, numpy.ndarray):
         log.error("Nifty gridder not available")
         return model, None
