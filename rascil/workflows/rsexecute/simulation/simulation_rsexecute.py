@@ -313,7 +313,8 @@ def calculate_selfcal_residual_from_gaintables_rsexecute_workflow(sub_bvis_list,
     no_error_bvis_list = [
         predict_skymodel_list_compsonly_rsexecute_workflow(no_error_bvis_list[ibv],
                                                            no_error_sm_list[ibv],
-                                                           context=context, docal=True)
+                                                           context=context, docal=True,
+                                                           **kwargs)
         for ibv, bvis in enumerate(no_error_bvis_list)]
 
     error_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
@@ -321,7 +322,8 @@ def calculate_selfcal_residual_from_gaintables_rsexecute_workflow(sub_bvis_list,
     error_bvis_list = [
         predict_skymodel_list_compsonly_rsexecute_workflow(error_bvis_list[ibv],
                                                            error_sm_list[ibv],
-                                                           context=context, docal=True)
+                                                           context=context, docal=True,
+                                                           **kwargs)
         for ibv, bvis in enumerate(error_bvis_list)]
 
     # Sum all visibilities per component so we can selfcal
@@ -356,7 +358,7 @@ def calculate_selfcal_residual_from_gaintables_rsexecute_workflow(sub_bvis_list,
                       for ibv, _ in enumerate(error_bvis_list)]
 
     dirty_list = invert_list_rsexecute_workflow(error_vis_list, sub_model_list,
-                                                context=context)
+                                                context=context, **kwargs)
     return dirty_list
 
 
