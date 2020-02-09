@@ -243,20 +243,52 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
     
     dec = phasecentre.dec.deg
     ra = phasecentre.ra.deg
-    
+
     if context == 'singlesource':
         log.info("create_simulation_components: Constructing single component")
         offset = [HWHM_deg * offset_dir[0], HWHM_deg * offset_dir[1]]
-        log.info("create_simulation_components: Offset from pointing centre = %.3f, %.3f deg" % (offset[0], offset[1]))
-        
+        log.info(
+            "create_simulation_components: Offset from pointing centre = %.3f, %.3f deg" % (
+            offset[0], offset[1]))
+
         # The point source is offset to approximately the halfpower point
-        offset_direction = SkyCoord(ra=(ra + offset[0] / numpy.cos(numpy.pi * dec / 180.0)) * units.deg,
-                                    dec=(dec + offset[1]) * units.deg,
-                                    frame='icrs', equinox='J2000')
-        
-        original_components = [Skycomponent(flux=[[1.0]], direction=offset_direction, frequency=frequency,
-                                            polarisation_frame=PolarisationFrame('stokesI'))]
-    
+        odirection = SkyCoord(
+            ra=(ra + offset[0] / numpy.cos(numpy.pi * dec / 180.0)) * units.deg,
+            dec=(dec + offset[1]) * units.deg,
+            frame='icrs', equinox='J2000')
+
+        original_components = [
+            Skycomponent(flux=[[1.0]], direction=odirection, frequency=frequency,
+                         polarisation_frame=PolarisationFrame('stokesI'))]
+
+        offset_direction = odirection
+
+    elif context == 'doublesource':
+
+        original_components = []
+
+        log.info("create_simulation_components: Constructing double components")
+
+        for sign_offset in [(-1,0), (1, 0)]:
+            offset = [HWHM_deg * sign_offset[0], HWHM_deg * sign_offset[1]]
+
+            log.info(
+                "create_simulation_components: Offset from pointing centre = %.3f, %.3f deg" % (
+                offset[0], offset[1]))
+
+            odirection = SkyCoord(
+                ra=(ra + offset[0] / numpy.cos(numpy.pi * dec / 180.0)) * units.deg,
+                dec=(dec + offset[1]) * units.deg,
+                frame='icrs', equinox='J2000')
+
+            original_components.append(
+                Skycomponent(flux=[[1.0]], direction=odirection, frequency=frequency,
+                             polarisation_frame=PolarisationFrame('stokesI')))
+        for o in original_components:
+            print(o)
+
+        offset_direction = odirection
+
     elif context == 'null':
         log.info("create_simulation_components: Constructing single component at the null")
         
