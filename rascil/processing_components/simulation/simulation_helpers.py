@@ -95,15 +95,17 @@ def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV cov
         u = numpy.array(vis.u[...].flat)
         v = numpy.array(vis.v[...].flat)
         if isinstance(vis, BlockVisibility):
-            k = vis.frequency / constants.c
+            k = (vis.frequency / constants.c).value
             u = numpy.array(numpy.outer(u, k).flat)
             v = numpy.array(numpy.outer(v, k).flat)
-        else:
+            plt.plot(u, v, '.', color='b', markersize=0.2)
+            plt.plot(-u, -v, '.', color='b', markersize=0.2)
+    else:
             k = vis.frequency / constants.c
             u = u * k
             v = v * k
-        plt.plot(u.value, v.value, '.', color='b', markersize=0.2)
-        plt.plot(-u.value, -v.value, '.', color='b', markersize=0.2)
+            plt.plot(u.value, v.value, '.', color='b', markersize=0.2)
+            plt.plot(-u.value, -v.value, '.', color='b', markersize=0.2)
     plt.xlabel('U (wavelengths)')
     plt.ylabel('V (wavelengths)')
     plt.title(title)
@@ -224,7 +226,7 @@ def find_pb_width_null(pbtype, frequency, **kwargs):
 
 
 def create_simulation_components(context, phasecentre, frequency, pbtype, offset_dir, flux_limit,
-                                 pbradius, pb_npixel, pb_cellsize, show=False):
+                                 pbradius, pb_npixel, pb_cellsize, show=False, fov='10'):
     """ Construct components for simulation
     
     :param context:
@@ -236,6 +238,7 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
     :param pbradius:
     :param pb_npixel:
     :param pb_cellsize:
+    :param fov: FOV in degrees (used to select catalog
     :return:
     """
     
@@ -318,7 +321,8 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
                                                                 phasecentre=phasecentre,
                                                                 polarisation_frame=PolarisationFrame("stokesI"),
                                                                 frequency=numpy.array(frequency),
-                                                                radius=pbradius)
+                                                                radius=pbradius,
+                                                                fov=fov)
         log.info("create_simulation_components: %d components before application of primary beam" %
               (len(original_components)))
         
