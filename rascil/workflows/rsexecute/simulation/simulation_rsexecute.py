@@ -6,6 +6,7 @@ __all__ = ['simulate_list_rsexecute_workflow', 'corrupt_list_rsexecute_workflow'
            'calculate_selfcal_residual_from_gaintables_rsexecute_workflow',
            'create_pointing_errors_gaintable_rsexecute_workflow',
            'create_standard_mid_simulation_rsexecute_workflow',
+           'create_standard_low_simulation_rsexecute_workflow',
            'create_surface_errors_gaintable_rsexecute_workflow',
            'create_atmospheric_errors_gaintable_rsexecute_workflow']
 
@@ -641,6 +642,68 @@ def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, t
 
     bvis_graph = [
         rsexecute.execute(create_blockvisibility)(mid, rtimes[itime], frequency=frequency,
+                                                  channel_bandwidth=channel_bandwidth,
+                                                  weight=1.0,
+                                                  phasecentre=phasecentre,
+                                                  polarisation_frame=polarisation_frame,
+                                                  zerow=zerow)
+        for itime in range(nchunks)]
+
+    return bvis_graph
+
+
+def create_standard_low_simulation_rsexecute_workflow(band, rmax, phasecentre, time_range,
+                                                      time_chunk, integration_time,
+                                                      shared_directory,
+                                                      polarisation_frame=None,
+                                                      zerow=False):
+    """ Create the standard LOW simulation
+
+    :param band: B
+    :param rmax: Maximum distance from array centre
+    :param phasecentre: Phase centre (SkyCoord)
+    :param time_range: Hour angle (in hours)
+    :param time_chunk: Chunking of time in seconds
+    :param integration_time:
+    :param shared_directory:
+    :param polarisation_frame: Desired polarisation frame
+    :param zerow: Set w to zero (False)
+    :return:
+    """
+    if polarisation_frame is None:
+        polarisation_frame = PolarisationFrame("stokesI")
+
+    # Set up details of simulated observation
+    frequency = [1.5e8]
+
+    channel_bandwidth = [1e7]
+    low_location = EarthLocation(lon="116.76444824", lat="-26.824722084", height=300.0)
+
+    # Do each time_chunk in parallel
+    start_times = numpy.arange(time_range[0] * 3600, time_range[1] * 3600, time_chunk)
+    end_times = start_times + time_chunk
+
+    start_times = find_times_above_elevation_limit(start_times, end_times,
+                                                   location=low_location,
+                                                   phasecentre=phasecentre,
+                                                   elevation_limit=45.0)
+    times = [numpy.arange(start_times[itime], end_times[itime], integration_time) for
+             itime in
+             range(len(start_times))]
+
+    s2r = numpy.pi / (12.0 * 3600)
+    rtimes = s2r * numpy.array(times)
+    ntimes = len(rtimes.flat)
+    nchunks = len(start_times)
+
+    assert ntimes > 0, "No data above elevation limit"
+
+    low = create_configuration_from_MIDfile('%s/ska1low_local.cfg' % shared_directory,
+                                            rmax=rmax,
+                                            location=low_location)
+
+    bvis_graph = [
+        rsexecute.execute(create_blockvisibility)(low, rtimes[itime], frequency=frequency,
                                                   channel_bandwidth=channel_bandwidth,
                                                   weight=1.0,
                                                   phasecentre=phasecentre,
