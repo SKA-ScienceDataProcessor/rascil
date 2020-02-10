@@ -1,0 +1,28 @@
+.. _ska_atmospheric_simulation:
+
+SKA atmospheric non-isoplanatism simulations
+============================================
+
+This calculates the change in a MID dirty image caused by atmosphere non-isoplanatism errors:
+
+    - The sky can be a point source or double source  at the half power point or a realistic sky constructed from S3-SEX catalog.
+    - The observation is by MID over a range of hour angles
+    - The atmosphere is modelled in a FITS cube generated using the ARatmospy packed. The screen moves at 30km/s, and is modeled as a thin screen at height 3km
+    - The phase for each dish and each source is calculated from the screen using the pierce points. Each source has its own gaintable.
+    - The visibility is calculated by Direct Fourier transform after application of the gaintable for each source.
+    - Processing can be divided into chunks of time (default 1800s)
+    - The noise level is measured by calculating the change in a small field dirty image induced by the pointing errors.
+    - Dask is used to distribute the processing over a number of workers.
+    - Various plots can be produced, The primary output is a csv file containing information about the statistics of the residual images.
+
+The full set of test scripts are available at: https://github.com/ska-telescope/sim-atmosphere.
+
+Command line arguments
+++++++++++++++++++++++
+
+.. argparse::
+   :filename: ../examples/ska_simulations/atmospheric_simulation.py
+   :func: cli_parser
+   :prog: atmospheric_simulation.py
+
+The python script is:
