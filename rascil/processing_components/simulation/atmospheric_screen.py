@@ -68,8 +68,10 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
 
     scale = numpy.power(r0/5000.0, -5.0/3.0)
     if type_atmosphere == 'troposphere':
+        # In troposphere files, the units are phase in radians.
         screen_to_phase = scale
     else:
+        # In the ionosphere file, the units are dTEC.
         screen_to_phase = - scale * 8.44797245e9 / numpy.array(vis.frequency)
 
     nant = station_locations.shape[0]
