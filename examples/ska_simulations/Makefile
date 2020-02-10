@@ -1,4 +1,6 @@
 
+.SUFFIXES:
+
 SCs = pointing_simulation.py surface_simulation.py
 
 RSTs=  $(SCs:.py=.rst)

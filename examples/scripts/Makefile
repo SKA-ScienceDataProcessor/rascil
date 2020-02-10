@@ -1,4 +1,6 @@
 
+.SUFFIXES:
+
 SCs = dprepb_rsexecute_pipeline.py imaging_sim2.py imaging.py primary_beam_zernikes.py
 
 RSTs=  $(SCs:.py=.rst)
