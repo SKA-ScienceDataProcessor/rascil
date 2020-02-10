@@ -31,7 +31,6 @@ dependencies:
   - numba
   - pip
   - python-casacore
-  - pyfftw
   - pip:
     - seqfile
     - aotools
