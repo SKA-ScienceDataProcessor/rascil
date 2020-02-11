@@ -34,7 +34,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestPipelineMPC(unittest.TestCase):
     def setUp(self):
         
-        rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, dashboard_address=None)
+        rsexecute.set_client()
         
         self.persist = os.getenv("RASCIL_PERSIST", False)
 
