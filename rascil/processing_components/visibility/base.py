@@ -807,6 +807,27 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
     :param antnum: the number of antenna
     :return:
     """
+    
+    def find_time_slots(times):
+        """ Find the time slots
+        
+        :param times:
+        :return:
+        """
+        intervals = times[1:]-times[0:-1]
+        integration_time = numpy.median(intervals[intervals>0.0])
+        chunk = 0
+        last_time = times[0]
+        time_slots = list()
+        for t in times:
+            if t > last_time + integration_time:
+                chunk += 1
+                last_time = t
+                time_slots.append(last_time)
+                
+        time_slots = numpy.array(time_slots)
+        
+        return time_slots
 
     def ParamDict(hdul):
         "Return the dictionary of the random parameters"
@@ -855,9 +876,11 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
             channum = range(channels)
 
         primary = hdul[0].data
-        # Read time
+        # Read time. We are trying to find a discrete set of times to use in
+        # BlockVisibility.
         bvtimes = Time(hdul[0].data['DATE'], hdul[0].data['_DATE'], format='jd')
-        bv_times = numpy.unique(bvtimes.jd)
+        bv_times = find_time_slots(bvtimes.jd)
+
         ntimes = len(bv_times)
 
         # # Get Antenna
@@ -874,7 +897,7 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
         antenna_mount = hdul[adhu].data['MNTSTA']
         try:
             antenna_diameter = hdul[adhu].data['DIAMETER']
-        except ValueError:
+        except (ValueError, KeyError):
             antenna_diameter = None
         # To reading some UVFITS with wrong numbers of antenna
         if antnum is not None:

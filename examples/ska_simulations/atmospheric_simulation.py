@@ -56,9 +56,10 @@ def cli_parser():
     par = argparse.ArgumentParser(
         description='Distributed simulation of atmosphere induced errors for SKA-MID')
     par.add_argument('--context', type=str, default='singlesource',
-                     help='Type of sky: s3sky or double source or singlesource or null')
+                     help='Type of sky: s3sky or doublesource or singlesource or null')
     par.add_argument('--imaging_context', type=str, default='2d',
-                     help='Type of imaging transforms to use: 2d or ng')
+                     help='Type of imaging transforms to use: 2d or ng. '
+                          'The latter requires that Nifty Gridder be installed')
     par.add_argument('--telescope', type=str, default='MID',
                      help='Telescope: MID or LOW')
 
@@ -91,7 +92,7 @@ def cli_parser():
     par.add_argument('--selfcal', type=str, default='True',
                      help='Selfcalibrate?')
     par.add_argument('--zerow', type=str, default='True',
-                     help='Set w to zero?')
+                     help='Set w to zero? Use together with --imaging_context 2d')
     # Control parameters
     par.add_argument('--show', type=str, default='False', help='Show images?')
     par.add_argument('--export_images', type=str, default='False',
@@ -104,7 +105,7 @@ def cli_parser():
     # Dask parameters; matched to P3
     par.add_argument('--serial', type=str, default='False',
                      help='Use serial processing (very slow)')
-    par.add_argument('--nthreads', type=int, default=1,
+    par.add_argument('--nthreads', type=int, default=4,
                      help='Number of threads in Nifty Gridder')
     par.add_argument('--memory', type=int, default=64,
                      help='Memory per Dask worker (GB)')
