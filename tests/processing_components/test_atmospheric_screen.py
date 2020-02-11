@@ -14,7 +14,7 @@ from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.image.operations import import_image_from_fits, qa_image, \
     export_image_to_fits
 from rascil.processing_components.imaging.primary_beams import create_low_test_beam
-from rascil.processing_components.simulation.ionospheric_screen import create_gaintable_from_screen, \
+from rascil.processing_components.simulation.atmospheric_screen import create_gaintable_from_screen, \
     grid_gaintable_to_screen, plot_gaintable_on_screen
 from rascil.processing_components.simulation import create_low_test_skycomponents_from_gleam
 from rascil.processing_components.simulation import create_named_configuration

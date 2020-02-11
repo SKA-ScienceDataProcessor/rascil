@@ -72,7 +72,7 @@ class TestPointing(unittest.TestCase):
                 plt.xlabel('Time (s)')
                 plt.ylabel('Gain')
                 plt.title('test_create_gaintable_from_pointingtable_%s' % telescope)
-                plt.show()
+                plt.show(block=False)
             assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
 
 

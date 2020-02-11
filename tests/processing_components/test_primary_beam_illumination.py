@@ -69,7 +69,7 @@ class TestPrimaryBeams(unittest.TestCase):
                 ax.imshow(vp.data[0,0])#, vmax=0.1, vmin=-0.01)
                 ax.axis('off')
 
-        plt.show()
+        plt.show(block=False)
 
 if __name__ == '__main__':
     unittest.main()

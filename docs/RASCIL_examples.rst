@@ -43,10 +43,11 @@ SKA simulations
 The SKA simulations make full use of the capabilities of RASCIL.
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    examples/ska_simulations/surface_simulation.rst
    examples/ska_simulations/pointing_simulation.rst
+   examples/ska_simulations/atmospheric_simulation.rst
 
 * :ref:`genindex`
 * :ref:`modindex`

@@ -1,37 +1,35 @@
-.. _ska_surface_simulation:
+.. _ska_atmospheric_simulation:
 
-SKA dish surface simulations
-============================
+SKA atmospheric non-isoplanatism simulations
+============================================
 
-This measures the change in a MID dirty image introduced by gravity-induced primary beam errors:
+This calculates the change in a MID dirty image caused by atmosphere non-isoplanatism errors:
 
-    - The sky can be a point source at the half power point or a realistic sky constructed from S3-SEX catalog.
+    - The sky can be a point source or double source  at the half power point or a realistic sky constructed from S3-SEX catalog.
     - The observation is by MID over a range of hour angles
-    - The visibility is calculated by Direct Fourier transform after having applied the antenna voltage beam for the pointing error for each dish.
+    - The atmosphere is modelled in a FITS cube generated using the ARatmospy packed. The screen moves at 30km/s, and is modeled as a thin screen at height 3km
+    - The phase for each dish and each source is calculated from the screen using the pierce points. Each source has its own gaintable.
+    - The visibility is calculated by Direct Fourier transform after application of the gaintable for each source.
     - Processing can be divided into chunks of time (default 1800s)
     - The noise level is measured by calculating the change in a small field dirty image induced by the pointing errors.
     - Dask is used to distribute the processing over a number of workers.
     - Various plots can be produced, The primary output is a csv file containing information about the statistics of the residual images.
 
-
-Running this script requires interpolated primary beams that are currently only available on P3.
-
-The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-surface, and the simulation results are summarised in a SKA internal report: SKA‐TEL‐SKO‐0001639, "Simulation of SKA1 Systematic Results".
+The full set of test scripts are available at: https://github.com/ska-telescope/sim-atmosphere.
 
 Command line arguments
 ++++++++++++++++++++++
 
 .. argparse::
-   :filename: ../examples/ska_simulations/surface_simulation.py
+   :filename: ../examples/ska_simulations/atmospheric_simulation.py
    :func: cli_parser
-   :prog: surface_simulation.py
-
+   :prog: atmospheric_simulation.py
 
 The python script is:
 
 .. code:: python
 
-     """Simulation of the effect of gravity-induced primary beam errors on MID observations
+     """Simulation of the effect of non-isoplanatic pahse errore on MID observations
      
      This measures the change in a dirty image induced by various errors:
          - The sky can be a point source at the half power point or a realistic sky constructed from S3-SEX catalog.
@@ -56,15 +54,17 @@ The python script is:
      
      from rascil.data_models.parameters import rascil_path
      from rascil.data_models.polarisation import PolarisationFrame
-     from rascil.processing_components import show_image, qa_image, export_image_to_fits, \
-         create_vp, \
-         create_image_from_visibility, advise_wide_field, plot_azel, \
+     from rascil.processing_components import plot_azel, \
          plot_uvcoverage, find_pb_width_null, create_simulation_components, \
-         convert_blockvisibility_to_visibility, convert_visibility_to_blockvisibility
-     from rascil.workflows import invert_list_rsexecute_workflow, sum_invert_results_rsexecute, \
-         weight_list_rsexecute_workflow, calculate_residual_from_gaintables_rsexecute_workflow, \
-         create_surface_errors_gaintable_rsexecute_workflow, \
+         convert_blockvisibility_to_visibility, \
+         convert_visibility_to_blockvisibility, show_image, qa_image, export_image_to_fits, \
+         create_image_from_visibility, advise_wide_field, \
+         apply_beam_to_skycomponent, create_pb, import_image_from_fits
+     from rascil.workflows import invert_list_rsexecute_workflow, \
+         sum_invert_results_rsexecute, weight_list_rsexecute_workflow, \
+         create_atmospheric_errors_gaintable_rsexecute_workflow, \
          create_standard_mid_simulation_rsexecute_workflow, \
+         calculate_selfcal_residual_from_gaintables_rsexecute_workflow,\
          sum_invert_results
      from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute, \
          get_dask_client
@@ -85,11 +85,13 @@ The python script is:
          import argparse
      
          par = argparse.ArgumentParser(
-             description='Distributed simulation of dish deformation errors for SKA-MID')
+             description='Distributed simulation of atmosphere induced errors for SKA-MID')
          par.add_argument('--context', type=str, default='singlesource',
-                          help='Type of sky: s3sky or singlesource or null')
+                          help='Type of sky: s3sky or double source or singlesource or null')
          par.add_argument('--imaging_context', type=str, default='2d',
                           help='Type of imaging transforms to use: 2d or ng')
+         par.add_argument('--telescope', type=str, default='MID',
+                          help='Telescope: MID or LOW')
      
          # Observation definition
          par.add_argument('--ra', type=float, default=+15.0,
@@ -109,39 +111,48 @@ The python script is:
                           help='Number of pixels in dirty image used for statistics')
          par.add_argument('--use_natural', type=str, default='False',
                           help='Use natural weighting?')
-         par.add_argument('--offset_dir', type=float, nargs=2, default=[1.0, 0.0],
-                          help='Multipliers for null offset')
          par.add_argument('--pbradius', type=float, default=2.0,
                           help='Radius of s3sky sources to include (in HWHM)')
          par.add_argument('--pbtype', type=str, default='MID',
                           help='Primary beam model: MID, MID_GAUSS, MID_FEKO_B1, MID_FEKO_B2, MID_FEKO_Ku')
          par.add_argument('--flux_limit', type=float, default=1.0,
                           help='Flux limit in selecting sources for s3sky (Jy)')
+         par.add_argument('--make_residual', type=str, default='True',
+                          help='Make residual image?')
+         par.add_argument('--selfcal', type=str, default='True',
+                          help='Selfcalibrate?')
+         par.add_argument('--zerow', type=str, default='True',
+                          help='Set w to zero?')
          # Control parameters
          par.add_argument('--show', type=str, default='False', help='Show images?')
          par.add_argument('--export_images', type=str, default='False',
                           help='Export images in fits format?')
          par.add_argument('--use_agg', type=str, default="True",
                           help='Use Agg matplotlib backend?')
-         par.add_argument('--use_radec', type=str, default="False",
-                          help='Calculate primary beams in RADEC?')
          default_shared_path = rascil_path("data/configurations")
          par.add_argument('--shared_directory', type=str, default=default_shared_path,
                           help='Location of configuration files (default is RASCIL data/configurations)')
          # Dask parameters; matched to P3
+         par.add_argument('--serial', type=str, default='False',
+                          help='Use serial processing (very slow)')
          par.add_argument('--nthreads', type=int, default=1,
-                          help='Number of threads per Dask worker')
+                          help='Number of threads in Nifty Gridder')
          par.add_argument('--memory', type=int, default=64,
                           help='Memory per Dask worker (GB)')
          par.add_argument('--nworkers', type=int, default=16, help='Number of Dask workers')
+         par.add_argument('--dask_worker_space', type=str, default=".",
+                          help='Location for dask worker files')
          # Simulation parameters
          par.add_argument('--time_chunk', type=float, default=1800.0,
-                          help="Time for a chunk (s)")
-         par.add_argument('--elevation_sampling', type=float, default=1.0,
-                          help='Elevation sampling 1 deg or coarser (deg)')
-         par.add_argument('--vp_directory', type=str,
-                          default='/mnt/storage-ssd/tim/Code/sim-mid-surface/beams/interpolated/',
-                          help='Directory for interpolated beams (default in on P3)')
+                          help="Chunking of time for simulation (s)")
+         par.add_argument('--type_atmosphere', type=str, default='troposphere',
+                          help="Type: troposphere or ionosphere")
+         par.add_argument('--screen', type=str, default=None,
+                          help="Screen as fits file")
+         par.add_argument('--height', type=float, default=3e3,
+                          help="Nominal height of screen")
+         par.add_argument('--r0', nargs='+', type=float, default=[5e3,15e3,45e3],
+                          help="List of r0 values to test (meters)")
          return par
      
      
@@ -149,7 +160,7 @@ The python script is:
      
          start_epoch = time.asctime()
          log.info(
-             "\nDistributed simulation of dish deformation errors for SKA-MID\nStarted at %s\n" % start_epoch)
+             "\nDistributed simulation of atmosphere induced errors\nStarted at %s\n" % start_epoch)
      
          memory_use = dict()
      
@@ -167,30 +178,35 @@ The python script is:
          from matplotlib import pyplot as plt
      
          band = args.band
+         telescope = args.telescope
          ra = args.ra
          declination = args.declination
-         use_radec = args.use_radec == "True"
          use_natural = args.use_natural == "True"
          export_images = args.export_images == "True"
          integration_time = args.integration_time
          time_range = args.time_range
          time_chunk = args.time_chunk
-         offset_dir = args.offset_dir
          pbtype = args.pbtype
          pbradius = args.pbradius
          rmax = args.rmax
          flux_limit = args.flux_limit
          npixel = args.npixel
          shared_directory = args.shared_directory
+         type_atmosphere = args.type_atmosphere
+         height = args.height
+         make_residual = args.make_residual == "True"
+         selfcal = args.selfcal == "True"
+         zerow = args.zerow == "True"
      
+         screen = args.screen
+         screen_image = import_image_from_fits(screen)
          # Simulation specific parameters
-         vp_directory = args.vp_directory
-         elevation_sampling = args.elevation_sampling
      
          show = args.show == 'True'
          context = args.context
          nworkers = args.nworkers
-         threads_per_worker = args.nthreads
+         threads_per_worker = 1
+         nthreads = args.nthreads
          memory = args.memory
          serial = args.serial == "True"
      
@@ -206,17 +222,21 @@ The python script is:
          else:
              print("Will use dask processing")
              if nworkers > 0:
+                 print("{nworkers} workers each with {memory}GB, worker files in {local_dir}".format(nworkers=nworkers,
+                                                                            memory=memory,
+                                                                            local_dir=args.dask_worker_space))
                  client = get_dask_client(n_workers=nworkers,
                                           memory_limit=memory * 1024 * 1024 * 1024,
-                                          threads_per_worker=threads_per_worker)
+                                          threads_per_worker=threads_per_worker,
+                                          local_dir=args.dask_worker_space)
                  rsexecute.set_client(client=client)
              else:
                  client = get_dask_client()
-         rsexecute.set_client(client=client)
+                 rsexecute.set_client(client=client)
      
-         actualnworkers = len(rsexecute.client.scheduler_info()['workers'])
-         nworkers = actualnworkers
-         print("Using %s Dask workers" % nworkers)
+             actualnworkers = len(rsexecute.client.scheduler_info()['workers'])
+             nworkers = actualnworkers
+             print("Using %s Dask workers" % nworkers)
      
          time_started = time.time()
      
@@ -232,6 +252,8 @@ The python script is:
          else:
              raise ValueError("Unknown band %s" % band)
      
+         frequency = numpy.array(frequency)
+     
          channel_bandwidth = [1e7]
          phasecentre = SkyCoord(ra=ra * u.deg, dec=declination * u.deg, frame='icrs',
                                 equinox='J2000')
@@ -240,31 +262,26 @@ The python script is:
                                                                         phasecentre,
                                                                         time_range, time_chunk,
                                                                         integration_time,
-                                                                        shared_directory)
+                                                                        shared_directory,
+                                                                        zerow=zerow)
          future_bvis_list = rsexecute.persist(bvis_graph)
          bvis_list0 = rsexecute.compute(bvis_graph[0], sync=True)
          nchunks = len(bvis_graph)
          memory_use['bvis_list'] = nchunks * bvis_list0.size()
      
-         vis_graph = [rsexecute.execute(convert_blockvisibility_to_visibility)(bv) for bv in
-                      future_bvis_list]
-         future_vis_list = rsexecute.persist(vis_graph, sync=True)
-     
-         vis_list0 = rsexecute.compute(vis_graph[0], sync=True)
-         memory_use['vis_list'] = nchunks * vis_list0.size()
+         memory_use['vis_list'] = nchunks * bvis_list0.size()
      
          # We need the HWHM of the primary beam, and the location of the nulls
          HWHM_deg, null_az_deg, null_el_deg = find_pb_width_null(pbtype, frequency)
      
          HWHM = HWHM_deg * numpy.pi / 180.0
      
-         FOV_deg = 8.0 * 1.36e9 / frequency[0]
+         FOV_deg = 4.0 * 1.36e9 / frequency[0]
          print('%s: HWHM beam = %g deg' % (pbtype, HWHM_deg))
      
-         advice_list = rsexecute.execute(advise_wide_field)(future_vis_list[0],
+         advice_list = rsexecute.execute(advise_wide_field)(bvis_list0,
                                                             guard_band_image=1.0,
                                                             delA=0.02)
-     
          advice = rsexecute.compute(advice_list, sync=True)
          pb_npixel = 1024
          d2r = numpy.pi / 180.0
@@ -272,28 +289,31 @@ The python script is:
          cellsize = advice['cellsize']
      
          if show:
-             vis_list = rsexecute.compute(vis_graph, sync=True)
-             plot_uvcoverage(vis_list, title=basename)
-             plt.savefig('uvcoverage.png')
-             plt.show(block=False)
-     
              bvis_list = rsexecute.compute(bvis_graph, sync=True)
              plot_azel(bvis_list, title=basename)
              plt.savefig('azel.png')
              plt.show(block=False)
      
-         # Now construct the components
+             vis_list = rsexecute.compute(bvis_graph, sync=True)
+             plot_uvcoverage(vis_list, title=basename)
+             plt.savefig('uvcoverage.png')
+             plt.show(block=False)
+     
+        # Now construct the components
+         print("Constructing components")
          original_components, offset_direction = create_simulation_components(context,
                                                                               phasecentre,
                                                                               frequency,
                                                                               pbtype,
-                                                                              offset_dir,
+                                                                              [0.0, 0.0],
                                                                               flux_limit,
                                                                               pbradius * HWHM,
                                                                               pb_npixel,
-                                                                              pb_cellsize)
+                                                                              pb_cellsize,
+                                                                              fov=10)
      
-         scenarios = ['']
+         scenarios = args.r0
+         print("Testing r0 values: {scenarios}".format(scenarios=scenarios))
      
          # Estimate resource usage
          nants = len(bvis_list0.configuration.names)
@@ -311,27 +331,28 @@ The python script is:
          print("Summary of processing:")
          print("    There are %d workers" % nworkers)
          print("    There are %d separate visibility time chunks being processed" % len(
-             future_vis_list))
+             future_bvis_list))
          print("    The integration time within each chunk is %.1f (s)" % integration_time)
          print("    There are a total of %d integrations per chunk" % ntimes)
          print("    There are %d baselines" % nbaselines)
          print("    There are %d components" % len(original_components))
          print("    %d scenario(s) will be tested" % len(scenarios))
-         ntotal = nchunks * ntimes * nbaselines * len(original_components) * len(scenarios)
-         print("    Total processing %g chunks-times-baselines-components-scenarios" % ntotal)
+         ntotal = ntimes * nbaselines * len(original_components) * len(scenarios)
+         print("    Total processing %g times-baselines-components-scenarios" % ntotal)
          print("    Approximate total memory use for data = %.3f GB" % total_memory_use)
-         nworkers = len(rsexecute.client.scheduler_info()['workers'])
-         print("    Using %s Dask workers" % nworkers)
+         if not serial:
+             nworkers = len(rsexecute.client.scheduler_info()['workers'])
+             print("    Using %s Dask workers" % nworkers)
      
          # Uniform weighting
-         psf_list = [rsexecute.execute(create_image_from_visibility)(v, npixel=npixel,
-                                                                     frequency=frequency,
-                                                                     nchan=nfreqwin,
-                                                                     cellsize=cellsize,
-                                                                     phasecentre=phasecentre,
-                                                                     polarisation_frame=PolarisationFrame(
-                                                                         "stokesI"))
-                     for v in future_vis_list]
+         psf_list = [
+             rsexecute.execute(create_image_from_visibility)(v, npixel=npixel,
+                                                             frequency=frequency,
+                                                             nchan=nfreqwin, cellsize=cellsize,
+                                                             phasecentre=phasecentre,
+                                                             polarisation_frame=PolarisationFrame(
+                                                                 "stokesI"))
+             for v in future_bvis_list]
          psf_list = rsexecute.compute(psf_list, sync=True)
          future_psf_list = rsexecute.scatter(psf_list)
          del psf_list
@@ -341,60 +362,90 @@ The python script is:
          else:
              print("Using uniform weighting")
      
-             vis_list = weight_list_rsexecute_workflow(future_vis_list, future_psf_list)
-             vis_list = rsexecute.compute(vis_list, sync=True)
-             future_vis_list = rsexecute.scatter(vis_list)
-             del vis_list
-     
-             bvis_list = [rsexecute.execute(convert_visibility_to_blockvisibility)(vis) for vis
-                          in future_vis_list]
+             vis_list = [rsexecute.execute(convert_blockvisibility_to_visibility)(bvis)
+                          for bvis in future_bvis_list]
+             vis_list = weight_list_rsexecute_workflow(vis_list, future_psf_list)
+             bvis_list = [rsexecute.execute(convert_visibility_to_blockvisibility)(vis)
+                          for vis in vis_list]
              bvis_list = rsexecute.compute(bvis_list, sync=True)
              future_bvis_list = rsexecute.scatter(bvis_list)
              del bvis_list
      
-         print("Inverting to get PSF")
-         psf_list = invert_list_rsexecute_workflow(future_vis_list, future_psf_list,
-                                                   args.imaging_context, dopsf=True)
-         psf_list = rsexecute.compute(psf_list, sync=True)
-         psf, sumwt = sum_invert_results(psf_list)
-         print("PSF sumwt ", sumwt)
-         if export_images:
-             export_image_to_fits(psf, 'PSF_rascil.fits')
-         if show:
-             show_image(psf, cm='gray_r', title='%s PSF' % basename, vmin=-0.01, vmax=0.1)
-             plt.savefig('PSF_rascil.png')
-             plt.show(block=False)
-         del psf_list
-         del future_psf_list
+         dopsf = False
+         if dopsf:
+             print("Calculating PSF")
+             imaging_context = args.imaging_context
+             if imaging_context == "ng":
+                 psf_list = invert_list_rsexecute_workflow(future_bvis_list, future_psf_list,
+                                                           args.imaging_context, dopsf=True,
+                                                           verbosity=0, nthreads=nthreads,
+                                                           do_wstacking=not zerow)
+             else:
+                 psf_list = invert_list_rsexecute_workflow(future_bvis_list, future_psf_list,
+                                                           args.imaging_context, dopsf=True,
+                                                           verbosity=0, nthreads=nthreads,
+                                                           do_wstacking=not zerow)
      
-         # ### Calculate the voltage pattern without errors
-         vp_list = [rsexecute.execute(create_image_from_visibility)(bv, npixel=pb_npixel,
-                                                                    frequency=frequency,
-                                                                    nchan=nfreqwin,
-                                                                    cellsize=pb_cellsize,
-                                                                    phasecentre=phasecentre,
-                                                                    override_cellsize=False)
-                    for bv in future_bvis_list]
-         print("Constructing voltage pattern")
-         vp_list = [rsexecute.execute(create_vp)(vp, pbtype, pointingcentre=phasecentre,
-                                                 use_local=not use_radec)
-                    for vp in vp_list]
-         future_vp_list = rsexecute.persist(vp_list)
-         del vp_list
+             psf_list = rsexecute.compute(psf_list, sync=True)
+             psf, sumwt = sum_invert_results(psf_list)
+             print("PSF sumwt ", sumwt)
+             print(qa_image(psf, context='PSF'))
      
-         # Make one image per component
+             if export_images:
+                 export_image_to_fits(psf, 'PSF_rascil.fits')
+             if show:
+                 show_image(psf, cm='gray_r', title='%s PSF' % basename, vmin=-0.01, vmax=0.1)
+                 plt.savefig('PSF_rascil.png')
+                 plt.show(block=False)
+             del psf_list
+             del future_psf_list
+     
+         if context == "s3sky":
+             pb_list = [
+                 rsexecute.execute(create_image_from_visibility)(bv, npixel=pb_npixel,
+                                                                 frequency=frequency,
+                                                                 nchan=nfreqwin,
+                                                                 cellsize=pb_cellsize,
+                                                                 phasecentre=phasecentre,
+                                                                 override_cellsize=False,
+                                                                 polarisation_frame=PolarisationFrame(
+                                                                     "stokesI"))
+                 for bv in future_bvis_list]
+             pb = rsexecute.compute(pb_list[0], sync=True)
+             del pb_list
+     
+             print("There are " + str(
+                 len(original_components)) + " components before pb application")
+     
+             pb = create_pb(pb, pbtype, use_local=False)
+             if show:
+                 show_image(pb, cm='gray_r', title='%s Primary beam' % basename,
+                            components=original_components)
+                 plt.savefig('PB.png')
+                 plt.show(block=False)
+     
+             original_components = apply_beam_to_skycomponent(original_components, pb)
+             print("There are " + str(
+                 len(original_components)) + " components after pb application")
+             assert len(original_components) > 0, "No components after applying primary beam"
+     
+         # Make one image per visibility
          future_model_list = [
-             rsexecute.execute(create_image_from_visibility)(future_vis_list[0], npixel=npixel,
+             rsexecute.execute(create_image_from_visibility)(fvis, npixel=npixel,
                                                              frequency=frequency,
                                                              nchan=nfreqwin, cellsize=cellsize,
-                                                             phasecentre=offset_direction,
+                                                             phasecentre=phasecentre,
                                                              polarisation_frame=PolarisationFrame(
                                                                  "stokesI"))
-             for i, _ in enumerate(original_components)]
+             for fvis in future_bvis_list]
      
          filename = seqfile.findNextFile(
-             prefix='surface_simulation_%s_' % socket.gethostname(), suffix='.csv')
+             prefix='atmospheric_simulation_%s_' % socket.gethostname(),
+             suffix='.csv')
          print('Saving results to %s' % filename)
+         plotfile = seqfile.findNextFile(
+             prefix='atmospheric_simulation_%s_' % socket.gethostname(),
+             suffix='.png')
      
          epoch = time.strftime("%Y-%m-%d %H:%M:%S")
      
@@ -411,6 +462,7 @@ The python script is:
              result = dict()
              result['context'] = context
              result['nb_name'] = sys.argv[0]
+             result['plotfile'] = plotfile
              result['hostname'] = socket.gethostname()
              result['epoch'] = epoch
              result['basename'] = basename
@@ -419,36 +471,47 @@ The python script is:
              result['pb_npixel'] = pb_npixel
              result['flux_limit'] = flux_limit
              result['pbtype'] = pbtype
-             result['offset_dir'] = offset_dir
              result['ra'] = ra
              result['declination'] = declination
-             result['use_radec'] = use_radec
              result['use_natural'] = use_natural
              result['integration_time'] = integration_time
              result['ntotal'] = ntotal
-             result['se'] = scenario
+             result['r0'] = scenario
+             result['type_atmosphere'] = type_atmosphere
              result['band'] = band
              result['frequency'] = frequency
+             result['height'] = height
+             result['screen'] = screen
+             result['make_residual'] = make_residual
+             result['selfcal'] = selfcal
      
              a2r = numpy.pi / (3600.0 * 180.0)
      
              rsexecute.init_statistics()
      
+             # Calculate gaintables from the screen_image
              no_error_gtl, error_gtl = \
-                 create_surface_errors_gaintable_rsexecute_workflow(band, future_bvis_list,
-                                                                    original_components,
-                                                                    vp_directory=vp_directory,
-                                                                    use_radec=use_radec,
-                                                                    show=show,
-                                                                    basename=basename)
+                 create_atmospheric_errors_gaintable_rsexecute_workflow(future_bvis_list,
+                                                                        original_components,
+                                                                        r0=scenario,
+                                                                        screen=screen_image,
+                                                                        height=height,
+                                                                        type_atmosphere=type_atmosphere,
+                                                                        show=show,
+                                                                        basename=basename)
      
-             # Now make all the residual images
+             # Now make all the residual images using these gaintables
              vis_comp_chunk_dirty_list = \
-                 calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list,
-                                                                       original_components,
-                                                                       future_model_list,
-                                                                       no_error_gtl, error_gtl,
-                                                                       context=args.imaging_context)
+                 calculate_selfcal_residual_from_gaintables_rsexecute_workflow(
+                     future_bvis_list,
+                     original_components,
+                     future_model_list,
+                     no_error_gtl, error_gtl,
+                     residual=make_residual,
+                     selfcal=selfcal,
+                     context=args.imaging_context,
+                     nthreads=nthreads,
+                     do_wstacking=not zerow)
      
              # Add the resulting images
              error_dirty_list = sum_invert_results_rsexecute(vis_comp_chunk_dirty_list)
@@ -456,25 +519,29 @@ The python script is:
              # Actually compute the graph assembled above
              error_dirty, sumwt = rsexecute.compute(error_dirty_list, sync=True)
              print("Dirty image sumwt", sumwt)
-             del error_dirty_list
-             print(qa_image(error_dirty))
+             del error_dirty_list, no_error_gtl, error_gtl, vis_comp_chunk_dirty_list
+     
+             if export_images:
+                 export_image_to_fits(error_dirty,
+                                      "residual_r0{scenario}.fits".format(scenario=scenario))
      
              if show:
-                 show_image(error_dirty, cm='gray_r')
-                 plt.savefig('residual_image.png')
+                 show_image(error_dirty, cm='gray_r',
+                            title='Residual r0{scenario}'.format(scenario=scenario),
+                            components=original_components)
+                 plt.savefig('residual_r0{scenario}_image.png'.format(scenario=scenario))
                  plt.show(block=False)
      
-             qa = qa_image(error_dirty)
-             _, _, ny, nx = error_dirty.shape
+             qa = qa_image(error_dirty, context=scenario)
+             print(qa)
              for field in ['maxabs', 'rms', 'medianabs']:
                  result["onsource_" + field] = qa.data[field]
-             result['onsource_abscentral'] = numpy.abs(
-                 error_dirty.data[0, 0, ny // 2, nx // 2])
      
-             qa_psf = qa_image(psf)
-             _, _, ny, nx = psf.shape
-             for field in ['maxabs', 'rms', 'medianabs']:
-                 result["psf_" + field] = qa_psf.data[field]
+             if dopsf:
+                 qa_psf = qa_image(psf)
+                 _, _, ny, nx = psf.shape
+                 for field in ['maxabs', 'rms', 'medianabs']:
+                     result["psf_" + field] = qa_psf.data[field]
      
              result['elapsed_time'] = time.time() - time_started
              print('Elapsed time = %.1f (s)' % result['elapsed_time'])
@@ -485,10 +552,10 @@ The python script is:
      
          print("Total processing %g times-baselines-components-scenarios" % ntotal)
          processing_rate = ntotal / (nworkers * (time.time() - time_started))
-         print(
-             "Processing rate of chunk-time-baseline-component-scenario = %g per worker-second" % processing_rate)
+         print("Processing rate of time-baseline-component-scenario = %g per worker-second"
+               % processing_rate)
      
-         rsexecute.save_statistics(name='surface_simulation')
+         rsexecute.save_statistics(name='atmospheric_simulation')
      
          for result in results:
              result["processing_rate"] = processing_rate
@@ -502,9 +569,37 @@ The python script is:
                  writer.writerow(result)
              csvfile.close()
      
-         rsexecute.close()
+         title = '%s, %.3f GHz, %d times %s \n%s %s %s' % \
+                 (context, frequency[0] * 1e-9, ntimes, type_atmosphere, socket.gethostname(),
+                  epoch,
+                  basename)
+         bar_width = 0.30
+         opacity = 0.8
      
-         log.info("\nDistributed simulation of dish deformation errors for SKA-MID")
+         plt.clf()
+         index = numpy.arange(len(scenarios))
+         fig, ax = plt.subplots()
+         colors = ['b', 'r', 'g', 'y']
+         for ifield, field in enumerate(['onsource_maxabs', 'onsource_rms',
+                                         'onsource_medianabs']):
+             plt.bar(index + ifield * bar_width,
+                     [1e6 * result[field] for result in results],
+                     bar_width, label=field, color=colors[ifield],
+                     alpha=opacity)
+             ax.set_yscale('log')
+     
+         plt.xlabel('r0 (meters)')
+         plt.ylabel('Error (uJy)')
+         plt.xticks(numpy.arange(len(scenarios)) + 1.0 * bar_width, scenarios)
+         plt.title(title)
+         plt.legend(fontsize='x-small')
+         print('Saving plot to %s' % plotfile)
+     
+         plt.tight_layout()
+         plt.savefig(plotfile)
+         plt.show(block=False)
+     
+         log.info("\nDistributed simulation of atmospheric errors for SKA-MID")
          log.info("Started at  %s" % start_epoch)
          log.info("Finished at %s" % time.asctime())
 
@@ -515,11 +610,14 @@ The shell script to run is:
 
      #!/bin/bash
      #!
-     python surface_simulation.py --context s3sky --rmax 1e5 --flux_limit 0.003 \
-      --show False --elevation_sampling 5.0 --declination -45 \
-     --vp_directory /mnt/storage-ssd/tim/Code/sim-mid-surface/beams/interpolated/ \
-      --band B2 --pbtype MID_FEKO_B2  --integration_time 120 --use_agg True \
-     --time_chunk 120 --time_range -6 6  | tee surface_simulation_P3_login.log
+     python atmospheric_simulation.py --context doublesource --frequency 1.36e9 \
+     --rmax 1e4 --flux_limit 0.003 --show True --pbtype MID_GAUSS --memory 32 \
+     --integration_time 90 --use_agg False --type_atmosphere ionosphere \
+     --time_range -4 4 --nworkers 16 --time_chunk 1800 --use_natural True \
+     --screen ../../screens/mid_screen_5000.0r0_0.033rate.fits --serial False \
+     --make_residual True --selfcal True --imaging_context ng --npixel 5120 \
+     --zerow False --dask_worker_space /mnt/storage-ssd/tim/dask-worker-space \
+     --nthreads 16 | tee atmospheric_simulation.log
 
 The SLURM batch file is:
 
@@ -538,13 +636,13 @@ The SLURM batch file is:
      
      #! sbatch directives begin here ###############################
      #! Name of the job:
-     #SBATCH -J TYPE1
+     #SBATCH -J ATMOS
      #! Which project should be charged:
      #SBATCH -A SKA-SDP
      #! How many whole nodes should be allocated?
-     #SBATCH --nodes=12
+     #SBATCH --nodes=16
      #! How many (MPI) tasks will there be in total? (<= nodes*16)
-     #SBATCH --ntasks=48
+     #SBATCH --ntasks=33
      #! Memory limit: P3 has roughly 107GB per node
      ##SBATCH --mem 50000
      #! How much wallclock time will be required?
@@ -570,7 +668,8 @@ The SLURM batch file is:
      module purge                               # Removes all modules still loaded
      
      #! Set up python
-     export PYTHONPATH=$PYTHONPATH:$RASCIL
+     # . $HOME/alaska-venv/bin/activate
+     export PYTHONPATH=$PYTHONPATH:$ARL
      echo "PYTHONPATH is ${PYTHONPATH}"
      
      echo -e "Running python: `which python`"
@@ -585,6 +684,7 @@ The SLURM batch file is:
      #! Create a hostfile:
      scontrol show hostnames $SLURM_JOB_NODELIST | uniq > hostfile.$JOBID
      
+     
      scheduler=$(head -1 hostfile.$JOBID)
      hostIndex=0
      for host in `cat hostfile.$JOBID`; do
@@ -595,25 +695,26 @@ The SLURM batch file is:
              sleep 5
          fi
          echo "run dask-worker"
-         ssh $host dask-worker --interface ib0  --nprocs 4 --nthreads 1  \
-         --memory-limit 35GB   ${scheduler}:8786  &
+         ssh $host dask-worker --host ${host} --nprocs 2 --nthreads 1  \
+         --memory-limit 16GB --local-directory /mnt/storage-ssd/tim/dask-workspace/${host} $scheduler:8786  &
              sleep 1
          hostIndex="1"
      done
      echo "Scheduler and workers now running"
      
-     rm -rf worker-*
-     
      #! We need to tell dask Client (inside python) where the scheduler is running
      export RASCIL_DASK_SCHEDULER=${scheduler}:8786
      echo "Scheduler is running at ${scheduler}"
      
-     CMD="python ../surface_simulation_elevation.py --context s3sky --rmax 1e5 --flux_limit 0.003 \
-     --show False --elevation_sampling 1.0 --declination -45 \
-     --vp_directory /mnt/storage-ssd/tim/Code/sim-mid-surface/beams/interpolated/ \
-     --band B2 --pbtype MID_FEKO_B2  --integration_time 120 --use_agg True \
-     --time_chunk 120 --time_range -6 6 --nworkers 16 --memory 32 | tee example_simulation_P3_cluster.log"
-     
+     CMD="python atmospheric_simulation.py --context doublesource --frequency 1.36e9 \
+     --rmax 1e4 --flux_limit 0.003 --show True --pbtype MID_GAUSS --memory 32 \
+     --integration_time 90 --use_agg False --type_atmosphere ionosphere \
+     --time_range -4 4 --nworkers 16 --time_chunk 1800 --use_natural True \
+     --screen ../../screens/mid_screen_5000.0r0_0.033rate.fits --serial False \
+     --make_residual True --selfcal True --imaging_context ng --npixel 5120 \
+     --zerow False --dask_worker_space /mnt/storage-ssd/tim/dask-worker-space \
+     --nthreads 16 | tee atmospheric_simulation.log
+     "
      echo "About to execute $CMD"
      
      eval $CMD

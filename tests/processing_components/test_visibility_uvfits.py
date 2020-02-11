@@ -100,7 +100,7 @@ class TestCreateMS(unittest.TestCase):
                 import matplotlib.pyplot as plt
                 from rascil.processing_components.image.operations import show_image
                 show_image(dirty)
-                plt.show()
+                plt.show(block=False)
             if self.persist: export_image_to_fits(dirty, '%s/test_visibility_uvfits_dirty.fits' % self.dir)
 
 

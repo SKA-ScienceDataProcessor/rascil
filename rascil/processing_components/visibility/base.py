@@ -106,7 +106,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     nrowsperintegration = nbaselines * nch
     rvis = numpy.zeros([nrows, npol], dtype='complex')
     rflags = numpy.zeros([nrows, npol], dtype='int')
-    rweight = numpy.zeros([nrows, npol])
+    rweight = numpy.ones([nrows, npol])
     rtimes = numpy.zeros([nrows])
     rfrequency = numpy.zeros([nrows])
     rchannel_bandwidth = numpy.zeros([nrows])
@@ -232,7 +232,7 @@ def create_blockvisibility(config: Configuration,
     visshape = [ntimes, nants, nants, nchan, npol]
     rvis = numpy.zeros(visshape, dtype='complex')
     rflags = numpy.zeros(visshape, dtype='int')
-    rweight = numpy.zeros(visshape)
+    rweight = numpy.ones(visshape)
     rimaging_weight = numpy.ones(visshape)
     rtimes = numpy.zeros([ntimes])
     ruvw = numpy.zeros([ntimes, nants, nants, 3])
@@ -252,7 +252,7 @@ def create_blockvisibility(config: Configuration,
 
             # Loop over all pairs of antennas. Note that a2>a1
             for a1 in range(nants):
-                rweight[itime, a1, a1, ...] = 1.0
+                rweight[itime, a1, a1, ...] = 0.0
                 for a2 in range(a1 + 1, nants):
                     ruvw[itime, a2, a1, :] = (ant_pos[a2, :] - ant_pos[a1, :])
                     ruvw[itime, a1, a2, :] = (ant_pos[a1, :] - ant_pos[a2, :])

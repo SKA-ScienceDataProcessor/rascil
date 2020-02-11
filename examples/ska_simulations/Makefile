@@ -1,7 +1,8 @@
 
+# Disable built in rules
 .SUFFIXES:
 
-SCs = pointing_simulation.py surface_simulation.py
+SCs = atmospheric_simulation.py pointing_simulation.py surface_simulation.py
 
 RSTs=  $(SCs:.py=.rst)
 
