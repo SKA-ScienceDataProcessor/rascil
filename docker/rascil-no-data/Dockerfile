@@ -41,6 +41,7 @@ RUN pip3 install Cython setuptools && \
     jupyter \
     jupyter_contrib_nbextensions \
     jupyter-server-proxy \
+    jupyterlab \
     matplotlib \
     numpy \
     photutils\
