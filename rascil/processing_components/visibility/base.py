@@ -981,6 +981,11 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
                         bv_uvw[time_index, antenna2, antenna1, 1] = vv[row] * constants.c.value
                         bv_uvw[time_index, antenna2, antenna1, 2] = ww[row] * constants.c.value
                         row += 1
+
+            # Convert negative weights to flags
+            bv_flags[bv_weight<0.0] = 1
+            bv_weight[bv_weight < 0.0] = 0.0
+
             vis_list.append(BlockVisibility(uvw=bv_uvw,
                                             time=bv_times,
                                             frequency=freq[spw_index][channum],
