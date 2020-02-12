@@ -2,7 +2,7 @@
 Running RASCIL under docker
 ***************************
 
-For some of the step below it is helpful to have the RASCIL code tree available. Use::
+For some of the steps below it is helpful to have the RASCIL code tree available. Use::
 
    git clone https://github.com/SKA-ScienceDataProcessor/rascil
    cd rascil
@@ -10,12 +10,12 @@ For some of the step below it is helpful to have the RASCIL code tree available.
 Running on existing docker images
 ---------------------------------
 
-The docker containers for RASCIL are at::
+The docker containers for RASCIL are on github at::
 
     docker.io/timcornwell/rascil-no-data
     docker.io/timcornwell/rascil-full
 
-The first does not have the RASCIL test data but is smaller in size. However, for many of the tests
+The first does not have the RASCIL test data but is smaller in size (2GB vs 4GB). However, for many of the tests
 and demonstrations the test data is needed.
 
 To run RASCIL with your home directory available inside the image::
@@ -101,7 +101,7 @@ Then at the docker prompt, do e.g.::
     cd /Users/timcornwell
     python3 /rascil/cluster_tests/ritoy/cluster_test_ritoy.py localhost:8786
 
-A jupyter notebook is also started by this docker-compose. The URL will be output during the
+A jupyter lab notebook is also started by this docker-compose. The URL will be output during the
 initial set up, e.g.::
 
     notebook_1   | [I 15:17:05.681 NotebookApp] The Jupyter Notebook is running at:
@@ -109,7 +109,9 @@ initial set up, e.g.::
     notebook_1   | [I 15:17:05.682 NotebookApp]  or http://127.0.0.1:8888/?token=0e77cf0e214fb0f5827b35fa5de8bbc5ebed6d4159e3d31e
     notebook_1   | [I 15:17:05.682 NotebookApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
 
-Check on the 127.0.0.1 URL.
+Click on the 127.0.0.1 URL. We have used the jupyter lab interface instead of jupyter notebook interface
+because the former allows control of Dask from the interface. This can be changed in the docker-compose.yml
+file. Note also that the classic notebook interface can be selected at the lab interface.
 
 Customisability
 ---------------

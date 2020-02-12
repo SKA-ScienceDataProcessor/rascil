@@ -20,7 +20,6 @@ WORKDIR /rascil
 # git-lfs is already loaded so we just need to install it
 RUN git lfs pull
 
-RUN pip3 install jupyterlab
 # Use entrypoint script to create a user on the fly and avoid running as root.
 RUN chmod +x /rascil/entrypoint.sh
 ENTRYPOINT ["/rascil/entrypoint.sh"]

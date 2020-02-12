@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
 LABEL author="Tim Cornwell <realtimcornwell@gmail.com>" \
       description="RASCIL no-data reference image" \
@@ -22,6 +22,8 @@ RUN git clone https://github.com/SKA-ScienceDataProcessor/rascil.git
 
 # Set runtime environment variables.
 ENV RASCIL=/rascil
+ENV LC_ALL=C.UTF-8
+ENV LANG=C.UTF-8
 
 # Change to the RASCIL root directory to run the commands below.
 WORKDIR /rascil
@@ -43,13 +45,13 @@ RUN pip3 install Cython setuptools && \
     jupyter-server-proxy \
     jupyterlab \
     matplotlib \
-    numpy \
     photutils\
     python-casacore \
     reproject \
     scikit-image \
     scipy \
     seqfile && \
+    pip3 install "numpy>=1.16.0" && \
     python3 setup.py build && python3 setup.py install && \
     rm -rf /root/.cache
 
