@@ -1,7 +1,7 @@
 FROM ubuntu:20.04
 
 LABEL author="Tim Cornwell <realtimcornwell@gmail.com>" \
-      description="RASCIL reference image" \
+      description="RASCIL no-data reference image" \
       license="Apache2.0"
 
 # Install required system packages.
@@ -21,17 +21,16 @@ RUN apt-get update -y && apt-get install -y \
 RUN git clone https://github.com/SKA-ScienceDataProcessor/rascil.git
 
 # Set runtime environment variables.
-ENV PYTHONPATH=/rascil:$PYTHONPATH
 ENV RASCIL=/rascil
 
 # Change to the RASCIL root directory to run the commands below.
 WORKDIR /rascil
 
+# We choose to put the dask scratch files inside the container.
+# It might be better to map it in with --volume
 RUN mkdir -p /rascil/dask-worker-space && \
     chmod 777 /rascil/dask-worker-space
 
-# run setup (may not be required, as we've added /rascil to the PYTHONPATH)
-# and clear pip cache. Use a single RUN statement to avoid multiple layers.
 RUN pip3 install Cython setuptools && \
     pip3 install aotools \
     astropy \
@@ -39,6 +38,9 @@ RUN pip3 install Cython setuptools && \
     distributed \
     bokeh \
     h5py \
+    jupyter \
+    jupyter_contrib_nbextensions \
+    jupyter-server-proxy \
     matplotlib \
     numpy \
     photutils\
