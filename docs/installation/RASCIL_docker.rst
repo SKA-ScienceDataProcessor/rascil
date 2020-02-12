@@ -12,8 +12,8 @@ Running on existing docker images
 
 The docker containers for RASCIL are at::
 
-    timcornwell/rascil-no-data
-    timcornwell/rascil-full
+    docker.io/timcornwell/rascil-no-data
+    docker.io/timcornwell/rascil-full
 
 The first does not have the RASCIL test data but is smaller in size. However, for many of the tests
 and demonstrations the test data is needed.
@@ -38,8 +38,8 @@ we will show the prompts from inside the container::
      -rw-r--r-- 1 rascil rascil 2102400 Feb 11 14:04 imaging_psf.fits
      -rw-r--r-- 1 rascil rascil 2102400 Feb 11 14:04 imaging_restored.fits
 
-In this example, we change directory to an external location (my home directory in this case),
-and then we run the script using the absolute path name inside the container.
+In this example, we change directory to an external location (my home directory in this case,
+use yours instead), and then we run the script using the absolute path name inside the container.
 
 Running notebooks
 -----------------
