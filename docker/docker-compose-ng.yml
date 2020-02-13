@@ -26,9 +26,9 @@ services:
 
   notebook:
     build:
-      context: ./rascil-full
+      context: ./rascil-notebook
       dockerfile: Dockerfile
-    image: timcornwell/rascil-full
+    image: timcornwell/rascil-notebook
     hostname: notebook
     volumes:
       - "${HOME}:${HOME}"
@@ -36,4 +36,4 @@ services:
       - "8888:8888"
     environment:
       - DASK_SCHEDULER_ADDRESS="tcp://scheduler:8786"
-    command: ["jupyter-notebook", "--no-browser", "--ip", "0.0.0.0"]
+    command: ["jupyter-lab", "--no-browser", "--ip", "0.0.0.0"]

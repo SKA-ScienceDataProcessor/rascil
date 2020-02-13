@@ -2,6 +2,7 @@
 
 
 """
+import os
 import logging
 import unittest
 
@@ -27,6 +28,8 @@ class TestImage(unittest.TestCase):
         
         self.m31image = create_test_image(cellsize=0.0001)
         self.cellsize = 180.0 * 0.0001 / numpy.pi
+        self.persist = os.getenv("RASCIL_PERSIST", False)
+
     
     def test_create_image_(self):
         newimage = create_image(npixel=1024, cellsize=0.001, polarisation_frame=PolarisationFrame("stokesIQUV"),
@@ -39,7 +42,7 @@ class TestImage(unittest.TestCase):
                                                     self.m31image.polarisation_frame)
         add_image(self.m31image, m31model_by_array)
         assert m31model_by_array.shape == self.m31image.shape
-        log.debug(export_image_to_fits(self.m31image, fitsfile='%s/test_model.fits' % (self.dir)))
+        if self.persist: export_image_to_fits(self.m31image, fitsfile='%s/test_model.fits' % (self.dir))
         log.debug(qa_image(m31model_by_array, context='test_create_from_image'))
     
     def test_create_empty_image_like(self):
@@ -110,26 +113,26 @@ class TestImage(unittest.TestCase):
     def test_calculate_image_frequency_moments(self):
         frequency = numpy.linspace(0.9e8, 1.1e8, 9)
         cube = create_low_test_image_from_gleam(npixel=512, cellsize=0.0001, frequency=frequency, flux_limit=1.0)
-        log.debug(export_image_to_fits(cube, fitsfile='%s/test_moments_cube.fits' % (self.dir)))
+        if self.persist: export_image_to_fits(cube, fitsfile='%s/test_moments_cube.fits' % (self.dir))
         original_cube = copy_image(cube)
         moment_cube = calculate_image_frequency_moments(cube, nmoment=3)
-        log.debug(export_image_to_fits(moment_cube, fitsfile='%s/test_moments_moment_cube.fits' % (self.dir)))
+        if self.persist: export_image_to_fits(moment_cube, fitsfile='%s/test_moments_moment_cube.fits' % (self.dir))
         reconstructed_cube = calculate_image_from_frequency_moments(cube, moment_cube)
-        log.debug(export_image_to_fits(reconstructed_cube, fitsfile='%s/test_moments_reconstructed_cube.fits' % (
-            self.dir)))
+        if self.persist: export_image_to_fits(reconstructed_cube, fitsfile='%s/test_moments_reconstructed_cube.fits' % (
+            self.dir))
         error = numpy.std(reconstructed_cube.data - original_cube.data)
         assert error < 0.2
     
     def test_calculate_image_frequency_moments_1(self):
         frequency = numpy.linspace(0.9e8, 1.1e8, 9)
         cube = create_low_test_image_from_gleam(npixel=512, cellsize=0.0001, frequency=frequency, flux_limit=1.0)
-        log.debug(export_image_to_fits(cube, fitsfile='%s/test_moments_1_cube.fits' % (self.dir)))
+        if self.persist: export_image_to_fits(cube, fitsfile='%s/test_moments_1_cube.fits' % (self.dir))
         original_cube = copy_image(cube)
         moment_cube = calculate_image_frequency_moments(cube, nmoment=1)
-        log.debug(export_image_to_fits(moment_cube, fitsfile='%s/test_moments_1_moment_cube.fits' % (self.dir)))
+        if self.persist: export_image_to_fits(moment_cube, fitsfile='%s/test_moments_1_moment_cube.fits' % (self.dir))
         reconstructed_cube = calculate_image_from_frequency_moments(cube, moment_cube)
-        log.debug(export_image_to_fits(reconstructed_cube, fitsfile='%s/test_moments_1_reconstructed_cube.fits' % (
-            self.dir)))
+        if self.persist: export_image_to_fits(reconstructed_cube, fitsfile='%s/test_moments_1_reconstructed_cube.fits' % (
+            self.dir))
         error = numpy.std(reconstructed_cube.data - original_cube.data)
         assert error < 0.2
     
@@ -142,7 +145,7 @@ class TestImage(unittest.TestCase):
         for x in [256, 768]:
             for y in [256, 768]:
                 self.assertAlmostEqual(im.data[0, 0, y, x], -0.46042631800538464, 7)
-        export_image_to_fits(im, '%s/test_wterm.fits' % self.dir)
+        if self.persist: export_image_to_fits(im, '%s/test_wterm.fits' % self.dir)
         assert im.data.shape == (5, 4, 1024, 1024), im.data.shape
         self.assertAlmostEqual(numpy.max(im.data.real), 1.0, 7)
     
@@ -152,7 +155,7 @@ class TestImage(unittest.TestCase):
         m31_fft_ifft = fft_image(m31_fft, self.m31image)
         numpy.testing.assert_array_almost_equal(self.m31image.data, m31_fft_ifft.data.real, 12)
         m31_fft.data = numpy.abs(m31_fft.data)
-        export_image_to_fits(m31_fft, fitsfile='%s/test_m31_fft.fits' % (self.dir))
+        if self.persist: export_image_to_fits(m31_fft, fitsfile='%s/test_m31_fft.fits' % (self.dir))
     
     def test_fftim_factors(self):
         for i in [3, 5, 7]:
@@ -164,7 +167,7 @@ class TestImage(unittest.TestCase):
             padded_fft_ifft = fft_image(padded_fft, m31image)
             numpy.testing.assert_array_almost_equal(padded.data, padded_fft_ifft.data.real, 12)
             padded_fft.data = numpy.abs(padded_fft.data)
-            export_image_to_fits(padded_fft, fitsfile='%s/test_m31_fft_%d.fits' % (self.dir, npixel))
+            if self.persist: export_image_to_fits(padded_fft, fitsfile='%s/test_m31_fft_%d.fits' % (self.dir, npixel))
     
     def test_pad_image(self):
         m31image = create_test_image(cellsize=0.001, frequency=[1e8], canonical=True)

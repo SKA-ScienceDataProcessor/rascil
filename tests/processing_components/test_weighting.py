@@ -2,6 +2,7 @@
 
 
 """
+import os
 import logging
 import unittest
 
@@ -29,7 +30,9 @@ class TestWeighting(unittest.TestCase):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         self.npixel = 512
-    
+
+        self.persist = os.getenv("RASCIL_PERSIST", False)
+
     def actualSetUp(self, time=None, frequency=None, dospectral=False, dopol=False):
         self.lowcore = create_named_configuration('LOWBD2', rmax=600)
         self.times = (numpy.pi / 12.0) * numpy.linspace(-3.0, 3.0, 5)
@@ -81,10 +84,12 @@ class TestWeighting(unittest.TestCase):
         self.componentvis = weight_visibility(self.componentvis, self.model, algoritm='uniform')
         self.componentvis = taper_visibility_gaussian(self.componentvis, beam=size_required)
         psf, sumwt = invert_2d(self.componentvis, self.model, dopsf=True)
-        export_image_to_fits(psf, '%s/test_weighting_gaussian_taper_psf.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(psf, '%s/test_weighting_gaussian_taper_psf.fits' % self.dir)
         xfr = fft_image(psf)
         xfr.data = xfr.data.real.astype('float')
-        export_image_to_fits(xfr, '%s/test_weighting_gaussian_taper_xfr.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(xfr, '%s/test_weighting_gaussian_taper_xfr.fits' % self.dir)
         npixel = psf.data.shape[3]
         sl = slice(npixel // 2 - 7, npixel // 2 + 8)
         fit = fit_2dgaussian(psf.data[0, 0, sl, sl])
@@ -105,10 +110,12 @@ class TestWeighting(unittest.TestCase):
         self.componentvis = weight_visibility(self.componentvis, self.model, algoritm='uniform')
         self.componentvis = taper_visibility_tukey(self.componentvis, tukey=1.0)
         psf, sumwt = invert_2d(self.componentvis, self.model, dopsf=True)
-        export_image_to_fits(psf, '%s/test_weighting_tukey_taper_psf.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(psf, '%s/test_weighting_tukey_taper_psf.fits' % self.dir)
         xfr = fft_image(psf)
         xfr.data = xfr.data.real.astype('float')
-        export_image_to_fits(xfr, '%s/test_weighting_tukey_taper_xfr.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(xfr, '%s/test_weighting_tukey_taper_xfr.fits' % self.dir)
 
 
 if __name__ == '__main__':
