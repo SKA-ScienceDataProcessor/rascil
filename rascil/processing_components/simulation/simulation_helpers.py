@@ -90,26 +90,25 @@ def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV cov
     :param kwargs:
     :return:
     """
-    if ax is None:
-        fig, ax = plt.subplots(111)
-        ax = ax[0]
-    
+
     for ivis, vis in enumerate(vis_list):
         u = numpy.array(vis.u[...].flat)
         v = numpy.array(vis.v[...].flat)
         if isinstance(vis, BlockVisibility):
-            k = vis.frequency / constants.c
+            k = (vis.frequency / constants.c).value
             u = numpy.array(numpy.outer(u, k).flat)
             v = numpy.array(numpy.outer(v, k).flat)
-        else:
+            plt.plot(u, v, '.', color='b', markersize=0.2)
+            plt.plot(-u, -v, '.', color='b', markersize=0.2)
+    else:
             k = vis.frequency / constants.c
             u = u * k
             v = v * k
-        ax.plot(u, v, '.', color='b', markersize=0.2)
-        ax.plot(-u, -v, '.', color='b', markersize=0.2)
-    ax.set_xlabel('U (wavelengths)')
-    ax.set_ylabel('V (wavelengths)')
-    ax.set_title(title)
+            plt.plot(u.value, v.value, '.', color='b', markersize=0.2)
+            plt.plot(-u.value, -v.value, '.', color='b', markersize=0.2)
+    plt.xlabel('U (wavelengths)')
+    plt.ylabel('V (wavelengths)')
+    plt.title(title)
 
 
 def plot_azel(bvis_list, plot_file='azel.png', **kwargs):
@@ -141,7 +140,7 @@ def plot_azel(bvis_list, plot_file='azel.png', **kwargs):
     plt.show(block=False)
 
 
-def plot_gaintable(gt_list, title='', plot_file='gaintable.png', **kwargs):
+def plot_gaintable(gt_list, title='', value='amp', plot_file='gaintable.png', **kwargs):
     """ Standard plot of gain table
     
     :param gt_list:
@@ -153,7 +152,12 @@ def plot_gaintable(gt_list, title='', plot_file='gaintable.png', **kwargs):
     plt.clf()
     for gt in gt_list:
         amp = numpy.abs(gt[0].gain[:, 0, 0, 0, 0])
-        plt.plot(gt[0].time[amp > 0.0], 1.0 / amp[amp > 0.0], '.')
+        if value=='phase':
+            y = numpy.angle(gt[0].gain[:, 0, 0, 0, 0])
+            plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.')
+        else:
+            y = amp
+            plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.')
     plt.title(title)
     plt.xlabel('Time (s)')
     plt.savefig(plot_file)
@@ -222,7 +226,7 @@ def find_pb_width_null(pbtype, frequency, **kwargs):
 
 
 def create_simulation_components(context, phasecentre, frequency, pbtype, offset_dir, flux_limit,
-                                 pbradius, pb_npixel, pb_cellsize, show=False):
+                                 pbradius, pb_npixel, pb_cellsize, show=False, fov='10'):
     """ Construct components for simulation
     
     :param context:
@@ -234,6 +238,7 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
     :param pbradius:
     :param pb_npixel:
     :param pb_cellsize:
+    :param fov: FOV in degrees (used to select catalog
     :return:
     """
     
@@ -241,20 +246,52 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
     
     dec = phasecentre.dec.deg
     ra = phasecentre.ra.deg
-    
+
     if context == 'singlesource':
         log.info("create_simulation_components: Constructing single component")
         offset = [HWHM_deg * offset_dir[0], HWHM_deg * offset_dir[1]]
-        log.info("create_simulation_components: Offset from pointing centre = %.3f, %.3f deg" % (offset[0], offset[1]))
-        
+        log.info(
+            "create_simulation_components: Offset from pointing centre = %.3f, %.3f deg" % (
+            offset[0], offset[1]))
+
         # The point source is offset to approximately the halfpower point
-        offset_direction = SkyCoord(ra=(ra + offset[0] / numpy.cos(numpy.pi * dec / 180.0)) * units.deg,
-                                    dec=(dec + offset[1]) * units.deg,
-                                    frame='icrs', equinox='J2000')
-        
-        original_components = [Skycomponent(flux=[[1.0]], direction=offset_direction, frequency=frequency,
-                                            polarisation_frame=PolarisationFrame('stokesI'))]
-    
+        odirection = SkyCoord(
+            ra=(ra + offset[0] / numpy.cos(numpy.pi * dec / 180.0)) * units.deg,
+            dec=(dec + offset[1]) * units.deg,
+            frame='icrs', equinox='J2000')
+
+        original_components = [
+            Skycomponent(flux=[[1.0]], direction=odirection, frequency=frequency,
+                         polarisation_frame=PolarisationFrame('stokesI'))]
+
+        offset_direction = odirection
+
+    elif context == 'doublesource':
+
+        original_components = []
+
+        log.info("create_simulation_components: Constructing double components")
+
+        for sign_offset in [(-1,0), (1, 0)]:
+            offset = [HWHM_deg * sign_offset[0], HWHM_deg * sign_offset[1]]
+
+            log.info(
+                "create_simulation_components: Offset from pointing centre = %.3f, %.3f deg" % (
+                offset[0], offset[1]))
+
+            odirection = SkyCoord(
+                ra=(ra + offset[0] / numpy.cos(numpy.pi * dec / 180.0)) * units.deg,
+                dec=(dec + offset[1]) * units.deg,
+                frame='icrs', equinox='J2000')
+
+            original_components.append(
+                Skycomponent(flux=[[1.0]], direction=odirection, frequency=frequency,
+                             polarisation_frame=PolarisationFrame('stokesI')))
+        for o in original_components:
+            print(o)
+
+        offset_direction = odirection
+
     elif context == 'null':
         log.info("create_simulation_components: Constructing single component at the null")
         
@@ -284,7 +321,8 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
                                                                 phasecentre=phasecentre,
                                                                 polarisation_frame=PolarisationFrame("stokesI"),
                                                                 frequency=numpy.array(frequency),
-                                                                radius=pbradius)
+                                                                radius=pbradius,
+                                                                fov=fov)
         log.info("create_simulation_components: %d components before application of primary beam" %
               (len(original_components)))
         

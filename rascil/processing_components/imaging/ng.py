@@ -42,7 +42,7 @@ try:
 
         if model is None:
             return bvis
-        
+
         nthreads = get_parameter(kwargs, "threads", 4)
         epsilon = get_parameter(kwargs, "epsilon", 1e-12)
         do_wstacking = get_parameter(kwargs, "do_wstacking", True)
@@ -80,7 +80,7 @@ try:
             imchan = vis_to_im[vchan]
             for vpol in range(vnpol):
                 vis[..., vchan, vpol] = ng.dirty2ms(fuvw.astype(numpy.float64),
-                                    freq[vchan:vchan + 1].astype(numpy.float64),
+                                    numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64),
                                     model.data[imchan, vpol, :, :].T.astype(numpy.float64),
                                     pixsize_x=pixsize,
                                     pixsize_y=pixsize,
@@ -94,7 +94,7 @@ try:
 
         # Now we can shift the visibility from the image frame to the original visibility frame
         return shift_vis_to_image(newbvis, model, tangent=True, inverse=True)
-    
+
     
     def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True,
                   **kwargs) -> (Image, numpy.ndarray):
@@ -172,7 +172,8 @@ try:
                 wgt_1d = numpy.array([wgt[row, vchan:vchan+1, pol] for row in range(nrows * nants * nants)])
                 wgt_1d.reshape([wgt_1d.shape[0], 1])
                 dirty = ng.ms2dirty(
-                    fuvw, freq[vchan:vchan+1], ms_1d, wgt_1d,
+                    fuvw.astype(numpy.float64),
+                    numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64), ms_1d, wgt_1d,
                     npixdirty, npixdirty, pixsize, pixsize, epsilon, do_wstacking=do_wstacking,
                     nthreads=nthreads, verbosity=verbosity)
                 sumwt[ichan, pol] += numpy.sum(wgt[:, vchan, pol])

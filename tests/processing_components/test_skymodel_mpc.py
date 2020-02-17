@@ -99,7 +99,7 @@ class TestSkymodelMPC(unittest.TestCase):
             # import matplotlib.pyplot as plt
             # from rascil.processing_components.image.operations import show_image
             # show_image(mask)
-            # plt.show()
+            # plt.show(block=False)
 
         assert len(actual_components) == 9, len(actual_components)
         sm = SkyModel(image=self.model, components=actual_components)

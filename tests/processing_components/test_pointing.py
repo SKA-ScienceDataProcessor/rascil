@@ -88,7 +88,7 @@ class TestPointing(unittest.TestCase):
             plt.plot(gt[0].time, numpy.real(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.plot(gt[0].time, numpy.imag(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.title('test_create_gaintable_from_pointingtable_dynamic')
-            plt.show()
+            plt.show(block=False)
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
     
     def test_create_gaintable_from_pointingtable_dynamic_radec(self):
@@ -106,7 +106,7 @@ class TestPointing(unittest.TestCase):
             plt.plot(gt[0].time, numpy.real(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.plot(gt[0].time, numpy.imag(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.title('test_create_gaintable_from_pointingtable_dynamic_radec')
-            plt.show()
+            plt.show(block=False)
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
     
     def test_create_gaintable_from_pointingtable_static(self):
@@ -124,7 +124,7 @@ class TestPointing(unittest.TestCase):
             plt.plot(gt[0].time, numpy.real(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.plot(gt[0].time, numpy.imag(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.title('test_create_gaintable_from_pointingtable_static')
-            plt.show()
+            plt.show(block=False)
         
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
     
@@ -143,7 +143,7 @@ class TestPointing(unittest.TestCase):
             plt.plot(gt[0].time, numpy.real(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.plot(gt[0].time, numpy.imag(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.title('test_create_gaintable_from_pointingtable_dynamic_static')
-            plt.show()
+            plt.show(block=False)
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
     
     def test_create_gaintable_from_pointingtable_global(self):
@@ -162,7 +162,7 @@ class TestPointing(unittest.TestCase):
             plt.plot(gt[0].time, numpy.real(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.plot(gt[0].time, numpy.imag(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.title('test_create_gaintable_from_pointingtable_global')
-            plt.show()
+            plt.show(block=False)
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
     
     def test_create_gaintable_from_pointingtable_global_dynamic(self):
@@ -180,7 +180,7 @@ class TestPointing(unittest.TestCase):
             plt.plot(gt[0].time, numpy.real(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.plot(gt[0].time, numpy.imag(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.title('test_create_gaintable_from_pointingtable_global_dynamic')
-            plt.show()
+            plt.show(block=False)
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
     
     def test_create_gaintable_from_pointingtable_GRASP(self):
@@ -198,7 +198,7 @@ class TestPointing(unittest.TestCase):
             plt.plot(gt[0].time, numpy.real(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.plot(gt[0].time, numpy.imag(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.title('test_create_gaintable_from_pointingtable_global_dynamic')
-            plt.show()
+            plt.show(block=False)
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
 
 

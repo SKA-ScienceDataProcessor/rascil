@@ -45,7 +45,7 @@ class TestImageIterators(unittest.TestCase):
     
         for nraster, overlap in [(-1, -1), (-1, 0), (2, 128), (1e6, 127)]:
             
-            with self.assertRaises(AssertionError) as context:
+            with self.assertRaises(AssertionError):
                 m31model = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
                 for patch in image_raster_iter(m31model, facets=nraster, overlap=overlap):
                     patch.data *= 2.0

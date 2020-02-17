@@ -305,7 +305,7 @@ class TestGridDataGridding(unittest.TestCase):
             plt.title('Prediction error for %s gridding' % title)
             plt.xlabel('W (wavelengths)')
             plt.ylabel('Real part of visibility prediction error')
-            plt.show()
+            plt.show(block=False)
 
 
 if __name__ == '__main__':

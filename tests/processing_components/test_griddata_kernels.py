@@ -105,7 +105,8 @@ class TestGridDataKernels(unittest.TestCase):
     def test_fill_wterm_to_convolutionfunction(self):
         gcf, cf = create_awterm_convolutionfunction(self.image, make_pb=None, nw=201, wstep=8.0, oversampling=8,
                                                     support=60, use_aaf=True)
-        export_image_to_fits(gcf, "%s/test_convolutionfunction_wterm_gcf.fits" % self.dir)
+        if self.persist:
+            export_image_to_fits(gcf, "%s/test_convolutionfunction_wterm_gcf.fits" % self.dir)
 
         cf_image = convert_convolutionfunction_to_image(cf)
         cf_image.data = numpy.real(cf_image.data)

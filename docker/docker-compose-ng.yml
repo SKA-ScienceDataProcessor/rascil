@@ -3,13 +3,12 @@ version: "3.1"
 services:
   scheduler:
     build:
-      context: ./rascil-no-data
+      context: ./rascil-ng
       dockerfile: Dockerfile
-    image: timcornwell/rascil-no-data
+    image: timcornwell/rascil-ng
     hostname: dask-scheduler
     volumes:
       - "${HOME}:${HOME}"
-      - "${RASCIL_DATA}:/rascil/data"
     ports:
       - "8786:8786"
       - "8787:8787"
@@ -17,14 +16,13 @@ services:
 
   worker:
     build:
-      context: ./rascil-no-data
+      context: ./rascil-ng
       dockerfile: Dockerfile
-    image: timcornwell/rascil-no-data
+    image: timcornwell/rascil-ng
     hostname: dask-worker
     volumes:
-    - "${HOME}:${HOME}"
-    - "${RASCIL_DATA}:/rascil/data"
-      command: ["dask-worker", "--local-directory", "/tmp", "tcp://scheduler:8786"]
+      - "${HOME}:${HOME}"
+    command: ["dask-worker", "--local-directory", "/tmp", "tcp://scheduler:8786"]
 
   notebook:
     build:
@@ -34,7 +32,6 @@ services:
     hostname: notebook
     volumes:
       - "${HOME}:${HOME}"
-      - "${RASCIL_DATA}:/rascil/data"
     ports:
       - "8888:8888"
     environment:

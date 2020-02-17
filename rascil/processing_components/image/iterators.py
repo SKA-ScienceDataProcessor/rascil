@@ -18,7 +18,7 @@ from rascil.processing_components.util.array_functions import tukey_filter
 log = logging.getLogger(__name__)
 
 
-def image_null_iter(im: Image, facets=1, overlap=0) -> collections.Iterable:
+def image_null_iter(im: Image, facets=1, overlap=0) -> collections.abc.Iterable:
     """One time iterator
 
     This is useful to simplify control structures.

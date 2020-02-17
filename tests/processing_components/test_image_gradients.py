@@ -38,10 +38,10 @@ class TestPrimaryBeams(unittest.TestCase):
             import matplotlib.pyplot as plt
             plt.clf()
             show_image(gradx, title='gradx')
-            plt.show()
+            plt.show(block=False)
             plt.clf()
             show_image(grady, title='grady')
-            plt.show()
+            plt.show(block=False)
         if self.persist:
             export_image_to_fits(gradx, "%s/test_image_gradients_gradx.fits" % (self.dir))
             export_image_to_fits(grady, "%s/test_image_gradients_grady.fits" % (self.dir))
@@ -50,16 +50,16 @@ class TestPrimaryBeams(unittest.TestCase):
             import matplotlib.pyplot as plt
             plt.clf()
             show_image(gradxx, title='gradxx')
-            plt.show()
+            plt.show(block=False)
             plt.clf()
             show_image(gradxy, title='gradxy')
-            plt.show()
+            plt.show(block=False)
             plt.clf()
             show_image(gradyx, title='gradyx')
-            plt.show()
+            plt.show(block=False)
             plt.clf()
             show_image(gradyy, title='gradyy')
-            plt.show()
+            plt.show(block=False)
         if self.persist:
             export_image_to_fits(gradxx, "%s/test_image_gradients_gradxx.fits" % (self.dir))
             export_image_to_fits(gradxy, "%s/test_image_gradients_gradxy.fits" % (self.dir))

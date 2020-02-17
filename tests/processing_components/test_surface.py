@@ -75,7 +75,7 @@ class TestSurface(unittest.TestCase):
             plt.plot(gt[0].time, 1.0 / numpy.real(gt[0].gain[:, ant, 0, 0, 0]), '.')
         plt.xlabel('Time (s)')
         plt.ylabel('Gain')
-        plt.show()
+        plt.show(block=False)
 
 
 if __name__ == '__main__':

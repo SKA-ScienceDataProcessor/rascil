@@ -86,7 +86,7 @@ class TestImagingNG(unittest.TestCase):
                                                    zerow=zerow)
         
         self.vis = convert_blockvisibility_to_visibility(self.blockvis)
-        
+
         self.model = create_unittest_model(self.vis, self.image_pol, npixel=self.npixel, nchan=freqwin)
         
         self.components = create_unittest_components(self.model, flux)
@@ -94,7 +94,7 @@ class TestImagingNG(unittest.TestCase):
         self.model = insert_skycomponent(self.model, self.components)
         
         self.blockvis = predict_skycomponent_visibility(self.blockvis, self.components)
-        
+
         # Calculate the model convolved with a Gaussian.
         
         self.cmodel = smooth_image(self.model)

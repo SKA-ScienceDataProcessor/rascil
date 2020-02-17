@@ -34,7 +34,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestPipelineMPC(unittest.TestCase):
     def setUp(self):
         
-        rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, dashboard_address=None)
+        rsexecute.set_client()
         
         self.persist = os.getenv("RASCIL_PERSIST", False)
 
@@ -64,7 +64,7 @@ class TestPipelineMPC(unittest.TestCase):
         # plt.xlim([-numpy.pi, numpy.pi])
         # plt.ylim([-numpy.pi, numpy.pi])
         plt.title("MPCCal iteration%d: Change in phase" % (it))
-        plt.show()
+        plt.show(block=False)
         
         return tl_list
     
@@ -146,7 +146,8 @@ class TestPipelineMPC(unittest.TestCase):
             voronoi_components = [voronoi_components[0]]
         
         self.screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
-        all_gaintables = create_gaintable_from_screen(blockvis, all_components, self.screen)
+        all_gaintables = create_gaintable_from_screen(blockvis, all_components,
+                                                      self.screen)
         
         gleam_skymodel_noniso = [SkyModel(components=[all_components[i]], gaintable=all_gaintables[i])
                                  for i, sm in enumerate(all_components)]

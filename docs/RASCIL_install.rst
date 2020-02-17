@@ -11,7 +11,7 @@ Installation via docker
 If you are familar with docker, an easy approach is to use our docker scripts:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    installation/RASCIL_docker
 
