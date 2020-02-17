@@ -135,8 +135,8 @@ def create_propagators(config, interferer, frequency, attenuation=1e-9):
     return propagators * attenuation
 
 
-def create_propagators_prop(config, frequency, nants_start, trans_freq, trans_bw, station_skip=1, attenuation=1e-9,
-                            transmitter=None, beamgainval=0., trans_range=[0, None]):
+def create_propagators_prop(config, frequency, nants_start, station_skip=1, attenuation=1e-9, beamgainval=0.,
+                            trans_range=[0, None]):
     """ Create a set of propagators
     :param config: configuration
     :param frequency: frequencies
@@ -161,9 +161,10 @@ def create_propagators_prop(config, frequency, nants_start, trans_freq, trans_bw
         beamgain_trans = numpy.loadtxt(beamgainval)
     else:
         beamgain_trans = beamgainval
-    propagation_trans[:, :] *= beamgain_trans
-    propagation_trans = propagation_trans[:nants_start]
-    propagation_trans = propagation_trans[::station_skip]
+    propagation_trans *= beamgain_trans
+    if type(propagation_trans) is numpy.ndarray:
+        propagation_trans = propagation_trans[:nants_start]
+        propagation_trans = propagation_trans[::station_skip]
     if trans_range[1] is None:
         propagation[:, trans_range[0]:trans_range[1]] = propagation_trans
     else:
