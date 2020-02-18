@@ -160,7 +160,8 @@ def visibility_scatter_channel(vis: BlockVisibility) -> List[BlockVisibility]:
     return [extract_channel(vis, channel) for channel, _ in enumerate(vis.frequency)]
 
 
-def visibility_gather_channel(vis_list: List[BlockVisibility], vis: BlockVisibility = None):
+def visibility_gather_channel(vis_list: List[BlockVisibility],
+                              vis: BlockVisibility = None):
     """ Gather a visibility by channel
     
     :param vis_list: List of Visibility

@@ -346,7 +346,8 @@ def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwar
     return create_image_from_array(numpy.zeros(shape), wcs=w, polarisation_frame=pol_frame)
 
 
-def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversampling_synthesised_beam=3.0,
+def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02,
+                      oversampling_synthesised_beam=3.0,
                       guard_band_image=6.0, facets=1, wprojection_planes=1, verbose=True):
     """ Advise on parameters for wide field imaging.
     
@@ -476,29 +477,29 @@ def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversa
     if verbose:
         log.info("advice_wide_field: W sampling for primary beam = %.1f (wavelengths)" % (w_sampling_primary_beam))
     
-    time_sampling_image = 86400.0 * w_sampling_image / (numpy.pi * maximum_baseline)
+    time_sampling_image = 86400.0 * (synthesized_beam / image_fov)
     if verbose:
         log.info("advice_wide_field: Time sampling for full image = %.1f (s)" % (time_sampling_image))
     
     if facets > 1:
-        time_sampling_facet = 86400.0 * w_sampling_facet / (numpy.pi * maximum_baseline)
+        time_sampling_facet = 86400.0 * (synthesized_beam / facet_fov)
         if verbose:
             log.info("advice_wide_field: Time sampling for facet = %.1f (s)" % (time_sampling_facet))
     
-    time_sampling_primary_beam = 86400.0 * w_sampling_primary_beam / (numpy.pi * maximum_baseline)
+    time_sampling_primary_beam = 86400.0 * (synthesized_beam / primary_beam_fov)
     if verbose:
         log.info("advice_wide_field: Time sampling for primary beam = %.1f (s)" % (time_sampling_primary_beam))
     
-    freq_sampling_image = numpy.max(vis.frequency) * w_sampling_image / (numpy.pi * maximum_baseline)
+    freq_sampling_image = numpy.max(vis.frequency) * (synthesized_beam / image_fov)
     if verbose:
         log.info("advice_wide_field: Frequency sampling for full image = %.1f (Hz)" % (freq_sampling_image))
     
     if facets > 1:
-        freq_sampling_facet = numpy.max(vis.frequency) * w_sampling_facet / (numpy.pi * maximum_baseline)
+        freq_sampling_facet = numpy.max(vis.frequency) * (synthesized_beam / facet_fov)
         if verbose:
             log.info("advice_wide_field: Frequency sampling for facet = %.1f (Hz)" % (freq_sampling_facet))
     
-    freq_sampling_primary_beam = numpy.max(vis.frequency) * w_sampling_primary_beam / (numpy.pi * maximum_baseline)
+    freq_sampling_primary_beam = numpy.max(vis.frequency) * (synthesized_beam / primary_beam_fov)
     if verbose:
         log.info("advice_wide_field: Frequency sampling for primary beam = %.1f (Hz)" % (freq_sampling_primary_beam))
     
