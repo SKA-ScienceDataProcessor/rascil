@@ -20,7 +20,7 @@ from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import copy_visibility, create_blockvisibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestCalibrationChain(unittest.TestCase):
@@ -124,6 +124,7 @@ class TestCalibrationChain(unittest.TestCase):
         calibrated_vis, gaintables = calibrate_chain(self.vis, original, calibration_context='TG',
                                                      controls=controls)
         residual = numpy.max(gaintables['T'].residual)
+        assert residual < 1e-8, "Max T residual = %s" % residual
         residual = numpy.max(gaintables['G'].residual)
         assert residual < 1e-8, "Max T residual = %s" % residual
 

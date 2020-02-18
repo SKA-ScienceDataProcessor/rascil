@@ -32,13 +32,13 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.skycomponent.operations import insert_skycomponent
 from rascil.processing_components.visibility.operations import qa_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestGridDataGridding(unittest.TestCase):

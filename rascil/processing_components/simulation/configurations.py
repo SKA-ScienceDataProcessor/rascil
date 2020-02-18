@@ -16,7 +16,7 @@ from rascil.processing_components.util.installation_checks import check_data_dir
 
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def create_configuration_from_file(antfile: str, location: EarthLocation = None,
                                    mount: str = 'azel',

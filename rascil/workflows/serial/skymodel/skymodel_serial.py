@@ -17,7 +17,7 @@ from rascil.processing_components.visibility import copy_visibility
 from rascil.processing_components.visibility import  convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def predict_skymodel_list_serial_workflow(obsvis, skymodel_list, context, vis_slices=1, facets=1,

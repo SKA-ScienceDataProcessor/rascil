@@ -30,7 +30,7 @@ from rascil.processing_components.util.coordinate_support import xyz_to_uvw, uvw
     skycoord_to_lmn, \
     simulate_point, hadec_to_azel
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def vis_summary(vis: Union[Visibility, BlockVisibility]):

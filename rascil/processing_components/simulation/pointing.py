@@ -19,7 +19,7 @@ from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scale=1.0, order=3,

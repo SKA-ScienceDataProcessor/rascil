@@ -9,7 +9,7 @@ import logging
 from rascil.processing_components.arrays.cleaners import create_scalestack, convolve_scalestack, convolve_convolve_scalestack,\
     argmax
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestImageMSClean(unittest.TestCase):

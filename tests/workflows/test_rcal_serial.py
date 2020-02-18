@@ -26,7 +26,7 @@ from rascil.processing_components.visibility.base import create_blockvisibility,
 
 from rascil.processing_components.calibration.rcal import rcal
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

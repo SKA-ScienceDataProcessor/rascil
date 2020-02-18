@@ -31,7 +31,7 @@ from rascil.processing_components.imaging import  taper_visibility_gaussian
 from rascil.processing_components.visibility import copy_visibility, create_visibility_from_rows
 from rascil.processing_components.visibility import visibility_scatter, visibility_gather
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def predict_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=1, facets=1,

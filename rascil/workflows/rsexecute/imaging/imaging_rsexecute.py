@@ -33,7 +33,7 @@ from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.workflows.shared.imaging import imaging_context, remove_sumwt, sum_predict_results, \
     threshold_list, sum_invert_results
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slices=1, facets=1,
                                      gcfcf=None, **kwargs):

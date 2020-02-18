@@ -23,7 +23,7 @@ from rascil.processing_components.calibration.operations import create_gaintable
 from rascil.processing_components.visibility.operations import divide_visibility
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def solve_from_X(gt: GainTable, x: numpy.ndarray, xwt: numpy.ndarray, chunk, crosspol, niter, phase_only, tol, npol) \
@@ -111,7 +111,14 @@ def solve_antenna_gains_itsubs_scalar(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
         gain = (1.0 - damping) * gain + damping * gainLast
         change = numpy.max(numpy.abs(gain - gainLast))
         if change < tol:
+            if phase_only:
+                mask = numpy.abs(gain) > 0.0
+                gain[mask] = gain[mask] / numpy.abs(gain[mask])
             return gain, gwt, solution_residual_scalar(gain, x, xwt)
+        
+    if phase_only:
+        mask = numpy.abs(gain) > 0.0
+        gain[mask] = gain[mask] / numpy.abs(gain[mask])
 
     return gain, gwt, solution_residual_scalar(gain, x, xwt)
 

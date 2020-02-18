@@ -10,7 +10,7 @@ import numpy
 from rascil.processing_components.griddata.operations import create_griddata_from_image, convert_griddata_to_image
 from rascil.processing_components.simulation import create_test_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestGridData(unittest.TestCase):

@@ -24,7 +24,7 @@ from rascil.workflows import invert_list_rsexecute_workflow, restore_list_rsexec
 
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

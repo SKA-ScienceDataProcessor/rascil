@@ -19,7 +19,7 @@ import numpy
 
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def vis_null_iter(vis: Union[Visibility, BlockVisibility], vis_slices=1) -> numpy.ndarray:

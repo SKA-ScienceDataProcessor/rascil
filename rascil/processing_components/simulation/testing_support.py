@@ -72,7 +72,7 @@ from rascil.processing_components.visibility.coalesce import convert_blockvisibi
 from rascil.processing_components.util.installation_checks import check_data_directory
 
 check_data_directory()
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def create_test_image(canonical=True, cellsize=None, frequency=None, channel_bandwidth=None,

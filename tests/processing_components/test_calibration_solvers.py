@@ -20,7 +20,7 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import copy_visibility, create_blockvisibility
 from rascil.processing_components.visibility.operations import divide_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestCalibrationSolvers(unittest.TestCase):

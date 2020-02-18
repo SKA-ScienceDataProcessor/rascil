@@ -21,7 +21,7 @@ from rascil.processing_components.imaging.weighting import weight_visibility
 
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestCoalesce(unittest.TestCase):

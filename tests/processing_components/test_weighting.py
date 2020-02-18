@@ -22,7 +22,7 @@ from rascil.processing_components.imaging.weighting import weight_visibility, ta
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestWeighting(unittest.TestCase):

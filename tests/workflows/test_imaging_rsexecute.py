@@ -31,7 +31,7 @@ from rascil.processing_components.skycomponent.operations import find_skycompone
 
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

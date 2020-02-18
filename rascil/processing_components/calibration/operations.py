@@ -18,7 +18,7 @@ from rascil.data_models.memory_data_models import GainTable, BlockVisibility, QA
 from rascil.data_models.polarisation import ReceptorFrame
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def gaintable_summary(gt: GainTable):
@@ -254,7 +254,7 @@ def qa_gaintable(gt: GainTable, context=None) -> QA:
 
 
 def gaintable_plot(gt: GainTable, ax, title='', value='amp', ants=None,  channels=None,
-                   label_max=10, **kwargs):
+                   label_max=10, min_amp=1e-5, **kwargs):
     """ Standard plot of gain table
 
     :param gt: Gaintable
@@ -281,11 +281,10 @@ def gaintable_plot(gt: GainTable, ax, title='', value='amp', ants=None,  channel
                 label = ''
             amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
             if value == 'amp':
-                ax.plot(gt.time, amp, '.', label=label)
+                ax.plot(gt.time[amp[:,0]>min_amp], amp[amp[:,0]>min_amp], '.', label=label)
             else:
                 angle = numpy.angle(gt.gain[:, ant, channels, 0, 0])
-                ax.plot(gt.time, angle, '.', label=label)
-   
+                ax.plot(gt.time[amp[:,0]>min_amp], angle[amp[:,0]>min_amp], '.', label=label)
         if gt.configuration is not None:
             if len(gt.configuration.names) < label_max:
                 ax.legend()

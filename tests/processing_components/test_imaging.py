@@ -25,7 +25,7 @@ from rascil.processing_components.imaging.weighting import taper_visibility_gaus
     weight_visibility
 from rascil.processing_components.griddata.kernels import create_awterm_convolutionfunction
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

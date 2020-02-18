@@ -24,7 +24,7 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter, vis_wslice_iter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def visibility_scatter(vis: Visibility, vis_iter, vis_slices=1) -> List[Visibility]:

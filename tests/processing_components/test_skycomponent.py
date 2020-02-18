@@ -19,7 +19,7 @@ from rascil.processing_components.skycomponent.operations import create_skycompo
 from rascil.processing_components import create_image
 from rascil.processing_components.imaging.primary_beams import create_low_test_beam
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestSkycomponent(unittest.TestCase):

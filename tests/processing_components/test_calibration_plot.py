@@ -19,7 +19,7 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.visibility.base import create_blockvisibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestCalibrationPlot(unittest.TestCase):

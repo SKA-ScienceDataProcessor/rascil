@@ -16,7 +16,7 @@ from rascil.processing_components.imaging.base import create_image_from_visibili
 from rascil.processing_components.simulation import ingest_unittest_visibility, create_unittest_model
 from rascil.processing_components.simulation import create_named_configuration
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

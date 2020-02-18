@@ -19,7 +19,7 @@ from rascil.processing_components.image.operations import smooth_image
 from rascil.processing_components.skycomponent.base import copy_skycomponent
 from rascil.processing_components.skycomponent.operations import filter_skycomponents_by_flux, insert_skycomponent, image_voronoi_iter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def copy_skymodel(sm):

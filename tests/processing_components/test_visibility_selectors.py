@@ -13,7 +13,7 @@ from rascil.processing_components.visibility import vis_select_uvrange, vis_sele
 from rascil.processing_components.visibility.base import create_visibility
 
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestVisibilitySelectors(unittest.TestCase):

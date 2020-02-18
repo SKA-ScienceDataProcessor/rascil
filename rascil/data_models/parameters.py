@@ -58,7 +58,7 @@ __all__ = ['rascil_path', 'get_parameter']
 import logging
 import os
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def rascil_path(path):

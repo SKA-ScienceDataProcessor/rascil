@@ -20,14 +20,14 @@ from rascil.processing_components.calibration.chain_calibration import create_ca
 from rascil.processing_components.image.operations import export_image_to_fits, qa_image, smooth_image
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
-    create_unittest_model, create_unittest_components, insert_unittest_errors
+    create_unittest_model, create_unittest_components
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.skycomponent.operations import insert_skycomponent
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
 from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))
@@ -121,7 +121,7 @@ class TestPipelines(unittest.TestCase):
     def test_time_setup(self):
         self.actualSetUp(add_errors=True)
     
-    @unittest.skip("Too expensive to run in Jenkins")
+    #@unittest.skip("Too expensive to run in Jenkins")
     def test_continuum_imaging_pipeline(self):
         self.actualSetUp(add_errors=False, zerow=True)
         clean, residual, restored = \
@@ -134,7 +134,8 @@ class TestPipelines(unittest.TestCase):
                                                    nmoment=3,
                                                    nmajor=5, gain=0.1,
                                                    deconvolve_facets=4, deconvolve_overlap=32,
-                                                   deconvolve_taper='tukey', psf_support=64)
+                                                   deconvolve_taper='tukey', psf_support=64,
+                                                   restore_facets=4, psfwidth=1.0)
         centre = len(clean) // 2
         if self.persist:
             export_image_to_fits(clean[centre], '%s/test_pipelines_continuum_imaging_pipeline_serial_clean.fits' % self.dir)
@@ -144,10 +145,10 @@ class TestPipelines(unittest.TestCase):
                                 '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
         
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 100.13762476849081) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.03627273884170454) < 1.0, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.13762476849081) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.03627273884170454) < 1.0e-7, str(qa)
     
-    @unittest.skip("Too expensive to run in Jenkins")
+    #@unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline(self):
         self.actualSetUp(add_errors=True)
         controls = create_calibration_controls()
@@ -165,6 +166,7 @@ class TestPipelines(unittest.TestCase):
                                       nmajor=5, gain=0.1,
                                       deconvolve_facets=4, deconvolve_overlap=32,
                                       deconvolve_taper='tukey', psf_support=64,
+                                      restore_facets=4, psfwidth=1.0,
                                       calibration_context='T', controls=controls, do_selfcal=True,
                                       global_solution=False)
         centre = len(clean) // 2
@@ -176,10 +178,10 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.32729396999524) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.6501547522800477) < 1.0, str(qa)
+        assert numpy.abs(qa.data['max'] - 106.5236056384444) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 15.697900103309841) < 1.0e-7, str(qa)
     
-    @unittest.skip("Too expensive to run in Jenkins")
+    #@unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline_global(self):
         self.actualSetUp(add_errors=True)
         controls = create_calibration_controls()
@@ -197,6 +199,7 @@ class TestPipelines(unittest.TestCase):
                                       nmajor=5, gain=0.1,
                                       deconvolve_facets=4, deconvolve_overlap=32,
                                       deconvolve_taper='tukey', psf_support=64,
+                                      restore_facets=4, psfwidth=1.0,
                                       calibration_context='T', controls=controls, do_selfcal=True,
                                       global_solution=True)
         
@@ -210,8 +213,8 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96071696416537) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.40259277141095084) < 1.0, str(qa)
+        assert numpy.abs(qa.data['max'] - 106.52401072204145) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 15.704658529419701) < 1.0e-7, str(qa)
 
 
 if __name__ == '__main__':

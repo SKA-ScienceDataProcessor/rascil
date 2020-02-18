@@ -18,7 +18,7 @@ from rascil.workflows.serial.imaging.imaging_serial import invert_list_serial_wo
 from rascil.data_models.polarisation import PolarisationFrame
 
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

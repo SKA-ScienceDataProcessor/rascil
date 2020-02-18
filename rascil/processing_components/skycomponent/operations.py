@@ -31,7 +31,7 @@ from rascil.processing_components.image.operations import create_image_from_arra
 from rascil.processing_components.util.array_functions import insert_function_sinc, insert_function_L, \
     insert_function_pswf, insert_array
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def create_skycomponent(direction: SkyCoord, flux: numpy.array, frequency: numpy.array, shape: str = 'Point',

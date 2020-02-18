@@ -29,7 +29,7 @@ __all__ = ['fit_uvwplane', 'fit_uvwplane_only', 'predict_timeslice_single', 'inv
 import logging
 from rascil.processing_components.image.operations import image_is_canonical
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 """
 The w-term can be viewed as a time-variable distortion. Approximating the array as instantaneously

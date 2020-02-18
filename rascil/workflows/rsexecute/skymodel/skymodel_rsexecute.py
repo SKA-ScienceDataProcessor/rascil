@@ -20,7 +20,7 @@ from rascil.processing_components.visibility import copy_visibility, convert_blo
 from rascil.workflows.serial.imaging import predict_list_serial_workflow, invert_list_serial_workflow
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def predict_skymodel_list_rsexecute_workflow(obsvis, skymodel_list, context, vis_slices=1, facets=1,

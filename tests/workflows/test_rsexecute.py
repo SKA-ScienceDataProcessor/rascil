@@ -10,7 +10,7 @@ import numpy
 # Import the base and then make a global version
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 class Testrsexecute(unittest.TestCase):
     

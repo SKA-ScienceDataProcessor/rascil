@@ -21,7 +21,7 @@ from rascil.workflows.rsexecute.image.image_rsexecute import image_rsexecute_map
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestImageGraph(unittest.TestCase):

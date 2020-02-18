@@ -13,7 +13,7 @@ from rascil.data_models.memory_data_models import BlockVisibility
 
 from rascil.workflows.serial.simulation.simulation_serial import simulate_list_serial_workflow
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestSimulationrsexecuteSupport(unittest.TestCase):

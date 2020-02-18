@@ -17,7 +17,7 @@ from rascil.processing_components.simulation import ingest_unittest_visibility, 
     create_low_test_skymodel_from_gleam
 from rascil.processing_components.simulation import create_named_configuration
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

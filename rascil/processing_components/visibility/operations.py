@@ -23,7 +23,7 @@ from rascil.processing_components.imaging import get_frequency_map
 from rascil.processing_components.util.coordinate_support import skycoord_to_lmn, simulate_point
 from rascil.processing_components.visibility import copy_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def append_visibility(vis: Union[Visibility, BlockVisibility], othervis: Union[Visibility, BlockVisibility]) \

@@ -17,7 +17,7 @@ from rascil.processing_components.simulation.surface import simulate_gaintable_f
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components import create_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestSurface(unittest.TestCase):

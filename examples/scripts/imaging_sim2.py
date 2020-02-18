@@ -14,7 +14,7 @@ from rascil.processing_components import create_blockvisibility_from_ms, \
     convert_visibility_to_stokes
 from rascil.workflows import invert_list_serial_workflow
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

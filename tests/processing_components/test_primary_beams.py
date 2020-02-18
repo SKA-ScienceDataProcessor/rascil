@@ -19,7 +19,7 @@ from rascil.processing_components.imaging.primary_beams import create_pb, create
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestPrimaryBeams(unittest.TestCase):

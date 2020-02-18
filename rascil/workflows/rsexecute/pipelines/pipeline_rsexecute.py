@@ -15,7 +15,7 @@ from rascil.workflows.rsexecute.imaging.imaging_rsexecute import invert_list_rse
     predict_list_rsexecute_workflow, subtract_list_rsexecute_workflow, \
     restore_list_rsexecute_workflow, deconvolve_list_rsexecute_workflow
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def ical_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slices=1, facets=1,
@@ -55,19 +55,20 @@ def ical_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slices=
                                                                    context=context, vis_slices=vis_slices,
                                                                    facets=facets,
                                                                    gcfcf=gcfcf, **kwargs)
-        recal_vis_list, gt_list = calibrate_list_rsexecute_workflow(cal_vis_list, predicted_model_vislist,
+        cal_vis_list, gt_list = calibrate_list_rsexecute_workflow(cal_vis_list, predicted_model_vislist,
                                                                    calibration_context=calibration_context, **kwargs)
         
         def zero_model_image(im):
-            log.info("ical_list_rsexecute_workflow: setting initial mode to zero after initial selfcal")
+            log.info("ical_list_rsexecute_workflow: setting initial model to zero after initial selfcal")
             im.data[...]=0.0
             return im
-        
+
         model_imagelist = [rsexecute.execute(zero_model_image, nout=1)(model) for model in model_imagelist]
 
-        residual_imagelist = invert_list_rsexecute_workflow(recal_vis_list, model_imagelist, context=context,
+        residual_imagelist = invert_list_rsexecute_workflow(cal_vis_list, model_imagelist,
+                                                            context=context, dopsf=False,
                                                                vis_slices=vis_slices, facets=facets, gcfcf=gcfcf,
-                                                               **kwargs)
+                                                               iteration=0, **kwargs)
 
     else:
         # If we are not selfcalibrating it's much easier and we can avoid an unnecessary round of gather/scatter
@@ -78,21 +79,22 @@ def ical_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slices=
     
     deconvolve_model_imagelist = deconvolve_list_rsexecute_workflow(residual_imagelist, psf_imagelist,
                                                                      model_imagelist,
-                                                                     prefix='cycle 0',
+                                                                     prefix='ical cycle 0',
                                                                      **kwargs)
     nmajor = get_parameter(kwargs, "nmajor", 5)
     if nmajor > 1:
         for cycle in range(nmajor):
             if do_selfcal:
-                predicted_model_vislist = predict_list_rsexecute_workflow(model_vislist, deconvolve_model_imagelist,
+                model_vislist = predict_list_rsexecute_workflow(model_vislist, deconvolve_model_imagelist,
                                                                            context=context, vis_slices=vis_slices,
                                                                            facets=facets,
                                                                            gcfcf=gcfcf, **kwargs)
-                recal_vis_list, gt_list = calibrate_list_rsexecute_workflow(cal_vis_list,
-                                                                           predicted_model_vislist,
+                cal_vis_list = [rsexecute.execute(copy_visibility)(v) for v in vis_list]
+                cal_vis_list, gt_list = calibrate_list_rsexecute_workflow(cal_vis_list,
+                                                                           model_vislist,
                                                                            calibration_context=calibration_context,
                                                                            iteration=cycle, **kwargs)
-                residual_vislist = subtract_list_rsexecute_workflow(recal_vis_list, model_vislist)
+                residual_vislist = subtract_list_rsexecute_workflow(cal_vis_list, model_vislist)
                 residual_imagelist = invert_list_rsexecute_workflow(residual_vislist, model_imagelist,
                                                                      context=context,
                                                                      vis_slices=vis_slices, facets=facets,
@@ -104,7 +106,7 @@ def ical_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slices=
                                                                        gcfcf=gcfcf,
                                                                        **kwargs)
             
-            prefix = "cycle %d" % (cycle + 1)
+            prefix = "ical cycle %d" % (cycle + 1)
             deconvolve_model_imagelist = deconvolve_list_rsexecute_workflow(residual_imagelist, psf_imagelist,
                                                                              deconvolve_model_imagelist,
                                                                              prefix=prefix,
@@ -138,12 +140,12 @@ def continuum_imaging_list_rsexecute_workflow(vis_list, model_imagelist, context
     
     deconvolve_model_imagelist = deconvolve_list_rsexecute_workflow(residual_imagelist, psf_imagelist,
                                                                      model_imagelist,
-                                                                     prefix='cycle 0',
+                                                                     prefix='cip cycle 0',
                                                                      **kwargs)
     nmajor = get_parameter(kwargs, "nmajor", 5)
     if nmajor > 1:
         for cycle in range(nmajor):
-            prefix = "cycle %d" % (cycle + 1)
+            prefix = "cip cycle %d" % (cycle + 1)
             residual_imagelist = residual_list_rsexecute_workflow(vis_list, deconvolve_model_imagelist,
                                                                    context=context, vis_slices=vis_slices,
                                                                    facets=facets,

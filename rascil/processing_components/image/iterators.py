@@ -15,7 +15,7 @@ from rascil.processing_components.image.operations import create_image_from_arra
     image_is_canonical
 from rascil.processing_components.util.array_functions import tukey_filter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def image_null_iter(im: Image, facets=1, overlap=0) -> collections.abc.Iterable:

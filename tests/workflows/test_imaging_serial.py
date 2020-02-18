@@ -24,7 +24,7 @@ from rascil.processing_components.simulation import ingest_unittest_visibility, 
     create_unittest_model, insert_unittest_errors, create_unittest_components
 from rascil.processing_components.simulation import create_named_configuration
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

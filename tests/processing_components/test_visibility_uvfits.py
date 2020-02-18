@@ -19,7 +19,7 @@ from rascil.processing_components.visibility.coalesce import convert_visibility_
 from rascil.processing_components.image.operations import export_image_to_fits
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))

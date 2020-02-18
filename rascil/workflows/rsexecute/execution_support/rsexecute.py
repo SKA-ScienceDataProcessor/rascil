@@ -23,7 +23,7 @@ except ImportError:
     def dlg_compute(*args, **kwargs):
         pass
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def get_dask_client(timeout=30, n_workers=None, threads_per_worker=1, processes=True, create_cluster=True,

@@ -23,7 +23,7 @@ from rascil.processing_components.visibility.base import copy_visibility
 from rascil.processing_components.fourier_transforms import ifft, fft
 from rascil.processing_components.image.operations import create_image_from_array
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def convolution_mapping(vis, griddata, cf, channel_tolerance=1e-8):

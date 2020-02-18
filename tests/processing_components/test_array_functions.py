@@ -9,7 +9,7 @@ import logging
 from rascil.processing_components.util.array_functions import average_chunks_jit as average_chunks
 from rascil.processing_components.util.array_functions import average_chunks2, average_chunks_jit
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestArray_functions(unittest.TestCase):

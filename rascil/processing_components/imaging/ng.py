@@ -21,7 +21,7 @@ from rascil.processing_components.image.operations import copy_image, image_is_c
 from rascil.processing_components.imaging.base import shift_vis_to_image, normalize_sumwt
 from rascil.processing_components.visibility.base import copy_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 try:
     import nifty_gridder as ng
@@ -46,7 +46,7 @@ try:
         nthreads = get_parameter(kwargs, "threads", 4)
         epsilon = get_parameter(kwargs, "epsilon", 1e-12)
         do_wstacking = get_parameter(kwargs, "do_wstacking", True)
-        verbosity = get_parameter(kwargs, "verbosity", 2)
+        verbosity = get_parameter(kwargs, "verbosity", 0)
         
         newbvis = copy_visibility(bvis, zero=True)
         

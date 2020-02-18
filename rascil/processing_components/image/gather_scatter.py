@@ -16,7 +16,7 @@ from rascil.processing_components.image.operations import create_image_from_arra
     image_is_canonical
 from rascil.processing_components.image.iterators import image_raster_iter, image_channel_iter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def image_scatter_facets(im: Image, facets=1, overlap=0, taper=None) -> List[Image]:

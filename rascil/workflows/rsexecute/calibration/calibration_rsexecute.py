@@ -35,7 +35,7 @@ def calibrate_list_rsexecute_workflow(vis_list, model_vislist, calibration_conte
         assert gt is not None
         return apply_calibration_chain(vis, gt, calibration_context=calibration_context, **kwargs)
     
-    if global_solution:
+    if global_solution and (len(vis_list) > 1):
         point_vislist = [rsexecute.execute(convert_visibility_to_blockvisibility, nout=1)(v) for v in vis_list]
         point_modelvislist = [rsexecute.execute(convert_visibility_to_blockvisibility, nout=1)(mv)
                               for mv in model_vislist]

@@ -45,7 +45,7 @@ from rascil.processing_components.imaging.imaging_params import get_frequency_ma
 from rascil.processing_components.util.coordinate_support import simulate_point, skycoord_to_lmn
 from rascil.processing_components.visibility.base import copy_visibility, phaserotate_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def shift_vis_to_image(vis: Union[Visibility, BlockVisibility], im: Image, tangent: bool = True, inverse: bool = False) \
@@ -319,7 +319,7 @@ def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwar
     log.debug("create_image_from_visibility: Cellsize          = %g radians, %g degrees" % (cellsize,
                                                                                            cellsize * 180.0 / numpy.pi))
     override_cellsize = get_parameter(kwargs, "override_cellsize", True)
-    if override_cellsize and cellsize > criticalcellsize:
+    if (override_cellsize and cellsize > criticalcellsize) or (cellsize == 0.0):
         log.debug("create_image_from_visibility: Resetting cellsize %g radians to criticalcellsize %g radians" % (
             cellsize, criticalcellsize))
         cellsize = criticalcellsize

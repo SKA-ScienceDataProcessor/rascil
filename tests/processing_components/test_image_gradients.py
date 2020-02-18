@@ -9,7 +9,7 @@ from rascil.data_models.parameters import rascil_path
 from rascil.processing_components.image.gradients import image_gradients
 from rascil.processing_components.image.operations import export_image_to_fits, show_image, import_image_from_fits
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestPrimaryBeams(unittest.TestCase):

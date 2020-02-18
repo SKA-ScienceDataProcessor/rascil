@@ -19,7 +19,7 @@ from rascil.processing_components.simulation.pointing import simulate_pointingta
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components import create_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestPointing(unittest.TestCase):

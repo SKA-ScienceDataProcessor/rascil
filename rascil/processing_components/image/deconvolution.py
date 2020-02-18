@@ -40,7 +40,7 @@ from rascil.processing_components.image.operations import create_image_from_arra
 from rascil.processing_components.image.operations import calculate_image_frequency_moments, \
     calculate_image_from_frequency_moments, image_is_canonical
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Image):

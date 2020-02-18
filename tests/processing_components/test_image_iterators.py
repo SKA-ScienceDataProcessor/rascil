@@ -14,7 +14,7 @@ from rascil.processing_components.image.iterators import image_raster_iter, imag
 from rascil.processing_components.image.operations import create_empty_image_like
 from rascil.processing_components.simulation import create_test_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestImageIterators(unittest.TestCase):

@@ -12,7 +12,7 @@ from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 from rascil.processing_components.visibility.base import create_visibility, create_visibility_from_rows
 
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestVisibilityIterators(unittest.TestCase):

@@ -28,7 +28,7 @@ from rascil.processing_components.visibility.coalesce import convert_blockvisibi
 from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 log.setLevel(logging.DEBUG)
 log.addHandler(logging.StreamHandler(sys.stdout))
@@ -168,36 +168,8 @@ class TestPipelineGraphs(unittest.TestCase):
                                  '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_restored.fits' % self.dir)
     
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 100.13762476849081) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.03627273884170454) < 1.0, str(qa)
-
-    def test_continuum_imaging_pipeline_serialclean(self):
-        self.actualSetUp(add_errors=False, zerow=True)
-        continuum_imaging_list = \
-            continuum_imaging_list_rsexecute_workflow(self.vis_list,
-                                                       model_imagelist=self.model_imagelist,
-                                                       context='2d',
-                                                       algorithm='mmclean', facets=1,
-                                                       scales=[0, 3, 10],
-                                                       niter=1000, fractional_threshold=0.1, threshold=0.1,
-                                                       nmoment=3,
-                                                       nmajor=5, gain=0.1,
-                                                       deconvolve_facets=4, deconvolve_overlap=32,
-                                                       deconvolve_taper='tukey', psf_support=64,
-                                                       use_serial_clean=True, restore_facets=4, psfwidth=1.0)
-        clean, residual, restored = rsexecute.compute(continuum_imaging_list, sync=True)
-        centre = len(clean) // 2
-        if self.persist:
-            export_image_to_fits(clean[centre], '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_clean.fits' %
-                                 self.dir)
-            export_image_to_fits(residual[centre][0],
-                                 '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_residual.fits' % self.dir)
-            export_image_to_fits(restored[centre],
-                                 '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_restored.fits' % self.dir)
-    
-        qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 100.13762476849081) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.03627273884170454) < 1.0, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.96056316339507) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4027437530187419) < 1.0e-7, str(qa)
 
     def test_ical_pipeline(self):
         self.actualSetUp(add_errors=True)
@@ -213,7 +185,7 @@ class TestPipelineGraphs(unittest.TestCase):
                                           scales=[0, 3, 10],
                                           niter=1000, fractional_threshold=0.1, threshold=0.1,
                                           nmoment=3,
-                                          nmajor=1, gain=0.1,
+                                          nmajor=5, gain=0.1,
                                           deconvolve_facets=4, deconvolve_overlap=32,
                                           deconvolve_taper='tukey', psf_support=64,
                                           restore_facets=4, psfwidth=1.0,
@@ -229,8 +201,8 @@ class TestPipelineGraphs(unittest.TestCase):
                                      self.dir)
         
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.32729396999524) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.6501547522800477) < 1.0, str(qa)
+        assert numpy.abs(qa.data['max'] - 106.5236056384444) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 15.697900103309841) < 1.0e-7, str(qa)
     
     def test_ical_pipeline_global(self):
         self.actualSetUp(add_errors=True)
@@ -246,7 +218,7 @@ class TestPipelineGraphs(unittest.TestCase):
                                           scales=[0, 3, 10],
                                           niter=1000, fractional_threshold=0.1, threshold=0.1,
                                           nmoment=3,
-                                          nmajor=1, gain=0.1,
+                                          nmajor=5, gain=0.1,
                                           deconvolve_facets=4, deconvolve_overlap=32,
                                           deconvolve_taper='tukey', psf_support=64,
                                           restore_facets=4, psfwidth=1.0,
@@ -263,8 +235,45 @@ class TestPipelineGraphs(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 98.92656340122159) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.7024492707920869) < 1.0, str(qa)
+        assert numpy.abs(qa.data['max'] - 106.52401072204145) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 15.704658529419701) < 1.0e-7, str(qa)
+
+    def test_continuum_imaging_pipeline_serialclean(self):
+        self.actualSetUp(add_errors=False, zerow=True)
+        continuum_imaging_list = \
+            continuum_imaging_list_rsexecute_workflow(self.vis_list,
+                                                      model_imagelist=self.model_imagelist,
+                                                      context='2d',
+                                                      algorithm='mmclean',
+                                                      facets=1,
+                                                      scales=[0, 3, 10],
+                                                      niter=1000,
+                                                      fractional_threshold=0.1,
+                                                      threshold=0.1,
+                                                      nmoment=3,
+                                                      nmajor=5, gain=0.1,
+                                                      deconvolve_facets=4,
+                                                      deconvolve_overlap=32,
+                                                      deconvolve_taper='tukey',
+                                                      psf_support=64,
+                                                      use_serial_clean=True,
+                                                      restore_facets=4,
+                                                      psfwidth=1.0)
+        clean, residual, restored = rsexecute.compute(continuum_imaging_list,
+                                                      sync=True)
+        centre = len(clean) // 2
+        if self.persist:
+            export_image_to_fits(clean[centre],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_clean.fits' %
+                                 self.dir)
+            export_image_to_fits(residual[centre][0],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_residual.fits' % self.dir)
+            export_image_to_fits(restored[centre],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_restored.fits' % self.dir)
+    
+        qa = qa_image(restored[centre])
+        assert numpy.abs(qa.data['max'] - 99.96050848972253) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.40249368636733457) < 1.0e-7, str(qa)
 
 
 if __name__ == '__main__':

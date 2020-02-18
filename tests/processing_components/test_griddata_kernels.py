@@ -23,7 +23,7 @@ from rascil.processing_components.imaging.primary_beams import create_pb_generic
 from rascil.processing_components.simulation import create_test_image
 from rascil.processing_components.griddata.kernels import convert_image_to_kernel
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class TestGridDataKernels(unittest.TestCase):
