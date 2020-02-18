@@ -140,7 +140,6 @@ def create_propagators_prop(config, frequency, nants_start, station_skip=1, atte
     """ Create a set of propagators
     :param config: configuration
     :param frequency: frequencies
-    :param transmitter: str name of transmitter
     :param attenuation: generic attenuation value to use if no transmitter specified, else filename to load
     :param beamgainval: float generic beam gain value to use if no transmitter specified, else filename to load
     :param nants_start: limiting station to use determined by use of rmax
@@ -371,7 +370,7 @@ def simulate_rfi_block_prop(bvis, nants_start, station_skip, attenuation_state=N
         # is set to produce signal roughly equal to noise at LOW
         propagators = create_propagators_prop(bvis.configuration, bvis.frequency, nants_start=nants_start,
                                               station_skip=station_skip, attenuation=attenuation,
-                                              transmitter=trans, beamgainval=beamgain, trans_range=DTV_range)
+                                              beamgainval=beamgain, trans_range=DTV_range)
         # Now calculate the RFI at the stations, based on the emitter and the propagators
         rfi_at_station = calculate_rfi_at_station(propagators, emitter)
 
