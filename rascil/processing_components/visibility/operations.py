@@ -412,7 +412,6 @@ def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=Non
     for i in range(0, nchan - 1, channel_average):
         channels.append([ochannels[i], ochannels[i + channel_average - 1]])
     for group in channels:
-        print(group, vis.frequency[group[0]:group[1]])
         vis_shape[-2] = group[1] - group[0]
         newvis = \
             BlockVisibility(data=None,
