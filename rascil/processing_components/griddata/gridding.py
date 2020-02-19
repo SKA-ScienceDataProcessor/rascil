@@ -17,7 +17,7 @@ import logging
 import numpy
 import numpy.testing
 
-from rascil.data_models.memory_data_models import Visibility
+from rascil.data_models.memory_data_models import Visibility, GridData
 from rascil.processing_components.griddata.operations import copy_griddata
 from rascil.processing_components.visibility.base import copy_visibility
 from rascil.processing_components.fourier_transforms import ifft, fft
@@ -162,7 +162,7 @@ def grid_visibility_to_griddata_fast(vis, griddata, cf, gcf):
     return griddata, sumwt
 
 
-def grid_weight_to_griddata(vis, griddata, cf):
+def grid_weight_to_griddata(vis, griddata: GridData, cf):
     """Grid Visibility weight onto a GridData
 
     :param vis: Visibility to be gridded
@@ -179,9 +179,12 @@ def grid_weight_to_griddata(vis, griddata, cf):
     coords = zip(vis.flagged_imaging_weight, pfreq_grid, pu_grid, pv_grid, pwg_grid)
     griddata.data[...] = 0.0
     
+    real_gd = numpy.real(griddata.data)
     for vwt, chan, xx, yy, zzg in coords:
-        griddata.data[chan, :, zzg, yy, xx] += vwt
+        real_gd[chan, :, zzg, yy, xx] += vwt
         sumwt[chan, :] += vwt
+        
+    griddata.data = real_gd.astype("complex")
     
     return griddata, sumwt
 
@@ -225,9 +228,10 @@ def griddata_reweight(vis, griddata, cf):
     _, _, _, _, _, gv, gu = cf.shape
     coords = zip(vis.imaging_weight, pfreq_grid, pu_grid, pv_grid, pwg_grid)
     
+    real_gd = numpy.real(griddata.data)
     for vwt, chan, xx, yy, zzg in coords:
-        if numpy.real(griddata.data[chan, :, zzg, yy, xx]).all() > 0.0:
-            vwt /= numpy.real(griddata.data[chan, :, zzg, yy, xx])
+        if real_gd[chan, :, zzg, yy, xx].all() > 0.0:
+            vwt /= real_gd[chan, :, zzg, yy, xx]
     
     return vis
 
