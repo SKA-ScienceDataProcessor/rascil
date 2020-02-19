@@ -13,7 +13,7 @@ __all__ = ['weight_visibility', 'taper_visibility_gaussian', 'taper_visibility_t
 import numpy
 
 from rascil.data_models.memory_data_models import Visibility
-from rascil.processing_components.griddata.gridding import grid_weight_to_griddata, griddata_reweight
+from rascil.processing_components.griddata.gridding import grid_visibility_weight_to_griddata, griddata_visibility_reweight
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.operations import create_griddata_from_image
 from rascil.processing_components.image.operations import image_is_canonical
@@ -41,8 +41,8 @@ def weight_visibility(vis, model, gcfcf=None, weighting='uniform', **kwargs):
         gcfcf = create_pswf_convolutionfunction(model)
     
     griddata = create_griddata_from_image(model)
-    griddata, sumwt = grid_weight_to_griddata(vis, griddata, gcfcf[1])
-    vis = griddata_reweight(vis, griddata, gcfcf[1])
+    griddata, sumwt = grid_visibility_weight_to_griddata(vis, griddata, gcfcf[1])
+    vis = griddata_visibility_reweight(vis, griddata, gcfcf[1])
     return vis
 
 

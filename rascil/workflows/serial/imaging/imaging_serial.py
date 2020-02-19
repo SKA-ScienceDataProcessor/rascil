@@ -19,7 +19,7 @@ from rascil.processing_components.image.operations import copy_image, create_emp
 from rascil.workflows.shared.imaging import imaging_context
 from rascil.workflows.shared.imaging import sum_invert_results, remove_sumwt, sum_predict_results, \
     threshold_list
-from rascil.processing_components.griddata import grid_weight_to_griddata, griddata_reweight, griddata_merge_weights
+from rascil.processing_components.griddata import grid_visibility_weight_to_griddata, griddata_visibility_reweight, griddata_merge_weights
 from rascil.processing_components.griddata import create_pswf_convolutionfunction
 from rascil.processing_components.griddata import create_griddata_from_image
 from rascil.processing_components.image import  deconvolve_cube, restore_cube
@@ -445,7 +445,7 @@ def weight_list_serial_workflow(vis_list, model_imagelist, gcfcf=None, weighting
         if vis is not None:
             if model is not None:
                 griddata = create_griddata_from_image(model)
-                griddata = grid_weight_to_griddata(vis, griddata, g[0][1])
+                griddata = grid_visibility_weight_to_griddata(vis, griddata, g[0][1])
                 return griddata
             else:
                 return None
@@ -463,7 +463,7 @@ def weight_list_serial_workflow(vis_list, model_imagelist, gcfcf=None, weighting
                 # function mapping works
                 agd = create_griddata_from_image(model)
                 agd.data = gd[0].data
-                vis = griddata_reweight(vis, agd, g[0][1])
+                vis = griddata_visibility_reweight(vis, agd, g[0][1])
                 return vis
             else:
                 return None

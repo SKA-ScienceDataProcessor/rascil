@@ -18,7 +18,7 @@ from rascil.processing_components.griddata.kernels import create_awterm_convolut
 from rascil.processing_components.griddata import convert_convolutionfunction_to_image
 from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
     fft_griddata_to_image, fft_image_to_griddata, \
-    degrid_visibility_from_griddata, grid_weight_to_griddata, griddata_merge_weights, griddata_reweight, \
+    degrid_visibility_from_griddata, grid_visibility_weight_to_griddata, griddata_merge_weights, griddata_visibility_reweight, \
     grid_visibility_to_griddata_fast
 from rascil.processing_components.griddata.operations import create_griddata_from_image
 from rascil.processing_components.image.operations import export_image_to_fits
@@ -285,9 +285,9 @@ class TestGridDataGridding(unittest.TestCase):
         self.actualSetUp(zerow=True)
         gcf, cf = create_box_convolutionfunction(self.model)
         gd = create_griddata_from_image(self.model)
-        gd_list = [grid_weight_to_griddata(self.vis, gd, cf) for i in range(10)]
+        gd_list = [grid_visibility_weight_to_griddata(self.vis, gd, cf) for i in range(10)]
         gd, sumwt = griddata_merge_weights(gd_list, algorithm='uniform')
-        self.vis = griddata_reweight(self.vis, gd, cf)
+        self.vis = griddata_visibility_reweight(self.vis, gd, cf)
         gd, sumwt = grid_visibility_to_griddata(self.vis, griddata=gd, cf=cf)
         im = fft_griddata_to_image(gd, gcf)
         im = normalize_sumwt(im, sumwt)
