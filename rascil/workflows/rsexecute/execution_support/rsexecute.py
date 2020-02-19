@@ -396,15 +396,13 @@ class _rsexecutebase():
                 log.info("\n" + tabulate(table, headers=headers))
                 duration = time.time() - self.start_time
                 speedup = (total / duration)
-                print(total, duration, speedup)
                 log.info("Total processor time {0:.3f} (s), total wallclock time {1:.3f} (s), speedup {2:.2f}".
                       format(total, duration, speedup))
 
-            print_ts(task_stream)
-            # try:
-            #     print_ts(task_stream)
-            # except  ValueError:
-            #     log.warning("Dask task stream is unintelligible")
+            try:
+                print_ts(task_stream)
+            except  ValueError:
+                log.warning("Dask task stream is unintelligible")
 
     @property
     def client(self):
