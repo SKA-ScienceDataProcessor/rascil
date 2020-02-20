@@ -79,22 +79,38 @@ try:
         pixsize = numpy.abs(numpy.radians(model.wcs.wcs.cdelt[0]))
         
         # Make de-gridding over a frequency range and pol fields
-        vis_to_im = numpy.round(
-            model.wcs.sub([4]).wcs_world2pix(freq, 0)[0]).astype('int')
-        for vpol in range(vnpol):
-            for vchan in range(vnchan):
-                imchan = vis_to_im[vchan]
-                vist[vpol, vchan, :] = ng.dirty2ms(fuvw.astype(numpy.float64),
-                                                   numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64),
-                                                   model.data[imchan, vpol, :, :].T.astype(numpy.float64),
-                                                   pixsize_x=pixsize,
-                                                   pixsize_y=pixsize,
-                                                   epsilon=epsilon,
-                                                   do_wstacking=do_wstacking,
-                                                   nthreads=nthreads,
-                                                   verbosity=verbosity)[:, 0]
+        vis_to_im = numpy.round(model.wcs.sub([4]).wcs_world2pix(freq, 0)[0]).astype('int')
+        
+        mfs = m_nchan == 1
+
+        if mfs:
+            for vpol in range(vnpol):
+                vist[vpol, : , :] = ng.dirty2ms(fuvw.astype(numpy.float64),
+                                               bvis.frequency.astype(numpy.float64),
+                                               model.data[0, vpol, :, :].T.astype(numpy.float64),
+                                               pixsize_x=pixsize,
+                                               pixsize_y=pixsize,
+                                               epsilon=epsilon,
+                                               do_wstacking=do_wstacking,
+                                               nthreads=nthreads,
+                                               verbosity=verbosity).T
+
+        else:
+            for vpol in range(vnpol):
+                for vchan in range(vnchan):
+                    imchan = vis_to_im[vchan]
+                    vist[vpol, vchan, :] = ng.dirty2ms(fuvw.astype(numpy.float64),
+                                                       numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64),
+                                                       model.data[imchan, vpol, :, :].T.astype(numpy.float64),
+                                                       pixsize_x=pixsize,
+                                                       pixsize_y=pixsize,
+                                                       epsilon=epsilon,
+                                                       do_wstacking=do_wstacking,
+                                                       nthreads=nthreads,
+                                                       verbosity=verbosity)[:, 0]
         
         vis = convert_pol_frame(vist.T, model.polarisation_frame, bvis.polarisation_frame, polaxis=2)
+
         newbvis.data['vis'] = vis.reshape([nrows, nants, nants, vnchan, vnpol])
         
         # Now we can shift the visibility from the image frame to the original visibility frame
@@ -137,14 +153,13 @@ try:
         
         freq = sbvis.frequency  # frequency, Hz
         
-        nrows, nants, _, vnchan, vnpol = vis.shape
-        flags = sbvis.flags.reshape([nrows * nants * nants, vnchan, vnpol])
+        nrows, nants, _, vnchan, vnpol = sbvis.vis.shape
         uvw = sbvis.uvw.reshape([nrows * nants * nants, 3])
-        ms = sbvis.flagged_vis.reshape([nrows * nants * nants, vnchan, vnpol])
-        wgt = sbvis.flagged_imaging_weight.reshape(
-            [nrows * nants * nants, vnchan, vnpol])
+        ms = sbvis.vis.reshape([nrows * nants * nants, vnchan, vnpol])
+        wgt = sbvis.flagged_imaging_weight.reshape([nrows * nants * nants, vnchan, vnpol])
         
         if dopsf:
+            flags = sbvis.flags.reshape([nrows * nants * nants, vnchan, vnpol])
             ms[...] = (1 - flags).astype('complex')
         
         if epsilon > 5.0e-6:
@@ -164,30 +179,43 @@ try:
         im.data[...] = 0.0
         sumwt = numpy.zeros([nchan, npol])
         
-        ms = convert_pol_frame(ms, bvis.polarisation_frame,
-                               im.polarisation_frame, polaxis=2)
+        ms = convert_pol_frame(ms, bvis.polarisation_frame, im.polarisation_frame, polaxis=2)
         # There's a latent problem here with the weights.
         # wgt = numpy.real(convert_pol_frame(wgt, bvis.polarisation_frame, im.polarisation_frame, polaxis=2))
         
         # Set up the conversion from visibility channels to image channels
-        vis_to_im = numpy.round(
-            model.wcs.sub([4]).wcs_world2pix(freq, 0)[0]).astype('int')
-        # Nifty gridder likes to receive contiguous arrays so we transpose
+        vis_to_im = numpy.round(model.wcs.sub([4]).wcs_world2pix(freq, 0)[0]).astype('int')
+        
+       # Nifty gridder likes to receive contiguous arrays so we transpose
         # at the beginning
+        
+        mfs = nchan == 1
         mst = ms.T
         wgtt = wgt.T
         for pol in range(npol):
-            for vchan in range(vnchan):
-                ichan = vis_to_im[vchan]
+            if mfs:
                 dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
-                                    numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64),
-                                    mst[pol, vchan, :][..., numpy.newaxis],
-                                    wgtt[pol, vchan, :][..., numpy.newaxis],
+                                    bvis.frequency.astype(numpy.float64),
+                                    mst[pol, :, :].T,
+                                    wgtt[pol, :, :].T,
                                     npixdirty, npixdirty, pixsize, pixsize, epsilon,
                                     do_wstacking=do_wstacking,
                                     nthreads=nthreads, verbosity=verbosity)
-                sumwt[ichan, pol] += numpy.sum(wgt[:, vchan, pol])
-                im.data[ichan, pol] += dirty.T
+                sumwt[0, pol] += numpy.sum(wgt[:, :, pol], axis=(0, 1))
+                im.data[0, pol] += dirty.T
+            else:
+                for vchan in range(vnchan):
+                    ichan = vis_to_im[vchan]
+                    frequency = numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64)
+                    dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
+                                        frequency.astype(numpy.float64),
+                                        mst[pol, vchan, :][..., numpy.newaxis],
+                                        wgtt[pol, vchan, :][..., numpy.newaxis],
+                                        npixdirty, npixdirty, pixsize, pixsize, epsilon,
+                                        do_wstacking=do_wstacking,
+                                        nthreads=nthreads, verbosity=verbosity)
+                    sumwt[ichan, pol] += numpy.sum(wgt[:, vchan, pol])
+                    im.data[ichan, pol] += dirty.T
         
         if normalize:
             im = normalize_sumwt(im, sumwt)
