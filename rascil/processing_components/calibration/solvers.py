@@ -139,10 +139,12 @@ def gain_substitution_scalar(gain, x, xwt):
     # Optimzied
     n_top = numpy.einsum('ik...,ijk...->jk...', gain[..., 0, 0], xxwt[:, :, :])
     n_bot = numpy.einsum('ik...,ijk...->jk...', gcg, xwt[..., 0, 0]).real
-    newgain1[:, :, 0, 0][n_bot[:].all() > 0.0] = n_top[n_bot[:].all() > 0.0] / n_bot[n_bot[:].all() > 0.0]
-    newgain1[:, :, 0, 0][n_bot[:].all() <= 0.0] = 0.0
+    mask = n_bot[:].all() > 0.0
+    notmask = n_bot[:].all() <= 0.0
+    newgain1[:, :, 0, 0][mask] = n_top[mask] / n_bot[mask]
+    newgain1[:, :, 0, 0][notmask] = 0.0
     gwt1[:, :, 0, 0] = n_bot
-    gwt1[:, :, 0, 0][n_bot[:].all() <= 0.0] = 0.0
+    gwt1[:, :, 0, 0][notmask] = 0.0
     return newgain1, gwt1
     # Original scripts
     # for ant1 in range(nants):
@@ -559,19 +561,16 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
     else:
         log.debug("solve_gaintable: starting from existing gaintable")
 
+    if modelvis is not None:
+        pointvis = divide_visibility(vis, modelvis)
+    else:
+        pointvis = vis
+
     for row in range(gt.ntimes):
         vis_rows = numpy.abs(vis.time - gt.time[row]) < gt.interval[row] / 2.0
         if numpy.sum(vis_rows) > 0:
-            subvis = create_visibility_from_rows(vis, vis_rows)
-            if modelvis is not None:
-                model_subvis = create_visibility_from_rows(modelvis, vis_rows)
-                pointvis = divide_visibility(subvis, model_subvis)
-                x = numpy.sum(pointvis.vis * pointvis.flagged_weight, axis=0)
-                xwt = numpy.sum(pointvis.flagged_weight, axis=0)
-            else:
-                x = numpy.sum(subvis.vis * subvis.flagged_weight, axis=0)
-                xwt = numpy.sum(subvis.flagged_weight, axis=0)
-
+            x = numpy.sum(pointvis.vis[vis_rows] * pointvis.flagged_weight[vis_rows], axis=0)
+            xwt = numpy.sum(pointvis.flagged_weight[vis_rows], axis=0)
             mask = numpy.abs(xwt) > 0.0
             x_shape = x.shape
             x[mask] = x[mask] / xwt[mask]
