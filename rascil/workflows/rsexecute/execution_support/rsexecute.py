@@ -389,9 +389,9 @@ class _rsexecutebase():
                 for key in summary.keys():
                     total += summary[key]
                 table = []
-                headers = ["Function", "Time (s)", "Per cent", "Number calls"]
+                headers = ["Function", "Time (s)", "Percent", "Number calls"]
                 for key in summary.keys():
-                    table.append([key, "{0:.3f}".format(summary[key]), "{0:.2f}".format(100.0 * summary[key] / total),
+                    table.append([key, "{0:.3f}".format(summary[key]), "{0:.3f}".format(100.0 * summary[key] / total),
                                   number[key]])
                 log.info("\n" + tabulate(table, headers=headers))
                 duration = time.time() - self.start_time
