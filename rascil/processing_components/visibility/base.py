@@ -244,6 +244,7 @@ def create_blockvisibility(config: Configuration,
     rweight = numpy.ones(visshape)
     rimaging_weight = numpy.ones(visshape)
     rtimes = numpy.zeros([ntimes])
+    rintegrationtime = numpy.zeros([ntimes])
     ruvw = numpy.zeros([ntimes, nants, nants, 3])
 
     # Do each hour angle in turn
@@ -265,17 +266,18 @@ def create_blockvisibility(config: Configuration,
                 for a2 in range(a1 + 1, nants):
                     ruvw[itime, a2, a1, :] = (ant_pos[a2, :] - ant_pos[a1, :])
                     ruvw[itime, a1, a2, :] = (ant_pos[a1, :] - ant_pos[a2, :])
-
+            if itime > 0:
+                rintegrationtime[itime] = rtimes[itime] - rtimes[itime-1]
             itime += 1
 
-    rintegration_time = numpy.full_like(rtimes, integration_time)
+    rintegrationtime[0] = rintegrationtime[1]
     rchannel_bandwidth = channel_bandwidth
     if zerow:
         ruvw[..., 2] = 0.0
     vis = BlockVisibility(uvw=ruvw, time=rtimes, frequency=frequency, vis=rvis,
                           weight=rweight,
                           imaging_weight=rimaging_weight, flags=rflags,
-                          integration_time=rintegration_time,
+                          integration_time=rintegrationtime,
                           channel_bandwidth=rchannel_bandwidth,
                           polarisation_frame=polarisation_frame, source=source, meta=meta)
     vis.phasecentre = phasecentre
