@@ -322,8 +322,7 @@ def divide_visibility(vis: BlockVisibility, modelvis: BlockVisibility):
                             modelvis.vis[row, ant2, ant1, chan].reshape([2, 2]))
                         wt = numpy.matrix(
                             vis.weight[row, ant2, ant1, chan].reshape([2, 2]))
-                        x[row, ant2, ant1, chan] = numpy.matmul(
-                            numpy.linalg.inv(mvis), ovis)
+                        x[row, ant2, ant1, chan] = numpy.matmul(numpy.linalg.inv(mvis), ovis)
                         xwt[row, ant2, ant1, chan] = numpy.dot(mvis,
                                                                numpy.multiply(
                                                                    wt,
@@ -409,15 +408,16 @@ def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=Non
     ochannels = range(nchan)
     
     channels = []
-    for i in range(0, nchan - 1, channel_average):
-        channels.append([ochannels[i], ochannels[i + channel_average - 1]])
+    for i in range(0, nchan-1, channel_average):
+        channels.append([ochannels[i], ochannels[i + channel_average - 1]+1])
     for group in channels:
-        vis_shape[-2] = group[1] - group[0]
+        vis_shape[-2] = 1
+        freq = numpy.array([numpy.average(vis.frequency[group[0]:group[1]])])
+        cb = numpy.array([numpy.sum(vis.channel_bandwidth[group[0]:group[1]])])
         newvis = \
             BlockVisibility(data=None,
-                            frequency=vis.frequency[group[0]:group[1]],
-                            channel_bandwidth=vis.channel_bandwidth[
-                                              group[0]:group[1]],
+                            frequency=freq,
+                            channel_bandwidth=cb,
                             phasecentre=vis.phasecentre,
                             configuration=vis.configuration,
                             uvw=vis.uvw,
@@ -425,30 +425,24 @@ def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=Non
                             vis=numpy.zeros(vis_shape, dtype='complex'),
                             flags=numpy.zeros(vis_shape, dtype='int'),
                             weight=numpy.zeros(vis_shape, dtype='float'),
-                            imaging_weight=numpy.zeros(vis_shape,
-                                                       dtype='float'),
+                            imaging_weight=numpy.zeros(vis_shape, dtype='float'),
                             integration_time=vis.integration_time,
                             polarisation_frame=vis.polarisation_frame,
                             source=vis.source,
                             meta=vis.meta)
         
-        newvis.data['flags'][..., 0, :] = numpy.sum(
-            vis.flags[..., group[0]:group[1], :], axis=-2)
+        newvis.data['flags'][..., 0, :] = numpy.sum(vis.flags[..., group[0]:group[1], :], axis=-2)
         newvis.data['flags'][newvis.data['flags'] < nchan] = 0
         newvis.data['flags'][newvis.data['flags'] > 1] = 1
         
-        newvis.data['vis'][..., 0, :] = numpy.sum(
-            vis.flagged_vis[..., group[0]:group[1], :] * vis.flagged_weight[...,
-                                                         group[0]:group[1], :],
-            axis=-2)
-        newvis.data['weight'][..., 0, :] = numpy.sum(
-            vis.flagged_weight[..., group[0]:group[1], :], axis=-2)
+        newvis.data['vis'][..., 0, :] = numpy.sum(vis.flagged_vis[..., group[0]:group[1], :]
+                                                  * vis.flagged_weight[..., group[0]:group[1], :], axis=-2)
+        newvis.data['weight'][..., 0, :] = numpy.sum(vis.flagged_weight[..., group[0]:group[1], :], axis=-2)
         newvis.data['imaging_weight'][..., 0, :] = numpy.sum(
             vis.flagged_imaging_weight[..., group[0]:group[1], :], axis=-2)
         mask = newvis.flagged_weight > 0.0
         newvis.data['vis'][mask] = newvis.data['vis'][mask] / \
-                                   newvis.flagged_weight[
-                                       mask]
+                                   newvis.flagged_weight[mask]
         
         newvis_list.append(newvis)
     
