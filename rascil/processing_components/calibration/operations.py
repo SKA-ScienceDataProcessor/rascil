@@ -63,9 +63,8 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
             nant, nchan, nrec, _ = gain.shape
             
             original = vis.vis[vis_rows]
-            originalwt = vis.weight[vis_rows]
-            applied = numpy.zeros_like(original, dtype='complex')
-            appliedwt = numpy.zeros_like(originalwt, dtype='float')
+            applied = copy.copy(vis.vis[vis_rows])
+            appliedwt = copy.copy(vis.weight[vis_rows])
             if is_scalar:
                 if inverse:
                     lgain = numpy.ones_like(gain)
@@ -73,7 +72,6 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
                 else:
                     lgain = gain
                 tlgain = lgain.T
-                
                 tclgain = numpy.conjugate(tlgain)
                 
                 smueller = numpy.ones([nchan, nant, nant], dtype='complex')
@@ -90,7 +88,7 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
             else:
                 
                 smueller = numpy.ones([nant, nant, nchan, nrec ** 2, nrec ** 2], dtype='complex')
-                has_inverse = numpy.ones([nant, nant, nchan], dtype='bool')
+                has_inverse = numpy.zeros([nant, nant, nchan], dtype='bool')
                 for a1 in range(vis.nants - 1):
                     for a2 in range(a1 + 1, vis.nants):
                         for chan in range(nchan):
@@ -109,15 +107,13 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
                     for a1 in range(vis.nants - 1):
                         for a2 in range(a1 + 1, vis.nants):
                             for chan in range(nchan):
-                                if has_inverse[a2, a1, chan]:
+                                if (not inverse) or has_inverse[a2, a1, chan]:
                                     applied[sub_vis_row, a2, a1, chan, ...] = \
                                         numpy.matmul(smueller[a2, a1, chan], original[sub_vis_row, a2, a1, chan, ...])
-                                    appliedwt[sub_vis_row, a2, a1, chan, ...] = 1.0
                                 else:
                                     applied[sub_vis_row, a2, a1, chan, ...] = original[sub_vis_row, a2, a1, chan, ...]
-                                    appliedwt[sub_vis_row, a2, a1, chan, ...] = 0.0
+
             vis.data['vis'][vis_rows] = applied
-            vis.data['weight'][vis_rows] = appliedwt
     
     return vis
 

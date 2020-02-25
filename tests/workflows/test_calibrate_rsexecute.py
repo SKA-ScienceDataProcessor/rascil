@@ -23,8 +23,10 @@ from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger('logger')
 
-log.setLevel(logging.INFO)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
+
+log.setLevel(logging.WARNING)
 
 
 class TestCalibrateGraphs(unittest.TestCase):
