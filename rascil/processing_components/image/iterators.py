@@ -31,7 +31,7 @@ def image_null_iter(im: Image, facets=1, overlap=0) -> collections.abc.Iterable:
     yield im
 
 
-def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=False) -> collections.Iterable:
+def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=False) -> collections.abc.Iterable:
     """Create an image_raster_iter generator, returning images, optionally with overlaps
 
     The WCS is adjusted appropriately for each raster element. Hence this is a coordinate-aware
