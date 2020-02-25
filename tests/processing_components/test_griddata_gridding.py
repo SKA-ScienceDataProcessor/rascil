@@ -313,7 +313,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = normalize_sumwt(im, sumwt)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_uniform.fits' % self.dir)
-        self.check_peaks(im, 116.52713986189858)
+        self.check_peaks(im, 119.28986516560794)
 
     def test_griddata_blockvisibility_weight(self):
         self.actualSetUp(zerow=True, block=True)
