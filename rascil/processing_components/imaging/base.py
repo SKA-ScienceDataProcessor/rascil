@@ -220,8 +220,11 @@ def predict_skycomponent_visibility(vis: Union[Visibility, BlockVisibility],
             l, m, n = skycoord_to_lmn(comp.direction, vis.phasecentre)
             phasor = simulate_point(vis.uvw, l, m)
             
-            comp_flux = comp.flux[im_nchan, :]
-            vis.data['vis'][...] += comp_flux[:,:] * phasor[:, numpy.newaxis]
+            flux = comp.flux[im_nchan, :]
+            if comp.polarisation_frame != vis.polarisation_frame:
+                flux = convert_pol_frame(flux, comp.polarisation_frame, vis.polarisation_frame)
+
+            vis.data['vis'][...] += flux[:,:] * phasor[:, numpy.newaxis]
 
     elif isinstance(vis, BlockVisibility):
         
