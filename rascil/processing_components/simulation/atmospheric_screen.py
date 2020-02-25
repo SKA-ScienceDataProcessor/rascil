@@ -244,4 +244,4 @@ def plot_gaintable_on_screen(vis, gaintables, height=3e5, gaintable_slices=None,
     if plotfile is not None:
         plt.savefig(plotfile)
 
-    plt.show()
+    plt.show(block=False)
