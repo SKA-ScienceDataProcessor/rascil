@@ -5,6 +5,7 @@
 __all__ = ['append_visibility', 'sort_visibility',
            'concatenate_blockvisibility_frequency',
            'concatenate_visibility',
+           'sum_visibility',
            'subtract_visibility',
            'qa_visibility',
            'remove_continuum_blockvisibility',
@@ -156,6 +157,44 @@ def concatenate_blockvisibility_frequency(bvis_list):
                            meta=None)
     assert result.nchan == nchan
     return result
+
+
+def sum_visibility(vis: Visibility, direction: SkyCoord) -> numpy.array:
+    """ Direct Fourier summation in a given direction
+
+    :param vis: Visibility to be summed
+    :param direction: Direction of summation
+    :return: flux[nch,npol], weight[nch,pol]
+    """
+    # TODO: Convert to Visibility or remove?
+    
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
+    
+    svis = copy_visibility(vis)
+    
+    l, m, n = skycoord_to_lmn(direction, svis.phasecentre)
+    phasor = numpy.conjugate(simulate_point(svis.uvw, l, m))
+    
+    # Need to put correct mapping here
+    _, frequency = get_frequency_map(svis, None)
+    
+    frequency = list(frequency)
+    
+    nchan = max(frequency) + 1
+    npol = svis.polarisation_frame.npol
+    
+    flux = numpy.zeros([nchan, npol])
+    weight = numpy.zeros([nchan, npol])
+    
+    coords = svis.vis, svis.flagged_weight, phasor, list(frequency)
+    for v, wt, p, ic in zip(*coords):
+        for pol in range(npol):
+            flux[ic, pol] += numpy.real(wt[pol] * v[pol] * p)
+            weight[ic, pol] += wt[pol]
+    
+    flux[weight > 0.0] = flux[weight > 0.0] / weight[weight > 0.0]
+    flux[weight <= 0.0] = 0.0
+    return flux, weight
 
 
 def subtract_visibility(vis, model_vis, inplace=False):
