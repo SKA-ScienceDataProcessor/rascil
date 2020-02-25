@@ -327,8 +327,8 @@ def divide_visibility(vis: BlockVisibility, modelvis: BlockVisibility):
                                                                numpy.multiply(
                                                                    wt,
                                                                    mvis.H)).real
-        x = x.reshape((nrows, nants, nants, nchan, nrec * nrec))
-        xwt = xwt.reshape((nrows, nants, nants, nchan, nrec * nrec))
+        x = x.reshape([nrows, nants, nants, nchan, nrec * nrec])
+        xwt = xwt.reshape([nrows, nants, nants, nchan, nrec * nrec])
     
     pointsource_vis = BlockVisibility(data=None, flags=vis.flags,
                                       frequency=vis.frequency,

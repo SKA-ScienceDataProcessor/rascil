@@ -62,7 +62,7 @@ class TestCalibrationChain(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
         original = copy_visibility(self.vis)
-        self.vis = apply_gaintable(self.vis, gt, vis_slices=None)
+        self.vis = apply_gaintable(self.vis, gt)
         # Now get the control dictionary and calibrate
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 0
@@ -80,7 +80,7 @@ class TestCalibrationChain(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
         original = copy_visibility(self.vis)
-        self.vis = apply_gaintable(self.vis, gt, vis_slices=None)
+        self.vis = apply_gaintable(self.vis, gt)
         # Now get the control dictionary and calibrate
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 0
@@ -99,7 +99,7 @@ class TestCalibrationChain(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=0.0, amplitude_error=0.1)
         original = copy_visibility(self.vis)
-        self.vis = apply_gaintable(self.vis, gt, vis_slices=None)
+        self.vis = apply_gaintable(self.vis, gt)
         # Now get the control dictionary and calibrate
         controls = create_calibration_controls()
         controls['G']['first_selfcal'] = 0
@@ -116,7 +116,7 @@ class TestCalibrationChain(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.1)
         original = copy_visibility(self.vis)
-        self.vis = apply_gaintable(self.vis, gt, vis_slices=None)
+        self.vis = apply_gaintable(self.vis, gt)
         # Now get the control dictionary and calibrate
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 0

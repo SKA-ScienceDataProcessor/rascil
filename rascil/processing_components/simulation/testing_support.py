@@ -858,6 +858,6 @@ def insert_unittest_errors(vt, seed=180555, calibration_context="TG", amp_errors
                                        timeslice=controls[c]['timeslice'], phase_only=controls[c]['phase_only'],
                                        crosspol=controls[c]['shape'] == 'matrix')
 
-        vt = apply_gaintable(vt, gaintable, timeslice=controls[c]['timeslice'], inverse=True)
+        vt = apply_gaintable(vt, gaintable, inverse=True, timeslice=controls[c]['timeslice'])
 
     return vt

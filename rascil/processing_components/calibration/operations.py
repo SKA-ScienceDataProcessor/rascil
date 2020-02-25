@@ -19,7 +19,7 @@ from rascil.data_models.polarisation import ReceptorFrame
 log = logging.getLogger('logger')
 
 
-def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, vis_slices=None, **kwargs) -> BlockVisibility:
+def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs) -> BlockVisibility:
     """Apply a gain table to a block visibility
 
     The corrected visibility is::

@@ -79,7 +79,7 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
                 gabs = numpy.average(numpy.abs(gt.data['gain'][row]))
                 gt.data['gain'][row] /= gabs
         else:
-            print("Gaintable {0}, vis time mismatch {1}".format(gt.time, vis.time))
+            log.warning("Gaintable {0}, vis time mismatch {1}".format(gt.time, vis.time))
 
     assert isinstance(gt, GainTable), "gt is not a GainTable: %r" % gt
 

@@ -171,7 +171,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
             'create_visibility: flagged %d/%d visibilities below elevation limit %f (rad)' %
             (n_flagged, vis.nvis, elevation_limit))
     else:
-        log.info('create_visibility: created %d visibilities' % (vis.nvis))
+        log.debug('create_visibility: created %d visibilities' % (vis.nvis))
 
     return vis
 
@@ -234,7 +234,7 @@ def create_blockvisibility(config: Configuration,
         log.info('create_visibility: flagged %d/%d times below elevation limit %f (rad)' %
                  (n_flagged, ntimes, elevation_limit))
     else:
-        log.info('create_visibility: created %d times' % (ntimes))
+        log.debug('create_visibility: created %d times' % (ntimes))
 
     npol = polarisation_frame.npol
     nchan = len(frequency)
@@ -270,7 +270,10 @@ def create_blockvisibility(config: Configuration,
                 rintegrationtime[itime] = rtimes[itime] - rtimes[itime-1]
             itime += 1
 
-    rintegrationtime[0] = rintegrationtime[1]
+    if itime > 1:
+        rintegrationtime[0] = rintegrationtime[1]
+    else:
+        rintegrationtime[0] = integration_time
     rchannel_bandwidth = channel_bandwidth
     if zerow:
         ruvw[..., 2] = 0.0
@@ -282,7 +285,7 @@ def create_blockvisibility(config: Configuration,
                           polarisation_frame=polarisation_frame, source=source, meta=meta)
     vis.phasecentre = phasecentre
     vis.configuration = config
-    log.info("create_blockvisibility: %s" % (vis_summary(vis)))
+    log.debug("create_blockvisibility: %s" % (vis_summary(vis)))
     assert isinstance(vis, BlockVisibility), "vis is not a BlockVisibility: %r" % vis
 
     return vis

@@ -301,9 +301,9 @@ def deconvolve_list_serial_workflow(dirty_list, psf_list, model_imagelist, prefi
     
     def deconvolve(dirty, psf, model, facet, gthreshold, msk=None):
         if prefix == '':
-            lprefix = "facet %d" % facet
+            lprefix = "subimage %d" % facet
         else:
-            lprefix = "%s, facet %d" % (prefix, facet)
+            lprefix = "%s, subimage %d" % (prefix, facet)
         
         if nmoment > 0:
             moment0 = calculate_image_frequency_moments(dirty)

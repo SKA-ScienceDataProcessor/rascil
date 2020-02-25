@@ -57,6 +57,18 @@ class TestCalibrationSolvers(unittest.TestCase):
         self.actualSetup('stokesI', 'stokesI', f=[100.0])
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
+        gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.1)
+        original = copy_visibility(self.vis)
+        self.vis = apply_gaintable(self.vis, gt)
+        gtsol = solve_gaintable(self.vis, original, phase_only=False, niter=200)
+        residual = numpy.max(gtsol.residual)
+        assert residual < 3e-8, "Max residual = %s" % (residual)
+        assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
+
+    def test_solve_gaintable_scalar_phaseonly(self):
+        self.actualSetup('stokesI', 'stokesI', f=[100.0])
+        gt = create_gaintable_from_blockvisibility(self.vis)
+        log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
         original = copy_visibility(self.vis)
         self.vis = apply_gaintable(self.vis, gt)
@@ -65,9 +77,40 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
 
-    def test_solve_gaintable_scalar_small_n(self):
-        self.actualSetup('stokesI', 'stokesI', f=[100.0], ntimes=10,
-                         rmax=83)
+    def test_solve_gaintable_scalar_repeat(self):
+        self.actualSetup('stokesI', 'stokesI', f=[100.0])
+        gt = create_gaintable_from_blockvisibility(self.vis)
+        log.info("Created gain table: %s" % (gaintable_summary(gt)))
+        gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
+        original = copy_visibility(self.vis)
+        self.vis = apply_gaintable(self.vis, gt)
+        gtsol = solve_gaintable(self.vis, original, phase_only=True, niter=200)
+        residual = numpy.max(gtsol.residual)
+        assert residual < 3e-8, "Max residual = %s" % (residual)
+        gtsol = solve_gaintable(self.vis, original, gt=gtsol, phase_only=True, niter=1)
+        residual = numpy.max(gtsol.residual)
+        assert residual < 3e-8, "Max residual = %s" % (residual)
+        assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
+
+    def test_solve_gaintable_scalar_repeat_apply(self):
+        self.actualSetup('stokesI', 'stokesI', f=[100.0])
+        gt = create_gaintable_from_blockvisibility(self.vis)
+        log.info("Created gain table: %s" % (gaintable_summary(gt)))
+        gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
+        original = copy_visibility(self.vis)
+        self.vis = apply_gaintable(self.vis, gt)
+        gtsol = solve_gaintable(self.vis, original, phase_only=True, niter=200)
+        residual = numpy.max(gtsol.residual)
+        assert residual < 3e-8, "Max residual = %s" % (residual)
+        self.vis = apply_gaintable(self.vis, gtsol)
+        gtsol = solve_gaintable(self.vis, original, phase_only=True, niter=1)
+        residual = numpy.max(gtsol.residual)
+        assert residual < 3e-8, "Max residual = %s" % (residual)
+        assert numpy.max(numpy.abs(gtsol.gain - 1.0)) < 1e-8
+
+    def test_solve_gaintable_scalar_small_n_large_t(self):
+        # Select only 6 stations
+        self.actualSetup('stokesI', 'stokesI', f=[100.0], ntimes=1000, rmax=83)
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
@@ -116,16 +159,15 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
 
-    @unittest.skip("Slow")
     def test_solve_gaintable_scalar_pointsource(self):
-        self.actualSetup('stokesI', 'stokesI', f=[100.0], ntimes=1000)
+        self.actualSetup('stokesI', 'stokesI', f=[100.0])
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
         original = copy_visibility(self.vis)
         self.vis = apply_gaintable(self.vis, gt)
         point_vis = divide_visibility(self.vis, original)
-        gtsol = solve_gaintable(point_vis, phase_only=True, niter=200)
+        gtsol = solve_gaintable(point_vis, phase_only=False, niter=200)
         residual = numpy.max(gtsol.residual)
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
