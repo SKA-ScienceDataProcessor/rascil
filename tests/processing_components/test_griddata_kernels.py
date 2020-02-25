@@ -25,6 +25,7 @@ from rascil.processing_components.griddata.kernels import convert_image_to_kerne
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestGridDataKernels(unittest.TestCase):
 

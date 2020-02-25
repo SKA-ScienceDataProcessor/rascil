@@ -11,6 +11,7 @@ import logging
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestParameters(unittest.TestCase):
     def setUp(self):

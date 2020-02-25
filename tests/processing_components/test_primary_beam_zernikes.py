@@ -23,6 +23,7 @@ from rascil.processing_components.visibility.base import create_visibility
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestPrimaryBeams(unittest.TestCase):
     def setUp(self):

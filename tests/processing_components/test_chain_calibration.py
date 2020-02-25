@@ -22,6 +22,7 @@ from rascil.processing_components.visibility.base import copy_visibility, create
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestCalibrationChain(unittest.TestCase):
     def setUp(self):

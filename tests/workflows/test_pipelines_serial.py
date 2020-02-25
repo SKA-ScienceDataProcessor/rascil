@@ -29,9 +29,8 @@ from rascil.processing_components.calibration.operations import create_gaintable
 
 log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
-log.addHandler(logging.StreamHandler(sys.stderr))
 
 
 class TestPipelines(unittest.TestCase):

@@ -29,7 +29,7 @@ from rascil.workflows.rsexecute.pipelines.pipeline_rsexecute import ical_list_rs
 
 log = logging.getLogger('logger')
 
-log.setLevel(logging.INFO)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 
 class TestPipelineGraphs(unittest.TestCase):

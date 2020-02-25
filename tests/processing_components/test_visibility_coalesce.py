@@ -23,6 +23,7 @@ import logging
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestCoalesce(unittest.TestCase):
     def setUp(self):

@@ -19,6 +19,7 @@ from rascil.processing_components import create_image
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestSurface(unittest.TestCase):
     def setUp(self):

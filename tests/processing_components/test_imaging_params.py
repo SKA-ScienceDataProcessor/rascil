@@ -18,6 +18,7 @@ from rascil.processing_components.imaging.imaging_params import get_frequency_ma
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImagingParams(unittest.TestCase):
     def setUp(self):

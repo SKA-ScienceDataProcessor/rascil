@@ -14,6 +14,7 @@ from rascil.processing_components.visibility.base import create_visibility, crea
 import logging
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestVisibilityIterators(unittest.TestCase):
     def setUp(self):

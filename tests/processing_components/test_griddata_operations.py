@@ -12,6 +12,7 @@ from rascil.processing_components.simulation import create_test_image
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestGridData(unittest.TestCase):
     

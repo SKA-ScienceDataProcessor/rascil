@@ -14,7 +14,7 @@ from rascil.processing_components.visibility.coalesce import convert_visibility_
 
 log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 

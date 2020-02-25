@@ -21,6 +21,7 @@ from rascil.processing_components.imaging.primary_beams import create_low_test_b
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestSkycomponent(unittest.TestCase):
     def setUp(self):

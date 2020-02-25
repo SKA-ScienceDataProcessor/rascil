@@ -11,6 +11,7 @@ from rascil.processing_components.image.operations import export_image_to_fits, 
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestPrimaryBeams(unittest.TestCase):
     def setUp(self):

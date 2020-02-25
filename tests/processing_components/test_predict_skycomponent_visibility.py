@@ -19,7 +19,7 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
 from rascil.processing_components.visibility.operations import append_visibility, qa_visibility, \
-    sum_visibility, subtract_visibility, divide_visibility
+    subtract_visibility, divide_visibility
 from rascil.processing_components.visibility.base import copy_visibility, create_visibility, create_blockvisibility, create_visibility_from_rows,\
     phaserotate_visibility
 

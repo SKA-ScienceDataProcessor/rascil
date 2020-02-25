@@ -12,6 +12,8 @@ from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
+
 class Testrsexecute(unittest.TestCase):
     
     def setUp(self):

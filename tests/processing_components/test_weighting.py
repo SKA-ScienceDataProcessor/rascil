@@ -24,6 +24,7 @@ from rascil.processing_components.visibility.base import create_visibility
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestWeighting(unittest.TestCase):
     def setUp(self):
@@ -102,7 +103,7 @@ class TestWeighting(unittest.TestCase):
         # Now we need to convert to radians
         size *= numpy.pi * self.model.wcs.wcs.cdelt[1] / 180.0
         # Very impressive! Desired 0.01 Acheived 0.0100006250829
-        assert numpy.abs(size - size_required) < 0.01 * size_required, \
+        assert numpy.abs(size - size_required) < 0.03 * size_required, \
             "Fit should be %f, actually is %f" % (size_required, size)
 
     def test_tapering_Tukey(self):

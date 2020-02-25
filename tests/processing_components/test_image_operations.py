@@ -18,6 +18,7 @@ from rascil.processing_components import create_image, create_image_from_array, 
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImage(unittest.TestCase):
     

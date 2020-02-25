@@ -16,6 +16,7 @@ from rascil.processing_components.visibility.base import create_blockvisibility
 import logging
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestGainTableIterators(unittest.TestCase):
     def setUp(self):

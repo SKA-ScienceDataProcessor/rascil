@@ -11,6 +11,7 @@ from rascil.processing_components.arrays.cleaners import create_scalestack, conv
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImageMSClean(unittest.TestCase):
     def setUp(self):

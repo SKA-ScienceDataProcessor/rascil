@@ -40,7 +40,7 @@ from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 import logging
 
 log = logging.getLogger()
-log.setLevel(logging.ERROR)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 mpl_logger = logging.getLogger("matplotlib")
 mpl_logger.setLevel(logging.WARNING)

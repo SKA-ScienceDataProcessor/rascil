@@ -26,6 +26,8 @@ from rascil.processing_components import create_image, create_empty_image_like
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
+
 
 class TestIonosphericScreen(unittest.TestCase):
     def setUp(self):

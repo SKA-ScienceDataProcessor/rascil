@@ -20,6 +20,7 @@ import logging
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestVisibilityGatherScatter(unittest.TestCase):
     

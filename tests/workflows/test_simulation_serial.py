@@ -15,6 +15,7 @@ from rascil.workflows.serial.simulation.simulation_serial import simulate_list_s
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestSimulationrsexecuteSupport(unittest.TestCase):
     def setUp(self):

@@ -22,6 +22,7 @@ from rascil.processing_components.visibility.operations import divide_visibility
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestCalibrationSolvers(unittest.TestCase):
     def setUp(self):

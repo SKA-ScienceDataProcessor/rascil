@@ -23,6 +23,7 @@ from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImageGraph(unittest.TestCase):
     def setUp(self):

@@ -20,6 +20,7 @@ from rascil.processing_components.visibility.base import create_blockvisibility
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestSkyModel(unittest.TestCase):
     def setUp(self):

@@ -21,7 +21,7 @@ from rascil.processing_components.image.operations import export_image_to_fits
 
 log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 

@@ -24,6 +24,7 @@ from rascil.processing_components.imaging.base import predict_2d, invert_2d, cre
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def setUp(self):

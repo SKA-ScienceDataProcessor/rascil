@@ -11,6 +11,8 @@ from rascil.processing_components.util.array_functions import average_chunks2, a
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
+
 
 class TestArray_functions(unittest.TestCase):
     def test_average_chunks(self):

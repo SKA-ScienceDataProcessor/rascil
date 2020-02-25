@@ -16,6 +16,7 @@ from rascil.processing_components.simulation import create_test_image
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImageIterators(unittest.TestCase):
     def test_raster(self):

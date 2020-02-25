@@ -16,6 +16,7 @@ from rascil.processing_components.simulation.rfi import create_propagators, calc
 
 log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestRFISim(unittest.TestCase):
     def setUp(self):
