@@ -128,7 +128,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = normalize_sumwt(im, sumwt)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_pswf_block.fits' % self.dir)
-        self.check_peaks(im, 122.50573778667788, tol=1e-7)
+        self.check_peaks(im, 116.38692786686167, tol=1e-7)
 
     def test_griddata_invert_pswf_w(self):
         self.actualSetUp(zerow=False)
@@ -292,7 +292,7 @@ class TestGridDataGridding(unittest.TestCase):
 
     def test_griddata_visibility_weight(self):
         self.actualSetUp(zerow=True)
-        gcf, cf = create_box_convolutionfunction(self.model)
+        gcf, cf = create_pswf_convolutionfunction(self.model)
         gd = create_griddata_from_image(self.model)
         gd_list = [grid_visibility_weight_to_griddata(self.vis, gd, cf) for i in range(10)]
         gd, sumwt = griddata_merge_weights(gd_list, algorithm='uniform')
@@ -302,21 +302,22 @@ class TestGridDataGridding(unittest.TestCase):
         im = normalize_sumwt(im, sumwt)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_uniform.fits' % self.dir)
-        self.check_peaks(im, 119.28986516560794)
+        self.check_peaks(im, 119.19876357360998)
 
     def test_griddata_blockvisibility_weight(self):
         self.actualSetUp(zerow=True, block=True)
-        gcf, cf = create_box_convolutionfunction(self.model)
+        gcf, cf = create_pswf_convolutionfunction(self.model)
         gd = create_griddata_from_image(self.model)
         gd_list = [grid_blockvisibility_weight_to_griddata(self.vis, gd, cf) for i in range(10)]
+        assert numpy.max(numpy.abs(gd_list[0][0].data)) > 10.0
         gd, sumwt = griddata_merge_weights(gd_list, algorithm='uniform')
         self.vis = griddata_blockvisibility_reweight(self.vis, gd, cf)
         gd, sumwt = grid_blockvisibility_to_griddata(self.vis, griddata=gd, cf=cf)
         im = fft_griddata_to_image(gd, gcf)
         im = normalize_sumwt(im, sumwt)
         if self.persist:
-            export_image_to_fits(im, '%s/test_gridding_dirty_2d_uniform.fits' % self.dir)
-        self.check_peaks(im, 122.63480249162777)
+            export_image_to_fits(im, '%s/test_gridding_dirty_2d_uniform_block.fits' % self.dir)
+        self.check_peaks(im, 120.06725951333463)
 
     def plot_vis(self, newvis, title=''):
         if self.doplot:

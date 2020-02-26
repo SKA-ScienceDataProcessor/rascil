@@ -393,12 +393,12 @@ def griddata_blockvisibility_reweight(vis, griddata, cf):
             frequency = vis.frequency[vchan]
             pu_grid, pu_offset, pv_grid, pv_offset, pwg_grid, pwg_fraction, pwc_grid, pwc_fraction = \
                 convolution_mapping_blockvisibility(vis, griddata, frequency, cf)
-            for row in range(nrows):
+            for row in range(nrows * nants * nants):
                 wt = real_gd[imchan, pol, pwg_grid[row], pv_grid[row], pu_grid[row]]
                 if wt > 0.0:
                     wgtt[pol, vchan, row] /= wt
 
-    vis.data['imaging_weight'] = wgtt.T.reshape([nrows, nants, nants, nvchan, nvpol])
+    vis.data['imaging_weight'][...] = wgtt.T.reshape([nrows, nants, nants, nvchan, nvpol])
 
     return vis
 
