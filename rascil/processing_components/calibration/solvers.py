@@ -65,8 +65,8 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
     for row in range(gt.ntimes):
         vis_rows = numpy.abs(vis.time - gt.time[row]) < gt.interval[row] / 2.0
         if numpy.sum(vis_rows) > 0:
-            x = numpy.sum(pointvis.vis[vis_rows] * pointvis.flagged_weight[vis_rows], axis=0)
-            xwt = numpy.sum(pointvis.flagged_weight[vis_rows], axis=0)
+            x = numpy.sum((pointvis.vis[vis_rows] * pointvis.weight[vis_rows])*(1-pointvis.flags[vis_rows]), axis=0)
+            xwt = numpy.sum(pointvis.weight[vis_rows]*(1-pointvis.flags[vis_rows]), axis=0)
             mask = numpy.abs(xwt) > 0.0
             x_shape = x.shape
             x[mask] = x[mask] / xwt[mask]
