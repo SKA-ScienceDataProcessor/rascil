@@ -117,10 +117,6 @@ class TestPipelines(unittest.TestCase):
             create_unittest_model(self.vis_list[i], self.image_pol, npixel=self.npixel, cellsize=0.0005)
             for i in range(nfreqwin)]
     
-    def test_time_setup(self):
-        self.actualSetUp(add_errors=True)
-    
-    #@unittest.skip("Too expensive to run in Jenkins")
     def test_continuum_imaging_pipeline(self):
         self.actualSetUp(add_errors=False, zerow=True)
         clean, residual, restored = \
@@ -144,12 +140,12 @@ class TestPipelines(unittest.TestCase):
                                 '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
         
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 100.13762476849081) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.03627273884170454) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.96056316339507) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4027437530187419) < 1.0e-7, str(qa)
     
     #@unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline(self):
-        self.actualSetUp(add_errors=True)
+        self.actualSetUp(add_errors=False)
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 1
         controls['T']['timeslice'] = 'auto'
@@ -177,12 +173,12 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 106.5236056384444) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 15.697900103309841) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.96329339612933) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.39885052949469246) < 1.0e-7, str(qa)
     
     #@unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline_global(self):
-        self.actualSetUp(add_errors=True)
+        self.actualSetUp(add_errors=False)
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 1
         controls['T']['timeslice'] = 'auto'
@@ -212,8 +208,8 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 106.52401072204145) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 15.704658529419701) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.96167141746571) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.40137591446730764) < 1.0e-7, str(qa)
 
 
 if __name__ == '__main__':

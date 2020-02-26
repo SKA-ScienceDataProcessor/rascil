@@ -138,9 +138,6 @@ class TestPipelineGraphs(unittest.TestCase):
         self.model_imagelist = rsexecute.compute(self.model_imagelist, sync=True)
         self.model_imagelist = rsexecute.scatter(self.model_imagelist)
     
-    def test_time_setup(self):
-        self.actualSetUp(add_errors=False)
-    
     def test_continuum_imaging_pipeline(self):
         self.actualSetUp(add_errors=False, zerow=True)
         continuum_imaging_list = \
