@@ -19,7 +19,7 @@ from rascil.processing_components.griddata import convert_convolutionfunction_to
 from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
     fft_griddata_to_image, fft_image_to_griddata, \
     degrid_visibility_from_griddata, grid_visibility_weight_to_griddata, griddata_merge_weights, griddata_visibility_reweight, \
-    grid_visibility_to_griddata_fast, grid_blockvisibility_to_griddata, griddata_blockvisibility_reweight, \
+    grid_blockvisibility_to_griddata, griddata_blockvisibility_reweight, \
     grid_blockvisibility_weight_to_griddata, degrid_blockvisibility_from_griddata
 from rascil.processing_components.griddata.operations import create_griddata_from_image
 from rascil.processing_components.image.operations import export_image_to_fits, convert_stokes_to_polimage
@@ -182,17 +182,6 @@ class TestGridDataGridding(unittest.TestCase):
         im = normalize_sumwt(im, sumwt)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_box.fits' % self.dir)
-        self.check_peaks(im, 116.52713986189858, tol=1e-7)
-    
-    def test_griddata_invert_fast(self):
-        self.actualSetUp(zerow=True)
-        gcf, cf = create_box_convolutionfunction(self.model)
-        griddata = create_griddata_from_image(self.model)
-        griddata, sumwt = grid_visibility_to_griddata_fast(self.vis, griddata=griddata, cf=cf, gcf=gcf)
-        im = fft_griddata_to_image(griddata, gcf)
-        im = normalize_sumwt(im, sumwt)
-        if self.persist:
-            export_image_to_fits(im, '%s/test_gridding_dirty_fast.fits' % self.dir)
         self.check_peaks(im, 116.52713986189858, tol=1e-7)
     
     def check_peaks(self, im, peak, tol=1e-6):

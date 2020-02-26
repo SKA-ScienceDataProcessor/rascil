@@ -41,7 +41,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestImaging(unittest.TestCase):
     def setUp(self):
         
-        rsexecute.set_client(verbose=False, memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
+        rsexecute.set_client(use_dask=True)
 
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
@@ -151,9 +151,6 @@ class TestImaging(unittest.TestCase):
             self.gcfcf_clipped = None
             self.gcfcf_joint = None
     
-    def test_time_setup(self):
-        self.actualSetUp()
-    
     def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=1.0):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)
         assert len(comps) == len(self.components), "Different number of components found: original %d, recovered %d" % \
@@ -204,11 +201,15 @@ class TestImaging(unittest.TestCase):
         
         if check_components:
             self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
-    
+
     def test_predict_2d(self):
         self.actualSetUp(zerow=True)
         self._predict_base(context='2d')
-    
+
+    def test_predict_2d_block(self):
+        self.actualSetUp(zerow=True, block=True)
+        self._predict_base(context='2d', extr='_block')
+
     @unittest.skip("Facets need overlap")
     def test_predict_facets(self):
         self.actualSetUp()

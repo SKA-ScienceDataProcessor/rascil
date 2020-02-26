@@ -35,9 +35,9 @@ from astropy.wcs.utils import pixel_to_skycoord
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image, Skycomponent, assert_same_chan_pol
 from rascil.data_models.parameters import get_parameter
 from rascil.data_models.polarisation import convert_pol_frame, PolarisationFrame
-from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
+from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, grid_blockvisibility_to_griddata, \
     fft_griddata_to_image, fft_image_to_griddata, \
-    degrid_visibility_from_griddata
+    degrid_visibility_from_griddata, degrid_blockvisibility_from_griddata
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.operations import create_griddata_from_image
 from rascil.processing_components.image import create_image_from_array
@@ -121,7 +121,7 @@ def predict_2d(vis: Union[BlockVisibility, Visibility], model: Image, gcfcf=None
     if model is None:
         return vis
     
-    assert isinstance(vis, Visibility), vis
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
 
     _, _, ny, nx = model.data.shape
     
@@ -134,8 +134,11 @@ def predict_2d(vis: Union[BlockVisibility, Visibility], model: Image, gcfcf=None
     
     griddata = create_griddata_from_image(model)
     griddata = fft_image_to_griddata(model, griddata, gcf)
-    vis = degrid_visibility_from_griddata(vis, griddata=griddata, cf=cf)
-    
+    if isinstance(vis, Visibility):
+            vis = degrid_visibility_from_griddata(vis, griddata=griddata, cf=cf)
+    else:
+        vis = degrid_blockvisibility_from_griddata(vis, griddata=griddata, cf=cf)
+
     # Now we can shift the visibility from the image frame to the original visibility frame
     svis = shift_vis_to_image(vis, model, tangent=True, inverse=True)
     
@@ -159,7 +162,7 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     :return: resulting image
 
     """
-    assert isinstance(vis, Visibility), vis
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     
     svis = copy_visibility(vis)
     
@@ -176,8 +179,11 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
         gcf, cf = gcfcf
 
     griddata = create_griddata_from_image(im)
-    griddata, sumwt = grid_visibility_to_griddata(svis, griddata=griddata, cf=cf)
-    
+    if isinstance(vis, Visibility):
+        griddata, sumwt = grid_visibility_to_griddata(svis, griddata=griddata, cf=cf)
+    else:
+        griddata, sumwt = grid_blockvisibility_to_griddata(svis, griddata=griddata, cf=cf)
+
     imaginary = get_parameter(kwargs, "imaginary", False)
     if imaginary:
         result0, result1 = fft_griddata_to_image(griddata, gcf, imaginary=imaginary)

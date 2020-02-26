@@ -76,7 +76,8 @@ class TestImaging(unittest.TestCase):
                                               [self.channelwidth],
                                               self.times,
                                               self.vis_pol,
-                                              self.phasecentre, block=block,
+                                              self.phasecentre,
+                                              block=block,
                                               zerow=zerow)
         
         self.model = create_unittest_model(self.vis, self.image_pol, npixel=self.npixel)
@@ -98,7 +99,8 @@ class TestImaging(unittest.TestCase):
     
     def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=1.0):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)
-        assert len(comps) == len(self.components), "Different number of components found: original %d, recovered %d" % \
+        assert len(comps) == len(self.components), \
+            "Different number of components found: original %d, recovered %d" % \
                                                    (len(self.components), len(comps))
         cellsize = abs(dirty.wcs.wcs.cdelt[0])
         
@@ -122,9 +124,10 @@ class TestImaging(unittest.TestCase):
         assert maxabs < fluxthreshold, "Error %.3f greater than fluxthreshold %.3f " % (maxabs, fluxthreshold)
     
     def _invert_base(self, fluxthreshold=1.0, positionthreshold=1.0, check_components=True,
-                     name='predict_2d', gcfcf=None, **kwargs):
+                     name='invert_2d', gcfcf=None, **kwargs):
         
-        dirty = invert_2d(self.vis, self.model, dopsf=False, normalize=True, gcfcf = gcfcf, **kwargs)
+        dirty = invert_2d(self.vis, self.model, dopsf=False, normalize=True, gcfcf = gcfcf,
+                          **kwargs)
         
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_%s_dirty.fits' %
                              (self.dir, name))
@@ -142,6 +145,14 @@ class TestImaging(unittest.TestCase):
         self.actualSetUp(zerow=True)
         self._invert_base(name='invert_2d', positionthreshold=2.0, check_components=True)
 
+    def test_predict_2d_block(self):
+        self.actualSetUp(zerow=True, block=True)
+        self._predict_base(name='predict_2d_block')
+
+    def test_invert_2d_block(self):
+        self.actualSetUp(zerow=True, block=True)
+        self._invert_base(name='invert_2d_block', positionthreshold=2.0, check_components=True)
+
     def test_predict_awterm(self):
         self.actualSetUp(zerow=False)
         make_pb = functools.partial(create_pb_generic, diameter=35.0, blockage=0.0, use_local=False)
@@ -155,6 +166,20 @@ class TestImaging(unittest.TestCase):
         gcfcf = create_awterm_convolutionfunction(self.model, make_pb=make_pb, nw=100, wstep=8.0,
                                                     oversampling=4, support=100, use_aaf=True)
         self._invert_base(name='invert_awterm', positionthreshold=35.0, check_components=False, gcfcf = gcfcf)
+
+    def test_predict_awterm_block(self):
+        self.actualSetUp(zerow=False, block=True)
+        make_pb = functools.partial(create_pb_generic, diameter=35.0, blockage=0.0, use_local=False)
+        gcfcf = create_awterm_convolutionfunction(self.model, make_pb=make_pb, nw=100, wstep=8.0,
+                                                    oversampling=4, support=100, use_aaf=True)
+        self._predict_base(name='predict_awterm_block', fluxthreshold=35.0, gcfcf = gcfcf)
+
+    def test_invert_awterm_block(self):
+        self.actualSetUp(zerow=False, block=True)
+        make_pb = functools.partial(create_pb_generic, diameter=35.0, blockage=0.0, use_local=False)
+        gcfcf = create_awterm_convolutionfunction(self.model, make_pb=make_pb, nw=100, wstep=8.0,
+                                                    oversampling=4, support=100, use_aaf=True)
+        self._invert_base(name='invert_awterm_block', positionthreshold=35.0, check_components=False, gcfcf = gcfcf)
 
     def test_predict_wterm(self):
         self.actualSetUp(zerow=False)

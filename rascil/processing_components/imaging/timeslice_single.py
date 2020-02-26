@@ -56,16 +56,19 @@ Ignoring changes in the normalisation term, we have:
 
 
 """
+
+from typing import Union
+
 import numpy
 
-from rascil.data_models.memory_data_models import Visibility, Image
+from rascil.data_models.memory_data_models import Visibility, Image, BlockVisibility
 
 from rascil.processing_components.image.operations import reproject_image
 
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
 
 
-def fit_uvwplane_only(vis: Visibility) -> (float, float):
+def fit_uvwplane_only(vis: Union[Visibility, BlockVisibility]) -> (float, float):
     """ Fit the best fitting plane p u + q v = w
 
     :param vis: visibility to be fitted
@@ -83,7 +86,7 @@ def fit_uvwplane_only(vis: Visibility) -> (float, float):
     return p, q
 
 
-def fit_uvwplane(vis: Visibility, remove=False) -> (Image, float, float):
+def fit_uvwplane(vis: Union[Visibility, BlockVisibility], remove=False) -> (Image, float, float):
     """ Fit and optionally remove the best fitting plane p u + q v = w
 
     :param vis: visibility to be fitted
@@ -103,8 +106,9 @@ def fit_uvwplane(vis: Visibility, remove=False) -> (Image, float, float):
     return vis, p, q
 
 
-def predict_timeslice_single(vis: Visibility, model: Image, predict=predict_2d, remove=True,
-                             gcfcf=None, **kwargs) -> Visibility:
+def predict_timeslice_single(vis: Union[Visibility, BlockVisibility], model: Image,
+                             predict=predict_2d, remove=True, gcfcf=None, **kwargs) \
+        -> Union[Visibility, BlockVisibility]:
     """ Predict using a single time slices.
 
     This fits a single plane and corrects the image geometry.
@@ -140,7 +144,7 @@ def predict_timeslice_single(vis: Visibility, model: Image, predict=predict_2d, 
     """
     assert image_is_canonical(model)
 
-    assert isinstance(vis, Visibility), vis
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     
     vis.data['vis'][...] = 0.0
     
@@ -171,7 +175,7 @@ def predict_timeslice_single(vis: Visibility, model: Image, predict=predict_2d, 
     return vis
 
 
-def invert_timeslice_single(vis: Visibility, im: Image, dopsf, normalize=True, remove=True,
+def invert_timeslice_single(vis: Union[Visibility, BlockVisibility], im: Image, dopsf, normalize=True, remove=True,
                             gcfcf=None, **kwargs) -> (Image, numpy.ndarray):
     """Process single time slice
 
@@ -206,7 +210,7 @@ def invert_timeslice_single(vis: Visibility, im: Image, dopsf, normalize=True, r
     :param normalize: Normalize by the sum of weights (True)
     :returns: image, sum of weights
     """
-    assert isinstance(vis, Visibility), vis
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     assert image_is_canonical(im)
     
     uvw = vis.uvw

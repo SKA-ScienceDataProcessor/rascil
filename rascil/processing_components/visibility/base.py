@@ -263,6 +263,7 @@ def create_blockvisibility(config: Configuration,
             # Loop over all pairs of antennas. Note that a2>a1
             for a1 in range(nants):
                 rweight[itime, a1, a1, ...] = 0.0
+                rflags[itime, a1, a1, ...] = 1.0
                 for a2 in range(a1 + 1, nants):
                     ruvw[itime, a2, a1, :] = (ant_pos[a2, :] - ant_pos[a1, :])
                     ruvw[itime, a1, a2, :] = (ant_pos[a1, :] - ant_pos[a2, :])
