@@ -175,21 +175,20 @@ def gain_substitution_scalar(gain, x, xwt):
     newgain1 = numpy.ones_like(gain, dtype='complex128')
     gwt1 = numpy.zeros_like(gain, dtype='double')
     
-    x = x.reshape([nants, nants, nchan, nrec, nrec])
-    xwt = xwt.reshape([nants, nants, nchan, nrec, nrec])
-    
-    xxwt = x[:, :, :, 0, 0] * xwt[:, :, :, 0, 0]
+    xxwt = x * xwt[:, :, :]
     cgain = numpy.conjugate(gain)
-    gcg = gain[:, :, 0, 0] * cgain[:, :, 0, 0]
+    gcg = gain[:, :] * cgain[:, :]
     # Optimzied
-    n_top = numpy.einsum('ik...,ijk...->jk...', gain[..., 0, 0], xxwt[:, :, :])
-    n_bot = numpy.einsum('ik...,ijk...->jk...', gcg, xwt[..., 0, 0]).real
-    mask = n_bot[:] > 0.0
-    notmask = n_bot[:] <= 0.0
-    newgain1[:, :, 0, 0][mask] = n_top[mask] / n_bot[mask]
-    newgain1[:, :, 0, 0][notmask] = 0.0
-    gwt1[:, :, 0, 0] = n_bot
-    gwt1[:, :, 0, 0][notmask] = 0.0
+    n_top = numpy.einsum('ik...,ijk...->jk...', gain, xxwt)
+    n_bot = numpy.einsum('ik...,ijk...->jk...', gcg, xwt).real
+    mask = n_bot > 0.0
+    notmask = n_bot <= 0.0
+    newgain1[:, :][mask] = n_top[mask] / n_bot[mask]
+    newgain1[:, :][notmask] = 0.0
+    gwt1[:, :] = n_bot
+    gwt1[:, :][notmask] = 0.0
+    newgain1 = newgain1.reshape([nants, nchan, nrec, nrec])
+    gwt1 = gwt1.reshape([nants, nchan, nrec, nrec])
     return newgain1, gwt1
     # Original scripts
     # for ant1 in range(nants):
