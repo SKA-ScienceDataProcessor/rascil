@@ -29,7 +29,7 @@ class TestCalibrationPlot(unittest.TestCase):
     
     def actualSetup(self, sky_pol_frame='stokesIQUV', data_pol_frame='linear', f=None, vnchan=3, ntimes=30):
         self.lowcore = create_named_configuration('LOWBD2', rmax=50.0)
-        self.times = (numpy.pi / 43200.0) * numpy.linspace(0.0, 30.0, ntimes)
+        self.times = (numpy.pi / 43200.0) * numpy.linspace(0.0, 30.0, ntimes) + 60000.0 * 2 * numpy.pi
         self.frequency = numpy.linspace(1.0e8, 1.1e8, vnchan)
         self.channel_bandwidth = numpy.array(vnchan * [self.frequency[1] - self.frequency[0]])
         
@@ -58,14 +58,7 @@ class TestCalibrationPlot(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=0.1, amplitude_error=0.1)
         plt.clf()
-        fig, ax = plt.subplots(1, 1)
-        gaintable_plot(gt, ax, value='amp')
-        plt.show(block=False)
-        fig, ax = plt.subplots(1, 1)
-        gaintable_plot(gt, ax, value='phase')
-        plt.show(block=False)
-        fig, ax = plt.subplots(1, 1)
-        gaintable_plot(gt, ax, value='residual')
+        gaintable_plot(gt)
         plt.show(block=False)
 
 

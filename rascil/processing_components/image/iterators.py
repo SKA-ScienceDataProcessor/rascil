@@ -157,7 +157,7 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
                     i += 1
 
 
-def image_channel_iter(im: Image, subimages=1) -> collections.Iterable:
+def image_channel_iter(im: Image, subimages=1) -> collections.abc.Iterable:
     """Create a image_channel_iter generator, returning images
 
     The WCS is adjusted appropriately for each raster element. Hence this is a coordinate-aware
