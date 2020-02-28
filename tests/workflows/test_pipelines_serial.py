@@ -176,7 +176,7 @@ class TestPipelines(unittest.TestCase):
         assert numpy.abs(qa.data['max'] - 99.96329339612933) < 1.0e-7, str(qa)
         assert numpy.abs(qa.data['min'] + 0.39885052949469246) < 1.0e-7, str(qa)
     
-    #@unittest.skip("Too expensive to run in Jenkins")
+    @unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline_global(self):
         self.actualSetUp(add_errors=False)
         controls = create_calibration_controls()
