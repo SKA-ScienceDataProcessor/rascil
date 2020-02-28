@@ -77,7 +77,7 @@ An explicit sync is required in both cases.
         return type(self._memory_data_model)
     
     def assert_type(self, memory_data_model_type):
-        if isinstance(self._memory_data_model, collections.Iterable):
+        if isinstance(self._memory_data_model, collections.abc.Iterable):
             for m in self._memory_data_model:
                 assert isinstance(m, memory_data_model_type), "Expected %s, actual %s" % (memory_data_model_type,
                                                                                           type(m))

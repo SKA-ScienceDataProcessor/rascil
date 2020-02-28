@@ -210,7 +210,7 @@ def predict_skycomponent_visibility(vis: Union[Visibility, BlockVisibility],
     if sc is None:
         return vis
     
-    if not isinstance(sc, collections.Iterable):
+    if not isinstance(sc, collections.abc.Iterable):
         sc = [sc]
 
     

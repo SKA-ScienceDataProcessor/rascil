@@ -328,7 +328,7 @@ def export_visibility_to_hdf5(vis, filename):
     :return:
     """
     
-    if not isinstance(vis, collections.Iterable):
+    if not isinstance(vis, collections.abc.Iterable):
         vis = [vis]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(vis)
@@ -362,7 +362,7 @@ def export_blockvisibility_to_hdf5(vis, filename):
     :return:
     """
 
-    if not isinstance(vis, collections.Iterable):
+    if not isinstance(vis, collections.abc.Iterable):
         vis = [vis]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(vis)
@@ -397,7 +397,7 @@ def export_flagtable_to_hdf5(ft, filename):
     :return:
     """
 
-    if not isinstance(ft, collections.Iterable):
+    if not isinstance(ft, collections.abc.Iterable):
         ft = [ft]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(ft)
@@ -467,7 +467,7 @@ def export_gaintable_to_hdf5(gt: GainTable, filename):
     :return:
     """
     
-    if not isinstance(gt, collections.Iterable):
+    if not isinstance(gt, collections.abc.Iterable):
         gt = [gt]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(gt)
@@ -542,7 +542,7 @@ def export_pointingtable_to_hdf5(pt: PointingTable, filename):
     :return:
     """
     
-    if not isinstance(pt, collections.Iterable):
+    if not isinstance(pt, collections.abc.Iterable):
         pt = [pt]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(pt)
@@ -616,7 +616,7 @@ def export_skycomponent_to_hdf5(sc: Skycomponent, filename):
     :return:
     """
     
-    if not isinstance(sc, collections.Iterable):
+    if not isinstance(sc, collections.abc.Iterable):
         sc = [sc]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(sc)
@@ -683,7 +683,7 @@ def export_image_to_hdf5(im, filename):
     :return:
     """
     
-    if not isinstance(im, collections.Iterable):
+    if not isinstance(im, collections.abc.Iterable):
         im = [im]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(im)
@@ -719,7 +719,7 @@ def export_skymodel_to_hdf5(sm, filename):
     :return:
     """
     
-    if not isinstance(sm, collections.Iterable):
+    if not isinstance(sm, collections.abc.Iterable):
         sm = [sm]
     
     with h5py.File(filename, 'w') as f:
@@ -851,7 +851,7 @@ def export_griddata_to_hdf5(gd, filename):
     :return:
     """
     
-    if not isinstance(gd, collections.Iterable):
+    if not isinstance(gd, collections.abc.Iterable):
         gd = [gd]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(gd)
@@ -920,7 +920,7 @@ def export_convolutionfunction_to_hdf5(cf, filename):
     :return:
     """
     
-    if not isinstance(cf, collections.Iterable):
+    if not isinstance(cf, collections.abc.Iterable):
         cf = [cf]
     with h5py.File(filename, 'w') as f:
         f.attrs['number_data_models'] = len(cf)

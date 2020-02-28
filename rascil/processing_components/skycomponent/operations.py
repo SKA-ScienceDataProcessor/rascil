@@ -321,7 +321,7 @@ def apply_beam_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], beam
     :return: List of skycomponents
     """
     assert isinstance(beam, Image)
-    single = not isinstance(sc, collections.Iterable)
+    single = not isinstance(sc, collections.abc.Iterable)
     
     if single:
         sc = [sc]
@@ -409,7 +409,7 @@ def insert_skycomponent(im: Image, sc: Union[Skycomponent, List[Skycomponent]], 
     
     nchan, npol, ny, nx = im.data.shape
     
-    if not isinstance(sc, collections.Iterable):
+    if not isinstance(sc, collections.abc.Iterable):
         sc = [sc]
     
     log.debug("insert_skycomponent: Using insert method %s" % insert_method)

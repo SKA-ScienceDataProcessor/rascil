@@ -24,7 +24,7 @@ def rcal(vis: BlockVisibility, components, **kwargs) -> GainTable:
     :return: gaintable
    """
     
-    if not isinstance(vis, collections.Iterable):
+    if not isinstance(vis, collections.abc.Iterable):
         vis = [vis]
     
     for ichunk, vischunk in enumerate(vis):

@@ -199,7 +199,7 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
                      facets=facets, gcfcf=gcfcf, **kwargs)[0]
                 for i, _ in enumerate(vis_list)]
     
-    if not isinstance(template_model_imagelist, collections.Iterable):
+    if not isinstance(template_model_imagelist, collections.abc.Iterable):
         template_model_imagelist = [template_model_imagelist]
     
     c = imaging_context(context)

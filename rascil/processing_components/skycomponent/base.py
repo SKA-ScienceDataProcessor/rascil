@@ -18,7 +18,7 @@ def copy_skycomponent(sc):
     :param sc:
     :return:
     """
-    single = not isinstance(sc, collections.Iterable)
+    single = not isinstance(sc, collections.abc.Iterable)
     
     if single:
         return Skycomponent(
