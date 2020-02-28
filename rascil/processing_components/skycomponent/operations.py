@@ -490,7 +490,7 @@ def voronoi_decomposition(im, comps):
     return vor, vertex_image
 
 
-def image_voronoi_iter(im: Image, components: list) -> collections.Iterable:
+def image_voronoi_iter(im: Image, components: list) -> collections.abc.Iterable:
     """Iterate through Voronoi decomposition, returning a generator yielding fullsize images
 
     :param im: Image

@@ -117,6 +117,7 @@ class TestPipelines(unittest.TestCase):
             create_unittest_model(self.vis_list[i], self.image_pol, npixel=self.npixel, cellsize=0.0005)
             for i in range(nfreqwin)]
     
+    @unittest.skip("Too expensive to run in Jenkins")
     def test_continuum_imaging_pipeline(self):
         self.actualSetUp(add_errors=False, zerow=True)
         clean, residual, restored = \
@@ -143,7 +144,7 @@ class TestPipelines(unittest.TestCase):
         assert numpy.abs(qa.data['max'] - 99.96056316339507) < 1.0e-7, str(qa)
         assert numpy.abs(qa.data['min'] + 0.4027437530187419) < 1.0e-7, str(qa)
     
-    #@unittest.skip("Too expensive to run in Jenkins")
+    @unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline(self):
         self.actualSetUp(add_errors=False)
         controls = create_calibration_controls()

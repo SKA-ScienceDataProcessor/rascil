@@ -10,10 +10,12 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
+from rascil.data_models import BlockVisibility
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.workflows.serial.imaging.imaging_serial import zero_list_serial_workflow, \
     predict_list_serial_workflow, invert_list_serial_workflow, subtract_list_serial_workflow, \
-    weight_list_serial_workflow, residual_list_serial_workflow
+    weight_list_serial_workflow, residual_list_serial_workflow, restore_list_serial_workflow
+from rascil.processing_components import convert_blockvisibility_to_visibility
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image, qa_image
 from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
@@ -78,15 +80,16 @@ class TestImaging(unittest.TestCase):
             flux = numpy.array([f])
         
         self.phasecentre = SkyCoord(ra=+180.0 * u.deg, dec=-60.0 * u.deg, frame='icrs', equinox='J2000')
-        self.vis_list = [ingest_unittest_visibility(self.low,
+        self.bvis_list = [ingest_unittest_visibility(self.low,
                                                     [self.frequency[freqwin]],
                                                     [self.channelwidth[freqwin]],
                                                     self.times,
                                                     self.vis_pol,
-                                                    self.phasecentre, block=block,
+                                                    self.phasecentre, block=True,
                                                     zerow=zerow)
                          for freqwin, _ in enumerate(self.frequency)]
-        
+        self.vis_list = [convert_blockvisibility_to_visibility(bvis) for bvis in self.bvis_list]
+
         self.model_list = [create_unittest_model(self.vis_list[freqwin],
                                                  self.image_pol,
                                                  cellsize=self.cellsize,
@@ -248,6 +251,7 @@ class TestImaging(unittest.TestCase):
         self.actualSetUp(dospectral=True)
         self._predict_base(context='wstack', extra='_spectral', fluxthreshold=4.0, vis_slices=101)
     
+    @unittest.skip("Too large")
     def test_predict_wstack_spectral_pol(self):
         self.actualSetUp(dospectral=True, dopol=True)
         self._predict_base(context='wstack', extra='_spectral', fluxthreshold=4.0, vis_slices=101)
@@ -264,14 +268,13 @@ class TestImaging(unittest.TestCase):
     
     def test_invert_2d_uniform_block(self):
         self.actualSetUp(zerow=True, makegcfcf=True, block=True)
-        self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list, gcfcf=self.gcfcf,
-                                                        weighting='uniform')
-        self.bvis_list = rsexecute.compute(self.bvis_list, sync=True)
+        self.bvis_list = weight_list_serial_workflow(self.bvis_list, self.model_list, gcfcf=self.gcfcf,
+                                                     weighting='uniform')
         assert isinstance(self.bvis_list[0], BlockVisibility)
 
     def test_invert_2d_uniform_nogcfcf(self):
         self.actualSetUp(zerow=True)
-        self.vis_list = weight_list_rsexecute_workflow(self.vis_list, self.model_list)
+        self.vis_list = weight_list_serial_workflow(self.vis_list, self.model_list)
         self._invert_base(context='2d', extra='_uniform', positionthreshold=2.0, check_components=False)
     
     @unittest.skip("Facets need overlap")
@@ -366,13 +369,12 @@ class TestImaging(unittest.TestCase):
         self.actualSetUp(zerow=True)
         
         centre = self.freqwin // 2
-        psf_image_list = invert_list_rsexecute_workflow(self.vis_list, self.model_list, context='2d', dopsf=True)
-        residual_image_list = residual_list_rsexecute_workflow(self.vis_list, self.model_list, context='2d')
-        restored_image_list = restore_list_rsexecute_workflow(self.model_list, psf_image_list, residual_image_list,
-                                                               psfwidth=1.0)
-        restored_image_list = rsexecute.compute(restored_image_list, sync=True)
-        if self.persist: export_image_to_fits(restored_image_list[centre], '%s/test_imaging_invert_%s_restored.fits' %
-                                              (self.dir, rsexecute.type()))
+        psf_image_list = invert_list_serial_workflow(self.vis_list, self.model_list, context='2d', dopsf=True)
+        residual_image_list = residual_list_serial_workflow(self.vis_list, self.model_list, context='2d')
+        restored_image_list = restore_list_serial_workflow(self.model_list, psf_image_list, residual_image_list,
+                                                           psfwidth=1.0)
+        if self.persist: export_image_to_fits(restored_image_list[centre], '%s/test_imaging_invert_serial_restored.fits' %
+                                              (self.dir))
         
         qa = qa_image(restored_image_list[centre])
         assert numpy.abs(qa.data['max'] - 99.43438263927834) < 1e-7, str(qa)
@@ -382,12 +384,11 @@ class TestImaging(unittest.TestCase):
         self.actualSetUp(zerow=True)
         
         centre = self.freqwin // 2
-        psf_image_list = invert_list_rsexecute_workflow(self.vis_list, self.model_list, context='2d', dopsf=True)
-        restored_image_list = restore_list_rsexecute_workflow(self.model_list, psf_image_list, psfwidth=1.0)
-        restored_image_list = rsexecute.compute(restored_image_list, sync=True)
+        psf_image_list = invert_list_serial_workflow(self.vis_list, self.model_list, context='2d', dopsf=True)
+        restored_image_list = restore_list_serial_workflow(self.model_list, psf_image_list, psfwidth=1.0)
         if self.persist: export_image_to_fits(restored_image_list[centre],
-                                              '%s/test_imaging_invert_%s_restored_noresidual.fits' %
-                                              (self.dir, rsexecute.type()))
+                                              '%s/test_imaging_invert_serial_restored_noresidual.fits' %
+                                              (self.dir))
         
         qa = qa_image(restored_image_list[centre])
         assert numpy.abs(qa.data['max'] - 100.0) < 1e-7, str(qa)
@@ -397,21 +398,19 @@ class TestImaging(unittest.TestCase):
         self.actualSetUp(zerow=True)
         
         centre = self.freqwin // 2
-        psf_image_list = invert_list_rsexecute_workflow(self.vis_list, self.model_list, context='2d', dopsf=True)
-        residual_image_list = residual_list_rsexecute_workflow(self.vis_list, self.model_list, context='2d')
-        restored_4facets_image_list = restore_list_rsexecute_workflow(self.model_list, psf_image_list,
+        psf_image_list = invert_list_serial_workflow(self.vis_list, self.model_list, context='2d', dopsf=True)
+        residual_image_list = residual_list_serial_workflow(self.vis_list, self.model_list, context='2d')
+        restored_4facets_image_list = restore_list_serial_workflow(self.model_list, psf_image_list,
                                                                        residual_image_list,
                                                                        restore_facets=4, psfwidth=1.0)
-        restored_4facets_image_list = rsexecute.compute(restored_4facets_image_list, sync=True)
         
-        restored_1facets_image_list = restore_list_rsexecute_workflow(self.model_list, psf_image_list,
+        restored_1facets_image_list = restore_list_serial_workflow(self.model_list, psf_image_list,
                                                                        residual_image_list,
                                                                        restore_facets=1, psfwidth=1.0)
-        restored_1facets_image_list = rsexecute.compute(restored_1facets_image_list, sync=True)
         
         if self.persist: export_image_to_fits(restored_4facets_image_list[0],
-                                              '%s/test_imaging_invert_%s_restored_4facets.fits' %
-                                              (self.dir, rsexecute.type()))
+                                              '%s/test_imaging_invert_serial_restored_4facets.fits' %
+                                              (self.dir))
         
         qa = qa_image(restored_4facets_image_list[centre])
         assert numpy.abs(qa.data['max'] - 99.43438263927833) < 1e-7, str(qa)
@@ -419,25 +418,11 @@ class TestImaging(unittest.TestCase):
         
         restored_4facets_image_list[centre].data -= restored_1facets_image_list[centre].data
         if self.persist: export_image_to_fits(restored_4facets_image_list[centre],
-                                              '%s/test_imaging_invert_%s_restored_4facets_error.fits' %
-                                              (self.dir, rsexecute.type()))
+                                              '%s/test_imaging_invert_serial_restored_4facets_error.fits' %
+                                              (self.dir))
         qa = qa_image(restored_4facets_image_list[centre])
         assert numpy.abs(qa.data['max']) < 1e-10, str(qa)
     
-    def test_sum_invert_list(self):
-        self.actualSetUp(zerow=True)
-    
-        residual_image_list = residual_list_rsexecute_workflow(self.vis_list, self.model_list, context='2d')
-        residual_image_list = rsexecute.compute(residual_image_list, sync=True)
-        route2 = sum_invert_results(residual_image_list)
-        route1 = sum_invert_results_rsexecute(residual_image_list)
-        route1 = rsexecute.compute(route1, sync=True)
-        for r in route1, route2:
-            assert len(r) == 2
-            qa = qa_image(r[0])
-            assert numpy.abs(qa.data['max'] - 0.35139716991480785) < 1.0, str(qa)
-            assert numpy.abs(qa.data['min'] + 0.7681701460717593) < 1.0, str(qa)
-            assert numpy.abs(r[1]-415950.0) < 1e-7, str(qa)
-            
+        
 if __name__ == '__main__':
     unittest.main()
