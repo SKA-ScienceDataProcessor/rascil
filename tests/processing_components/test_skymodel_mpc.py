@@ -22,8 +22,9 @@ from rascil.processing_components.skymodel.operations import image_voronoi_iter
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components import create_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestSkymodelMPC(unittest.TestCase):
     def setUp(self):

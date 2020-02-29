@@ -24,7 +24,7 @@ import numpy
 
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class ReceptorFrame:
@@ -246,12 +246,16 @@ def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, po
     if ipf == PolarisationFrame("linear"):
         if opf == PolarisationFrame("stokesIQUV"):
             return convert_linear_to_stokes(polvec, polaxis)
+        elif opf == PolarisationFrame("stokesI"):
+            return convert_linear_to_stokesI(polvec, polaxis)
         else:
             raise ValueError("Unknown polarisation conversion")
 
     if ipf == PolarisationFrame("circular"):
         if opf == PolarisationFrame("stokesIQUV"):
             return convert_circular_to_stokes(polvec, polaxis)
+        elif opf == PolarisationFrame("stokesI"):
+            return convert_circular_to_stokesI(polvec, polaxis)
         else:
             raise ValueError("Unknown polarisation conversion")
 

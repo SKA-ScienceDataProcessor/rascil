@@ -7,8 +7,9 @@ import logging
 
 from rascil.data_models.memory_data_models import QA
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestQualityAssessment(unittest.TestCase):
     

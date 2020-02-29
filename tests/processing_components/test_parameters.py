@@ -9,8 +9,9 @@ from rascil.data_models.parameters import get_parameter
 
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestParameters(unittest.TestCase):
     def setUp(self):

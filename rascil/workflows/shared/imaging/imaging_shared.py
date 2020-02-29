@@ -19,7 +19,7 @@ from rascil.processing_components.visibility import  vis_null_iter, vis_timeslic
 from rascil.processing_components.imaging import  predict_timeslice_single, invert_timeslice_single
 from rascil.processing_components.imaging import  predict_wstack_single, invert_wstack_single
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def imaging_contexts():
     """Contains all the context information for imaging

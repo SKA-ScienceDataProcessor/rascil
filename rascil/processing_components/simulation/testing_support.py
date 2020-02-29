@@ -72,7 +72,7 @@ from rascil.processing_components.visibility.coalesce import convert_blockvisibi
 from rascil.processing_components.util.installation_checks import check_data_directory
 
 check_data_directory()
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def create_test_image(canonical=True, cellsize=None, frequency=None, channel_bandwidth=None,
@@ -858,6 +858,6 @@ def insert_unittest_errors(vt, seed=180555, calibration_context="TG", amp_errors
                                        timeslice=controls[c]['timeslice'], phase_only=controls[c]['phase_only'],
                                        crosspol=controls[c]['shape'] == 'matrix')
 
-        vt = apply_gaintable(vt, gaintable, timeslice=controls[c]['timeslice'], inverse=True)
+        vt = apply_gaintable(vt, gaintable, inverse=True, timeslice=controls[c]['timeslice'])
 
     return vt

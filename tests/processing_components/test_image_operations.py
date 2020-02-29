@@ -16,8 +16,9 @@ from rascil.processing_components.simulation import create_test_image, create_lo
 from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, \
     copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImage(unittest.TestCase):
     

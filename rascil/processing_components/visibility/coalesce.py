@@ -32,7 +32,7 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.processing_components.util.array_functions import average_chunks, average_chunks2
 from rascil.processing_components.visibility.base import vis_summary, copy_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def coalesce_visibility(vis: BlockVisibility, time_coal=0.0, frequency_coal=0.0, max_time_coal=100,

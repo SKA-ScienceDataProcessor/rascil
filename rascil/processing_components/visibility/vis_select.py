@@ -10,7 +10,7 @@ import numpy
 
 from rascil.data_models.memory_data_models import Visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def vis_select_uvrange(vis: Visibility, uvmin=0.0, uvmax=numpy.infty):
     """Return rows in valid region

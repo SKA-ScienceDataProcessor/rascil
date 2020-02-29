@@ -11,7 +11,7 @@ import numpy
 from rascil.data_models.memory_data_models import GainTable
 from rascil.data_models.parameters import get_parameter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def gaintable_null_iter(gt: GainTable, **kwargs) -> numpy.ndarray:
     """One time iterator returning true for all rows

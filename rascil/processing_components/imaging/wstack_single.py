@@ -20,7 +20,7 @@ from rascil.processing_components.image.operations import copy_image, create_w_t
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
 from rascil.processing_components.visibility.base import copy_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def predict_wstack_single(vis, model, remove=True, gcfcf=None, **kwargs) -> Visibility:

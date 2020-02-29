@@ -16,9 +16,9 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation.noise import addnoise_visibility
 from rascil.processing_components.visibility.base import create_visibility, create_blockvisibility, copy_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
@@ -41,12 +41,12 @@ class TestNoise(unittest.TestCase):
     
     def test_addnoise_visibility(self):
         self.vis = create_visibility(self.config, self.times, self.frequency, phasecentre=self.phasecentre,
-                                     weight=1.0, polarisation_frame=PolarisationFrame('stokesIQUV'),
+                                     weight=1.0, integration_time=300.0, polarisation_frame=PolarisationFrame('stokesIQUV'),
                                      channel_bandwidth=self.channel_bandwidth)
         original = copy_visibility(self.vis)
         self.vis = addnoise_visibility(self.vis)
         actual = numpy.std(numpy.abs(self.vis.vis - original.vis))
-        assert abs(actual - 0.010786973492702846) < 1e-4, actual
+        assert abs(actual - 0.000622776961225623) < 1e-4, actual
     
     def test_addnoise_blockvisibility(self):
         self.vis = create_blockvisibility(self.config, self.times, self.frequency, phasecentre=self.phasecentre,
@@ -55,7 +55,7 @@ class TestNoise(unittest.TestCase):
         original = copy_visibility(self.vis)
         self.vis = addnoise_visibility(self.vis)
         actual = numpy.std(numpy.abs(self.vis.vis - original.vis))
-        assert abs(actual - 0.01077958403015586) < 1e-4, actual
+        assert abs(actual - 0.0006225400451837758) < 1e-4, actual
 
 
 if __name__ == '__main__':

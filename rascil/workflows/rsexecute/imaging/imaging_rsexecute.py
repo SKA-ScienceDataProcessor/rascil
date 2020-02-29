@@ -18,7 +18,9 @@ from rascil.data_models.memory_data_models import Image, Visibility, BlockVisibi
 from rascil.data_models.parameters import get_parameter
 from rascil.processing_components.griddata import create_griddata_from_image
 from rascil.processing_components.griddata import create_pswf_convolutionfunction
-from rascil.processing_components.griddata import grid_weight_to_griddata, griddata_reweight, griddata_merge_weights
+from rascil.processing_components.griddata import grid_visibility_weight_to_griddata, \
+    grid_blockvisibility_weight_to_griddata, griddata_blockvisibility_reweight, \
+    griddata_visibility_reweight, griddata_merge_weights
 from rascil.processing_components.image import calculate_image_frequency_moments
 from rascil.processing_components.image import deconvolve_cube, restore_cube
 from rascil.processing_components.image import image_scatter_facets, image_gather_facets, \
@@ -33,7 +35,7 @@ from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.workflows.shared.imaging import imaging_context, remove_sumwt, sum_predict_results, \
     threshold_list, sum_invert_results
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slices=1, facets=1,
                                      gcfcf=None, **kwargs):
@@ -197,7 +199,7 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
                      facets=facets, gcfcf=gcfcf, **kwargs)[0]
                 for i, _ in enumerate(vis_list)]
     
-    if not isinstance(template_model_imagelist, collections.Iterable):
+    if not isinstance(template_model_imagelist, collections.abc.Iterable):
         template_model_imagelist = [template_model_imagelist]
     
     c = imaging_context(context)
@@ -398,9 +400,9 @@ def deconvolve_list_rsexecute_workflow(dirty_list, psf_list, model_imagelist, pr
     
     def deconvolve(dirty, psf, model, facet, gthreshold, msk=None):
         if prefix == '':
-            lprefix = "facet %d" % facet
+            lprefix = "subimage %d" % facet
         else:
-            lprefix = "%s, facet %d" % (prefix, facet)
+            lprefix = "%s, subimage %d" % (prefix, facet)
         
         if nmoment > 0:
             moment0 = calculate_image_frequency_moments(dirty)
@@ -582,27 +584,22 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
     if gcfcf is None:
         gcfcf = [rsexecute.execute(create_pswf_convolutionfunction)(model_imagelist[centre])]
         
-    def to_vis(v):
-        if isinstance(v, BlockVisibility):
-            av = convert_blockvisibility_to_visibility(v)
-            return av
-        else:
-            return v
-    
-    avis_list = [rsexecute.execute(to_vis, nout=1)(vis) for vis in vis_list]
-    
     def grid_wt(vis, model, g):
         if vis is not None:
             if model is not None:
                 griddata = create_griddata_from_image(model)
-                griddata = grid_weight_to_griddata(vis, griddata, g[0][1])
+                if isinstance(vis, BlockVisibility):
+                    griddata = grid_blockvisibility_weight_to_griddata(vis, griddata, g[0][1])
+                else:
+                    griddata = grid_visibility_weight_to_griddata(vis, griddata, g[0][1])
+
                 return griddata
             else:
                 return None
         else:
             return None
     
-    weight_list = [rsexecute.execute(grid_wt, pure=True, nout=1)(avis_list[i], model_imagelist[i],
+    weight_list = [rsexecute.execute(grid_wt, pure=True, nout=1)(vis_list[i], model_imagelist[i],
                                                                   gcfcf)
                    for i in range(len(vis_list))]
     
@@ -616,24 +613,18 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
                 # function mapping works
                 agd = create_griddata_from_image(model)
                 agd.data = gd[0].data
-                vis = griddata_reweight(vis, agd, g[0][1])
+                if isinstance(vis, BlockVisibility):
+                    vis = griddata_blockvisibility_reweight(vis, agd, g[0][1])
+                else:
+                    vis = griddata_visibility_reweight(vis, agd, g[0][1])
                 return vis
             else:
                 return None
         else:
             return vis
     
-    avis_list = [rsexecute.execute(re_weight, nout=1)(v, model_imagelist[i], merged_weight_grid, gcfcf)
-              for i, v in enumerate(avis_list)]
-
-    def to_bvis(v, ov):
-        if isinstance(ov, BlockVisibility):
-            av = convert_visibility_to_blockvisibility(v)
-            return av
-        else:
-            return v
-
-    result = [rsexecute.execute(to_bvis, nout=1)(vis, ovis) for vis, ovis in zip(avis_list, vis_list)]
+    result = [rsexecute.execute(re_weight, nout=1)(v, model_imagelist[i], merged_weight_grid, gcfcf)
+              for i, v in enumerate(vis_list)]
 
     return rsexecute.optimize(result)
 

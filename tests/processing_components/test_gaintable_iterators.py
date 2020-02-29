@@ -14,8 +14,9 @@ from rascil.processing_components.calibration.operations import create_gaintable
 from rascil.processing_components.visibility.base import create_blockvisibility
 
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestGainTableIterators(unittest.TestCase):
     def setUp(self):

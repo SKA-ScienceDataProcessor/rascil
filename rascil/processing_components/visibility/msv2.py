@@ -15,7 +15,7 @@ from astropy.time import Time
 from rascil.processing_components.visibility.msv2fund import MS_UVData, BaseData
 from rascil.processing_components.visibility.msv2supp import STOKES_CODES, geo_to_ecef, get_eci_transform
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 try:
     from casacore.tables import table, tableutil

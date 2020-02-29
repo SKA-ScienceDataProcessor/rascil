@@ -20,8 +20,9 @@ from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import copy_visibility, create_blockvisibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestCalibrationChain(unittest.TestCase):
     def setUp(self):
@@ -62,7 +63,7 @@ class TestCalibrationChain(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
         original = copy_visibility(self.vis)
-        self.vis = apply_gaintable(self.vis, gt, vis_slices=None)
+        self.vis = apply_gaintable(self.vis, gt)
         # Now get the control dictionary and calibrate
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 0
@@ -80,7 +81,7 @@ class TestCalibrationChain(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.0)
         original = copy_visibility(self.vis)
-        self.vis = apply_gaintable(self.vis, gt, vis_slices=None)
+        self.vis = apply_gaintable(self.vis, gt)
         # Now get the control dictionary and calibrate
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 0
@@ -99,7 +100,7 @@ class TestCalibrationChain(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=0.0, amplitude_error=0.1)
         original = copy_visibility(self.vis)
-        self.vis = apply_gaintable(self.vis, gt, vis_slices=None)
+        self.vis = apply_gaintable(self.vis, gt)
         # Now get the control dictionary and calibrate
         controls = create_calibration_controls()
         controls['G']['first_selfcal'] = 0
@@ -116,7 +117,7 @@ class TestCalibrationChain(unittest.TestCase):
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
         gt = simulate_gaintable(gt, phase_error=10.0, amplitude_error=0.1)
         original = copy_visibility(self.vis)
-        self.vis = apply_gaintable(self.vis, gt, vis_slices=None)
+        self.vis = apply_gaintable(self.vis, gt)
         # Now get the control dictionary and calibrate
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 0
@@ -124,6 +125,7 @@ class TestCalibrationChain(unittest.TestCase):
         calibrated_vis, gaintables = calibrate_chain(self.vis, original, calibration_context='TG',
                                                      controls=controls)
         residual = numpy.max(gaintables['T'].residual)
+        assert residual < 1e-8, "Max T residual = %s" % residual
         residual = numpy.max(gaintables['G'].residual)
         assert residual < 1e-8, "Max T residual = %s" % residual
 

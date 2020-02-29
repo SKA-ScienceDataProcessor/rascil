@@ -22,7 +22,9 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_visibility
 from rascil.processing_components.imaging.base import predict_2d, invert_2d, create_image_from_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
+
+log.setLevel(logging.WARNING)
 
 
 class TestImageDeconvolution(unittest.TestCase):

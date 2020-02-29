@@ -30,7 +30,7 @@ from rascil.processing_components.util.coordinate_support import xyz_to_uvw, uvw
     skycoord_to_lmn, \
     simulate_point, hadec_to_azel
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def vis_summary(vis: Union[Visibility, BlockVisibility]):
@@ -171,7 +171,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
             'create_visibility: flagged %d/%d visibilities below elevation limit %f (rad)' %
             (n_flagged, vis.nvis, elevation_limit))
     else:
-        log.info('create_visibility: created %d visibilities' % (vis.nvis))
+        log.debug('create_visibility: created %d visibilities' % (vis.nvis))
 
     return vis
 
@@ -234,7 +234,7 @@ def create_blockvisibility(config: Configuration,
         log.info('create_visibility: flagged %d/%d times below elevation limit %f (rad)' %
                  (n_flagged, ntimes, elevation_limit))
     else:
-        log.info('create_visibility: created %d times' % (ntimes))
+        log.debug('create_visibility: created %d times' % (ntimes))
 
     npol = polarisation_frame.npol
     nchan = len(frequency)
@@ -244,6 +244,7 @@ def create_blockvisibility(config: Configuration,
     rweight = numpy.ones(visshape)
     rimaging_weight = numpy.ones(visshape)
     rtimes = numpy.zeros([ntimes])
+    rintegrationtime = numpy.zeros([ntimes])
     ruvw = numpy.zeros([ntimes, nants, nants, 3])
 
     # Do each hour angle in turn
@@ -262,25 +263,30 @@ def create_blockvisibility(config: Configuration,
             # Loop over all pairs of antennas. Note that a2>a1
             for a1 in range(nants):
                 rweight[itime, a1, a1, ...] = 0.0
+                rflags[itime, a1, a1, ...] = 1.0
                 for a2 in range(a1 + 1, nants):
                     ruvw[itime, a2, a1, :] = (ant_pos[a2, :] - ant_pos[a1, :])
                     ruvw[itime, a1, a2, :] = (ant_pos[a1, :] - ant_pos[a2, :])
-
+            if itime > 0:
+                rintegrationtime[itime] = rtimes[itime] - rtimes[itime-1]
             itime += 1
 
-    rintegration_time = numpy.full_like(rtimes, integration_time)
+    if itime > 1:
+        rintegrationtime[0] = rintegrationtime[1]
+    else:
+        rintegrationtime[0] = integration_time
     rchannel_bandwidth = channel_bandwidth
     if zerow:
         ruvw[..., 2] = 0.0
     vis = BlockVisibility(uvw=ruvw, time=rtimes, frequency=frequency, vis=rvis,
                           weight=rweight,
                           imaging_weight=rimaging_weight, flags=rflags,
-                          integration_time=rintegration_time,
+                          integration_time=rintegrationtime,
                           channel_bandwidth=rchannel_bandwidth,
                           polarisation_frame=polarisation_frame, source=source, meta=meta)
     vis.phasecentre = phasecentre
     vis.configuration = config
-    log.info("create_blockvisibility: %s" % (vis_summary(vis)))
+    log.debug("create_blockvisibility: %s" % (vis_summary(vis)))
     assert isinstance(vis, BlockVisibility), "vis is not a BlockVisibility: %r" % vis
 
     return vis

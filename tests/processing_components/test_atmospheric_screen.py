@@ -24,7 +24,9 @@ from rascil.processing_components.skycomponent.operations import filter_skycompo
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components import create_image, create_empty_image_like
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
+
+log.setLevel(logging.WARNING)
 
 
 class TestIonosphericScreen(unittest.TestCase):

@@ -16,7 +16,7 @@ from rascil.workflows.rsexecute.imaging.imaging_rsexecute import invert_list_rse
     deconvolve_list_rsexecute_workflow
 from rascil.workflows.rsexecute.skymodel.skymodel_rsexecute import convolve_skymodel_list_rsexecute_workflow
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def mpccal_skymodel_list_rsexecute_workflow(visobs, model, theta_list, nmajor=10, context='2d',

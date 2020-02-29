@@ -15,7 +15,7 @@ from rascil.processing_components.imaging import create_vp_generic_numeric
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility import create_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 if __name__ == '__main__':
 

@@ -7,7 +7,7 @@ from rascil.processing_components.image import copy_image
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.image import image_scatter_facets, image_gather_facets
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def image_rsexecute_map_workflow(im, imfunction, facets=1, overlap=0, taper=None, **kwargs):
     """Apply a function across an image: scattering to subimages, applying the function, and then gathering

@@ -5,6 +5,7 @@ completeness. Use rsexecute versions pipelines/components.py for speed.
 __all__ = ['ical_list_serial_workflow',
            'continuum_imaging_list_serial_workflow',
            'spectral_line_imaging_list_serial_workflow']
+import logging
 
 from rascil.data_models.parameters import get_parameter
 from rascil.processing_components.griddata import create_pswf_convolutionfunction
@@ -15,6 +16,7 @@ from rascil.workflows.serial.imaging.imaging_serial import invert_list_serial_wo
     predict_list_serial_workflow, subtract_list_serial_workflow, \
     restore_list_serial_workflow, deconvolve_list_serial_workflow
 
+log = logging.getLogger('logger')
 
 def ical_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=1, facets=1,
                               gcfcf=None, calibration_context='TG', do_selfcal=True, **kwargs):
@@ -48,13 +50,20 @@ def ical_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=1, 
     if do_selfcal:
         # Make the predicted visibilities, selfcalibrate against it correcting the gains, then
         # form the residual visibility, then make the residual image
-        model_vislist = predict_list_serial_workflow(model_vislist, model_imagelist,
+        predicted_model_vislist = predict_list_serial_workflow(model_vislist, model_imagelist,
                                                      context=context, vis_slices=vis_slices, facets=facets,
                                                      gcfcf=gcfcf, **kwargs)
-        cal_vis_list, gt_list = calibrate_list_serial_workflow(cal_vis_list, model_vislist,
+        cal_vis_list, gt_list = calibrate_list_serial_workflow(cal_vis_list, predicted_model_vislist,
                                                          calibration_context=calibration_context, **kwargs)
-        residual_vislist = subtract_list_serial_workflow(cal_vis_list, model_vislist)
-        residual_imagelist = invert_list_serial_workflow(residual_vislist, model_imagelist,
+        
+        def zero_model_image(im):
+            log.info("ical_list_rsexecute_workflow: setting initial model to zero after initial selfcal")
+            im.data[...]=0.0
+            return im
+
+        model_imagelist = [zero_model_image(model) for model in model_imagelist]
+
+        residual_imagelist = invert_list_serial_workflow(cal_vis_list, model_imagelist,
                                                          context=context, dopsf=False,
                                                          vis_slices=vis_slices, facets=facets, gcfcf=gcfcf,
                                                          iteration=0, **kwargs)
@@ -67,7 +76,7 @@ def ical_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=1, 
     
     deconvolve_model_imagelist = deconvolve_list_serial_workflow(residual_imagelist, psf_imagelist,
                                                                     model_imagelist,
-                                                                    prefix='cycle 0', **kwargs)
+                                                                    prefix='ical cycle 0', **kwargs)
     nmajor = get_parameter(kwargs, "nmajor", 5)
     if nmajor > 1:
         for cycle in range(nmajor):
@@ -91,7 +100,7 @@ def ical_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=1, 
                                                                    gcfcf=gcfcf,
                                                                    **kwargs)
             
-            prefix = "cycle %d" % (cycle + 1)
+            prefix = "ical cycle %d" % (cycle + 1)
             deconvolve_model_imagelist = deconvolve_list_serial_workflow(residual_imagelist, psf_imagelist,
                                                                             deconvolve_model_imagelist,
                                                                             prefix=prefix,
@@ -127,13 +136,13 @@ def continuum_imaging_list_serial_workflow(vis_list, model_imagelist, context, g
     
     deconvolve_model_imagelist = deconvolve_list_serial_workflow(residual_imagelist, psf_imagelist,
                                                                     model_imagelist,
-                                                                    prefix='cycle 0',
+                                                                    prefix='cip cycle 0',
                                                                     **kwargs)
     
     nmajor = get_parameter(kwargs, "nmajor", 5)
     if nmajor > 1:
         for cycle in range(nmajor):
-            prefix = "cycle %d" % (cycle + 1)
+            prefix = "cip cycle %d" % (cycle + 1)
             residual_imagelist = residual_list_serial_workflow(vis_list, deconvolve_model_imagelist,
                                                                context=context, vis_slices=vis_slices,
                                                                facets=facets,

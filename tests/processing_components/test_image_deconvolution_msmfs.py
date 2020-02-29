@@ -22,8 +22,9 @@ from rascil.processing_components.imaging.primary_beams import create_low_test_b
 from rascil.processing_components.visibility.base import create_visibility
 from rascil.processing_components.imaging.base import predict_2d, invert_2d, create_image_from_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImageDeconvolutionMSMFS(unittest.TestCase):
     def setUp(self):

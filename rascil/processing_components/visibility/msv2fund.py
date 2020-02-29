@@ -10,7 +10,7 @@ import numpy
 
 from rascil.processing_components.visibility.msv2supp import cmp_to_total, STOKES_CODES, NUMERIC_STOKES, merge_baseline
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 __version__ = '0.1'
 __revision__ = '$Rev$'

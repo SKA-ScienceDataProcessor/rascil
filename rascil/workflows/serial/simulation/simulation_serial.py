@@ -18,7 +18,7 @@ from rascil.processing_components.visibility import convert_blockvisibility_to_v
     convert_visibility_to_blockvisibility
 from rascil.processing_components.visibility import create_blockvisibility, create_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def simulate_list_serial_workflow(config='LOWBD2',

@@ -16,7 +16,7 @@ from rascil.data_models.parameters import rascil_path
 from rascil.processing_components.image.operations import import_image_from_fits, reproject_image
 from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like, fft_image, pad_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def set_pb_header(pb, use_local=True):
@@ -156,7 +156,7 @@ def mosaic_pb(model, telescope, pointingcentres, use_local=True):
     :param pointingcentres: list of pointing centres
     :return:
     """
-    assert isinstance(pointingcentres, collections.Iterable), "Need a list of pointing centres"
+    assert isinstance(pointingcentres, collections.abc.Iterable), "Need a list of pointing centres"
     sumpb = create_empty_image_like(model)
     for pc in pointingcentres:
         pb = create_pb(model, telescope, pointingcentre=pc, use_local=use_local)
@@ -287,7 +287,7 @@ def create_vp_generic_numeric(model, pointingcentre=None, diameter=15.0, blockag
             for pol in range(npol):
                 xfr.data[chan, pol, ...] *= numpy.exp(1j * phase)
         
-        if isinstance(zernikes, collections.Iterable):
+        if isinstance(zernikes, collections.abc.Iterable):
             try:
                 import aotools
             except ModuleNotFoundError:

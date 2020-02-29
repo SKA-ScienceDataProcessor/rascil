@@ -23,7 +23,7 @@ from rascil.processing_components.imaging.primary_beams import create_pb
 from rascil.processing_components.skycomponent.base import copy_skycomponent
 from rascil.processing_components.skycomponent.operations import apply_beam_to_skycomponent
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def find_times_above_elevation_limit(start_times, end_times, location, phasecentre, elevation_limit):
     """ Find all times for which a phasecentre is above the elevation limit
@@ -58,7 +58,7 @@ def find_times_above_elevation_limit(start_times, end_times, location, phasecent
     return valid_start_times
 
 
-def plot_visibility(vis_list, ax=None, title='Visibility', y='amp', x='uvdist', **kwargs):
+def plot_visibility(vis_list, title='Visibility', y='amp', x='uvdist', **kwargs):
     """ Standard plot of visibility
 
     :param vis_list:
@@ -66,20 +66,17 @@ def plot_visibility(vis_list, ax=None, title='Visibility', y='amp', x='uvdist', 
     :param kwargs:
     :return:
     """
-    if ax is None:
-        fig, ax = plt.subplots(111)
-        ax = ax[0]
-
+    plt.clf()
     for ivis, vis in enumerate(vis_list):
         if y == 'amp':
-            yvalue = numpy.abs(vis.vis[...,0,0].flat)
+            yvalue = numpy.abs(vis.vis[...,0,0]).flat
         else:
-            yvalue = numpy.angle(vis.vis[...,0,0].flat)
+            yvalue = numpy.angle(vis.vis[...,0,0]).flat
         xvalue = vis.uvdist.flat
-        ax.plot(xvalue[yvalue>0.0], yvalue[yvalue>0.0], '.', color='b', markersize=0.2)
-    ax.set_xlabel(x)
-    ax.set_ylabel(y)
-    ax.set_title(title)
+        plt.plot(xvalue[yvalue>0.0], yvalue[yvalue>0.0], '.', color='b', markersize=0.2)
+    plt.xlabel(x)
+    plt.ylabel(y)
+    plt.title(title)
     
 
 def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV coverage', **kwargs):
@@ -100,7 +97,7 @@ def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV cov
             v = numpy.array(numpy.outer(v, k).flat)
             plt.plot(u, v, '.', color='b', markersize=0.2)
             plt.plot(-u, -v, '.', color='b', markersize=0.2)
-    else:
+        else:
             k = vis.frequency / constants.c
             u = u * k
             v = v * k

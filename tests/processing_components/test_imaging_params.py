@@ -16,8 +16,9 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_visibility
 from rascil.processing_components.imaging.imaging_params import get_frequency_map
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImagingParams(unittest.TestCase):
     def setUp(self):

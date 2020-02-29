@@ -21,7 +21,7 @@ from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 from rascil.processing_components.util.coordinate_support import xyz_to_uvw, skycoord_to_lmn
 
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def find_pierce_points(station_locations, ha, dec, phasecentre, height):
     """Find the pierce points for a flat screen at specified height
@@ -244,4 +244,4 @@ def plot_gaintable_on_screen(vis, gaintables, height=3e5, gaintable_slices=None,
     if plotfile is not None:
         plt.savefig(plotfile)
 
-    plt.show()
+    plt.show(block=False)

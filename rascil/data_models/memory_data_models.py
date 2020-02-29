@@ -38,7 +38,7 @@ warnings.simplefilter('ignore', AstropyDeprecationWarning)
 
 from rascil.data_models.polarisation import PolarisationFrame, ReceptorFrame
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 class Configuration:

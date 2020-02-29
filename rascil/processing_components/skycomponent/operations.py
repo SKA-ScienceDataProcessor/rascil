@@ -31,7 +31,7 @@ from rascil.processing_components.image.operations import create_image_from_arra
 from rascil.processing_components.util.array_functions import insert_function_sinc, insert_function_L, \
     insert_function_pswf, insert_array
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def create_skycomponent(direction: SkyCoord, flux: numpy.array, frequency: numpy.array, shape: str = 'Point',
@@ -321,7 +321,7 @@ def apply_beam_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], beam
     :return: List of skycomponents
     """
     assert isinstance(beam, Image)
-    single = not isinstance(sc, collections.Iterable)
+    single = not isinstance(sc, collections.abc.Iterable)
     
     if single:
         sc = [sc]
@@ -409,7 +409,7 @@ def insert_skycomponent(im: Image, sc: Union[Skycomponent, List[Skycomponent]], 
     
     nchan, npol, ny, nx = im.data.shape
     
-    if not isinstance(sc, collections.Iterable):
+    if not isinstance(sc, collections.abc.Iterable):
         sc = [sc]
     
     log.debug("insert_skycomponent: Using insert method %s" % insert_method)
@@ -490,7 +490,7 @@ def voronoi_decomposition(im, comps):
     return vor, vertex_image
 
 
-def image_voronoi_iter(im: Image, components: list) -> collections.Iterable:
+def image_voronoi_iter(im: Image, components: list) -> collections.abc.Iterable:
     """Iterate through Voronoi decomposition, returning a generator yielding fullsize images
 
     :param im: Image

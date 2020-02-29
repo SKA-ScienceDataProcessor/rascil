@@ -8,10 +8,13 @@ import os
 import logging
 import time
 
+from tabulate import tabulate
+
 from dask import delayed, optimize
 from dask.distributed import wait
 from distributed import Client, LocalCluster
 
+log = logging.getLogger("logger")
 
 # Support daliuge's delayed function, make it fail if not available but used
 try:
@@ -23,7 +26,7 @@ except ImportError:
     def dlg_compute(*args, **kwargs):
         pass
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def get_dask_client(timeout=30, n_workers=None, threads_per_worker=1, processes=True, create_cluster=True,
@@ -370,7 +373,7 @@ class _rsexecutebase():
             self.client.profile(plot='save', filename="%s_profile.html" % name)
 
             def print_ts(ts):
-                print(">>> Processor time used in each function")
+                log.info("Processor time used in each function")
                 summary = {}
                 number = {}
                 for t in ts:
@@ -385,22 +388,21 @@ class _rsexecutebase():
                 total = 0.0
                 for key in summary.keys():
                     total += summary[key]
+                table = []
+                headers = ["Function", "Time (s)", "Percent", "Number calls"]
                 for key in summary.keys():
-                    print(">>> %s %.3f (s) %.1f %s %d (calls)" %
-                          (key, summary[key], 100.0 * summary[key] / total, '%', number[key]))
-                print(">>> Total processor time %.3f (s)" % total)
+                    table.append([key, "{0:.3f}".format(summary[key]), "{0:.3f}".format(100.0 * summary[key] / total),
+                                  number[key]])
+                log.info("\n" + tabulate(table, headers=headers))
                 duration = time.time() - self.start_time
-                print(">>> Total wallclock time %.3f (s)" % duration)
                 speedup = (total / duration)
-                print(">>> Speedup = %.2f" % speedup)
+                log.info("Total processor time {0:.3f} (s), total wallclock time {1:.3f} (s), speedup {2:.2f}".
+                      format(total, duration, speedup))
 
             try:
                 print_ts(task_stream)
             except  ValueError:
-                print("task stream is unintelligible")
-                import pprint
-                pp = pprint.PrettyPrinter()
-                pp.pprint(task_stream)
+                log.warning("Dask task stream is unintelligible")
 
     @property
     def client(self):

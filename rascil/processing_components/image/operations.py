@@ -49,7 +49,7 @@ from rascil.data_models.polarisation import PolarisationFrame, convert_stokes_to
 from rascil.processing_components.fourier_transforms import w_beam, fft, ifft
 
 warnings.simplefilter('ignore', FITSFixedWarning)
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def image_is_canonical(im: Image):
     """ Is this Image canonical format?
@@ -63,7 +63,8 @@ def image_is_canonical(im: Image):
     canonical = True
     canonical = canonical and len(im.shape) == 4
     canonical = canonical and im.wcs.wcs.ctype[0] == 'RA---SIN' and im.wcs.wcs.ctype[1] == 'DEC--SIN'
-    canonical = canonical and im.wcs.wcs.ctype[2] == 'STOKES' and im.wcs.wcs.ctype[3] == 'FREQ'
+    canonical = canonical and im.wcs.wcs.ctype[2] == 'STOKES'
+    canonical = canonical and (im.wcs.wcs.ctype[3] == 'FREQ' or im.wcs.wcs.ctype[3] == "MOMENT")
 
     if not canonical:
         log.debug("image_is_canonical: Image is not canonical 4D image with axes RA---SIN, DEC--SIN, STOKES, FREQ")

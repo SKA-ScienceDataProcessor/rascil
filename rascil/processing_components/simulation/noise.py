@@ -11,7 +11,7 @@ import numpy
 
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def calculate_noise_visibility(bandwidth, int_time, diameter, t_sys, eta):
     """Calculate noise rms per visibility

@@ -17,7 +17,7 @@ from rascil.data_models.polarisation import ReceptorFrame
 
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def pointingtable_summary(pt: PointingTable):
     """Return string summarizing the Gaintable

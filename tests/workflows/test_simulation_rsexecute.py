@@ -14,8 +14,9 @@ from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 from rascil.workflows.rsexecute.simulation.simulation_rsexecute import simulate_list_rsexecute_workflow
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestSimulationrsexecuteSupport(unittest.TestCase):
     def setUp(self):
