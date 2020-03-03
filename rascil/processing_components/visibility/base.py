@@ -475,9 +475,9 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None):
     # log.debug("create_blockvisibility_from_ms: %s" % str(tab.info()))
     # Start the table
     tbl = msv2.Ms(msname, ref_time=0, source_name=source_name, if_delete=True)
-    if source_name is None:
-        source_name = 'RASCIL'
     for vis in vis_list:
+        if source_name is None:
+            source_name = vis.source
         # Check polarisition
         npol = vis.npol
         nchan = vis.nchan
