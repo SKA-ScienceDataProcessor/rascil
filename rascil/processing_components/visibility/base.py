@@ -478,7 +478,7 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None):
     for vis in vis_list:
         if source_name is None:
             source_name = vis.source
-        # Check polarisition
+        # Check polarisation
         npol = vis.npol
         nchan = vis.nchan
         if vis.polarisation_frame.type == 'linear':
