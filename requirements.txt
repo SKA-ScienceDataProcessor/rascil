@@ -17,4 +17,5 @@ reproject
 scikit-image
 scipy
 seqfile
+ConfigParser
 tabulate
