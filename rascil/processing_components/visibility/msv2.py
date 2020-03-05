@@ -379,9 +379,9 @@ try:
             tb = table("%s/OBSERVATION" % self.basename, desc, nrow=1, ack=False)
 
             # from astropy.time import Time
-            utc = Time(self.data[0].obstime, format='unix',scale='utc')
+            utc = Time(self.data[0].obstime, format='mjd',scale='utc')
             tStart = utc.mjd
-            utc = Time(self.data[-1].obstime, format='unix', scale='utc')
+            utc = Time(self.data[-1].obstime, format='mjd', scale='utc')
             tStop = utc.mjd
 
             tb.putcell('TIME_RANGE', 0, [tStart * 86400, tStop * 86400])
@@ -408,7 +408,7 @@ try:
             sourceID = 0
             for dataSet in self.data:
                 if dataSet.pol == self.stokes[0]:
-                    utc0 = Time(dataSet.obstime, format='unix', scale='utc')
+                    utc0 = Time(dataSet.obstime, format='mjd', scale='utc')
                     utc = utc0.jd
 
                     currSourceName = dataSet.source
@@ -420,7 +420,7 @@ try:
                             # currSourceName = dataSet.source.name
 
                             ### Zenith pointings
-                            sidereal = Time(dataSet.obstime, format='unix', scale='utc', location=self.site_config.location)
+                            sidereal = Time(dataSet.obstime, format='mjd', scale='utc', location=self.site_config.location)
                             sidereal_time = sidereal.sidereal_time('apparent').value
                             ra = sidereal_time * 15
                             dec = latitude
@@ -740,12 +740,12 @@ try:
                     ## Figure out the new date/time for the observation
 
                     from astropy.time import Time
-                    utc = Time(dataSet.obstime, format='unix', scale='utc')
+                    utc = Time(dataSet.obstime, format='mjd', scale='utc')
                     utc0 = utc.jd
 
                     if dataSet.source is None:
                         ### Zenith pointings
-                        sidereal = Time(dataSet.obstime, format='unix', scale='utc', location=self.site_config.location)
+                        sidereal = Time(dataSet.obstime, format='mjd', scale='utc', location=self.site_config.location)
                         sidereal_time = sidereal.sidereal_time('apparent').value
                         # equ = astro.equ_posn(obs.sidereal_time() * 180 / numpy.pi, obs.lat * 180 / numpy.pi)
                         from astropy.coordinates import Angle
@@ -804,7 +804,8 @@ try:
                     ### Add in the new date/time and integration time
                     # timeList = [utc - astro.MJD_OFFSET for bl in dataSet.baselines]
                     inttimeList = [dataSet.inttime for bl in dataSet.baselines]
-                    timeList = [(utc0 - 2400000.5) * 86400 + dataSet.inttime / 2.0 for bl in dataSet.baselines]
+                    #timeList = [(utc0/86400.0 - 2400000.5) * 86400 + dataSet.inttime / 2.0 for bl in dataSet.baselines]
+                    timeList = [utc0 + dataSet.inttime / 2.0 for bl in dataSet.baselines]
 
                     ### Add in the new new source ID and name
                     sourceList = [sourceID for bl in dataSet.baselines]
