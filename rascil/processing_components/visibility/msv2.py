@@ -420,7 +420,7 @@ try:
                             # currSourceName = dataSet.source.name
 
                             ### Zenith pointings
-                            sidereal = Time(dataSet.obstime, format='mjd', scale='utc', location=self.site_config.location)
+                            sidereal = Time(dataSet.obstime/86400.0, format='mjd', scale='utc', location=self.site_config.location)
                             sidereal_time = sidereal.sidereal_time('apparent').value
                             ra = sidereal_time * 15
                             dec = latitude
@@ -745,7 +745,7 @@ try:
 
                     if dataSet.source is None:
                         ### Zenith pointings
-                        sidereal = Time(dataSet.obstime, format='mjd', scale='utc', location=self.site_config.location)
+                        sidereal = Time(dataSet.obstime/86400.0, format='mjd', scale='utc', location=self.site_config.location)
                         sidereal_time = sidereal.sidereal_time('apparent').value
                         # equ = astro.equ_posn(obs.sidereal_time() * 180 / numpy.pi, obs.lat * 180 / numpy.pi)
                         from astropy.coordinates import Angle

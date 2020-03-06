@@ -14,6 +14,7 @@ from rascil.data_models.memory_data_models import Configuration
 from rascil.data_models.polarisation import ReceptorFrame
 
 from astropy.coordinates import EarthLocation
+from astropy.time import Time
 
 try:
     import casacore
@@ -183,7 +184,7 @@ class measurementset_tests(unittest.TestCase):
         if run_ms_tests==False:
             return
 
-        testTime = time.time()
+        testTime = float( 86400.0 * Time(time.time(), format='unix').mjd)
         testFile = os.path.join(self.testPath, 'ms-test-W.ms')
 
         # Get some data
@@ -209,7 +210,7 @@ class measurementset_tests(unittest.TestCase):
         if run_ms_tests==False:
             return
 
-        testTime = time.time()
+        testTime = float( 86400.0 * Time(time.time(), format='unix').mjd)
         testFile = os.path.join(self.testPath, 'ms-test-WGS.ms')
 
         # Get some data
@@ -235,7 +236,7 @@ class measurementset_tests(unittest.TestCase):
         if run_ms_tests==False:
             return
 
-        testTime = time.time()
+        testTime = float(86400.0 * Time(time.time(), format='unix').mjd)
         testFile = os.path.join(self.testPath, 'ms-test-UV.ms')
 
         # Get some data
@@ -296,7 +297,7 @@ class measurementset_tests(unittest.TestCase):
         """writing more than one spectral window to a MeasurementSet."""
         if run_ms_tests==False:
             return
-        testTime = time.time()
+        testTime = float( 86400.0 * Time(time.time(), format='unix').mjd)
         testFile = os.path.join(self.testPath, 'ms-test-MultiIF.ms')
 
         # Get some data
