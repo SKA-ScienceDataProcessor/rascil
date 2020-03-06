@@ -24,7 +24,7 @@ if sys.platform == 'darwin':
 packages = ['rascil']
 package_data = [i for p in packages for i in glob.glob(p + '/*/') + glob.glob(p + '/*/*/') + glob.glob(p + '/*/*/*/')]
 setup(name='rascil',
-      version='0.1',
+      version='0.1.0',
       python_requires='>=3.6',
       description='Radio Astronomy Simulation, Calibration, and Imaging Library',
       long_description=open('README.md').read(),
