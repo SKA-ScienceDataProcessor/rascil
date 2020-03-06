@@ -6,7 +6,7 @@ variables:
 data:
   stage: build
   script:
-    - tar zcf rascil_data.tgz data
+    - tar -zcf rascil_data.tgz data
   artifacts:
     paths:
       - rascil_data.tgz
