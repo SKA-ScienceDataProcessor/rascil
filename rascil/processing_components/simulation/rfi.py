@@ -13,9 +13,9 @@ The scenario is
 We want to study the effects of this RFI on statistics of the images: on source and at the pole.
 """
 
-__all__ = ['simulate_DTV', 'create_propagators', 'calculate_averaged_correlation',
-           'calculate_rfi_at_station',
+__all__ = ['simulate_DTV', 'create_propagators', 'calculate_averaged_correlation', 'calculate_rfi_at_station',
            'simulate_rfi_block', 'calculate_station_correlation_rfi']
+
 
 import astropy.units as u
 import numpy
@@ -23,15 +23,12 @@ from astropy import constants
 from astropy.coordinates import SkyCoord
 
 from rascil.processing_components.util.array_functions import average_chunks2
-from rascil.processing_components.util.compass_bearing import \
-    calculate_initial_compass_bearing
+from rascil.processing_components.util.compass_bearing import calculate_initial_compass_bearing
 from rascil.processing_components.util.coordinate_support import simulate_point
-from rascil.processing_components.util.coordinate_support import skycoord_to_lmn, \
-    azel_to_hadec
+from rascil.processing_components.util.coordinate_support import skycoord_to_lmn, azel_to_hadec
 
 
-def simulate_DTV(frequency, times, power=50e3, timevariable=False,
-                 frequency_variable=False):
+def simulate_DTV(frequency, times, power=50e3, timevariable=False, frequency_variable=False):
     """ Calculate DTV sqrt(power) as a function of time and frequency
 
     :param frequency: (sample frequencies)
@@ -49,28 +46,20 @@ def simulate_DTV(frequency, times, power=50e3, timevariable=False,
     if timevariable:
         if frequency_variable:
             sshape = [ntimes, nchan // 2]
-            signal[:, bchan:echan] += numpy.random.normal(0.0, numpy.sqrt(amp / 2.0),
-                                                          sshape) \
-                                      + 1j * numpy.random.normal(0.0,
-                                                                 numpy.sqrt(amp / 2.0),
-                                                                 sshape)
+            signal[:, bchan:echan] += numpy.random.normal(0.0, numpy.sqrt(amp/2.0), sshape) \
+                                    + 1j * numpy.random.normal(0.0, numpy.sqrt(amp/2.0), sshape)
         else:
             sshape = [ntimes]
-            signal[:, bchan:echan] += numpy.random.normal(0.0, numpy.sqrt(amp / 2.0),
-                                                          sshape) \
-                                      + 1j * numpy.random.normal(0.0,
-                                                                 numpy.sqrt(amp / 2.0),
-                                                                 sshape)
+            signal[:, bchan:echan] += numpy.random.normal(0.0, numpy.sqrt(amp/2.0), sshape) \
+                                    + 1j * numpy.random.normal(0.0, numpy.sqrt(amp/2.0), sshape)
     else:
         if frequency_variable:
             sshape = [nchan // 2]
-            signal[:, bchan:echan] += \
-            (numpy.random.normal(0.0, numpy.sqrt(amp / 2.0), sshape)
-             + 1j * numpy.random.normal(0.0, numpy.sqrt(amp / 2.0), sshape))[
-                numpy.newaxis, ...]
+            signal[:, bchan:echan] += (numpy.random.normal(0.0, numpy.sqrt(amp/2.0), sshape)
+                                   + 1j * numpy.random.normal(0.0, numpy.sqrt(amp/2.0), sshape))[numpy.newaxis, ...]
         else:
             signal[:, bchan:echan] = amp
-
+    
     return signal
 
 
@@ -81,8 +70,7 @@ def create_propagators(config, interferer, frequency, attenuation=1e-9):
     """
     nchannels = len(frequency)
     nants = len(config.data['names'])
-    interferer_xyz = [interferer.geocentric[0].value, interferer.geocentric[1].value,
-                      interferer.geocentric[2].value]
+    interferer_xyz = [interferer.geocentric[0].value, interferer.geocentric[1].value, interferer.geocentric[2].value]
     propagators = numpy.zeros([nants, nchannels], dtype='complex')
     for iant, ant_xyz in enumerate(config.xyz):
         vec = ant_xyz - interferer_xyz
@@ -101,9 +89,8 @@ def calculate_rfi_at_station(propagators, emitter):
     :return: Complex array [nstations, ntimes, nchannels]
     """
     rfi_at_station = emitter[:, numpy.newaxis, ...] * propagators[numpy.newaxis, ...]
-    rfi_at_station[numpy.abs(rfi_at_station) < 1e-15] = 0.
+    rfi_at_station[numpy.abs(rfi_at_station)<1e-15] = 0.
     return rfi_at_station
-
 
 def calculate_station_correlation_rfi(rfi_at_station):
     """ Form the correlation from the rfi at the station
@@ -112,16 +99,12 @@ def calculate_station_correlation_rfi(rfi_at_station):
     :return: Correlation(nant, nants, ntimes, nchan] in Jy
     """
     ntimes, nants, nchan = rfi_at_station.shape
-    correlationt = numpy.zeros([ntimes, nchan, nants, nants], dtype='complex')
-    rfit = numpy.transpose(rfi_at_station, axes=[0, 2, 1])
-    rfitc = numpy.conjugate(rfit)
-
+    correlation = numpy.zeros([ntimes, nants, nants, nchan], dtype='complex')
+    
     for itime in range(ntimes):
         for chan in range(nchan):
-            correlationt[itime, chan, ...] = numpy.outer(rfit[itime, chan, :],
-                                                         rfitc[itime, chan, :])
-
-    correlation = numpy.transpose(correlationt, axes=[0, 2, 3, 1])
+            correlation[itime, ..., chan] = numpy.outer(rfi_at_station[itime, :, chan],
+                                                       numpy.conjugate(rfi_at_station[itime, :, chan]))
 
     return correlation[..., numpy.newaxis] * 1e26
 
@@ -138,8 +121,7 @@ def calculate_averaged_correlation(correlation, time_width, channel_width):
     return average_chunks2(correlation, wts, (time_width, channel_width))[0]
 
 
-def simulate_rfi_block(bvis, emitter_location, emitter_power=5e4, attenuation=1.0,
-                       use_pole=False):
+def simulate_rfi_block(bvis, emitter_location, emitter_power=5e4, attenuation=1.0, use_pole=False):
     """ Simulate RFI block
 
     :param emitter_location: EarthLocation of emitter
@@ -150,14 +132,12 @@ def simulate_rfi_block(bvis, emitter_location, emitter_power=5e4, attenuation=1.
     """
 
     # Calculate the power spectral density of the DTV station: Watts/Hz
-    emitter = simulate_DTV(bvis.frequency, bvis.time, power=emitter_power,
-                           timevariable=False)
-
+    emitter = simulate_DTV(bvis.frequency, bvis.time, power=emitter_power, timevariable=False)
+    
     # Calculate the propagators for signals from Perth to the stations in low
     # These are fixed in time but vary with frequency. The ad hoc attenuation
     # is set to produce signal roughly equal to noise at LOW
-    propagators = create_propagators(bvis.configuration, emitter_location,
-                                     frequency=bvis.frequency,
+    propagators = create_propagators(bvis.configuration, emitter_location, frequency=bvis.frequency,
                                      attenuation=attenuation)
     # Now calculate the RFI at the stations, based on the emitter and the propagators
     rfi_at_station = calculate_rfi_at_station(propagators, emitter)
@@ -179,9 +159,8 @@ def simulate_rfi_block(bvis, emitter_location, emitter_power=5e4, attenuation=1.
         l, m, n = skycoord_to_lmn(pole, bvis.phasecentre)
         phasor = numpy.ones([ntimes, nant, nant, nchan, npol], dtype='complex')
         for chan in range(nchan):
-            phasor[:, :, :, chan, :] = simulate_point(uvw[..., chan], l, m)[
-                ..., numpy.newaxis]
-
+            phasor[:, :, :, chan, :] = simulate_point(uvw[..., chan], l, m)[..., numpy.newaxis]
+    
         # Now fill this into the BlockVisibility
         bvis.data['vis'] = bvis.data['vis'] * phasor
     else:
@@ -205,8 +184,7 @@ def simulate_rfi_block(bvis, emitter_location, emitter_power=5e4, attenuation=1.
 
             phasor = numpy.ones([nant, nant, nchan, npol], dtype='complex')
             for chan in range(nchan):
-                phasor[:, :, chan, :] = simulate_point(uvw[itime, ..., chan], l, m)[
-                    ..., numpy.newaxis]
+                phasor[:, :, chan, :] = simulate_point(uvw[itime, ..., chan], l, m)[..., numpy.newaxis]
 
             # Now fill this into the BlockVisibility
             bvis.data['vis'][itime, ...] = bvis.data['vis'][itime, ...] * phasor
