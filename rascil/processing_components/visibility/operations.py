@@ -144,7 +144,7 @@ def concatenate_blockvisibility_frequency(bvis_list):
         weight[..., schan:echan, :] = bvis.flagged_weight[...]
         imaging_weight[..., schan:echan, :] = bvis.flagged_imaging_weight[...]
     
-    return BlockVisibility(vis=vis, flags=flags, weight=weight,
+    result = BlockVisibility(vis=vis, flags=flags, weight=weight,
                            imaging_weight=imaging_weight, uvw=uvw, time=time,
                            integration_time=integration_time,
                            frequency=frequency,
@@ -154,6 +154,8 @@ def concatenate_blockvisibility_frequency(bvis_list):
                            configuration=bvis_list[0].configuration,
                            phasecentre=bvis_list[0].phasecentre,
                            meta=None)
+    assert result.nchan == nchan
+    return result
 
 
 def subtract_visibility(vis, model_vis, inplace=False):
@@ -369,7 +371,7 @@ def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=Non
     ochannels = range(nchan)
     
     channels = []
-    for i in range(0, nchan-1, channel_average):
+    for i in range(0, nchan, channel_average):
         channels.append([ochannels[i], ochannels[i + channel_average - 1]+1])
     for group in channels:
         vis_shape[-2] = 1
@@ -495,6 +497,9 @@ def convert_blockvisibility_to_stokesI(vis):
     :param vis: Visibility
     :return: Converted visibility data.
    """
+    if vis.polarisation_frame == PolarisationFrame('stokesI'):
+        return vis
+
     polarisation_frame = PolarisationFrame('stokesI')
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):

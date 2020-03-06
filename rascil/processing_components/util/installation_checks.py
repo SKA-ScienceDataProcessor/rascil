@@ -11,7 +11,7 @@ log = logging.getLogger(__file__)
 __all__ = ['check_data_directory']
 
 def check_data_directory(verbose=False):
-    """ Check the data directory to see if it has been downloaded correctly
+    """ Check the RASCIL data directory to see if it has been installed correctly
     """
     canary = rascil_path("data/configurations/LOWBD2.csv")
     try:
@@ -19,11 +19,11 @@ def check_data_directory(verbose=False):
             first = f.read(1)
             if first == "version https://git-lfs.github.com/spec/v1":
                 log.warning(
-                    "The data directory is not available - if required then git-lfs is needed")
+                    "The RASCIL data directory is not available - if required then git-lfs is needed")
             else:
-                if verbose: print("The data directory appears to have been installed correctly")
+                if verbose: print("The RASCIL data directory appears to have been installed correctly")
     except FileNotFoundError:
-        log.warning("The data directory is not available - if required then git-lfs is needed")
+        log.warning("The RASCIL data directory is not available - if required then git-lfs is needed")
 
 
 if __name__ == "__main__":

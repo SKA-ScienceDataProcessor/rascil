@@ -10,6 +10,7 @@ docs:
     - apt-get -y install pandoc
     - pip install -r requirements.txt -r requirements-docs.txt
     - mkdir -p docs/build/html
+    - mkdir -p test_results
   script:
     - PYTHONPATH=`pwd` make -k -j -C docs html
   after_script:

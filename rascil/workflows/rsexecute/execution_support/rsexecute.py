@@ -29,7 +29,8 @@ except ImportError:
 log = logging.getLogger('logger')
 
 
-def get_dask_client(timeout=30, n_workers=None, threads_per_worker=1, processes=True, create_cluster=True,
+def get_dask_client(timeout=30, n_workers=None, threads_per_worker=1,
+                    processes=True, create_cluster=True,
                     memory_limit=None, local_dir='.', with_file=False,
                     scheduler_file='./scheduler.json',
                     dashboard_address=':8787'):

@@ -313,7 +313,7 @@ def gaintable_plot(gt: GainTable, cc="T", title='', ants=None, channels=None, la
             ax[1].xaxis.set_tick_params(labelsize='small')
 
             phase = numpy.angle(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
-            ax[2].imshow(amp, cmap=cmap)
+            ax[2].imshow(phase, cmap=cmap)
             ax[2].set_ylabel('Phase (radian)')
             ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
             ax[2].xaxis.set_tick_params(labelsize='small')
