@@ -7,11 +7,9 @@ data:
   stage: build
   script:
     - tar zcf rascil_data.tgz data
-  after_script:
-    - mv rascil_data.tgz html
   artifacts:
     paths:
-      - html/
+      - rascil_data.tgz
     expire_in: 6 months
 
 docs:
@@ -51,6 +49,7 @@ pages:
     - unittests
   script:
     - mv html public
+    - mv rascil_data.tgz public
     - mv coverage/ public/coverage
   artifacts:
     paths:
