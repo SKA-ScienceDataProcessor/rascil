@@ -22,7 +22,8 @@ if sys.platform == 'darwin':
 # re-use the setuptools build support.
 
 packages = ['rascil']
-package_data = [i for p in packages for i in glob.glob(p + '/*/') + glob.glob(p + '/*/*/') + glob.glob(p + '/*/*/*/')]
+package_data = [i for p in packages for i in
+                glob.glob(p + '/*/') + glob.glob(p + '/*/*/') + glob.glob(p + '/*/*/*/')]
 setup(name='rascil',
       version='0.1.0',
       python_requires='>=3.6',
@@ -34,5 +35,26 @@ setup(name='rascil',
       license='Apache License Version 2.0',
       packages=(packages + package_data),
       test_suite="tests",
-      tests_require=['pytest']
+      tests_require=['pytest'],
+      install_requires=['aotools',
+                        'astropy',
+                        'bokeh',
+                        'dask',
+                        'distributed',
+                        'h5py',
+                        'jupyter',
+                        'jupyter_contrib_nbextensions',
+                        'matplotlib<3.1.3',
+                        'numba',
+                        'numpy',
+                        'paramiko',
+                        'photutils',
+                        'python-casacore',
+                        'graphviz',
+                        'reproject',
+                        'scikit-image',
+                        'scipy',
+                        'seqfile',
+                        'ConfigParser',
+                        'tabulate']
       )
