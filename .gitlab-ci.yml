@@ -3,6 +3,17 @@ image: "python:3.7"
 variables:
   MPLBACKEND: "agg"
 
+data:
+  stage: build
+  script:
+    - tar zcf rascil_data.tgz data
+  after_script:
+    - mv rascil_data.tgz html
+  artifacts:
+    paths:
+      - html/
+    expire_in: 6 months
+
 docs:
   stage: build
   before_script:
