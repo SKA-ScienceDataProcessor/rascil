@@ -7,6 +7,7 @@ data:
   stage: build
   script:
     - tar -zcf rascil_data.tgz data
+  after_script:
   artifacts:
     paths:
       - rascil_data.tgz
@@ -47,6 +48,7 @@ pages:
   dependencies:
     - docs
     - unittests
+    - data
   script:
     - mv html public
     - mv rascil_data.tgz public
