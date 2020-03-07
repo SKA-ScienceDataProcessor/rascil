@@ -34,7 +34,7 @@ from rascil.processing_components.griddata import create_convolutionfunction_fro
 
 class TestDataModelHelpers(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         
         self.mid = create_named_configuration('MID', rmax=1000.0)

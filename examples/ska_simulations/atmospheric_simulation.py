@@ -21,7 +21,7 @@ import seqfile
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components import plot_azel, \
     plot_uvcoverage, find_pb_width_null, create_simulation_components, \
@@ -99,7 +99,7 @@ def cli_parser():
                      help='Export images in fits format?')
     par.add_argument('--use_agg', type=str, default="True",
                      help='Use Agg matplotlib backend?')
-    default_shared_path = rascil_path("data/configurations")
+    default_shared_path = rascil_data_path("configurations")
     par.add_argument('--shared_directory', type=str, default=default_shared_path,
                      help='Location of configuration files (default is RASCIL data/configurations)')
     # Dask parameters; matched to P3

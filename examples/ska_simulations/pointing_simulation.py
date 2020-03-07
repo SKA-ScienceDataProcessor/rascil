@@ -21,7 +21,7 @@ import seqfile
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components import plot_azel, \
     plot_uvcoverage, find_pb_width_null, create_simulation_components, \
@@ -95,7 +95,7 @@ def cli_parser():
                      help='Use Agg matplotlib backend?')
     par.add_argument('--use_radec', type=str, default="False",
                      help='Calculate primary beams in RADEC?')
-    default_shared_path = rascil_path("data/configurations")
+    default_shared_path = rascil_data_path("configurations")
     par.add_argument('--shared_directory', type=str, default=default_shared_path,
                      help='Location of configuration files (default is RASCIL data/configurations)')
     # Dask parameters; matched to P3
@@ -121,7 +121,7 @@ def cli_parser():
                      help='Scale (arcsec) for random dynamic errors (varies with time and dish)')
     par.add_argument('--pointing_file', type=str, default=None, help="Pointing file")
     par.add_argument('--pointing_directory', type=str,
-                     default=rascil_path('data/models'),
+                     default=rascil_data_path('models'),
                      help='Location of wind-induced pointing files')
     return par
 

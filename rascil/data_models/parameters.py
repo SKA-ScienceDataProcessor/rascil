@@ -53,7 +53,7 @@ spectral_mode           Visibility processing mode          'mfs' or 'channel'
 
 """
 
-__all__ = ['rascil_path', 'get_parameter']
+__all__ = ['rascil_path', 'rascil_data_path', 'get_parameter']
 
 import logging
 import os
@@ -65,7 +65,7 @@ def rascil_path(path):
     """Converts a path that might be relative to RASCIL root into an
     absolute path::
 
-        rascil_path('data/models/SKA1_LOW_beam.fits')
+        rascil_data_path('models/SKA1_LOW_beam.fits')
         '/Users/timcornwell/Code/rascil/data/models/SKA1_LOW_beam.fits'
 
     :param path:
@@ -74,6 +74,22 @@ def rascil_path(path):
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)) + "/../../")
     rascilhome = os.getenv('RASCIL', project_root)
     return os.path.join(rascilhome, path)
+
+def rascil_data_path(path):
+    """Converts a path that might be relative to RASCIL root into an
+    absolute path::
+
+        rascil_data_path('models/SKA1_LOW_beam.fits')
+        '/Users/timcornwell/Code/rascil/data/models/SKA1_LOW_beam.fits'
+
+    :param path:
+    :return: absolute path
+    """
+    rascil_data_home = os.getenv('RASCIL_DATA', None)
+    if rascil_data_home is None:
+        return rascil_path('data/'+path)
+    else:
+        return os.path.join(rascil_data_home, path)
 
 
 def get_parameter(kwargs, key, default=None):

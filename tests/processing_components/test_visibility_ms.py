@@ -8,8 +8,7 @@ import logging
 
 import numpy
 
-from rascil.data_models.parameters import rascil_path
-
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.processing_components.visibility.base import create_blockvisibility_from_ms, create_visibility_from_ms
 from rascil.processing_components.visibility.operations import integrate_visibility_by_channel
 

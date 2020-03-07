@@ -7,7 +7,7 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from rascil.data_models import SkyModel, rascil_path, PolarisationFrame
+from rascil.data_models import SkyModel, rascil_path, rascil_data_path, PolarisationFrame
 
 from rascil.processing_components.image.operations import create_empty_image_like
 
@@ -145,7 +145,7 @@ class TestPipelineMPC(unittest.TestCase):
         if nvoronoi is not None:
             voronoi_components = [voronoi_components[0]]
         
-        self.screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
+        self.screen = import_image_from_fits(rascil_data_path('models/test_mpc_screen.fits'))
         all_gaintables = create_gaintable_from_screen(blockvis, all_components,
                                                       self.screen)
         

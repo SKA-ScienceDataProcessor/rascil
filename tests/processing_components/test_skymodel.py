@@ -24,7 +24,7 @@ log.setLevel(logging.WARNING)
 
 class TestSkyModel(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.lowcore = create_named_configuration('LOWBD2', rmax=300.0)
         self.dir = rascil_path('test_results')
         self.times = (numpy.pi / 12.0) * numpy.linspace(-3.0, 3.0, 7)

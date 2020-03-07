@@ -28,7 +28,7 @@ log.setLevel(logging.WARNING)
 
 class TestSkymodelMPC(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         dec = -40.0 * u.deg
         
         self.lowcore = create_named_configuration('LOWBD2', rmax=300.0)

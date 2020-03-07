@@ -8,8 +8,7 @@ import unittest
 import logging
 import numpy
 
-from rascil.data_models.parameters import rascil_path
-
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.processing_components.visibility.coalesce import convert_visibility_to_blockvisibility, convert_blockvisibility_to_visibility
 
 log = logging.getLogger('logger')

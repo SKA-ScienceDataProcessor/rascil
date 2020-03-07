@@ -24,7 +24,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 
 class TestConfigurations(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         
         self.frequency = numpy.linspace(0.8e8, 1.2e8, 3)

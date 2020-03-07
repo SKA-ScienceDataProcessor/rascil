@@ -92,19 +92,24 @@ def calculate_rfi_at_station(propagators, emitter):
     rfi_at_station[numpy.abs(rfi_at_station)<1e-15] = 0.
     return rfi_at_station
 
+
 def calculate_station_correlation_rfi(rfi_at_station):
     """ Form the correlation from the rfi at the station
-    
+
     :param rfi_at_station:
     :return: Correlation(nant, nants, ntimes, nchan] in Jy
     """
     ntimes, nants, nchan = rfi_at_station.shape
-    correlation = numpy.zeros([ntimes, nants, nants, nchan], dtype='complex')
-    
+    correlationt = numpy.zeros([ntimes, nchan, nants, nants], dtype='complex')
+    rfit = numpy.transpose(rfi_at_station, axes=[0, 2, 1])
+    rfitc = numpy.conjugate(rfit)
+
     for itime in range(ntimes):
         for chan in range(nchan):
-            correlation[itime, ..., chan] = numpy.outer(rfi_at_station[itime, :, chan],
-                                                       numpy.conjugate(rfi_at_station[itime, :, chan]))
+            correlationt[itime, chan, ...] = numpy.outer(rfit[itime, chan, :],
+                                                         rfitc[itime, chan, :])
+
+    correlation = numpy.transpose(correlationt, axes=[0, 2, 3, 1])
 
     return correlation[..., numpy.newaxis] * 1e26
 

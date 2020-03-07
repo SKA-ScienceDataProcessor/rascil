@@ -35,7 +35,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 
 class TestPipelinesFunctions(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         
         self.setupVis(add_errors=False, block=True)
