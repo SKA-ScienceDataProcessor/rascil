@@ -29,7 +29,7 @@ class TestImageGraph(unittest.TestCase):
     def setUp(self):
         rsexecute.set_client(verbose=False, memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
 
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         
         self.frequency = numpy.linspace(1e8, 1.5e8, 3)

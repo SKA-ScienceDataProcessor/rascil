@@ -9,7 +9,7 @@ import astropy.units as u
 import numpy
 from astropy.coordinates import SkyCoord
 
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.image.operations import import_image_from_fits, qa_image, \
     export_image_to_fits
@@ -55,11 +55,11 @@ class TestIonosphericScreen(unittest.TestCase):
                                   phasecentre=self.phasecentre)
     
     def test_read_screen(self):
-        screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
+        screen = import_image_from_fits(rascil_data_path('models/test_mpc_screen.fits'))
         assert screen.data.shape == (1, 3, 2000, 2000), screen.data.shape
     
     def test_create_gaintable_from_screen(self):
-        screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
+        screen = import_image_from_fits(rascil_data_path('models/test_mpc_screen.fits'))
         beam = create_test_image(cellsize=0.0015, phasecentre=self.vis.phasecentre,
                                  frequency=self.frequency)
         
@@ -81,7 +81,7 @@ class TestIonosphericScreen(unittest.TestCase):
         assert gaintables[0].gain.shape == (3, 94, 3, 1, 1), gaintables[0].gain.shape
     
     def test_grid_gaintable_to_screen(self):
-        screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
+        screen = import_image_from_fits(rascil_data_path('models/test_mpc_screen.fits'))
         beam = create_test_image(cellsize=0.0015, phasecentre=self.vis.phasecentre,
                                  frequency=self.frequency)
         
@@ -110,7 +110,7 @@ class TestIonosphericScreen(unittest.TestCase):
         if self.persist: export_image_to_fits(weights, rascil_path('test_results/test_mpc_screen_gridded_weights.fits'))
 
     def test_plot_gaintable_to_screen(self):
-        screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
+        screen = import_image_from_fits(rascil_data_path('models/test_mpc_screen.fits'))
         beam = create_test_image(cellsize=0.0015, phasecentre=self.vis.phasecentre,
                                  frequency=self.frequency)
     

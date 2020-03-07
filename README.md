@@ -13,14 +13,21 @@ To acheive sufficient performance we take a dual pronged approach -
 using threaded libraries for shared memory processing, and the Dask
 library for distributed processing.
 
+Documentation is [here](https://timcornwell.gitlab.io/rascil/)
+
 RASCIL can be installed using pip::
 
     pip install rascil
+    
+You may also need the rascil data for simulations:
 
-Other installation instructions such as for development are available from the [documentation](https://timcornwell.gitlab.io/rascil/)
-  
-RASCIL code is hosted on [Github](https://github.com/SKA-ScienceDataProcessor/rascil)
+    wget https://timcornwell.gitlab.io/rascil/rascil_data.tgz
+    tar zxf rascil_data.tgz
+    export RASCIL_DATA=`pwd`/rascil_data
 
+Alternatively, if you wish to develop using RASCIL then you can 
+clone from the GitHub repository:
+ 
+    git clone https://github.com/SKA-ScienceDataProcessor/rascil
+    
 RASCIL CI/CD occurs on  [Gitlab](https://gitlab.com/timcornwell/rascil)
-
-The documentation builds occur in the pipeline on GitLab.  

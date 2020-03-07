@@ -25,7 +25,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 
 class TestImagingFunctions(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
     
     def actualSetUp(self, add_errors=False, freqwin=1, block=False, dospectral=True, dopol=False):

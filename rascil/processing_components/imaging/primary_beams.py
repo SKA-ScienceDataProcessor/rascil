@@ -12,7 +12,7 @@ import numpy
 from astropy import constants as const
 
 from rascil.data_models.memory_data_models import Image
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.processing_components.image.operations import import_image_from_fits, reproject_image
 from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like, fft_image, pad_image
 
@@ -91,29 +91,29 @@ def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=
         return create_vp_generic(model, pointingcentre=pointingcentre, diameter=15.0, blockage=0.0, use_local=use_local)
     elif telescope == 'MID_GRASP':
         log.debug("create_vp: Using GRASP model for MID voltage pattern")
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_GRASP_VP_real.fits'))
-        imag_vp = import_image_from_fits(rascil_path('data/models/MID_GRASP_VP_imag.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_GRASP_VP_real.fits'))
+        imag_vp = import_image_from_fits(rascil_data_path('models/MID_GRASP_VP_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
     elif telescope == 'MID_FEKO_B1':
         log.debug("create_vp: Using FEKO model for MID voltage pattern")
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_B1_45_0765_real.fits'))
-        imag_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_B1_45_0765_imag.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B1_45_0765_real.fits'))
+        imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B1_45_0765_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
     elif telescope == 'MID_FEKO_B2':
         log.debug("create_vp: Using FEKO model for MID voltage pattern")
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_B2_45_1360_real.fits'))
-        imag_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_B2_45_1360_imag.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B2_45_1360_real.fits'))
+        imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B2_45_1360_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
     elif telescope == 'MID_FEKO_Ku':
         log.debug("create_vp: Using FEKO model for MID voltage pattern")
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_Ku_45_12179_real.fits'))
-        imag_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_Ku_45_12179_imag.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_Ku_45_12179_real.fits'))
+        imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_Ku_45_12179_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
@@ -331,7 +331,7 @@ def create_low_test_beam(model: Image, use_local=True) -> Image:
     :param model: Template image
     :return: Image
     """
-    beam = import_image_from_fits(rascil_path('data/models/SKA1_LOW_beam.fits'))
+    beam = import_image_from_fits(rascil_data_path('models/SKA1_LOW_beam.fits'))
     
     # Scale the image cellsize to account for the different in frequencies. Eventually we will want to
     # use a frequency cube
@@ -381,7 +381,7 @@ def create_low_test_vp(model: Image, use_local=True) -> Image:
     :return: Image
     """
     
-    beam = import_image_from_fits(rascil_path('data/models/SKA1_LOW_beam.fits'))
+    beam = import_image_from_fits(rascil_data_path('models/SKA1_LOW_beam.fits'))
     beam.data = numpy.sqrt(beam.data).astype('complex')
     
     # Scale the image cellsize to account for the different in frequencies. Eventually we will want to

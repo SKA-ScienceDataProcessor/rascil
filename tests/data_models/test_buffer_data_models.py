@@ -27,7 +27,7 @@ from rascil.processing_components import create_blockvisibility, create_flagtabl
 
 class TestBufferDataModelHelpers(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results/')
         
         self.midcore = create_named_configuration('MID', rmax=3000.0)

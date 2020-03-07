@@ -2,8 +2,7 @@
 
 """
 import sys
-from rascil.data_models.parameters import rascil_path
-
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 import numpy
 
 from rascil.processing_components.visibility.base import create_blockvisibility_from_ms
@@ -31,7 +30,7 @@ if __name__ == '__main__':
     
     # Test requires that casa be installed
     try:
-        bvt = create_blockvisibility_from_ms(rascil_path('data/vis/sim-2.ms'), channum=[35, 36, 37, 38, 39])[0]
+        bvt = create_blockvisibility_from_ms(rascil_data_path('vis/sim-2.ms'), channum=[35, 36, 37, 38, 39])[0]
         bvt.configuration.diameter[...] = 35.0
         vt = convert_blockvisibility_to_visibility(bvt)
         vt = convert_visibility_to_stokes(vt)

@@ -13,7 +13,7 @@ from scipy.interpolate import RectBivariateSpline
 
 from rascil.data_models.memory_data_models import BlockVisibility
 from rascil.data_models.memory_data_models import PointingTable
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.visibility.base import create_visibility_from_rows
@@ -251,7 +251,7 @@ def simulate_pointingtable_from_timeseries(pt, type='wind', time_series_type='pr
         numpy.random.seed(seed)
 
     if pointing_directory is None:
-        pointing_directory = rascil_path("data/models/%s" % time_series_type)
+        pointing_directory = rascil_data_path("models/%s" % time_series_type)
 
     pt.data['pointing'] = numpy.zeros(pt.data['pointing'].shape)
 

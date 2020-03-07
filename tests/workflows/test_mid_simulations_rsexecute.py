@@ -13,8 +13,7 @@ import os
 import sys
 import unittest
 
-from rascil.data_models.parameters import rascil_path
-
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 results_dir = rascil_path('test_results')
 
 import numpy
@@ -215,7 +214,7 @@ class TestPointingSimulation(unittest.TestCase):
         
         # Control parameters
         parser.add_argument('--use_radec', type=str, default="False", help='Calculate in RADEC (false)?')
-        parser.add_argument('--shared_directory', type=str, default=rascil_path('data/configurations'),
+        parser.add_argument('--shared_directory', type=str, default=rascil_data_path('configurations'),
                             help='Location of configuration files')
         
         # Dask parameters
@@ -233,9 +232,9 @@ class TestPointingSimulation(unittest.TestCase):
                             help='Multipliers for static errors')
         parser.add_argument('--dynamic_pe', type=float, default=1.0, help='Multiplier for dynamic errors')
         parser.add_argument('--pointing_file', type=str, default=None, help="Pointing file")
-        parser.add_argument('--pointing_directory', type=str, default=rascil_path('data/models'),
+        parser.add_argument('--pointing_directory', type=str, default=rascil_data_path('models'),
                             help='Location of pointing files')
-        parser.add_argument('--vp_directory', type=str, default=rascil_path('data/models/interpolated'),
+        parser.add_argument('--vp_directory', type=str, default=rascil_data_path('models/interpolated'),
                             help='Location of pointing files')
 
         args = parser.parse_args([])
