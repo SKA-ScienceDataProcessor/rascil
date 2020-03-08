@@ -3,6 +3,22 @@
 Fourier processing
 ******************
 
+For wide field imaging with w term correction, the Nifty Gridder is supported and has the best performance.
+See the installation directions at:
+
+    https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
+
+This is supported at the processing component level via:
+
+ * :py:func:`rascil.processing_components.imaging.ng.invert_ng`
+ * :py:func:`rascil.processing_components.imaging.ng.predict_ng`
+
+In imaging and pipeline workflows, use context='ng'.
+
+RASCIL model
+*************
+
+If only wterm needs to be corrected, the Nifty Gridder is the best option. However RASCIL has another approach.
 There are many algorithms for imaging, using different approaches to correct for various effects:
 
 + Simple 2D transforms
@@ -24,12 +40,9 @@ framework decomposes the overall transform into suitable linear combinations of 
 
 The full layering is:
 
-+ The core 2d imaging functions are defined in :py:mod:`processing_components.imaging.base`. W projection is included
-    at this level by setting wstep to the desired non-zero value.
++ The core 2d imaging functions are defined in :py:mod:`processing_components.imaging.base`. W projection is included at this level by setting wstep to the desired non-zero value.
 
-+ Other algorithms (e.g. timeslice and wstack) are implemented as workflowss using the core 2d imaging functions.
-    These are defined in :py:mod:`workflows.serial.imaging.imaging_serial` and
-    :py:mod:`workflows.rsexecute.imaging.imaging_rsexecute`
++ Other algorithms (e.g. timeslice and wstack) are implemented as workflows using the core 2d imaging functions. These are defined in :py:mod:`workflows.serial.imaging.imaging_serial` and :py:mod:`workflows.rsexecute.imaging.imaging_rsexecute`
 
 The style of first approach is::
 

@@ -37,6 +37,8 @@ try:
         
         Nifty-gridder version. https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
     
+        In the imaging and pipeline workflows, this may be invoked using context='ng'.
+
         :param bvis: BlockVisibility to be predicted
         :param model: model image
         :return: resulting BlockVisibility (in place works)
@@ -125,10 +127,9 @@ try:
         https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
     
         Use the image im as a template. Do PSF in a separate call.
-    
-        This is at the bottom of the layering i.e. all transforms are eventually expressed in terms
-        of this function. . Any shifting needed is performed here.
-    
+
+        In the imaging and pipeline workflows, this may be invoked using context='ng'.
+
         :param bvis: BlockVisibility to be inverted
         :param im: image template (not changed)
         :param normalize: Normalize by the sum of weights (True)
@@ -231,6 +232,17 @@ except ImportError:
     def predict_ng(bvis: Union[BlockVisibility, Visibility], model: Image,
                    **kwargs) -> \
             Union[BlockVisibility, Visibility]:
+        """ Predict using convolutional degridding.
+
+        Nifty-gridder version. https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
+
+        In the imaging and pipeline workflows, this may be invoked using context='ng'.
+
+        :param bvis: BlockVisibility to be predicted
+        :param model: model image
+        :return: resulting BlockVisibility (in place works)
+        """
+
         log.error("Nifty gridder not available")
         return bvis
     
@@ -238,5 +250,21 @@ except ImportError:
     def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False,
                   normalize: bool = True,
                   **kwargs) -> (Image, numpy.ndarray):
+        """ Invert using nifty-gridder module
+
+        https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
+
+        Use the image im as a template. Do PSF in a separate call.
+
+        Any shifting needed is performed here.
+
+        In the imaging and pipeline workflows, this may be invoked using context='ng'.
+
+        :param bvis: BlockVisibility to be inverted
+        :param im: image template (not changed)
+        :param normalize: Normalize by the sum of weights (True)
+        :return: (resulting image, sum of the weights for each frequency and polarization)
+
+        """
         log.error("Nifty gridder not available")
         return model, None
