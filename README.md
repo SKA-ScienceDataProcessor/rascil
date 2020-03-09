@@ -21,7 +21,7 @@ RASCIL can be installed using pip::
     
 You may also need the rascil data for simulations:
 
-    wget https://timcornwell.gitlab.io/rascil/rascil_data.tgz
+    curl https://timcornwell.gitlab.io/rascil/rascil_data.tgz -o rascil.data.tgz
     tar zxf rascil_data.tgz
     export RASCIL_DATA=`pwd`/rascil_data
 

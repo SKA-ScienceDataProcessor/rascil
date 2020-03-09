@@ -14,7 +14,7 @@ If you just wish to run the package and do not intend to run simulations or test
 
 For simulations, you can add the data in a separate step::
 
-    wget https://timcornwell.gitlab.io/rascil/rascil_data.tgz
+    curl https://timcornwell.gitlab.io/rascil/rascil_data.tgz -o rascil.data.tgz
     tar zxf rascil_data.tgz
     export RASCIL_DATA=`pwd`/rascil_data
 

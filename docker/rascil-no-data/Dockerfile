@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && apt-get install -y \
     ca-certificates \
-    gosu git \
+    gosu git wget curl \
     libxml2-dev liblapack-dev libcfitsio-dev libgtkmm-3.0-dev \
     cmake g++ build-essential gfortran libpng-dev casacore-dev \
     python3 python3-dev python3-pip python3-setuptools && \
@@ -44,7 +44,7 @@ RUN pip3 install Cython setuptools && \
     jupyter_contrib_nbextensions \
     jupyter-server-proxy \
     jupyterlab \
-    matplotlib \
+    "matplotlib<3.1.3" \
     photutils\
     python-casacore \
     reproject \
