@@ -1,10 +1,10 @@
-.. Fourier processing
+.. _Fourier_processing:
 
 Fourier processing
 ******************
 
 For wide field imaging with w term correction, the Nifty Gridder is supported and has the best performance.
-See the installation directions at:
+We do not distribute NG as part of RASCIL. However, installation is quite straightforward. See the directions at:
 
     https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
 
@@ -13,10 +13,10 @@ This is supported at the processing component level via:
  * :py:func:`rascil.processing_components.imaging.ng.invert_ng`
  * :py:func:`rascil.processing_components.imaging.ng.predict_ng`
 
-In imaging and pipeline workflows, use context='ng'.
+At the workflow level, such as imaging and pipeline workflows, use context='ng'.
 
 RASCIL model
-*************
+------------
 
 If only wterm needs to be corrected, the Nifty Gridder is the best option. However RASCIL has another approach.
 There are many algorithms for imaging, using different approaches to correct for various effects:

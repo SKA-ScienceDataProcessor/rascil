@@ -20,7 +20,7 @@ See the jupyter note books below:
    examples/notebooks/imaging-wterm_rsexecute.rst
    examples/notebooks/simple-dask_rsexecute.rst
    examples/notebooks/imaging-pipelines_rsexecute.rst
-   examples/notebooks//bandpass-calibration_rsexecute.rst
+   examples/notebooks//bandpass-calibration_serial.rst
 
 In addition, there are other notebooks in examples/notebooks that are not built as part of this documentation.
 

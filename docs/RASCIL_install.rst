@@ -5,21 +5,34 @@ Installation
 
 RASCIL can be run on a Linux or macos machine or cluster of machines. At least 16GB physical memory is necessary to run the full test suite. In general more memory is better. RASCIL uses Dask for multi-processing and can make good use of multi-core and multi-node machines.
 
+Installation via pip
+++++++++++++++++++++
+
+If you just wish to run the package and do not intend to run simulations or tests, RASCIL can be installed using pip::
+
+    pip install rascil
+
+For simulations, you can add the data in a separate step::
+
+    wget https://timcornwell.gitlab.io/rascil/rascil_data.tgz
+    tar zxf rascil_data.tgz
+    export RASCIL_DATA=`pwd`/rascil_data
+
+For tests, use one of the steps below.
+
 Installation via docker
 +++++++++++++++++++++++
 
-If you are familar with docker, an easy approach is to use our docker scripts:
+If you are familar with docker, an easy approach is to use docker:
 
-.. toctree::
-   :maxdepth: 1
-
-   installation/RASCIL_docker
+ .. toctree::
+    installation/RASCIL_docker
 
 
 Installation via git clone
 ++++++++++++++++++++++++++
 
-Installation should be straightforward. We strongly recommend the use of a python virtual environment.
+Use of git clone is necessary if you wish to develop and possibly contribute RASCIL code. Installation should be straightforward. We strongly recommend the use of a python virtual environment.
 
 RASCIL requires python 3.6 or 3.7. It has not yet been tested for 3.8.
 

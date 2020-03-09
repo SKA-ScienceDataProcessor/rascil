@@ -7,6 +7,21 @@ Use the SKA Python Coding Guidelines (http://developer.skatelescope.org/en/lates
 We recommend using a tool to help ensure PEP 8 compliance. PyCharm does a good job at this and other code quality
 checks.
 
+Process
+=======
+
+- Use git to make a local clone of the Github respository::
+
+   git clone https://github.com/SKA-ScienceDataProcessor/rascil
+
+- Make a branch. Use a descriptive name e.g. feature_improved_gridding, bugfix_issue_666
+- Make whatever changes are needed, including documentation.
+- Always add appropriate test code in the tests directory.
+- Consider adding to the examples area.
+- Push the branch to github. It will be build automatically on gitlab: https://gitlab.com/timcornwell/rascil/pipelines
+- Once it builds correctly, submit a pull request.
+
+
 Design
 ======
 

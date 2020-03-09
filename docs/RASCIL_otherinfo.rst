@@ -11,6 +11,7 @@ Other information
    RASCIL_dask
    RASCIL_developing
    RASCIL_documenting
+   RASCIL_release_process
    RASCIL_converting_from_ARL
    RASCIL_background
    RASCIL_SDP

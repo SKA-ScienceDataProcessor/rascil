@@ -8,7 +8,7 @@
 #
 name: rascil_env
 channels:
-  - astropy
+  - astropy>=4.0
   - defaults
   - conda-forge
 dependencies:
