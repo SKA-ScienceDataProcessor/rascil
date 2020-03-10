@@ -18,11 +18,12 @@ docs:
   before_script:
     - apt-get update
     - apt-get -y install pandoc
-    - pip install -r requirements.txt -r requirements-docs.txt
     - mkdir -p docs/build/html
-    - mkdir -p test_results
+    - pipenv install --ignore-pipfile
   script:
-    - PYTHONPATH=`pwd` make -k -j -C docs html
+    - cd docs
+    - pipenv run make -k -j -C . html
+    - cd ..
   after_script:
     - mv docs/build/html html
   artifacts:
@@ -33,11 +34,13 @@ docs:
 unittests:
   stage: build
   before_script:
-    - pip install -r requirements.txt -r requirements-test.txt
+    - pipenv install --ignore-pipfile
   script:
-    - pip install pytest pytest-xdist pytest-cov
-    - py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
-    - py.test -n 4 tests/data_models tests/processing_components tests/workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
+    - cd tests
+    - pipenv run py.test workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
+    - pipenv run py.test -n 4 data_models processing_components workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
+    - mv coverage ..
+    - cd ..
   artifacts:
     paths:
       - coverage

@@ -1,0 +1,40 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+pytest-cov = "*"
+pytest-xdist = "*"
+
+[packages]
+aotools = "*"
+astropy = "==4.0"
+bokeh = "*"
+dask = "*"
+distributed = "*"
+h5py = "*"
+jupyter = "*"
+jupyter-contrib-nbextensions = "*"
+matplotlib = "==3.1.2"
+numba = "*"
+numpy = "*"
+paramiko = "*"
+photutils = "*"
+python-casacore = "==3.1.1"
+graphviz = "*"
+reproject = "*"
+scikit-image = "*"
+scipy = "*"
+seqfile = "*"
+configparser = "*"
+tabulate = "*"
+rascil = {path = "."}
+sphinx-rtd-theme = "*"
+sphinx-automodapi = "*"
+sphinx-argparse = "*"
+Sphinx = "*"
+
+[requires]
+python_version = "3.7"

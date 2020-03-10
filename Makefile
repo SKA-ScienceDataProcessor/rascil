@@ -13,7 +13,7 @@ CURRENT_DIR = $(shell pwd)
 JUPYTER_PASSWORD ?= changeme
 
 # RASCIL data directory usualy found in ./data
-RASCILDATA = $(CURRENT_DIR)/data
+RASCIL_DATA = $(CURRENT_DIR)/data
 
 -include PrivateRules.mak
 

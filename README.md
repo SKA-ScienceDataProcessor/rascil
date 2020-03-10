@@ -13,7 +13,7 @@ To acheive sufficient performance we take a dual pronged approach -
 using threaded libraries for shared memory processing, and the Dask
 library for distributed processing.
 
-Documentation is [here](https://timcornwell.gitlab.io/rascil/)
+Documentation is at https://timcornwell.gitlab.io/rascil/
 
 RASCIL can be installed using pip::
 
