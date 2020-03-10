@@ -94,7 +94,7 @@ def create_test_image(canonical=True, cellsize=None, frequency=None, channel_ban
 
     if frequency is None:
         frequency = [1e8]
-    im = import_image_from_fits(rascil_path("data/models/M31.MOD"))
+    im = import_image_from_fits(rascil_data_path("models/M31.MOD"))
     if canonical:
 
         if polarisation_frame is None:
@@ -543,7 +543,7 @@ def create_low_test_skycomponents_from_gleam(flux_limit=0.1, polarisation_frame=
     """
     check_data_directory()
 
-    fitsfile = rascil_path("data/models/GLEAM_EGC.fits")
+    fitsfile = rascil_data_path("models/GLEAM_EGC.fits")
 
     rad2deg = 180.0 / numpy.pi
     decmin = phasecentre.dec.to('deg').value - rad2deg * radius / 2.0
