@@ -22,10 +22,7 @@ docs:
     - pip install pipenv
     - pipenv install --ignore-pipfile
   script:
-    - export RASCIL_DATA=`pwd`/data
-    - cd docs
-    - pipenv run make -k -j -C . html
-    - cd ..
+    - pipenv run make -k -j -C docs html
   after_script:
     - mv docs/build/html html
   artifacts:
@@ -39,12 +36,8 @@ unittests:
     - pip install pipenv
     - pipenv install --ignore-pipfile --dev
   script:
-    - export RASCIL_DATA=`pwd`/data
-    - cd tests
-    - pipenv run py.test workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
-    - pipenv run py.test -n 4 data_models processing_components workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
-    - mv coverage ..
-    - cd ..
+    - pipenv run py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
+    - pipenv run py.test -n 4 tests/data_models tests/processing_components tests/workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
   artifacts:
     paths:
       - coverage
