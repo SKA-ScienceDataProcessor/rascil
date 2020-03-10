@@ -4,7 +4,7 @@
 
 import logging
 
-from rascil.data_models import rascil_path
+from rascil.data_models import rascil_data_path
 
 log = logging.getLogger(__file__)
 
@@ -13,8 +13,7 @@ __all__ = ['check_data_directory']
 def check_data_directory(verbose=False):
     """ Check the RASCIL data directory to see if it has been installed correctly
     """
-    canary = rascil_data_path("
-configurations/LOWBD2.csv")
+    canary = rascil_data_path("configurations/LOWBD2.csv")
     try:
         with open(canary, "r") as f:
             first = f.read(1)
