@@ -36,7 +36,7 @@ unittests:
   stage: build
   before_script:
     - pip install pipenv
-    - pipenv install --ignore-pipfile
+    - pipenv install --ignore-pipfile --dev
   script:
     - cd tests
     - pipenv run py.test workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
