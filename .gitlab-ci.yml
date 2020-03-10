@@ -19,6 +19,7 @@ docs:
     - apt-get update
     - apt-get -y install pandoc
     - mkdir -p docs/build/html
+    - pip install pipenv
     - pipenv install --ignore-pipfile
   script:
     - cd docs
@@ -34,6 +35,7 @@ docs:
 unittests:
   stage: build
   before_script:
+    - pip install pipenv
     - pipenv install --ignore-pipfile
   script:
     - cd tests
