@@ -82,9 +82,11 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
     number_bad = 0
     number_good = 0
 
+    time_zero = numpy.average(vis.time)
+    
     for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
         v = create_visibility_from_rows(vis, rows)
-        ha = numpy.average(v.time)
+        ha = numpy.average(v.time-time_zero)
         for icomp, comp in enumerate(sc):
             pp = find_pierce_points(station_locations, (comp.direction.ra.rad + t2r * ha) * units.rad, comp.direction.dec,
                                     height=height, phasecentre=vis.phasecentre)
@@ -139,10 +141,12 @@ def grid_gaintable_to_screen(vis, gaintables, screen, height=3e5, gaintable_slic
 
     # The time in the Visibility is hour angle in seconds!
     number_no_weight = 0
+
     for gaintable in gaintables:
+        time_zero = numpy.average(gaintable.time)
         for iha, rows in enumerate(gaintable_timeslice_iter(gaintable, gaintable_slices=gaintable_slices)):
             gt = create_gaintable_from_rows(gaintable, rows)
-            ha = numpy.average(gt.time)
+            ha = numpy.average(gt.time-time_zero)
 
             pp = find_pierce_points(station_locations,
                                     (gt.phasecentre.ra.rad + t2r * ha) * units.rad,

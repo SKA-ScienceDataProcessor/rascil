@@ -16,7 +16,7 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord, EarthLocation
 
-from rascil.data_models.memory_data_models import Visibility, SkyModel
+from rascil.data_models.memory_data_models import Visibility, SkyModel, Configuration
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.calibration import apply_gaintable, \
     create_gaintable_from_blockvisibility, solve_gaintable
@@ -93,7 +93,11 @@ def simulate_list_rsexecute_workflow(config='LOWBD2',
         channel_bandwidth = [1e6]
     if frequency is None:
         frequency = [1e8]
-    conf = create_named_configuration(config, rmax=rmax)
+        
+    if isinstance(config, Configuration):
+        conf = config
+    else:
+        conf = create_named_configuration(config, rmax=rmax)
 
     if order == 'time':
         log.debug(
