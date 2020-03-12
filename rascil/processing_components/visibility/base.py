@@ -136,19 +136,17 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
 
     # Do each hour angle in turn
     row = 0
+    site = Observer(config.location)
+    stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
+    if stime.masked:
+        stime = utc_time
     for iha, ha in enumerate(times):
 
         # Calculate the positions of the antennas as seen for this hour angle
         # and declination
         _, elevation = hadec_to_azel(ha, phasecentre.dec.rad, latitude)
         if elevation_limit is None or (elevation > elevation_limit):
-            site = Observer(config.location)
-            horizon = 0.0 * u.deg
-            if elevation_limit is not None:
-                horizon = elevation_limit * u.deg
-            stime = site.target_rise_time(utc_time, phasecentre, which="next", horizon=horizon)
             rtimes[row:row + nrowsperintegration] = stime.mjd * 86400.0 + ha * 86164.1 / (2.0 * numpy.pi)
-
 
             # TODO: optimise loop
             # Loop over all pairs of antennas. Note that a2>a1
@@ -244,6 +242,7 @@ def create_blockvisibility(config: Configuration,
 
     ntimes = 0
     n_flagged = 0
+    
     for iha, ha in enumerate(times):
 
         # Calculate the positions of the antennas as seen for this hour angle
@@ -274,6 +273,11 @@ def create_blockvisibility(config: Configuration,
 
     # Do each hour angle in turn
     itime = 0
+    site = Observer(config.location)
+    stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
+    if stime.masked:
+        stime = utc_time
+
     for iha, ha in enumerate(times):
 
         # Calculate the positions of the antennas as seen for this hour angle
@@ -281,11 +285,6 @@ def create_blockvisibility(config: Configuration,
         ant_pos = xyz_to_uvw(ants_xyz, ha, phasecentre.dec.rad)
         _, elevation = hadec_to_azel(ha, phasecentre.dec.rad, latitude)
         if elevation_limit is None or (elevation > elevation_limit):
-            site = Observer(config.location)
-            horizon = 0.0 * u.deg
-            if elevation_limit is not None:
-                horizon = elevation_limit * u.deg
-            stime = site.target_rise_time(utc_time, phasecentre, which="next", horizon=horizon)
             rtimes[itime] = stime.mjd * 86400.0 + ha * 86164.1 / (2.0 * numpy.pi)
             rweight[itime, ...] = 1.0
             rflags[itime, ...] = 0
