@@ -66,7 +66,6 @@ In addition there are notebooks that use components in workflows/notebooks.
    examples/notebooks/imaging-wterm_rsexecute.rst
    examples/notebooks/simple-dask_rsexecute.rst
    examples/notebooks/imaging-pipelines_rsexecute.rst
-   examples/notebooks//bandpass-calibration_rsexecute.rst
 
 These notebooks are scaled to run on a 2017-era laptop (4 cores, 16GB) but can be changed to larger scales. Both
 explicitly create a client and output the URL (usually http://127.0.0.1:8787) for the Dask diagnostics. Of these the

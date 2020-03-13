@@ -18,7 +18,7 @@ For simulations, you can add the data in a separate step::
     tar zxf rascil_data.tgz
     export RASCIL_DATA=`pwd`/rascil_data
 
-For tests, use one of the steps below.
+If you wish to run the RASCIL tests, use one of the steps below.
 
 Installation via docker
 +++++++++++++++++++++++

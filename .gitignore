@@ -43,3 +43,7 @@ examples/ska_simulations/atmospheric_simulation.rst
 docs/examples/ska_simulations/atmospheric_simulation.rst
 
 dist/
+
+noarch/
+
+rascil.egg-info/

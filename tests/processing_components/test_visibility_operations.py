@@ -43,6 +43,13 @@ class TestVisibilityOperations(unittest.TestCase):
         self.comp = Skycomponent(direction=self.compreldirection, frequency=self.frequency, flux=self.flux)
 
 
+    def test_create_blockvisibility(self):
+        self.vis = create_blockvisibility(self.lowcore, self.times, self.frequency,
+                                     channel_bandwidth=self.channel_bandwidth,
+                                     phasecentre=self.phasecentre,
+                                     weight=1.0)
+        assert self.vis.nvis == len(self.vis.time)
+
     def test_create_visibility1(self):
         self.vis = create_visibility(self.lowcore, self.times, self.frequency,
                                      channel_bandwidth=self.channel_bandwidth,

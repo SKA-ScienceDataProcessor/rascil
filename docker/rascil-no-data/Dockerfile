@@ -36,6 +36,7 @@ RUN mkdir -p /rascil/dask-worker-space && \
 RUN pip3 install Cython setuptools && \
     pip3 install aotools \
     astropy \
+    astroplan \
     dask \
     distributed \
     bokeh \

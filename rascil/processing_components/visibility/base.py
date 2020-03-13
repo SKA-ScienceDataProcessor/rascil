@@ -15,6 +15,7 @@ import logging
 import re
 from typing import Union
 
+from astroplan import Observer
 import astropy.constants as constants
 import numpy
 from astropy import units as u
@@ -68,10 +69,16 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
                       weight: float, polarisation_frame=PolarisationFrame('stokesI'),
                       integration_time=1.0,
                       zerow=False, elevation_limit=15.0 * numpy.pi / 180.0,
-                      source='unknown', meta=None) -> Visibility:
+                      source='unknown', meta=None,
+                      utc_time=None) -> Visibility:
     """ Create a Visibility from Configuration, hour angles, and direction of source
 
     Note that we keep track of the integration time for BDA purposes
+    
+    The input times are hour angles in radians, these are converted to UTC MJD in seconds, using utc_time as
+    the approximate time.
+
+
 
     :param config: Configuration of antennas
     :param times: hour angles in radians
@@ -86,9 +93,13 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     :param elevation_limit: in degrees
     :param source: Source name
     :param meta: Meta data as a dictionary
+    :param utc_time: Time of ha definition. Default is Time("2020-01-01T00:00:00", format='isot', scale='utc')
     :return: Visibility
     """
     assert phasecentre is not None, "Must specify phase centre"
+    
+    if utc_time is None:
+        utc_time = Time("2020-01-01T00:00:00", format='isot', scale='utc')
 
     if polarisation_frame is None:
         polarisation_frame = correlate_polarisation(config.receptor_frame)
@@ -125,13 +136,17 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
 
     # Do each hour angle in turn
     row = 0
+    site = Observer(config.location)
+    stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
+    if stime.masked:
+        stime = utc_time
     for iha, ha in enumerate(times):
 
         # Calculate the positions of the antennas as seen for this hour angle
         # and declination
         _, elevation = hadec_to_azel(ha, phasecentre.dec.rad, latitude)
         if elevation_limit is None or (elevation > elevation_limit):
-            rtimes[row:row + nrowsperintegration] = ha * 43200.0 / numpy.pi
+            rtimes[row:row + nrowsperintegration] = stime.mjd * 86400.0 + ha * 86164.1 / (2.0 * numpy.pi)
 
             # TODO: optimise loop
             # Loop over all pairs of antennas. Note that a2>a1
@@ -188,10 +203,14 @@ def create_blockvisibility(config: Configuration,
                            elevation_limit=None,
                            source='unknown',
                            meta=None,
+                           utc_time=None,
                            **kwargs) -> BlockVisibility:
     """ Create a BlockVisibility from Configuration, hour angles, and direction of source
 
     Note that we keep track of the integration time for BDA purposes
+    
+    The input times are hour angles in radians, these are converted to UTC MJD in seconds, using utc_time as
+    the approximate time.
 
     :param config: Configuration of antennas
     :param times: hour angles in radians
@@ -206,9 +225,13 @@ def create_blockvisibility(config: Configuration,
     :param elevation_limit: in degrees
     :param source: Source name
     :param meta: Meta data as a dictionary
+    :param utc_time: Time of ha definition default is Time("2020-01-01T00:00:00", format='isot', scale='utc')
     :return: BlockVisibility
     """
     assert phasecentre is not None, "Must specify phase centre"
+    
+    if utc_time is None:
+        utc_time = Time("2020-01-01T00:00:00", format='isot', scale='utc')
 
     if polarisation_frame is None:
         polarisation_frame = correlate_polarisation(config.receptor_frame)
@@ -219,6 +242,7 @@ def create_blockvisibility(config: Configuration,
 
     ntimes = 0
     n_flagged = 0
+    
     for iha, ha in enumerate(times):
 
         # Calculate the positions of the antennas as seen for this hour angle
@@ -249,6 +273,11 @@ def create_blockvisibility(config: Configuration,
 
     # Do each hour angle in turn
     itime = 0
+    site = Observer(config.location)
+    stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
+    if stime.masked:
+        stime = utc_time
+
     for iha, ha in enumerate(times):
 
         # Calculate the positions of the antennas as seen for this hour angle
@@ -256,7 +285,7 @@ def create_blockvisibility(config: Configuration,
         ant_pos = xyz_to_uvw(ants_xyz, ha, phasecentre.dec.rad)
         _, elevation = hadec_to_azel(ha, phasecentre.dec.rad, latitude)
         if elevation_limit is None or (elevation > elevation_limit):
-            rtimes[itime] = ha * 43200.0 / numpy.pi
+            rtimes[itime] = stime.mjd * 86400.0 + ha * 86164.1 / (2.0 * numpy.pi)
             rweight[itime, ...] = 1.0
             rflags[itime, ...] = 0
 
@@ -744,7 +773,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             diameter = anttab.getcol('DISH_DIAMETER')
             xyz = anttab.getcol('POSITION')
             configuration = Configuration(name='', data=None, location=None,
-                                          names=names, xyz=xyz, mount=mount, frame=None,
+                                          names=names, xyz=xyz, mount=mount, frame="geocentric",
                                           receptor_frame=ReceptorFrame("linear"),
                                           diameter=diameter)
             # Get phasecentres
