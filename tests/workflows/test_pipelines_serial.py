@@ -18,7 +18,7 @@ from rascil.data_models.data_model_helpers import export_gaintable_to_hdf5
 from rascil.workflows.serial.pipelines.pipeline_serial import ical_list_serial_workflow, continuum_imaging_list_serial_workflow
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.image.operations import export_image_to_fits, qa_image, smooth_image
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
 from rascil.processing_components.simulation import create_named_configuration
@@ -94,7 +94,7 @@ class TestPipelines(unittest.TestCase):
                                 for freqwin, m in enumerate(self.model_imagelist)]
         
         self.blockvis_list = [
-            predict_skycomponent_visibility(self.blockvis_list[freqwin], self.components_list[freqwin])
+            dft_skycomponent_visibility(self.blockvis_list[freqwin], self.components_list[freqwin])
             for freqwin, _ in enumerate(self.blockvis_list)]
         
         self.model_imagelist = [insert_skycomponent(self.model_imagelist[freqwin], self.components_list[freqwin])

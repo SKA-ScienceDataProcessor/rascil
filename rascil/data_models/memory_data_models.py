@@ -734,7 +734,7 @@ class Skycomponent:
 
         bm = create_low_test_beam(model=model)
         sc = apply_beam_to_skycomponent(sc, bm)
-        vis = predict_skycomponent_visibility(vis, sc)
+        vis = dft_skycomponent_visibility(vis, sc)
     """
     
     def __init__(self,

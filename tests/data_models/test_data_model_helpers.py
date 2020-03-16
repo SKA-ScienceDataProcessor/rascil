@@ -23,7 +23,7 @@ from rascil.data_models.memory_data_models import Skycomponent, SkyModel
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.calibration.pointing import create_pointingtable_from_blockvisibility
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import simulate_gaintable, create_test_image
 from rascil.processing_components.simulation.pointing import simulate_pointingtable
 from rascil.processing_components.simulation import create_named_configuration
@@ -57,7 +57,7 @@ class TestDataModelHelpers(unittest.TestCase):
                                      phasecentre=self.phasecentre,
                                      polarisation_frame=PolarisationFrame("linear"),
                                      weight=1.0)
-        self.vis = predict_skycomponent_visibility(self.vis, self.comp)
+        self.vis = dft_skycomponent_visibility(self.vis, self.comp)
         export_visibility_to_hdf5(self.vis, '%s/test_data_model_helpers_visibility.hdf' % self.dir)
         newvis = import_visibility_from_hdf5('%s/test_data_model_helpers_visibility.hdf' % self.dir)
         
@@ -82,7 +82,7 @@ class TestDataModelHelpers(unittest.TestCase):
                                           phasecentre=self.phasecentre,
                                           polarisation_frame=PolarisationFrame("linear"),
                                           weight=1.0)
-        self.vis = predict_skycomponent_visibility(self.vis, self.comp)
+        self.vis = dft_skycomponent_visibility(self.vis, self.comp)
         export_blockvisibility_to_hdf5(self.vis, '%s/test_data_model_helpers_blockvisibility.hdf' % self.dir)
         newvis = import_blockvisibility_from_hdf5('%s/test_data_model_helpers_blockvisibility.hdf' % self.dir)
 

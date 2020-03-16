@@ -347,9 +347,9 @@ def apply_beam_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], beam
         if not numpy.isnan(pixloc).any():
             x, y = int(round(float(pixloc[0]))), int(round(float(pixloc[1])))
             if 0 <= x < nx and 0 <= y < ny:
-                comp.flux[:, :] *= beam.data[:, :, y, x]
-                total_flux += comp.flux
-                newsc.append(Skycomponent(comp.direction, comp.frequency, comp.name, comp.flux,
+                comp_flux = comp.flux * beam.data[:, :, y, x]
+                total_flux += comp_flux
+                newsc.append(Skycomponent(comp.direction, comp.frequency, comp.name, comp_flux,
                                           shape=comp.shape,
                                           polarisation_frame=comp.polarisation_frame))
     

@@ -25,7 +25,7 @@ from rascil.processing_components.griddata.operations import create_griddata_fro
 from rascil.processing_components.image.operations import export_image_to_fits, convert_stokes_to_polimage
 from rascil.processing_components.image.operations import smooth_image
 from rascil.processing_components.imaging.base import normalize_sumwt
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.imaging.primary_beams import create_pb_generic
 from rascil.processing_components.simulation import create_unittest_model, \
     create_unittest_components, ingest_unittest_visibility
@@ -91,7 +91,7 @@ class TestGridDataGridding(unittest.TestCase):
                                                      scale=0.5, single=False, symmetric=True)
         self.model = insert_skycomponent(self.model, self.components)
         
-        self.vis = predict_skycomponent_visibility(self.vis, self.components)
+        self.vis = dft_skycomponent_visibility(self.vis, self.components)
         
         # Calculate the model convolved with a Gaussian.
         self.cmodel = smooth_image(self.model)

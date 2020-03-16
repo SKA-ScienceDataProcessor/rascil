@@ -12,7 +12,7 @@ from rascil.data_models.memory_data_models import Image, GainTable, Visibility, 
 from rascil.processing_components.image import copy_image
 
 from rascil.processing_components.calibration import apply_gaintable
-from rascil.processing_components.imaging import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.skycomponent import copy_skycomponent, apply_beam_to_skycomponent
 from rascil.processing_components.visibility import copy_visibility, convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
@@ -55,9 +55,9 @@ def predict_skymodel_list_rsexecute_workflow(obsvis, skymodel_list, context, vis
             if isinstance(sm.mask, Image):
                 comps = copy_skycomponent(sm.components)
                 comps = apply_beam_to_skycomponent(comps, sm.mask)
-                v = predict_skycomponent_visibility(v, comps)
+                v = dft_skycomponent_visibility(v, comps)
             else:
-                v = predict_skycomponent_visibility(v, sm.components)
+                v = dft_skycomponent_visibility(v, sm.components)
         
         if isinstance(sm.image, Image):
             if numpy.max(numpy.abs(sm.image.data)) > 0.0:
@@ -113,9 +113,9 @@ def predict_skymodel_list_compsonly_rsexecute_workflow(obsvis, skymodel_list, do
         if isinstance(sm.mask, Image):
             comps = copy_skycomponent(sm.components)
             comps = apply_beam_to_skycomponent(comps, sm.mask)
-            bv = predict_skycomponent_visibility(bv, comps)
+            bv = dft_skycomponent_visibility(bv, comps)
         else:
-            bv = predict_skycomponent_visibility(bv, sm.components)
+            bv = dft_skycomponent_visibility(bv, sm.components)
         
         if docal and isinstance(sm.gaintable, GainTable):
             bv = apply_gaintable(bv, sm.gaintable, inverse=True)
@@ -237,9 +237,9 @@ def convolve_skymodel_list_rsexecute_workflow(obsvis, skymodel_list, context, vi
             if isinstance(sm.mask, Image):
                 comps = copy_skycomponent(sm.components)
                 comps = apply_beam_to_skycomponent(comps, sm.mask)
-                v = predict_skycomponent_visibility(v, comps)
+                v = dft_skycomponent_visibility(v, comps)
             else:
-                v = predict_skycomponent_visibility(v, sm.components)
+                v = dft_skycomponent_visibility(v, sm.components)
     
         if isinstance(sm.image, Image):
             if numpy.max(numpy.abs(sm.image.data)) > 0.0:

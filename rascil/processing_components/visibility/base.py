@@ -258,7 +258,7 @@ def create_blockvisibility(config: Configuration,
         log.info('create_visibility: flagged %d/%d times below elevation limit %f (rad)' %
                  (n_flagged, ntimes, elevation_limit))
     else:
-        log.debug('create_visibility: created %d times' % (ntimes))
+        log.debug('create_blockvisibility: created %d times' % (ntimes))
 
     npol = polarisation_frame.npol
     nchan = len(frequency)

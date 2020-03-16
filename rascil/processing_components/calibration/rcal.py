@@ -9,7 +9,7 @@ import collections
 from rascil.data_models.memory_data_models import BlockVisibility, GainTable
 from rascil.processing_components.visibility.base import copy_visibility
 from rascil.processing_components.calibration.solvers import solve_gaintable
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 
 def rcal(vis: BlockVisibility, components, **kwargs) -> GainTable:
     """ Real-time calibration pipeline.
@@ -29,6 +29,6 @@ def rcal(vis: BlockVisibility, components, **kwargs) -> GainTable:
     
     for ichunk, vischunk in enumerate(vis):
         vispred = copy_visibility(vischunk, zero=True)
-        vispred = predict_skycomponent_visibility(vispred, components)
+        vispred = dft_skycomponent_visibility(vispred, components)
         gt = solve_gaintable(vischunk, vispred, **kwargs)
         yield gt

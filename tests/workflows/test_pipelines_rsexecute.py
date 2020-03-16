@@ -16,7 +16,7 @@ from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 from rascil.processing_components.image.operations import export_image_to_fits, qa_image, smooth_image
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
@@ -102,7 +102,7 @@ class TestPipelineGraphs(unittest.TestCase):
         self.components_list = rsexecute.compute(self.components_list, sync=True)
         self.components_list = rsexecute.scatter(self.components_list)
         
-        self.blockvis_list = [rsexecute.execute(predict_skycomponent_visibility)
+        self.blockvis_list = [rsexecute.execute(dft_skycomponent_visibility)
                               (self.blockvis_list[freqwin], self.components_list[freqwin])
                               for freqwin, _ in enumerate(self.blockvis_list)]
         self.blockvis_list = rsexecute.compute(self.blockvis_list, sync=True)
