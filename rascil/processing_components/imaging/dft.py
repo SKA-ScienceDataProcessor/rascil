@@ -31,7 +31,7 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility, S
 from rascil.data_models.polarisation import convert_pol_frame
 from rascil.processing_components.imaging.imaging_params import get_frequency_map
 from rascil.processing_components.skycomponent import copy_skycomponent
-from visibility.base import calculate_visibility_phasor, calculate_blockvisibility_phasor
+from rascil.processing_components.visibility.base import calculate_visibility_phasor, calculate_blockvisibility_phasor
 
 log = logging.getLogger('logger')
 
