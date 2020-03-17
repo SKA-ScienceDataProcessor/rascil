@@ -142,7 +142,7 @@ try:
                                 newbvis.data['vis'][itime,i2,i1,vchan,vpol] = wtvis.bl[ibl].vis[0] + 1j*wtvis.bl[ibl].vis[1]
                                 ibl += 1 
         
-        newbvis.data['vis'] = convert_pol_frame(newbvis.data['vis'], model.polarisation_frame, bvis.polarisation_frame, polaxis=2)
+        newbvis.data['vis'] = convert_pol_frame(newbvis.data['vis'], model.polarisation_frame, bvis.polarisation_frame, polaxis=4)
 
         # Now we can shift the visibility from the image frame to the original visibility frame
         return shift_vis_to_image(newbvis, model, tangent=True, inverse=True)
