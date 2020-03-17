@@ -8,11 +8,17 @@ This module contains functions for performing the griddata process and the inver
 The GridData data model is used to hold the specification of the desired result.
 """
 
-__all__ = ['convolution_mapping_visibility', 'grid_visibility_to_griddata',
-           'grid_visibility_weight_to_griddata', 'griddata_merge_weights',
+__all__ = ['convolution_mapping_visibility',
+           'grid_visibility_to_griddata',
+           'grid_blockvisibility_to_griddata',
+           'degrid_visibility_from_griddata',
+           'degrid_blockvisibility_from_griddata',
+           'grid_visibility_weight_to_griddata',
+           'griddata_merge_weights',
            'griddata_visibility_reweight',
            'fft_griddata_to_image',
-           'degrid_visibility_from_griddata', 'fft_image_to_griddata',
+           'degrid_visibility_from_griddata',
+           'fft_image_to_griddata',
            'grid_blockvisibility_weight_to_griddata',
            'griddata_blockvisibility_reweight']
 

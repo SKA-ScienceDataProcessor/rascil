@@ -488,6 +488,7 @@ class Image:
         """
         s = "Image:\n"
         s += "\tShape: %s\n" % str(self.data.shape)
+        s += "\tData type: %s\n" % str(self.data.dtype)
         s += "\tWCS: %s\n" % self.wcs.__repr__()
         s += "\tPolarisation frame: %s\n" % str(self.polarisation_frame.type)
         return s

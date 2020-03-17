@@ -11,14 +11,14 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from rascil.data_models.polarisation import PolarisationFrame, convert_pol_frame
+from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.imaging.base import create_image_from_visibility
 from rascil.processing_components.imaging.dft import dft_skycomponent_visibility, idft_visibility_skycomponent
-from rascil.processing_components.imaging.primary_beams import create_pb
+from rascil.processing_components.imaging.primary_beams import create_vp
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.skycomponent import create_skycomponent, apply_beam_to_skycomponent, \
-    copy_skycomponent
-from rascil.processing_components.visibility import create_blockvisibility, sum_visibility
+    copy_skycomponent, apply_voltage_pattern_to_skycomponent
+from rascil.processing_components.visibility import create_blockvisibility
 
 log = logging.getLogger('logger')
 
@@ -48,40 +48,74 @@ class TestPrimaryBeamsPol(unittest.TestCase):
         assert len(self.config.names) == nants
         assert len(self.config.mount) == nants
         
-        self.config = create_named_configuration(config, rmax=rmax)
-        self.phasecentre = SkyCoord(ra=+15 * u.deg, dec=dec * u.deg, frame='icrs', equinox='J2000')
-    
     def test_apply_primary_beam_imageplane(self):
         self.createVis()
         telescope = 'MID'
-        flux = numpy.array([[100.0, 60.0, -10.0, +1.0]])
-        ipol = PolarisationFrame("stokesIQUV")
-        print("Original flux = {}".format(flux))
-        apply_pb = False
-        for vpol in (PolarisationFrame("linear"), PolarisationFrame("circular")):
+        lflux = numpy.array([[100.0, 1.0,  -10.0, +60.0]])
+        cflux = numpy.array([[100.0, 60.0, -10.0, +1.0]])
+        apply_pb = True
+        for flux, vpol in ((lflux, PolarisationFrame("linear")), (cflux, PolarisationFrame("circular"))):
             print("Testing {0}".format(vpol.type))
+            print("Original flux = {}".format(flux))
             bvis = create_blockvisibility(self.config, self.times, self.frequency,
                                           channel_bandwidth=self.channel_bandwidth,
                                           phasecentre=self.phasecentre, weight=1.0,
                                           polarisation_frame=vpol)
             
-            component_centre = SkyCoord(ra=+15.0 * u.deg, dec=-35.0 * u.deg, frame='icrs',
-                                        equinox='J2000')
+            component_centre = SkyCoord(ra=+15.5 * u.deg, dec=-35.0 * u.deg, frame='icrs', equinox='J2000')
             component = create_skycomponent(direction=component_centre, flux=flux,
                                             frequency=self.frequency,
                                             polarisation_frame=PolarisationFrame("stokesIQUV"))
             model = create_image_from_visibility(bvis, cellsize=self.cellsize, npixel=self.npixel,
                                                  override_cellsize=False,
                                                  polarisation_frame=PolarisationFrame("stokesIQUV"))
-            beam = create_pb(model, telescope=telescope, use_local=False)
+            vpbeam = create_vp(model, telescope=telescope, use_local=False)
+            print(vpbeam)
             if apply_pb:
-                pbcomp = apply_beam_to_skycomponent(component, beam)
+                pbcomp = apply_beam_to_skycomponent(component, vpbeam)
+                print("After application of primary beam {}".format(str(pbcomp.flux)))
             else:
                 pbcomp = copy_skycomponent(component)
-            print(pbcomp.flux)
             bvis = dft_skycomponent_visibility(bvis, pbcomp)
-            iquv_image = convert_pol_frame(sum_visibility(bvis, component.direction)[0], ipol, vpol, 1)
-            print("IQUV to {0} to IQUV image = {1}".format(vpol.type, iquv_image))
+            iquv_image = idft_visibility_skycomponent(bvis, component)[0]
+            print("IQUV to {0} to IQUV image = {1}".format(vpol.type, iquv_image[0].flux))
+
+    def test_apply_voltage_pattern_imageplane(self):
+        self.createVis()
+        telescope = 'MID_FEKO_B2'
+        cflux = numpy.array([[100.0, 1.0, -10.0, +60.0]])
+        lflux = numpy.array([[100.0, 60.0, -10.0, +1.0]])
+        cflux = numpy.array([[100.0, 0.0, 0.0, 0.0]])
+        lflux = numpy.array([[100.0, 0.0, 0.0, 0.0]])
+        apply_vp = True
+        for flux, vpol in ((lflux, PolarisationFrame("linear")), (cflux, PolarisationFrame("circular"))):
+            print("Testing {0}".format(vpol.type))
+            print("Original flux = {}".format(flux))
+            bvis = create_blockvisibility(self.config, self.times, self.frequency,
+                                          channel_bandwidth=self.channel_bandwidth,
+                                          phasecentre=self.phasecentre, weight=1.0,
+                                          polarisation_frame=vpol)
+
+            component_centre = SkyCoord(ra=+15.0 * u.deg, dec=-35.0 * u.deg, frame='icrs', equinox='J2000')
+            component = create_skycomponent(direction=component_centre, flux=flux,
+                                            frequency=self.frequency,
+                                            polarisation_frame=PolarisationFrame("stokesIQUV"))
+            model = create_image_from_visibility(bvis, cellsize=self.cellsize, npixel=self.npixel,
+                                                 override_cellsize=False,
+                                                 polarisation_frame=PolarisationFrame("stokesIQUV"))
+            vpbeam = create_vp(model, telescope=telescope, use_local=False)
+            vpbeam.wcs.wcs.ctype[0] = 'RA---SIN'
+            vpbeam.wcs.wcs.ctype[1] = 'DEC--SIN'
+            vpbeam.wcs.wcs.crval[0] = model.wcs.wcs.crval[0]
+            vpbeam.wcs.wcs.crval[1] = model.wcs.wcs.crval[1]
+            if apply_vp:
+                pbcomp = apply_voltage_pattern_to_skycomponent(component, vpbeam)
+                print("After application of primary beam {}".format(str(pbcomp.flux)))
+            else:
+                pbcomp = copy_skycomponent(component)
+            bvis = dft_skycomponent_visibility(bvis, pbcomp)
+            iquv_image = idft_visibility_skycomponent(bvis, component)[0]
+            print("IQUV to {0} to IQUV image = {1}".format(vpol.type, iquv_image[0].flux))
 
 
 if __name__ == '__main__':

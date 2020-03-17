@@ -5,7 +5,6 @@
 __all__ = ['append_visibility', 'sort_visibility',
            'concatenate_blockvisibility_frequency',
            'concatenate_visibility',
-           'sum_visibility',
            'subtract_visibility',
            'qa_visibility',
            'remove_continuum_blockvisibility',
@@ -158,56 +157,6 @@ def concatenate_blockvisibility_frequency(bvis_list):
                            meta=None)
     assert result.nchan == nchan
     return result
-
-
-def sum_visibility(vis: Visibility, direction: SkyCoord) -> numpy.array:
-    """ Direct Fourier summation in a given direction
-
-    :param vis: Visibility to be summed
-    :param direction: Direction of summation
-    :return: flux[nch,npol], weight[nch,pol]
-    """
-    # TODO: Convert to Visibility or remove?
-    
-    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
-    
-    svis = copy_visibility(vis)
-    
-    l, m, n = skycoord_to_lmn(direction, svis.phasecentre)
-
-    if isinstance(vis, Visibility):
-        _, frequency_map = get_frequency_map(svis, None)
-        nchan = max(frequency_map) + 1
-        npol = svis.polarisation_frame.npol
-        flux = numpy.zeros([nchan, npol])
-        weight = numpy.zeros([nchan, npol])
-        phasor = numpy.conjugate(simulate_point(svis.uvw, l, m))
-        for row in range(vis.nvis):
-            ic = frequency_map[row]
-            flux[ic, :] += numpy.real(svis.flagged_weight[row, :] * svis.vis[row, :] * phasor[row])
-            weight[ic, :] += svis.flagged_weight[row, :]
-    else:
-        nrows, nants, _, nchan, npol = svis.vis.shape
-        flux = numpy.zeros([nchan, npol])
-        weight = numpy.zeros([nchan, npol])
-        k = (vis.frequency / const.c).value
-        uvw = vis.uvw[..., numpy.newaxis] * k
-        phasor = numpy.ones([nrows, nants, nants, nchan, npol], dtype='complex')
-        nchan = len(vis.frequency)
-        for chan in range(nchan):
-            phasor[:, :, :, chan, :] = simulate_point(uvw[..., chan], l, m)[..., numpy.newaxis]
-        for row in range(svis.nvis):
-            for ant2 in range(svis.nants):
-                for ant1 in range(ant2+1, svis.nants):
-                    for ic in range(nchan):
-                        flux[ic, :] += numpy.real(svis.flagged_weight[row, ant2, ant1, ic, :] *
-                                                  svis.vis[row, ant2, ant1, ic, :] *
-                                                  phasor[row, ant2, ant1, ic, :])
-                        weight[ic, :] += svis.flagged_weight[row, ant2, ant1, ic, :]
-
-    flux[weight > 0.0] = flux[weight > 0.0] / weight[weight > 0.0]
-    flux[weight <= 0.0] = 0.0
-    return flux, weight
 
 
 def subtract_visibility(vis, model_vis, inplace=False):

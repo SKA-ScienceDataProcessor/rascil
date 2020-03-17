@@ -20,9 +20,9 @@ probably more useful.
 
 """
 
-import numpy
-
 import logging
+
+import numpy
 
 log = logging.getLogger('logger')
 
@@ -106,6 +106,10 @@ class PolarisationFrame:
             return False
         return self.type == a.type
 
+    def __str__(self):
+        """Default printer for Polarisation"""
+        return self.type
+
     @property
     def npol(self):
         """ Number of correlated polarisations
@@ -140,7 +144,8 @@ def polmatrixmultiply(cm, vec, polaxis=1):
         elif polaxis == 3:
             permut[0], permut[1], permut[2], permut[3] = permut[1], permut[2], permut[3], permut[0]
         elif polaxis == 4:
-            permut[0], permut[1], permut[2], permut[3], permut[4] = permut[1], permut[2], permut[3], permut[4], permut[0]
+            permut[0], permut[1], permut[2], permut[3], permut[4] = permut[1], permut[2], permut[3], permut[4], permut[
+                0]
         transposed = numpy.transpose(result, axes=permut)
         assert transposed.shape == vec.shape
         return transposed
@@ -189,7 +194,7 @@ def convert_linear_to_stokesI(linear, polaxis=1):
 
     Equation 4.58 TMS, inverted with numpy.linalg.inv
     """
-    return 0.5 * (linear[...,0]+linear[...,3])[..., numpy.newaxis]
+    return 0.5 * (linear[..., 0] + linear[..., 3])[..., numpy.newaxis]
 
 
 def convert_stokes_to_circular(stokes, polaxis=1):
@@ -226,6 +231,7 @@ def convert_circular_to_stokes(circular, polaxis=1):
 
     return polmatrixmultiply(conversion_matrix, circular, polaxis)
 
+
 def convert_circular_to_stokesI(circular, polaxis=1):
     """ Convert Circular to Stokes I
 
@@ -236,7 +242,7 @@ def convert_circular_to_stokesI(circular, polaxis=1):
     Equation 4.58 TMS, inverted with numpy.linalg.inv
     """
 
-    return 0.5 * (circular[...,0] + circular[...,3])[..., numpy.newaxis]
+    return 0.5 * (circular[..., 0] + circular[..., 3])[..., numpy.newaxis]
 
 
 def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, polaxis=1):

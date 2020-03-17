@@ -19,10 +19,9 @@ This and related modules contain various approachs for dealing with the wide-fie
 extra phase term in the Fourier transform cannot be ignored.
 """
 
-__all__ = ['shift_vis_to_image', 'normalize_sumwt', 'predict_2d', 'invert_2d', 'dft_skycomponent_visibility',
+__all__ = ['shift_vis_to_image', 'normalize_sumwt', 'predict_2d', 'invert_2d', 'predict_skycomponent_visibility',
            'create_image_from_visibility', 'advise_wide_field', 'visibility_recentre']
 
-import collections
 import logging
 from typing import List, Union
 
@@ -32,20 +31,15 @@ import astropy.wcs as wcs
 import numpy
 from astropy.wcs.utils import pixel_to_skycoord
 
-from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image, Skycomponent, assert_same_chan_pol
+from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image, Skycomponent
 from rascil.data_models.parameters import get_parameter
-from rascil.data_models.polarisation import convert_pol_frame, PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
-    grid_blockvisibility_to_griddata, \
-    fft_griddata_to_image, fft_image_to_griddata, \
+    grid_blockvisibility_to_griddata, fft_griddata_to_image, fft_image_to_griddata, \
     degrid_visibility_from_griddata, degrid_blockvisibility_from_griddata
-from rascil.processing_components.imaging.dft import dft_skycomponent_visibility, idft_visibility_skycomponent
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.operations import create_griddata_from_image
 from rascil.processing_components.image import create_image_from_array
-from rascil.processing_components.imaging.imaging_params import get_frequency_map
-from rascil.processing_components.skycomponent import copy_skycomponent
-from rascil.processing_components.util.coordinate_support import simulate_point, skycoord_to_lmn
 from rascil.processing_components.visibility.base import copy_visibility, phaserotate_visibility
 
 log = logging.getLogger('logger')
@@ -214,6 +208,7 @@ def predict_skycomponent_visibility(vis: Union[Visibility, BlockVisibility],
     """
 
     log.warning("predict_skycomponent_visibility: deprecated - please use dft_skycomponent_visibility")
+    from rascil.processing_components.imaging.dft import dft_skycomponent_visibility
     return dft_skycomponent_visibility(vis, sc)
 
 

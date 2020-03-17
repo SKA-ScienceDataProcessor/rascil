@@ -30,9 +30,7 @@ try:
     import nifty_gridder as ng
     
     
-    def predict_ng(bvis: Union[BlockVisibility, Visibility], model: Image,
-                   **kwargs) -> \
-            Union[BlockVisibility, Visibility]:
+    def predict_ng(bvis: BlockVisibility, model: Image, **kwargs) -> BlockVisibility:
         """ Predict using convolutional degridding.
         
         Nifty-gridder version. https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
@@ -229,9 +227,7 @@ except ImportError:
     warnings.warn('Cannot import nifty_gridder, ng disabled', ImportWarning)
     
     
-    def predict_ng(bvis: Union[BlockVisibility, Visibility], model: Image,
-                   **kwargs) -> \
-            Union[BlockVisibility, Visibility]:
+    def predict_ng(bvis: BlockVisibility, model: Image, **kwargs) -> BlockVisibility:
         """ Predict using convolutional degridding.
 
         Nifty-gridder version. https://gitlab.mpcdf.mpg.de/ift/nifty_gridder

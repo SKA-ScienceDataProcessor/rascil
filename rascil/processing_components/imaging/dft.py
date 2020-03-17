@@ -19,21 +19,19 @@ This and related modules contain various approachs for dealing with the wide-fie
 extra phase term in the Fourier transform cannot be ignored.
 """
 
-__all__ = ['dft_skycomponent_visibility', 'idft_visibility_skycomponent', 'calculate_blockvisibility_phasor',
-           'calculate_visibility_phasor']
+__all__ = ['dft_skycomponent_visibility', 'idft_visibility_skycomponent']
 
 import collections
 import logging
 from typing import List, Union
 
-import astropy.constants as constants
 import numpy
 
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Skycomponent, assert_same_chan_pol
 from rascil.data_models.polarisation import convert_pol_frame
 from rascil.processing_components.imaging.imaging_params import get_frequency_map
 from rascil.processing_components.skycomponent import copy_skycomponent
-from rascil.processing_components.util.coordinate_support import simulate_point, skycoord_to_lmn
+from visibility.base import calculate_visibility_phasor, calculate_blockvisibility_phasor
 
 log = logging.getLogger('logger')
 
@@ -63,14 +61,14 @@ def dft_skycomponent_visibility(vis: Union[Visibility, BlockVisibility], sc: Uni
         if isinstance(vis, Visibility):
 
             _, im_nchan = list(get_frequency_map(vis, None))
-            phasor = calculate_visibility_phasor(comp, vis)
+            phasor = calculate_visibility_phasor(comp.direction, vis)
             for row in range(vis.nvis):
                 ic = im_nchan[row]
                 vis.data['vis'][row, :] += flux[ic, :] * phasor[row]
 
         elif isinstance(vis, BlockVisibility):
 
-            phasor = calculate_blockvisibility_phasor(comp, vis)
+            phasor = calculate_blockvisibility_phasor(comp.direction, vis)
             vis.data['vis'] += flux * phasor
 
     return vis
@@ -104,7 +102,7 @@ def idft_visibility_skycomponent(vis: Union[Visibility, BlockVisibility],
             flux = numpy.zeros_like(comp.flux, dtype='complex')
             weight = numpy.zeros_like(comp.flux, dtype='float')
             _, im_nchan = list(get_frequency_map(vis, None))
-            phasor = numpy.conjugate(calculate_visibility_phasor(comp, vis))
+            phasor = numpy.conjugate(calculate_visibility_phasor(comp.direction, vis))
             fvwp = vis.flagged_weight * vis.flagged_vis * phasor
             fw = vis.flagged_weight
             for row in range(vis.nvis):
@@ -114,7 +112,7 @@ def idft_visibility_skycomponent(vis: Union[Visibility, BlockVisibility],
 
         elif isinstance(vis, BlockVisibility):
 
-            phasor = numpy.conjugate(calculate_blockvisibility_phasor(comp, vis))
+            phasor = numpy.conjugate(calculate_blockvisibility_phasor(comp.direction, vis))
             flux = numpy.sum(vis.flagged_weight * vis.flagged_vis * phasor, axis=(0, 1, 2))
             weight = numpy.sum(vis.flagged_weight, axis=(0, 1, 2))
 
@@ -131,30 +129,3 @@ def idft_visibility_skycomponent(vis: Union[Visibility, BlockVisibility],
     return newsc, weights_list
 
 
-def calculate_visibility_phasor(comp, vis):
-    """ Calculate the phasor for a component for a Visibility
-
-    :param comp:
-    :param vis:
-    :return:
-    """
-    l, m, n = skycoord_to_lmn(comp.direction, vis.phasecentre)
-    phasor = simulate_point(vis.uvw, l, m)[..., numpy.newaxis]
-    return phasor
-
-
-def calculate_blockvisibility_phasor(comp, vis):
-    """ Calculate the phasor for a component for a BlockVisibility
-
-    :param comp:
-    :param vis:
-    :return:
-    """
-    ntimes, nant, _, nchan, npol = vis.vis.shape
-    k = numpy.array(vis.frequency) / constants.c.to('m s^-1').value
-    l, m, n = skycoord_to_lmn(comp.direction, vis.phasecentre)
-    uvw = vis.uvw[..., numpy.newaxis] * k
-    phasor = numpy.ones([ntimes, nant, nant, nchan, npol], dtype='complex')
-    for chan in range(nchan):
-        phasor[:, :, :, chan, :] = simulate_point(uvw[..., chan], l, m)[..., numpy.newaxis]
-    return phasor
