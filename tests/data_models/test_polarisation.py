@@ -15,7 +15,8 @@ from rascil.data_models.polarisation import PolarisationFrame, ReceptorFrame, co
 
 class TestPolarisation(unittest.TestCase):
     def test_polarisation_frame(self):
-        for frame in ['circular', 'circularnp', 'linear', 'linearnp', 'stokesIQUV', 'stokesIV', 'stokesIQ', 'stokesI']:
+        for frame in ['circular', 'circularnp', 'linear', 'linearnp', 'stokesIQUV', 'stokesIV',
+                      'stokesIQ', 'stokesI']:
             polarisation_frame = PolarisationFrame(frame)
             assert polarisation_frame.type == frame
             
@@ -59,36 +60,36 @@ class TestPolarisation(unittest.TestCase):
     def test_stokes_linear_conversion(self):
         stokes = numpy.array([1.0, 0.0, 0.0, 0.0])
         linear = convert_stokes_to_linear(stokes)
-        assert_array_almost_equal(linear, numpy.array([1.0 + 0j, 0.0 + 0j, 0.0 + 0j, 1.0 + 0j]))
+        assert_array_almost_equal(linear, numpy.array([1.0 + 0j, 1.0 + 0j, 0.0 + 0j, 0.0 + 0j]))
     
         stokes = numpy.array([0.0, 1.0, 0.0, 0.0])
         linear = convert_stokes_to_linear(stokes)
-        assert_array_almost_equal(linear, numpy.array([1.0 + 0j, 0j, 0j, -1.0 + 0j]))
+        assert_array_almost_equal(linear, numpy.array([1.0 + 0j, -1.0 + 0j, 0j, 0j]))
     
         stokes = numpy.array([0.0, 0.0, 1.0, 0.0])
         linear = convert_stokes_to_linear(stokes)
-        assert_array_almost_equal(linear, numpy.array([0.0 + 0j, 1.0 + 0j, 1.0 + 0j, 0.0 + 0j]))
+        assert_array_almost_equal(linear, numpy.array([0.0 + 0j, 0.0 + 0j, 1.0 + 0j, 1.0 + 0j]))
     
         stokes = numpy.array([0.0, 0.0, 0.0, 1.0])
         linear = convert_stokes_to_linear(stokes)
-        assert_array_almost_equal(linear, numpy.array([0.0 + 0j, +1.0j, -1.0j, 0.0 + 0j]))
+        assert_array_almost_equal(linear, numpy.array([0.0 + 0j, 0.0 + 0j, +1.0j, -1.0j]))
 
     def test_stokes_circular_conversion(self):
         stokes = numpy.array([1.0, 0.0, 0.0, 0.0])
         circular = convert_stokes_to_circular(stokes)
-        assert_array_almost_equal(circular, numpy.array([1.0 + 0j, 0.0 + 0j, 0.0 + 0j, 1.0 + 0j]))
+        assert_array_almost_equal(circular, numpy.array([1.0 + 0j, 1.0 + 0j, 0.0 + 0j, 0.0 + 0j]))
     
         stokes = numpy.array([0.0, 1.0, 0.0, 0.0])
         circular = convert_stokes_to_circular(stokes)
-        assert_array_almost_equal(circular, numpy.array([0.0 + 0j, -1j, -1j, 0.0 + 0j]))
+        assert_array_almost_equal(circular, numpy.array([0.0 + 0j, 0.0 + 0j, -1j, -1j]))
     
         stokes = numpy.array([0.0, 0.0, 1.0, 0.0])
         circular = convert_stokes_to_circular(stokes)
-        assert_array_almost_equal(circular, numpy.array([0.0 + 0j, 1.0 + 0j, -1.0 + 0j, 0.0 + 0j]))
+        assert_array_almost_equal(circular, numpy.array([0.0 + 0j, 0.0 + 0j, 1.0 + 0j, -1.0 + 0j]))
     
         stokes = numpy.array([0.0, 0.0, 0.0, 1.0])
         circular = convert_stokes_to_circular(stokes)
-        assert_array_almost_equal(circular, numpy.array([1.0 + 0j, +0.0j, 0.0j, -1.0 + 0j]))
+        assert_array_almost_equal(circular, numpy.array([1.0 + 0j, -1.0 + 0j, +0.0j, 0.0j]))
 
     def test_stokes_linear_stokes_conversion(self):
         stokes = numpy.array([1, 0.5, 0.2, -0.1])
