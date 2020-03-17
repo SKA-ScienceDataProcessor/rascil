@@ -67,13 +67,11 @@ class ReceptorFrame:
 class PolarisationFrame:
     """ Define polarisation frames post correlation
 
-    See Table 7 in https://www.aanda.org/articles/aa/full/2002/45/aah3859/aah3859.right.html
-
     """
     fits_codes = {
-        'circular': [-1, -2, -3, -4],  # RR, LL, RL, LR
+        'circular': [-1, -2, -3, -4],
         'circularnp': [-1, -4],
-        'linear': [-5, -6, -7, -8],  # XX, YY, XY, YX
+        'linear': [-5, -6, -7, -8],
         'linearnp': [-5, -8],
         'stokesIQUV': [1, 2, 3, 4],
         'stokesIV': [1, 4],
@@ -81,18 +79,9 @@ class PolarisationFrame:
         'stokesI': [1]
     }
     polarisation_frames = {
-        # These are the old (incorrect) codes - changed Mar 2020
-        # 'circular': {'RR': 0, 'RL': 1, 'LR': 2, 'LL': 3},
-        # 'circularnp': {'RR': 0, 'LL': 1},
-        # 'linear': {'XX': 0, 'XY': 1, 'YX': 2, 'YY': 3},
-        # 'linearnp': {'XX': 0, 'YY': 1},
-        # 'stokesIQUV': {'I': 0, 'Q': 1, 'U': 2, 'V': 3},
-        # 'stokesIV': {'I': 0, 'V': 1},
-        # 'stokesIQ': {'I': 0, 'Q': 1},
-        # 'stokesI': {'I': 0}
-        'circular': {'RR': 0, 'LL': 1, 'LR': 2, 'RL': 3},
+        'circular': {'RR': 0, 'RL': 1, 'LR': 2, 'LL': 3},
         'circularnp': {'RR': 0, 'LL': 1},
-        'linear': {'XX': 0, 'YY': 1, 'XY': 2, 'YX': 3},
+        'linear': {'XX': 0, 'XY': 1, 'YX': 2, 'YY': 3},
         'linearnp': {'XX': 0, 'YY': 1},
         'stokesIQUV': {'I': 0, 'Q': 1, 'U': 2, 'V': 3},
         'stokesIV': {'I': 0, 'V': 1},
@@ -171,14 +160,10 @@ def convert_stokes_to_linear(stokes, polaxis=1):
 
     Equation 4.58 TMS
     """
-    # conversion_matrix = numpy.array([[1, 1, 0, 0],
-    #                                  [0, 0, 1, 1j],
-    #                                  [0, 0, 1, -1j],
-    #                                  [1, -1, 0, 0]])
     conversion_matrix = numpy.array([[1, 1, 0, 0],
-                                     [1, -1, 0, 0],
                                      [0, 0, 1, 1j],
-                                     [0, 0, 1, -1j]])
+                                     [0, 0, 1, -1j],
+                                     [1, -1, 0, 0]])
 
     return polmatrixmultiply(conversion_matrix, stokes, polaxis)
 
@@ -192,15 +177,10 @@ def convert_linear_to_stokes(linear, polaxis=1):
 
     Equation 4.58 TMS, inverted with numpy.linalg.inv
     """
-    # conversion_matrix = numpy.array([[0.5 + 0.j, 0.0 + 0.j, 0.0 + 0.j, 0.5 + 0.j],
-    #                                  [0.5 + 0.j, 0.0 + 0.j, 0.0 + 0.j, -0.5 - 0.j],
-    #                                  [0.0 + 0.j, 0.5 + 0.j, 0.5 + 0.j, 0.0 + 0.j],
-    #                                  [0.0 + 0.j, 0.0 - 0.5j, 0.0 + 0.5j, 0.0 + 0.j]])
-
-    conversion_matrix = numpy.array([[0.5 + 0.j, 0.5 + 0.j, 0. + 0.j, 0. + 0.j],
-                                     [0.5 + 0.j, -0.5 - 0.j, 0. - 0.j, 0. - 0.j],
-                                     [0. + 0.j, 0. + 0.j, 0.5 + 0.j, 0.5 + 0.j],
-                                     [-0. + 0.j, -0. + 0.j, 0. - 0.5j, -0. + 0.5j]])
+    conversion_matrix = numpy.array([[0.5 + 0.j, 0.0 + 0.j, 0.0 + 0.j, 0.5 + 0.j],
+                                     [0.5 + 0.j, 0.0 + 0.j, 0.0 + 0.j, -0.5 - 0.j],
+                                     [0.0 + 0.j, 0.5 + 0.j, 0.5 + 0.j, 0.0 + 0.j],
+                                     [0.0 + 0.j, 0.0 - 0.5j, 0.0 + 0.5j, 0.0 + 0.j]])
 
     return polmatrixmultiply(conversion_matrix, linear, polaxis)
 
@@ -214,7 +194,7 @@ def convert_linear_to_stokesI(linear, polaxis=1):
 
     Equation 4.58 TMS, inverted with numpy.linalg.inv
     """
-    return 0.5 * (linear[..., 0] + linear[..., 1])[..., numpy.newaxis]
+    return 0.5 * (linear[..., 0] + linear[..., 3])[..., numpy.newaxis]
 
 
 def convert_stokes_to_circular(stokes, polaxis=1):
@@ -226,14 +206,10 @@ def convert_stokes_to_circular(stokes, polaxis=1):
 
     Equation 4.59 TMS
     """
-    # conversion_matrix = numpy.array([[1, 0, 0, 1],
-    #                                  [0, -1j, 1, 0],
-    #                                  [0, -1j, -1, 0],
-    #                                  [1, 0, 0, -1]])
     conversion_matrix = numpy.array([[1, 0, 0, 1],
-                                     [1, 0, 0, -1],
                                      [0, -1j, 1, 0],
-                                     [0, -1j, -1, 0]])
+                                     [0, -1j, -1, 0],
+                                     [1, 0, 0, -1]])
 
     return polmatrixmultiply(conversion_matrix, stokes, polaxis)
 
@@ -248,15 +224,10 @@ def convert_circular_to_stokes(circular, polaxis=1):
     Equation 4.58 TMS, inverted with numpy.linalg.inv
     """
 
-    # conversion_matrix = numpy.array([[0.5 + 0.j, 0.0 + 0.j, 0.0 + 0.j, 0.5 + 0.j],
-    #                                  [0.0 + 0.j, -0.0 + 0.5j, -0.0 + 0.5j, 0.0 + 0.j],
-    #                                  [0.0 + 0.j, 0.5 + 0.j, -0.5 - 0.j, 0.0 + 0.j],
-    #                                  [0.5 + 0.j, 0.0 + 0.j, 0.0 + 0.j, -0.5 - 0.j]])
-
-    conversion_matrix = numpy.array([[0.5 + 0.j, 0.5 + 0.j, 0. + 0.j, 0. + 0.j],
-                                     [-0. + 0.j, -0. + 0.j, -0. + 0.5j, -0. + 0.5j],
-                                     [0. - 0.j, 0. - 0.j, 0.5 + 0.j, -0.5 - 0.j],
-                                     [0.5 + 0.j, -0.5 - 0.j, 0. - 0.j, 0. - 0.j]])
+    conversion_matrix = numpy.array([[0.5 + 0.j, 0.0 + 0.j, 0.0 + 0.j, 0.5 + 0.j],
+                                     [0.0 + 0.j, -0.0 + 0.5j, -0.0 + 0.5j, 0.0 + 0.j],
+                                     [0.0 + 0.j, 0.5 + 0.j, -0.5 - 0.j, 0.0 + 0.j],
+                                     [0.5 + 0.j, 0.0 + 0.j, 0.0 + 0.j, -0.5 - 0.j]])
 
     return polmatrixmultiply(conversion_matrix, circular, polaxis)
 
@@ -271,7 +242,7 @@ def convert_circular_to_stokesI(circular, polaxis=1):
     Equation 4.58 TMS, inverted with numpy.linalg.inv
     """
 
-    return 0.5 * (circular[..., 0] + circular[..., 1])[..., numpy.newaxis]
+    return 0.5 * (circular[..., 0] + circular[..., 3])[..., numpy.newaxis]
 
 
 def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, polaxis=1):
