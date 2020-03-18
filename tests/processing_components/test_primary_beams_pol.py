@@ -56,8 +56,8 @@ class TestPrimaryBeamsPol(unittest.TestCase):
         cflux = numpy.array([[100.0, 60.0, -10.0, +1.0]])
         apply_pb = True
         for flux, vpol in ((lflux, PolarisationFrame("linear")), (cflux, PolarisationFrame("circular"))):
-            print("Testing {0}".format(vpol.type))
-            print("Original flux = {}".format(flux))
+            # print("Testing {0}".format(vpol.type))
+            # print("Original flux = {}".format(flux))
             bvis = create_blockvisibility(self.config, self.times, self.frequency,
                                           channel_bandwidth=self.channel_bandwidth,
                                           phasecentre=self.phasecentre, weight=1.0,
@@ -73,12 +73,12 @@ class TestPrimaryBeamsPol(unittest.TestCase):
             pb = create_pb(model, telescope=telescope, use_local=False)
             if apply_pb:
                 pbcomp = apply_beam_to_skycomponent(component, pb)
-                print("After application of primary beam {}".format(str(pbcomp.flux)))
+                # print("After application of primary beam {}".format(str(pbcomp.flux)))
             else:
                 pbcomp = copy_skycomponent(component)
             bvis = dft_skycomponent_visibility(bvis, pbcomp)
             iquv_image = idft_visibility_skycomponent(bvis, component)[0]
-            print("IQUV to {0} to IQUV image = {1}".format(vpol.type, iquv_image[0].flux))
+            # print("IQUV to {0} to IQUV image = {1}".format(vpol.type, iquv_image[0].flux))
 
     def test_apply_voltage_pattern_imageplane(self):
         self.createVis()
@@ -108,12 +108,14 @@ class TestPrimaryBeamsPol(unittest.TestCase):
                 vpbeam.wcs.wcs.ctype[1] = 'DEC--SIN'
                 vpbeam.wcs.wcs.crval[0] = model.wcs.wcs.crval[0]
                 vpbeam.wcs.wcs.crval[1] = model.wcs.wcs.crval[1]
-                pbcomp = apply_voltage_pattern_to_skycomponent(component, vpbeam)
-                inv_pbcomp = apply_voltage_pattern_to_skycomponent(pbcomp, vpbeam, inverse=True)
-                assert_array_almost_equal(flux, numpy.real(inv_pbcomp.flux), 12)
-                # print("After application of primary beam {}".format(str(pbcomp.flux)))
-                # print("After correction of primary beam {}".format(str(inv_pbcomp.flux)))
+                vpcomp = apply_voltage_pattern_to_skycomponent(component, vpbeam)
+                bvis = dft_skycomponent_visibility(bvis, vpcomp)
+                vpcomp = idft_visibility_skycomponent(bvis, component)[0][0]
+                inv_vpcomp = apply_voltage_pattern_to_skycomponent(vpcomp, vpbeam, inverse=True)
+                # print("After application of primary beam {}".format(str(vpcomp.flux)))
+                # print("After correction of primary beam {}".format(str(inv_vpcomp.flux)))
                 # print("{0} {1} succeeded".format(vpol, str(flux)))
+                assert_array_almost_equal(flux, numpy.real(inv_vpcomp.flux), 9)
             except AssertionError as e:
                 print(e)
                 print("{0} {1} failed".format(vpol, str(flux)))
