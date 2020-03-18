@@ -79,12 +79,6 @@ def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=
     :param telescope:
     :return: Primary beam image
     """
-    def permute_pol_axes(vp_data):
-        newvp_data = vp_data.copy()
-        newvp_data[:, 3] = vp_data[:, 1]
-        newvp_data[:, 1] = vp_data[:, 2]
-        newvp_data[:, 2] = vp_data[:, 3]
-        return newvp_data
 
     if telescope == 'MID_GAUSS':
         log.debug("create_vp: Using numeric tapered Gaussian model for MID voltage pattern")
@@ -101,7 +95,6 @@ def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=
         imag_vp = import_image_from_fits(rascil_data_path('models/MID_GRASP_VP_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
-        real_vp.data = permute_pol_axes(real_vp.data)
         return real_vp
     elif telescope == 'MID_FEKO_B1':
         log.debug("create_vp: Using FEKO model for MID voltage pattern")
@@ -109,14 +102,12 @@ def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=
         imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B1_45_0765_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
-        real_vp.data = permute_pol_axes(real_vp.data)
         return real_vp
     elif telescope == 'MID_FEKO_B2':
         log.debug("create_vp: Using FEKO model for MID voltage pattern")
         real_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B2_45_1360_real.fits'))
         imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B2_45_1360_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
-        real_vp.data = permute_pol_axes(real_vp.data)
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
     elif telescope == 'MID_FEKO_Ku':
@@ -125,7 +116,6 @@ def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=
         imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_Ku_45_12179_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
-        real_vp.data = permute_pol_axes(real_vp.data)
         return real_vp
     elif telescope == 'MEERKAT':
         return create_vp_generic(model, pointingcentre=pointingcentre, diameter=13.5, blockage=0.0, use_local=use_local)

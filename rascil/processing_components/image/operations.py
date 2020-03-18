@@ -109,6 +109,13 @@ def import_image_from_fits(fitsfile: str) -> Image:
     else:
         try:
             fim.polarisation_frame = polarisation_frame_from_wcs(fim.wcs, fim.data.shape)
+            # FITS and RASCIL polarisation conventions differ
+            new_data = fim.data.copy()
+            new_data[:, 3] = fim.data[:, 1]
+            new_data[:, 1] = fim.data[:, 2]
+            new_data[:, 2] = fim.data[:, 3]
+            fim.data = new_data
+
         except ValueError:
             fim.polarisation_frame = PolarisationFrame('stokesI')
 

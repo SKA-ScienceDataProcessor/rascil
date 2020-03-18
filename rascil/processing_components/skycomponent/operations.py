@@ -25,6 +25,7 @@ from photutils import segmentation
 from scipy import interpolate
 from scipy.spatial.qhull import Voronoi
 
+from rascil.processing_components.calibration.jones import apply_jones
 from rascil.data_models.memory_data_models import Image, Skycomponent, assert_same_chan_pol
 from rascil.data_models.polarisation import PolarisationFrame, convert_pol_frame
 from rascil.processing_components.image.operations import create_image_from_array
@@ -360,11 +361,13 @@ def apply_beam_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], beam
         return newsc
 
 
-def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], vp: Image) \
+def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], vp: Image,
+                                          inverse=False) \
         -> Union[Skycomponent, List[Skycomponent]]:
     """ Apply a voltage pattern to a Skycomponent
 
-    Requires a complex Image with the correct ordering of polarisation axes: e.g. RR, RL, LR, LL or XX, XY, YX, YY
+    Requires a complex Image with the correct ordering of polarisation axes:
+    e.g. RR, LL, RL, LR or XX, YY, XY, YX
 
     :param vp: voltage pattern
     :param sc: SkyComponent or list of SkyComponents
@@ -388,10 +391,10 @@ def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycompon
 
     newsc = []
     total_flux = numpy.zeros([nchan, npol], dtype="complex")
+
     for icomp, comp in enumerate(sc):
 
         assert comp.shape == 'Point', "Cannot handle shape %s" % comp.shape
-
         assert_same_chan_pol(vp, comp)
 
         # Convert to linear (xx, xy, yx, yy) or circular (rr, rl, lr, ll)
@@ -400,7 +403,10 @@ def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycompon
         comp_flux_cstokes = \
             convert_pol_frame(comp.flux, comp.polarisation_frame, vp.polarisation_frame).reshape([nchan, 2, 2])
         comp_flux = numpy.zeros([nchan, npol], dtype='complex')
+        weight = numpy.zeros([nchan, npol], dtype='float')
 
+        import pprint
+        pp = pprint.PrettyPrinter()
         pixloc = (pixlocs[0][icomp], pixlocs[1][icomp])
         if not numpy.isnan(pixloc).any():
             x, y = int(round(float(pixloc[0]))), int(round(float(pixloc[1])))
@@ -408,9 +414,12 @@ def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycompon
                 # Now we want to left and right multiply by the Jones matrices
                 # comp_flux = vp.data[:, :, y, x] * comp_flux_cstokes * numpy.vp.data[:, :, y, x]
                 for chan in range(nchan):
-                    left = vp.data[chan, :, y, x].reshape([2, 2])
-                    right = numpy.conjugate(vp.data[chan, :, y, x]).reshape([2, 2])
-                    comp_flux[chan, :] = (left @ comp_flux_cstokes[chan] @ right).reshape([4])
+                    ej = vp.data[chan, :, y, x].reshape([2, 2])
+                    cfs = comp_flux_cstokes[chan]
+                    comp_flux[chan, :] = apply_jones(ej, cfs, inverse)
+                    comp_flux[chan, :] = convert_pol_frame(comp_flux[chan, :], vp.polarisation_frame,
+                                                           comp.polarisation_frame)
+
                 total_flux += comp_flux
                 newsc.append(Skycomponent(comp.direction, comp.frequency, comp.name, comp_flux,
                                           shape=comp.shape,
