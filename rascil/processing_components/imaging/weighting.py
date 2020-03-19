@@ -7,13 +7,15 @@ There are two classes of functions:
 
 """
 
-__all__ = ['weight_visibility', 'taper_visibility_gaussian', 'taper_visibility_tukey']
+__all__ = ['weight_visibility', 'weight_blockvisibility', 'taper_visibility_gaussian',
+           'taper_visibility_tukey']
 
 
 import numpy
 
-from rascil.data_models.memory_data_models import Visibility
-from rascil.processing_components.griddata.gridding import grid_visibility_weight_to_griddata, griddata_visibility_reweight
+from rascil.data_models.memory_data_models import Visibility, BlockVisibility
+from rascil.processing_components.griddata.gridding import grid_visibility_weight_to_griddata, \
+    griddata_visibility_reweight, grid_blockvisibility_weight_to_griddata, griddata_blockvisibility_reweight
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.operations import create_griddata_from_image
 from rascil.processing_components.image.operations import image_is_canonical
@@ -32,17 +34,41 @@ def weight_visibility(vis, model, gcfcf=None, weighting='uniform', **kwargs):
     :param kwargs: Parameters for functions in graphs
     :return: List of vis_graphs
    """
-    
+
     assert isinstance(vis, Visibility), vis
     assert image_is_canonical(model)
 
+    if gcfcf is None:
+        gcfcf = create_pswf_convolutionfunction(model)
+
+    griddata = create_griddata_from_image(model, vis)
+    griddata, sumwt = grid_visibility_weight_to_griddata(vis, griddata, gcfcf[1])
+    vis = griddata_visibility_reweight(vis, griddata, gcfcf[1])
+    return vis
+
+
+def weight_blockvisibility(vis, model, gcfcf=None, weighting='uniform', **kwargs):
+    """ Weight the visibility data
+
+    This is done collectively so the weights are summed over all vis_lists and then
+    corrected
+
+    :param vis_list:
+    :param model_imagelist: Model required to determine weighting parameters
+    :param weighting: Type of weighting
+    :param kwargs: Parameters for functions in graphs
+    :return: List of vis_graphs
+   """
+
+    assert isinstance(vis, BlockVisibility), vis
+    assert image_is_canonical(model)
 
     if gcfcf is None:
         gcfcf = create_pswf_convolutionfunction(model)
-    
-    griddata = create_griddata_from_image(model)
-    griddata, sumwt = grid_visibility_weight_to_griddata(vis, griddata, gcfcf[1])
-    vis = griddata_visibility_reweight(vis, griddata, gcfcf[1])
+
+    griddata = create_griddata_from_image(model, vis)
+    griddata, sumwt = grid_blockvisibility_weight_to_griddata(vis, griddata, gcfcf[1])
+    vis = griddata_blockvisibility_reweight(vis, griddata, gcfcf[1])
     return vis
 
 

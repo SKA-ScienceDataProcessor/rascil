@@ -33,13 +33,14 @@ from astropy.wcs.utils import pixel_to_skycoord
 
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image, Skycomponent
 from rascil.data_models.parameters import get_parameter
-from rascil.data_models.polarisation import PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame, convert_pol_frame
 from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
     grid_blockvisibility_to_griddata, fft_griddata_to_image, fft_image_to_griddata, \
     degrid_visibility_from_griddata, degrid_blockvisibility_from_griddata
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.operations import create_griddata_from_image
-from rascil.processing_components.image import create_image_from_array
+from rascil.processing_components.image import create_image_from_array, convert_polimage_to_stokes, \
+    convert_stokes_to_polimage
 from rascil.processing_components.visibility.base import copy_visibility, phaserotate_visibility
 
 log = logging.getLogger('logger')
@@ -129,8 +130,9 @@ def predict_2d(vis: Union[BlockVisibility, Visibility], model: Image, gcfcf=None
     else:
         gcf, cf = gcfcf
 
-    griddata = create_griddata_from_image(model)
-    griddata = fft_image_to_griddata(model, griddata, gcf)
+    griddata = create_griddata_from_image(model, vis)
+    polmodel = convert_stokes_to_polimage(model, vis.polarisation_frame)
+    griddata = fft_image_to_griddata(polmodel, griddata, gcf)
     if isinstance(vis, Visibility):
         vis = degrid_visibility_from_griddata(vis, griddata=griddata, cf=cf)
     else:
@@ -164,7 +166,16 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     svis = copy_visibility(vis)
 
     if dopsf:
-        svis.data['vis'][...] = 1.0 + 0.0j
+        if vis.npol == 4:
+            vis.data['vis'][..., 1:4] = 0.0 + 0.0j
+            vis.data['vis'][..., 0] = 1.0 + 0.0j
+        else:
+            vis.data[..., :] = 1.0 + 0.0j
+
+        svis.data['vis'][...] = \
+            convert_pol_frame(vis.data['vis'],
+                              PolarisationFrame("stokesIQUV"),
+                              vis.polarisation_frame, polaxis=-1)
 
     svis = shift_vis_to_image(svis, im, tangent=True, inverse=False)
 
@@ -175,25 +186,20 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     else:
         gcf, cf = gcfcf
 
-    griddata = create_griddata_from_image(im)
+    griddata = create_griddata_from_image(im, svis)
     if isinstance(vis, Visibility):
         griddata, sumwt = grid_visibility_to_griddata(svis, griddata=griddata, cf=cf)
     else:
         griddata, sumwt = grid_blockvisibility_to_griddata(svis, griddata=griddata, cf=cf)
 
-    imaginary = get_parameter(kwargs, "imaginary", False)
-    if imaginary:
-        result0, result1 = fft_griddata_to_image(griddata, gcf, imaginary=imaginary)
-        log.debug("invert_2d: retaining imaginary part of dirty image")
-        if normalize:
-            result0 = normalize_sumwt(result0, sumwt)
-            result1 = normalize_sumwt(result1, sumwt)
-        return result0, sumwt, result1
-    else:
-        result = fft_griddata_to_image(griddata, gcf)
-        if normalize:
-            result = normalize_sumwt(result, sumwt)
-        return result, sumwt
+    result = fft_griddata_to_image(griddata, gcf)
+
+    if normalize:
+        result = normalize_sumwt(result, sumwt)
+
+    result = convert_polimage_to_stokes(result)
+
+    return result, sumwt
 
 
 def predict_skycomponent_visibility(vis: Union[Visibility, BlockVisibility],
@@ -229,7 +235,7 @@ def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwar
     :return: image
 
     See also
-        :py:func:`rascil.processing_components.image.create_image`
+        :py:func:`rascil.processing_components.image.operations.create_image`
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), \
         "vis is not a Visibility or a BlockVisibility: %r" % (vis)

@@ -204,7 +204,7 @@ class TestBufferDataModelHelpers(unittest.TestCase):
 
     def test_readwritegriddata(self):
         im = create_test_image()
-        gd = create_griddata_from_image(im)
+        gd = create_griddata_from_image(im, None)
         config = {"buffer": {"directory": self.dir},
                   "griddata": {"name": "test_buffergriddata.hdf", "data_model": "GridData"}}
         bdm = BufferGridData(config["buffer"], config["griddata"], gd)

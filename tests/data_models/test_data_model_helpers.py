@@ -165,7 +165,7 @@ class TestDataModelHelpers(unittest.TestCase):
 
     def test_readwritegriddata(self):
         im = create_test_image()
-        gd = create_griddata_from_image(im)
+        gd = create_griddata_from_image(im, None)
         export_griddata_to_hdf5(gd, '%s/test_data_model_helpers_griddata.hdf' % self.dir)
         newgd = import_griddata_from_hdf5('%s/test_data_model_helpers_griddata.hdf' % self.dir)
     

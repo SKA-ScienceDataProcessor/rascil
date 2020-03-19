@@ -25,9 +25,9 @@ from photutils import segmentation
 from scipy import interpolate
 from scipy.spatial.qhull import Voronoi
 
-from rascil.processing_components.calibration.jones import apply_jones
 from rascil.data_models.memory_data_models import Image, Skycomponent, assert_same_chan_pol
 from rascil.data_models.polarisation import PolarisationFrame, convert_pol_frame
+from rascil.processing_components.calibration.jones import apply_jones
 from rascil.processing_components.image.operations import create_image_from_array
 from rascil.processing_components.util.array_functions import insert_function_sinc, insert_function_L, \
     insert_function_pswf, insert_array
@@ -291,11 +291,12 @@ def find_skycomponents(im: Image, fwhm=1.0, threshold=1.0, npixels=5) -> List[Sk
         # decs[numpy.isnan(decs)] = 0.0
 
         # Determine "true" position by weighting
-        flux_sum = numpy.sum(flux)
-        ra = numpy.sum(flux * ras) / flux_sum
-        dec = numpy.sum(flux * decs) / flux_sum
-        xs = numpy.sum(flux * xs) / flux_sum
-        ys = numpy.sum(flux * ys) / flux_sum
+        aflux = numpy.abs(flux)
+        flux_sum = numpy.sum(aflux)
+        ra = numpy.sum(aflux * ras) / flux_sum
+        dec = numpy.sum(aflux * decs) / flux_sum
+        xs = numpy.sum(aflux * xs) / flux_sum
+        ys = numpy.sum(aflux * ys) / flux_sum
 
         point_flux = im.data[:, :, numpy.round(ys.value).astype('int'), numpy.round(xs.value).astype('int')]
 
@@ -366,14 +367,23 @@ def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycompon
         -> Union[Skycomponent, List[Skycomponent]]:
     """ Apply a voltage pattern to a Skycomponent
 
+    For inverse==False, input polarisation_frame must be stokesIQUV, and
+    output polarisation_frame is same as voltage pattern
+
+    For inverse==True, input polarisation_frame must be same as voltage pattern, and
+    output polarisation_frame is "stokesIQUV"
+
     Requires a complex Image with the correct ordering of polarisation axes:
     e.g. RR, LL, RL, LR or XX, YY, XY, YX
 
-    :param vp: voltage pattern
+    :param vp: voltage pattern as complex image
     :param sc: SkyComponent or list of SkyComponents
     :return: List of skycomponents
     """
     assert isinstance(vp, Image)
+    assert (vp.polarisation_frame == PolarisationFrame("linear")) or \
+           (vp.polarisation_frame == PolarisationFrame("circular"))
+
     assert vp.data.dtype == "complex128"
     single = not isinstance(sc, collections.abc.Iterable)
 
@@ -400,13 +410,13 @@ def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycompon
         # Convert to linear (xx, xy, yx, yy) or circular (rr, rl, lr, ll)
         nchan, npol = comp.flux.shape
         assert npol == 4
+        if not inverse:
+            assert comp.polarisation_frame == PolarisationFrame("stokesIQUV")
+
         comp_flux_cstokes = \
             convert_pol_frame(comp.flux, comp.polarisation_frame, vp.polarisation_frame).reshape([nchan, 2, 2])
         comp_flux = numpy.zeros([nchan, npol], dtype='complex')
-        weight = numpy.zeros([nchan, npol], dtype='float')
 
-        import pprint
-        pp = pprint.PrettyPrinter()
         pixloc = (pixlocs[0][icomp], pixlocs[1][icomp])
         if not numpy.isnan(pixloc).any():
             x, y = int(round(float(pixloc[0]))), int(round(float(pixloc[1])))
@@ -417,13 +427,15 @@ def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycompon
                     ej = vp.data[chan, :, y, x].reshape([2, 2])
                     cfs = comp_flux_cstokes[chan]
                     comp_flux[chan, :] = apply_jones(ej, cfs, inverse)
-                    comp_flux[chan, :] = convert_pol_frame(comp_flux[chan, :], vp.polarisation_frame,
-                                                           comp.polarisation_frame)
 
                 total_flux += comp_flux
+                if inverse:
+                    comp_flux = convert_pol_frame(comp_flux, vp.polarisation_frame, PolarisationFrame("stokesIQUV"))
+                    comp.polarisation_frame = PolarisationFrame("stokesIQUV")
+
                 newsc.append(Skycomponent(comp.direction, comp.frequency, comp.name, comp_flux,
                                           shape=comp.shape,
-                                          polarisation_frame=comp.polarisation_frame))
+                                          polarisation_frame=vp.polarisation_frame))
 
     log.debug('apply_vp_to_skycomponent: %d components with total flux %s' %
               (len(newsc), total_flux))

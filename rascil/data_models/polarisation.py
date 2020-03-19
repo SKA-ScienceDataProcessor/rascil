@@ -67,6 +67,8 @@ class ReceptorFrame:
 class PolarisationFrame:
     """ Define polarisation frames post correlation
 
+    stokesI, stokesIQUV, linear, circular
+
     """
     fits_codes = {
         'circular': [-1, -2, -3, -4],
@@ -134,6 +136,8 @@ def polmatrixmultiply(cm, vec, polaxis=1):
     else:
         # This tensor swaps the first two axes so we need to tranpose back
         # e.g. if polaxis=2 1000, 3, 4 becomes 4, 1000, 3
+        if polaxis ==-1:
+            polaxis = len(vec.shape)-1
         result = numpy.tensordot(cm, vec, axes=(1, polaxis))
         permut = list(range(len(vec.shape)))
         assert 5 > polaxis > 0, "Error in polarisation conversion logic"
@@ -152,7 +156,7 @@ def polmatrixmultiply(cm, vec, polaxis=1):
 
 
 def convert_stokes_to_linear(stokes, polaxis=1):
-    """ Convert Stokes IQUV to Linear
+    """ Convert Stokes IQUV to Linear (complex image)
 
     :param stokes: [...,4] Stokes vector in I,Q,U,V (can be complex)
     :param polaxis: Axis of stokes with polarisation (default 1)
@@ -169,7 +173,7 @@ def convert_stokes_to_linear(stokes, polaxis=1):
 
 
 def convert_linear_to_stokes(linear, polaxis=1):
-    """ Convert Linear to Stokes IQUV
+    """ Convert Linear to Stokes IQUV (complex image)
 
     :param linear: [...,4] linear vector in XX, XY, YX, YY sequence
     :param polaxis: Axis of linear with polarisation (default 1)
@@ -198,7 +202,7 @@ def convert_linear_to_stokesI(linear, polaxis=1):
 
 
 def convert_stokes_to_circular(stokes, polaxis=1):
-    """ Convert Stokes IQUV to Circular
+    """ Convert Stokes IQUV to Circular (complex image)
 
     :param stokes: [...,4] Stokes vector in I,Q,U,V (can be complex)
     :param polaxis: Axis of stokes with polarisation (default 1)
@@ -215,7 +219,7 @@ def convert_stokes_to_circular(stokes, polaxis=1):
 
 
 def convert_circular_to_stokes(circular, polaxis=1):
-    """ Convert Circular to Stokes IQUV
+    """ Convert Circular to Stokes IQUV (complex image)
 
     :param circular: [...,4] linear vector in RR, RL, LR, LL sequence
     :param polaxis: Axis of circular with polarisation (default 1)

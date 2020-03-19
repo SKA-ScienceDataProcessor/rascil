@@ -80,10 +80,10 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
     :return: component image, residual image
 
     See also
-        :py:func:`rascil.processing_components.arrays.hogbom`
-        :py:func:`rascil.processing_components.arrays.hogbom_complex`
-        :py:func:`rascil.processing_components.arrays.msclean`
-        :py:func:`rascil.processing_components.arrays.msmfsclean`
+        :py:func:`rascil.processing_components.arrays.cleaners.hogbom`
+        :py:func:`rascil.processing_components.arrays.cleaners.hogbom_complex`
+        :py:func:`rascil.processing_components.arrays.cleaners.msclean`
+        :py:func:`rascil.processing_components.arrays.cleaners.msmfsclean`
 
     """
     
