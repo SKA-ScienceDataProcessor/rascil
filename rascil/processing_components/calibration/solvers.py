@@ -71,6 +71,7 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
             x_shape = x.shape
             x[mask] = x[mask] / xwt[mask]
             x[~mask] = 0.0
+            xwt[mask] = xwt[mask] / numpy.max(xwt[mask])
             x = x.reshape(x_shape)
             
             if vis.npol > 1:

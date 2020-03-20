@@ -256,44 +256,11 @@ def divide_visibility(vis: BlockVisibility, modelvis: BlockVisibility):
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     
-    # Different for scalar and vector/matrix cases
-    isscalar = vis.polarisation_frame.npol == 1
-    
-    if isscalar:
-        # Scalar case is straightforward
-        x = numpy.zeros_like(vis.vis)
-        xwt = numpy.abs(modelvis.vis) ** 2 * vis.flagged_weight
-        mask = xwt > 0.0
-        x[mask] = vis.vis[mask] / modelvis.vis[mask]
-    else:
-        nrows, nants, _, nchan, npol = vis.vis.shape
-        nrec = 2
-        assert nrec * nrec == npol
-        xshape = (nrows, nants, nants, nchan, nrec, nrec)
-        x = numpy.zeros(xshape, dtype='complex')
-        xwt = numpy.zeros(xshape)
-        # TODO: Remove filter when fixed to use ndarray
-        warnings.simplefilter("ignore", category=PendingDeprecationWarning)
-        
-        # TODO: optimise loop
-        for row in range(nrows):
-            for ant1 in range(nants):
-                for ant2 in range(ant1 + 1, nants):
-                    for chan in range(nchan):
-                        ovis = numpy.matrix(
-                            vis.vis[row, ant2, ant1, chan].reshape([2, 2]))
-                        mvis = numpy.matrix(
-                            modelvis.vis[row, ant2, ant1, chan].reshape([2, 2]))
-                        wt = numpy.matrix(
-                            vis.weight[row, ant2, ant1, chan].reshape([2, 2]))
-                        x[row, ant2, ant1, chan] = numpy.matmul(numpy.linalg.inv(mvis), ovis)
-                        xwt[row, ant2, ant1, chan] = numpy.dot(mvis,
-                                                               numpy.multiply(
-                                                                   wt,
-                                                                   mvis.H)).real
-        x = x.reshape([nrows, nants, nants, nchan, nrec * nrec])
-        xwt = xwt.reshape([nrows, nants, nants, nchan, nrec * nrec])
-    
+    x = numpy.zeros_like(vis.vis)
+    xwt = numpy.abs(modelvis.vis) ** 2 * vis.flagged_weight
+    mask = xwt > 0.0
+    x[mask] = vis.vis[mask] / modelvis.vis[mask]
+
     pointsource_vis = BlockVisibility(data=None, flags=vis.flags,
                                       frequency=vis.frequency,
                                       channel_bandwidth=vis.channel_bandwidth,

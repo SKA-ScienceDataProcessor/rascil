@@ -61,7 +61,7 @@ class TestPipelineGraphs(unittest.TestCase):
         if dopol:
             self.vis_pol = PolarisationFrame('linear')
             self.image_pol = PolarisationFrame('stokesIQUV')
-            f = numpy.array([100.0, 20.0, -10.0, 1.0])
+            f = numpy.array([100.0, 20.0, 0.0, 0.0])
         else:
             self.vis_pol = PolarisationFrame('stokesI')
             self.image_pol = PolarisationFrame('stokesI')
@@ -195,7 +195,7 @@ class TestPipelineGraphs(unittest.TestCase):
         assert numpy.abs(qa.data['min'] + 3.0049548291981445) < 1.0e-7, str(qa)
 
     def test_ical_pipeline(self):
-        self.actualSetUp(add_errors=False)
+        self.actualSetUp(add_errors=True)
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 1
         controls['T']['timeslice'] = 'auto'
@@ -225,11 +225,11 @@ class TestPipelineGraphs(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96329339612933) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.39885052949469246) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.236505654618) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 2.923588897251197) < 1.0e-7, str(qa)
 
     def test_ical_pipeline_pol(self):
-        self.actualSetUp(add_errors=False, dopol=True)
+        self.actualSetUp(add_errors=True, dopol=True)
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 1
         controls['T']['timeslice'] = 'auto'
@@ -263,7 +263,7 @@ class TestPipelineGraphs(unittest.TestCase):
         assert numpy.abs(qa.data['min'] + 0.39885052949469246) < 1.0e-7, str(qa)
 
     def test_ical_pipeline_global(self):
-        self.actualSetUp(add_errors=False)
+        self.actualSetUp(add_errors=True)
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 1
         controls['T']['timeslice'] = 'auto'
