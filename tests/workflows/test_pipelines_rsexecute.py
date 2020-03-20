@@ -137,9 +137,9 @@ class TestPipelineGraphs(unittest.TestCase):
                                 for i in range(nfreqwin)]
         self.model_imagelist = rsexecute.compute(self.model_imagelist, sync=True)
         self.model_imagelist = rsexecute.scatter(self.model_imagelist)
-    
-    def test_continuum_imaging_pipeline(self):
-        self.actualSetUp(add_errors=False, zerow=True)
+
+    def test_continuum_imaging_pipeline_pol(self):
+        self.actualSetUp(add_errors=False, zerow=True, dopol=True)
         continuum_imaging_list = \
             continuum_imaging_list_rsexecute_workflow(self.vis_list,
                                                       model_imagelist=self.model_imagelist,
@@ -161,17 +161,45 @@ class TestPipelineGraphs(unittest.TestCase):
                                  '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_residual.fits' % self.dir)
             export_image_to_fits(restored[centre],
                                  '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_restored.fits' % self.dir)
-        
+
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96056316339507) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.4027437530187419) < 1.0e-7, str(qa)
-    
+        assert numpy.abs(qa.data['max'] - 99.95638547388533) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 10.019122324704824) < 1.0e-7, str(qa)
+
+    def test_continuum_imaging_pipeline(self):
+        self.actualSetUp(add_errors=False, zerow=True, dopol=False)
+        continuum_imaging_list = \
+            continuum_imaging_list_rsexecute_workflow(self.vis_list,
+                                                      model_imagelist=self.model_imagelist,
+                                                      context='2d',
+                                                      algorithm='mmclean', facets=1,
+                                                      scales=[0, 3, 10],
+                                                      niter=1000, fractional_threshold=0.1, threshold=0.1,
+                                                      nmoment=3,
+                                                      nmajor=5, gain=0.1,
+                                                      deconvolve_facets=4, deconvolve_overlap=32,
+                                                      deconvolve_taper='tukey', psf_support=64,
+                                                      restore_facets=4, psfwidth=1.0)
+        clean, residual, restored = rsexecute.compute(continuum_imaging_list, sync=True)
+        centre = len(clean) // 2
+        if self.persist:
+            export_image_to_fits(clean[centre], '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_clean.fits' %
+                                 self.dir)
+            export_image_to_fits(residual[centre][0],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_residual.fits' % self.dir)
+            export_image_to_fits(restored[centre],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_rsexecute_restored.fits' % self.dir)
+
+        qa = qa_image(restored[centre])
+        assert numpy.abs(qa.data['max'] - 100.19122324704826) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 3.0049548291981445) < 1.0e-7, str(qa)
+
     def test_ical_pipeline(self):
         self.actualSetUp(add_errors=False)
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 1
         controls['T']['timeslice'] = 'auto'
-        
+
         ical_list = \
             ical_list_rsexecute_workflow(self.vis_list,
                                          model_imagelist=self.model_imagelist,
@@ -195,11 +223,45 @@ class TestPipelineGraphs(unittest.TestCase):
             export_image_to_fits(restored[centre], '%s/test_pipelines_ical_pipeline_rsexecute_restored.fits' % self.dir)
             export_gaintable_to_hdf5(gt_list[centre]['T'], '%s/test_pipelines_ical_pipeline_rsexecute_gaintable.hdf5' %
                                      self.dir)
-        
+
         qa = qa_image(restored[centre])
         assert numpy.abs(qa.data['max'] - 99.96329339612933) < 1.0e-7, str(qa)
         assert numpy.abs(qa.data['min'] + 0.39885052949469246) < 1.0e-7, str(qa)
-    
+
+    def test_ical_pipeline_pol(self):
+        self.actualSetUp(add_errors=False, dopol=True)
+        controls = create_calibration_controls()
+        controls['T']['first_selfcal'] = 1
+        controls['T']['timeslice'] = 'auto'
+
+        ical_list = \
+            ical_list_rsexecute_workflow(self.vis_list,
+                                         model_imagelist=self.model_imagelist,
+                                         context='2d',
+                                         algorithm='mmclean', facets=1,
+                                         scales=[0, 3, 10],
+                                         niter=1000, fractional_threshold=0.1, threshold=0.1,
+                                         nmoment=3,
+                                         nmajor=5, gain=0.1,
+                                         deconvolve_facets=4, deconvolve_overlap=32,
+                                         deconvolve_taper='tukey', psf_support=64,
+                                         restore_facets=4, psfwidth=1.0,
+                                         calibration_context='T', controls=controls, do_selfcal=True,
+                                         global_solution=False)
+        clean, residual, restored, gt_list = rsexecute.compute(ical_list, sync=True)
+        centre = len(clean) // 2
+        if self.persist:
+            export_image_to_fits(clean[centre], '%s/test_pipelines_ical_pipeline_rsexecute_clean.fits' % self.dir)
+            export_image_to_fits(residual[centre][0],
+                                 '%s/test_pipelines_ical_pipeline_rsexecute_residual.fits' % self.dir)
+            export_image_to_fits(restored[centre], '%s/test_pipelines_ical_pipeline_rsexecute_restored.fits' % self.dir)
+            export_gaintable_to_hdf5(gt_list[centre]['T'], '%s/test_pipelines_ical_pipeline_rsexecute_gaintable.hdf5' %
+                                     self.dir)
+
+        qa = qa_image(restored[centre])
+        assert numpy.abs(qa.data['max'] - 99.96329339612933) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.39885052949469246) < 1.0e-7, str(qa)
+
     def test_ical_pipeline_global(self):
         self.actualSetUp(add_errors=False)
         controls = create_calibration_controls()

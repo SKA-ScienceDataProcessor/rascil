@@ -259,7 +259,7 @@ def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, po
         elif opf == PolarisationFrame("stokesI"):
             return convert_linear_to_stokesI(polvec, polaxis)
         else:
-            raise ValueError("Unknown polarisation conversion")
+            raise ValueError("Unknown polarisation conversion: linear to {}".format(opf))
 
     if ipf == PolarisationFrame("circular"):
         if opf == PolarisationFrame("stokesIQUV"):
@@ -267,7 +267,7 @@ def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, po
         elif opf == PolarisationFrame("stokesI"):
             return convert_circular_to_stokesI(polvec, polaxis)
         else:
-            raise ValueError("Unknown polarisation conversion")
+            raise ValueError("Unknown polarisation conversion: circular to {}".format(opf))
 
     if ipf == PolarisationFrame("stokesIQUV"):
         if opf == PolarisationFrame("linear"):
@@ -275,7 +275,7 @@ def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, po
         elif opf == PolarisationFrame("circular"):
             return convert_stokes_to_circular(polvec, polaxis)
         else:
-            raise ValueError("Unknown polarisation conversion")
+            raise ValueError("Unknown polarisation conversion: stokesIQUV to {}".format(opf))
 
     if ipf == PolarisationFrame("stokesI"):
         if opf == PolarisationFrame("stokesI"):

@@ -166,16 +166,22 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     svis = copy_visibility(vis)
 
     if dopsf:
-        if vis.npol == 4:
-            vis.data['vis'][..., 1:4] = 0.0 + 0.0j
-            vis.data['vis'][..., 0] = 1.0 + 0.0j
+        if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
+            svis.data['vis'][..., 1:4] = 0.0 + 0.0j
+            svis.data['vis'][..., 0] = 1.0 + 0.0j
+            svis.data['vis'][...] = \
+                convert_pol_frame(vis.data['vis'],
+                                  PolarisationFrame("stokesIQUV"),
+                                  vis.polarisation_frame, polaxis=-1)
+        elif im.polarisation_frame == PolarisationFrame("stokesI"):
+            svis.data['vis'][..., :] = 1.0 + 0.0j
+            svis.data['vis'][...] = \
+                convert_pol_frame(vis.data['vis'],
+                                  PolarisationFrame("stokesI"),
+                                  vis.polarisation_frame, polaxis=-1)
         else:
-            vis.data[..., :] = 1.0 + 0.0j
+            raise ValueError("Cannot calculate PSF for {}".format(im.polarisation_frame))
 
-        svis.data['vis'][...] = \
-            convert_pol_frame(vis.data['vis'],
-                              PolarisationFrame("stokesIQUV"),
-                              vis.polarisation_frame, polaxis=-1)
 
     svis = shift_vis_to_image(svis, im, tangent=True, inverse=False)
 
