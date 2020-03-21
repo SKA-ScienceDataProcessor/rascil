@@ -243,7 +243,7 @@ def convert_kernel_to_list(gcfcf):
     wmax = cf.grid_wcs.sub([4]).wcs_pix2world(nw - 1, 0)
     wstep = cf.grid_wcs.wcs.cdelt[4]
 
-    return (nw, wplanes, wmin, wmax, wstep, oversampling)
+    return (nw, wplanes, wmin, wmax, wstep, size_y, size_x, oversampling)
 
 
 def convert_image_to_kernel(im: Image, oversampling, kernelwidth):
