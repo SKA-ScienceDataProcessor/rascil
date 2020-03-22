@@ -77,7 +77,7 @@ class TestImage(unittest.TestCase):
             polarisation_frame_from_wcs(polimage.wcs, polimage.shape)
             rstokes = convert_polimage_to_stokes(polimage)
             assert polimage.data.dtype == 'complex'
-            assert rstokes.data.dtype == 'complex'
+            assert rstokes.data.dtype == 'float'
             numpy.testing.assert_array_almost_equal(stokes.data, rstokes.data.real, 12)
 
     def test_polarisation_frame_from_wcs(self):
