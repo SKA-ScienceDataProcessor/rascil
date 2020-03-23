@@ -13,13 +13,14 @@ from astropy.coordinates import SkyCoord
 from numpy.testing import assert_array_almost_equal
 
 from rascil.data_models.polarisation import PolarisationFrame
+from rascil.processing_components.image import export_image_to_fits
 from rascil.processing_components.imaging import create_image_from_visibility, invert_2d, \
     advise_wide_field, weight_blockvisibility
 from rascil.processing_components.imaging.dft import dft_skycomponent_visibility, idft_visibility_skycomponent
 from rascil.processing_components.imaging.primary_beams import create_vp, create_pb
-from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.simulation import create_named_configuration, create_test_skycomponents_from_s3
 from rascil.processing_components.skycomponent import create_skycomponent, apply_beam_to_skycomponent, \
-    copy_skycomponent, apply_voltage_pattern_to_skycomponent, find_skycomponents
+    copy_skycomponent, apply_voltage_pattern_to_skycomponent, find_skycomponents, filter_skycomponents_by_flux
 from rascil.processing_components.visibility import create_blockvisibility
 
 log = logging.getLogger('logger')
@@ -40,7 +41,7 @@ class TestPrimaryBeamsPol(unittest.TestCase):
         self.flux = numpy.array([[100.0, 60.0, -10.0, +1.0]])
         self.phasecentre = SkyCoord(ra=+15.0 * u.deg, dec=-35.0 * u.deg, frame='icrs',
                                     equinox='J2000')
-        self.config = create_named_configuration(config)
+        self.config = create_named_configuration(config, rmax=rmax)
         self.times = numpy.linspace(-300.0, 300.0, 3) * numpy.pi / 43200.0
         nants = self.config.xyz.shape[0]
         self.npixel = 1024
@@ -153,11 +154,11 @@ class TestPrimaryBeamsPol(unittest.TestCase):
         vpbeam.wcs.wcs.crval[0] = pbmodel.wcs.wcs.crval[0]
         vpbeam.wcs.wcs.crval[1] = pbmodel.wcs.wcs.crval[1]
 
-        for flux in (numpy.array([[100.0, 0.0, 0.0, 0.0]]),
-                     numpy.array([[100.0, 100.0, 0.0, 0.0]]),
-                     numpy.array([[100.0, 0.0, 100.0, 0.0]]),
-                     numpy.array([[100.0, 0.0, 0.0, 100.0]]),
-                     numpy.array([[100.0, 1.0, -10.0, +60.0]])):
+        for case, flux in enumerate((numpy.array([[100.0, 0.0, 0.0, 0.0]]),
+                                     numpy.array([[100.0, 100.0, 0.0, 0.0]]),
+                                     numpy.array([[100.0, 0.0, 100.0, 0.0]]),
+                                     numpy.array([[100.0, 0.0, 0.0, 100.0]]),
+                                     numpy.array([[100.0, 1.0, -10.0, +60.0]]))):
             try:
                 component = create_skycomponent(direction=component_centre, flux=flux,
                                                 frequency=self.frequency,
@@ -166,6 +167,7 @@ class TestPrimaryBeamsPol(unittest.TestCase):
                 bvis.data['vis'][...] = 0.0 + 0.0j
                 bvis = dft_skycomponent_visibility(bvis, vpcomp)
                 polimage, sumwt = invert_2d(bvis, model, dopsf=False)
+                export_image_to_fits(polimage, "{0}/test_primary_beams_pol_case{1}.fits".format(self.dir, case))
                 found_component = find_skycomponents(polimage, threshold=10.0, npixels=5)
                 inv_vpcomp = apply_voltage_pattern_to_skycomponent(found_component[0], vpbeam,
                                                                    inverse=True)
@@ -175,6 +177,61 @@ class TestPrimaryBeamsPol(unittest.TestCase):
                 print("{0} {1} failed".format(vpol, str(flux)))
                 nfailures += 1
         assert nfailures == 0, "{} tests failed".format(nfailures)
+
+    def test_apply_voltage_pattern_image_s3(self):
+        self.createVis(rmax=1e4)
+        telescope = 'MID_FEKO_B2'
+        vpol = PolarisationFrame("linear")
+        self.times = numpy.linspace(-6, +6, 120) * numpy.pi / 12.0
+        bvis = create_blockvisibility(self.config, self.times, self.frequency,
+                                      channel_bandwidth=self.channel_bandwidth,
+                                      phasecentre=self.phasecentre, weight=1.0,
+                                      polarisation_frame=vpol, zerow=True)
+        cellsize = advise_wide_field(bvis)['cellsize']
+        model = create_image_from_visibility(bvis, cellsize=cellsize, npixel=8192,
+                                             phasecentre=self.phasecentre,
+                                             override_cellsize=False,
+                                             polarisation_frame=PolarisationFrame("linear"))
+        print(model)
+        bvis = weight_blockvisibility(bvis, model)
+
+        pbmodel = create_image_from_visibility(bvis, cellsize=self.cellsize, npixel=self.npixel,
+                                               override_cellsize=False,
+                                               polarisation_frame=PolarisationFrame("stokesIQUV"))
+        vpbeam = create_vp(pbmodel, telescope=telescope, use_local=False)
+        vpbeam.wcs.wcs.ctype[0] = 'RA---SIN'
+        vpbeam.wcs.wcs.ctype[1] = 'DEC--SIN'
+        vpbeam.wcs.wcs.crval[0] = pbmodel.wcs.wcs.crval[0]
+        vpbeam.wcs.wcs.crval[1] = pbmodel.wcs.wcs.crval[1]
+
+        s3_components = create_test_skycomponents_from_s3(flux_limit=0.001,
+                                                          phasecentre=self.phasecentre,
+                                                          frequency=self.frequency,
+                                                          polarisation_frame=PolarisationFrame('stokesI'),
+                                                          radius=2.0*numpy.pi/180.0)
+
+        print(len(s3_components))
+
+        for comp in s3_components:
+            comp.polarisation_frame = PolarisationFrame('stokesIQUV')
+            comp.flux = numpy.array([[comp.flux[0, 0], 0.0, 0.0, 0.0]])
+
+        s3_components = filter_skycomponents_by_flux(s3_components, 0.0, 10.0)
+
+        from rascil.processing_components.image import show_image
+        import matplotlib.pyplot as plt
+        plt.clf()
+        show_image(vpbeam, components=s3_components)
+        plt.show(block=False)
+
+        vpcomp = apply_voltage_pattern_to_skycomponent(s3_components, vpbeam)
+        bvis.data['vis'][...] = 0.0 + 0.0j
+        bvis = dft_skycomponent_visibility(bvis, vpcomp)
+        polimage, sumwt = invert_2d(bvis, model, dopsf=False)
+        export_image_to_fits(polimage, "{0}/test_primary_beams_pol_s3.fits".format(self.dir))
+        plt.clf()
+        show_image(polimage, components=s3_components)
+        plt.show(block=False)
 
 
 if __name__ == '__main__':
