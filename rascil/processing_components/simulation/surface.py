@@ -12,7 +12,7 @@ from scipy.interpolate import RectBivariateSpline
 from rascil.data_models.memory_data_models import BlockVisibility
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
-from rascil.processing_components.visibility.base import create_visibility_from_rows
+from rascil.processing_components.visibility import create_visibility_from_rows, calculate_blockvisibility_hourangles
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 
 log = logging.getLogger('logger')
@@ -63,7 +63,7 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
         # voltage pattern
         for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
                 v = create_visibility_from_rows(vis, rows)
-                ha = numpy.average(v.time)
+                ha = numpy.average(calculate_blockvisibility_hourangles(v))
                 har = s2r * ha
                 
                 # Calculate the az el for this hourangle and the phasecentre declination
@@ -135,8 +135,8 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
             # in AZELGEO. With that we can then look up the relevant gain from the
             # voltage pattern
             v = create_visibility_from_rows(vis, rows)
-            ha = numpy.average(v.time)
-        
+            ha = numpy.average(calculate_blockvisibility_hourangles(v))
+
             for icomp, comp in enumerate(sc):
                 antgain = numpy.zeros([nant], dtype='complex')
                 antwt = numpy.zeros([nant])

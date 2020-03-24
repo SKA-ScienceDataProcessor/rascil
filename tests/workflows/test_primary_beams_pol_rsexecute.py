@@ -19,7 +19,7 @@ from rascil.processing_components.imaging.dft import dft_skycomponent_visibility
 from rascil.processing_components.imaging.primary_beams import create_vp
 from rascil.processing_components.simulation import create_named_configuration, create_test_skycomponents_from_s3
 from rascil.processing_components.skycomponent import apply_voltage_pattern_to_skycomponent, \
-    filter_skycomponents_by_flux, find_nearest_skycomponent_index
+    filter_skycomponents_by_flux
 from rascil.processing_components.visibility import create_blockvisibility, vis_timeslice_iter, \
     create_visibility_from_rows
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
@@ -168,7 +168,7 @@ class TestPrimaryBeamsPolGraph(unittest.TestCase):
                                  '%s/test_primary_beams_pol_rsexecute_restored.fits' % self.dir)
 
         plt.clf()
-        show_image(restored[centre], components=s3_components)
+        show_image(restored[centre])
         plt.show(block=False)
 
         qa = qa_image(restored[centre])
