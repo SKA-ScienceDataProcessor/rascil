@@ -272,6 +272,7 @@ def create_blockvisibility(config: Configuration,
 
     # Do each hour angle in turn
     itime = 0
+    from astroplan import Observer
     site = Observer(config.location)
     stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
     if stime.masked:

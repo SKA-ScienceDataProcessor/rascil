@@ -563,6 +563,7 @@ def calculate_blockvisibility_azel(bvis, direction=None):
     if direction is None:
         direction = bvis.phasecentre
 
+    from astroplan import Observer
     site = Observer(location=bvis.configuration.location)
     utc = Time(bvis.time / 86400.0, format='mjd', scale='utc')
     altaz = site.altaz(utc, direction)
