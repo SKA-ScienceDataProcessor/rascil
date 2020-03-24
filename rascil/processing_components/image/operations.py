@@ -79,7 +79,7 @@ def export_image_to_fits(im: Image, fitsfile: str = 'imaging.fits'):
     :returns: None
 
     See also
-        :py:func:`rascil.processing_components.image.operations.import_image_from_array`
+        :py:func:`rascil.processing_components.image.import_image_from_array`
 
     """
     assert isinstance(im, Image), im
@@ -93,7 +93,7 @@ def import_image_from_fits(fitsfile: str) -> Image:
     :return: Image
 
     See also
-        :py:func:`rascil.processing_components.image.operations.export_image_to_array`
+        :py:func:`rascil.processing_components.image.export_image_to_array`
 
 
     """
@@ -109,13 +109,6 @@ def import_image_from_fits(fitsfile: str) -> Image:
     else:
         try:
             fim.polarisation_frame = polarisation_frame_from_wcs(fim.wcs, fim.data.shape)
-            # FITS and RASCIL polarisation conventions differ
-            new_data = fim.data.copy()
-            new_data[:, 3] = fim.data[:, 1]
-            new_data[:, 1] = fim.data[:, 2]
-            new_data[:, 2] = fim.data[:, 3]
-            fim.data = new_data
-
         except ValueError:
             fim.polarisation_frame = PolarisationFrame('stokesI')
 
@@ -451,7 +444,7 @@ def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame)
     :returns: Complex image
 
     See also
-        :py:func:`rascil.processing_components.image.operations.convert_polimage_to_stokes`
+        :py:func:`rascil.processing_components.image.convert_polimage_to_stokes`
         :py:func:`rascil.data_models.polarisation.convert_circular_to_stokes`
         :py:func:`rascil.data_models.polarisation.convert_linear_to_stokes`
     """
@@ -466,8 +459,6 @@ def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame)
     elif polarisation_frame == PolarisationFrame('circular'):
         cimarr = convert_stokes_to_circular(im.data)
         return create_image_from_array(cimarr, im.wcs, polarisation_frame)
-    elif polarisation_frame == PolarisationFrame('stokesI'):
-        return create_image_from_array(im.data.astype("complex"), im.wcs, PolarisationFrame('stokesI'))
     else:
         raise ValueError("Cannot convert stokes to %s" % (polarisation_frame.type))
 
@@ -482,7 +473,7 @@ def convert_polimage_to_stokes(im: Image):
     :returns: Complex image
 
     See also
-        :py:func:`rascil.processing_components.image.operations.convert_stokes_to_polimage`
+        :py:func:`rascil.processing_components.image.convert_stokes_to_polimage`
         :py:func:`rascil.data_models.polarisation.convert_stokes_to_circular`
         :py:func:`rascil.data_models.polarisation.convert_stokes_to_linear`
 
@@ -492,12 +483,10 @@ def convert_polimage_to_stokes(im: Image):
 
     if im.polarisation_frame == PolarisationFrame('linear'):
         cimarr = convert_linear_to_stokes(im.data)
-        return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
+        return create_image_from_array(cimarr, im.wcs, PolarisationFrame('stokesIQUV'))
     elif im.polarisation_frame == PolarisationFrame('circular'):
         cimarr = convert_circular_to_stokes(im.data)
-        return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
-    elif im.polarisation_frame == PolarisationFrame('stokesI'):
-        return create_image_from_array(numpy.real(im.data), im.wcs, PolarisationFrame('stokesI'))
+        return create_image_from_array(cimarr, im.wcs, PolarisationFrame('stokesIQUV'))
     else:
         raise ValueError("Cannot convert %s to stokes" % (im.polarisation_frame.type))
 
@@ -519,7 +508,7 @@ def create_window(template, window_type, **kwargs):
     :return: New image containing window
 
     See also
-        :py:func:`rascil.processing_components.image.deconvolution.deconvolve_cube`
+        :py:func:`rascil.processing_components.image.deconvolve_cube`
 
 
     """
@@ -578,8 +567,8 @@ def create_image(npixel=512, cellsize=0.000015, polarisation_frame=PolarisationF
     :return: Image
 
     See also
-        :py:func:`rascil.processing_components.image.operations.testing_support.create_image_from_array`
-        :py:func:`rascil.processing_components.imaging.base.create_image_from_visibility`
+        :py:func:`rascil.processing_components.image.create_image_from_array`
+        :py:func:`rascil.processing_components.imaging.create_image_from_visibility`
         :py:func:`rascil.processing_components.simulation.create_test_image`
         :py:mod:`rascil.processing_components.simulation`
 
@@ -620,8 +609,8 @@ def create_image_from_array(data: numpy.array, wcs: WCS, polarisation_frame: Pol
     :return: Image
 
     See also
-        :py:func:`rascil.processing_components.image.operations.create_image`
-        :py:func:`rascil.processing_components.imaging.base.create_image_from_visibility`
+        :py:func:`rascil.processing_components.image.create_image`
+        :py:func:`rascil.processing_components.imaging.create_image_from_visibility`
 
     """
     fim = Image()
@@ -730,7 +719,7 @@ def create_empty_image_like(im: Image) -> Image:
     :return: Image
 
     See also
-        :py:func:`rascil.processing_components.image.base.copy_image`
+        :py:func:`rascil.processing_components.image.copy_image`
     """
     assert isinstance(im, Image), im
     fim = Image()
@@ -794,8 +783,8 @@ def fft_image(im, template_image=None):
     :return:
 
     See also
-        :py:func:`rascil.processing_components.fourier_transforms.fft_support.fft`
-        :py:func:`rascil.processing_components.fourier_transforms.fft_support.ifft`
+        :py:func:`rascil.processing_components.fourier_transforms.fft`
+        :py:func:`rascil.processing_components.fourier_transforms.ifft`
     """
     assert len(im.shape) == 4
     d2r = numpy.pi / 180.0

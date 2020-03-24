@@ -587,7 +587,7 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
     def grid_wt(vis, model, g):
         if vis is not None:
             if model is not None:
-                griddata = create_griddata_from_image(model, vis)
+                griddata = create_griddata_from_image(model)
                 if isinstance(vis, BlockVisibility):
                     griddata = grid_blockvisibility_weight_to_griddata(vis, griddata, g[0][1])
                 else:
@@ -611,7 +611,7 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
             if vis is not None:
                 # Ensure that the griddata has the right axes so that the convolution
                 # function mapping works
-                agd = create_griddata_from_image(model, vis)
+                agd = create_griddata_from_image(model)
                 agd.data = gd[0].data
                 if isinstance(vis, BlockVisibility):
                     vis = griddata_blockvisibility_reweight(vis, agd, g[0][1])

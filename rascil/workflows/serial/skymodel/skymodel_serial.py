@@ -10,7 +10,7 @@ from rascil.data_models.memory_data_models import Image, GainTable, Visibility, 
 from rascil.processing_components.image import copy_image
 from rascil.workflows.serial.imaging.imaging_serial import predict_list_serial_workflow, invert_list_serial_workflow
 from rascil.processing_components.calibration import apply_gaintable
-from rascil.processing_components.imaging import dft_skycomponent_visibility
+from rascil.processing_components.imaging import predict_skycomponent_visibility
 from rascil.processing_components.skycomponent import copy_skycomponent
 from rascil.processing_components.skycomponent import apply_beam_to_skycomponent
 from rascil.processing_components.visibility import copy_visibility
@@ -52,9 +52,9 @@ def predict_skymodel_list_serial_workflow(obsvis, skymodel_list, context, vis_sl
             if isinstance(sm.mask, Image):
                 comps = copy_skycomponent(sm.components)
                 comps = apply_beam_to_skycomponent(comps, sm.mask)
-                v = dft_skycomponent_visibility(v, comps)
+                v = predict_skycomponent_visibility(v, comps)
             else:
-                v = dft_skycomponent_visibility(v, sm.components)
+                v = predict_skycomponent_visibility(v, sm.components)
         
         if isinstance(sm.image, Image):
             if numpy.max(numpy.abs(sm.image.data)) > 0.0:
@@ -193,9 +193,9 @@ def convolve_skymodel_list_serial_workflow(obsvis, skymodel_list, context, vis_s
             if isinstance(sm.mask, Image):
                 comps = copy_skycomponent(sm.components)
                 comps = apply_beam_to_skycomponent(comps, sm.mask)
-                v = dft_skycomponent_visibility(v, comps)
+                v = predict_skycomponent_visibility(v, comps)
             else:
-                v = dft_skycomponent_visibility(v, sm.components)
+                v = predict_skycomponent_visibility(v, sm.components)
         
         if isinstance(sm.image, Image):
             if numpy.max(numpy.abs(sm.image.data)) > 0.0:

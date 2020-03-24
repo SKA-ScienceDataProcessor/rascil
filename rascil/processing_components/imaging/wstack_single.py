@@ -16,13 +16,9 @@ import logging
 import numpy
 
 from rascil.data_models.memory_data_models import Visibility, Image
-from rascil.processing_components.image import copy_image, create_w_term_like, \
-    image_is_canonical, convert_stokes_to_polimage, convert_polimage_to_stokes
-from rascil.processing_components.griddata import grid_visibility_to_griddata, \
-    degrid_visibility_from_griddata, fft_griddata_to_image, fft_image_to_griddata, \
-    create_griddata_from_image
+from rascil.processing_components.image.operations import copy_image, create_w_term_like, image_is_canonical
+from rascil.processing_components.imaging.base import predict_2d, invert_2d
 from rascil.processing_components.visibility.base import copy_visibility
-from rascil.processing_components.imaging import normalize_sumwt
 
 log = logging.getLogger('logger')
 
@@ -60,16 +56,18 @@ def predict_wstack_single(vis, model, remove=True, gcfcf=None, **kwargs) -> Visi
     tempvis = copy_visibility(vis)
 
     # Calculate w beam and apply to the model. The imaginary part is not needed
-    workimage = convert_stokes_to_polimage(model, vis.polarisation_frame)
+    workimage = copy_image(model)
     w_beam = create_w_term_like(model, w_average, vis.phasecentre)
-    workimage.data = numpy.conjugate(w_beam.data) * workimage.data
-
-    gcf, cf = gcfcf
-
-    griddata = create_griddata_from_image(model, vis)
-    griddata = fft_image_to_griddata(workimage, griddata, gcf)
-    vis = degrid_visibility_from_griddata(vis, griddata=griddata, cf=cf)
-
+    
+    # Do the real part
+    workimage.data = w_beam.data.real * model.data
+    vis = predict_2d(vis, workimage, gcfcf=gcfcf, **kwargs)
+    
+    # and now the imaginary part
+    workimage.data = w_beam.data.imag * model.data
+    tempvis = predict_2d(tempvis, workimage, gcfcf=gcfcf, **kwargs)
+    vis.data['vis'] -= 1j * tempvis.data['vis']
+    
     if remove:
         vis.data['uvw'][..., 2] += w_average
 
@@ -107,21 +105,14 @@ def invert_wstack_single(vis: Visibility, im: Image, dopsf, normalize=True, remo
     w_average = numpy.average(vis.w)
     if remove:
         vis.data['uvw'][..., 2] -= w_average
-
-    gcf, cf = gcfcf
-
-    griddata = create_griddata_from_image(im, vis)
-    griddata, sumwt = grid_visibility_to_griddata(vis, griddata=griddata, cf=cf)
-    cim = fft_griddata_to_image(griddata, gcf)
-    cim = normalize_sumwt(cim, sumwt)
-
+    
+    reWorkimage, sumwt, imWorkimage = invert_2d(vis, im, dopsf, normalize=normalize, gcfcf=gcfcf, **kwargs)
+    
     if remove:
         vis.data['uvw'][..., 2] += w_average
 
     # Calculate w beam and apply to the model. The imaginary part is not needed
     w_beam = create_w_term_like(im, w_average, vis.phasecentre)
-    cworkimage = copy_image(cim)
-    cworkimage.data = numpy.conjugate(w_beam.data) * cim.data
-    workimage = convert_polimage_to_stokes(cworkimage)
-
-    return workimage, sumwt
+    reWorkimage.data = w_beam.data.real * reWorkimage.data - w_beam.data.imag * imWorkimage.data
+    
+    return reWorkimage, sumwt

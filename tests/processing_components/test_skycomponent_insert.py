@@ -13,7 +13,7 @@ from rascil.data_models.polarisation import PolarisationFrame
 
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
-from rascil.processing_components.imaging import dft_skycomponent_visibility
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.skycomponent.operations import insert_skycomponent, create_skycomponent
 from rascil.processing_components.simulation import create_test_image
 from rascil.processing_components.simulation import create_named_configuration
@@ -83,7 +83,7 @@ class TestSkycomponentInsert(unittest.TestCase):
                                     polarisation_frame=PolarisationFrame('stokesI'))
 
         self.vis.data['vis'][...] = 0.0
-        self.vis = dft_skycomponent_visibility(self.vis, self.sc)
+        self.vis = predict_skycomponent_visibility(self.vis, self.sc)
         im, sumwt = invert_2d(self.vis, self.model)
         if self.persist: export_image_to_fits(im, '%s/test_skycomponent_dft.fits' % self.dir)
         assert numpy.max(numpy.abs(self.vis.vis.imag)) < 1e-3

@@ -61,7 +61,7 @@ from rascil.processing_components.calibration.chain_calibration import create_ca
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 from rascil.processing_components.image.operations import create_image_from_array
 from rascil.processing_components.image.operations import import_image_from_fits
-from rascil.processing_components.imaging import predict_2d, dft_skycomponent_visibility, \
+from rascil.processing_components.imaging.base import predict_2d, predict_skycomponent_visibility, \
     create_image_from_visibility, advise_wide_field
 from rascil.processing_components.imaging.primary_beams import create_pb
 from rascil.processing_components.skycomponent.operations import create_skycomponent, insert_skycomponent, \
@@ -694,7 +694,7 @@ def create_blockvisibility_iterator(config: Configuration, times: numpy.array, f
             bvis = convert_visibility_to_blockvisibility(vis)
 
         if components is not None:
-            vis = dft_skycomponent_visibility(bvis, components)
+            vis = predict_skycomponent_visibility(bvis, components)
 
         # Add phase errors
         if phase_error > 0.0 or amplitude_error > 0.0:

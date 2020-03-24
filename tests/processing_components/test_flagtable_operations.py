@@ -12,7 +12,7 @@ from numpy.testing import assert_allclose
 
 from rascil.data_models.memory_data_models import Skycomponent
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.imaging import dft_skycomponent_visibility
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components import create_flagtable_from_blockvisibility, qa_flagtable, \
     create_blockvisibility, create_flagtable_from_rows

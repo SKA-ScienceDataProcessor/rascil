@@ -20,9 +20,9 @@ probably more useful.
 
 """
 
-import logging
-
 import numpy
+
+import logging
 
 log = logging.getLogger('logger')
 
@@ -67,8 +67,6 @@ class ReceptorFrame:
 class PolarisationFrame:
     """ Define polarisation frames post correlation
 
-    stokesI, stokesIQUV, linear, circular
-
     """
     fits_codes = {
         'circular': [-1, -2, -3, -4],
@@ -108,10 +106,6 @@ class PolarisationFrame:
             return False
         return self.type == a.type
 
-    def __str__(self):
-        """Default printer for Polarisation"""
-        return self.type
-
     @property
     def npol(self):
         """ Number of correlated polarisations
@@ -136,8 +130,6 @@ def polmatrixmultiply(cm, vec, polaxis=1):
     else:
         # This tensor swaps the first two axes so we need to tranpose back
         # e.g. if polaxis=2 1000, 3, 4 becomes 4, 1000, 3
-        if polaxis ==-1:
-            polaxis = len(vec.shape)-1
         result = numpy.tensordot(cm, vec, axes=(1, polaxis))
         permut = list(range(len(vec.shape)))
         assert 5 > polaxis > 0, "Error in polarisation conversion logic"
@@ -148,15 +140,14 @@ def polmatrixmultiply(cm, vec, polaxis=1):
         elif polaxis == 3:
             permut[0], permut[1], permut[2], permut[3] = permut[1], permut[2], permut[3], permut[0]
         elif polaxis == 4:
-            permut[0], permut[1], permut[2], permut[3], permut[4] = permut[1], permut[2], permut[3], permut[4], permut[
-                0]
+            permut[0], permut[1], permut[2], permut[3], permut[4] = permut[1], permut[2], permut[3], permut[4], permut[0]
         transposed = numpy.transpose(result, axes=permut)
         assert transposed.shape == vec.shape
         return transposed
 
 
 def convert_stokes_to_linear(stokes, polaxis=1):
-    """ Convert Stokes IQUV to Linear (complex image)
+    """ Convert Stokes IQUV to Linear
 
     :param stokes: [...,4] Stokes vector in I,Q,U,V (can be complex)
     :param polaxis: Axis of stokes with polarisation (default 1)
@@ -173,7 +164,7 @@ def convert_stokes_to_linear(stokes, polaxis=1):
 
 
 def convert_linear_to_stokes(linear, polaxis=1):
-    """ Convert Linear to Stokes IQUV (complex image)
+    """ Convert Linear to Stokes IQUV
 
     :param linear: [...,4] linear vector in XX, XY, YX, YY sequence
     :param polaxis: Axis of linear with polarisation (default 1)
@@ -198,11 +189,11 @@ def convert_linear_to_stokesI(linear, polaxis=1):
 
     Equation 4.58 TMS, inverted with numpy.linalg.inv
     """
-    return 0.5 * (linear[..., 0] + linear[..., 3])[..., numpy.newaxis]
+    return 0.5 * (linear[...,0]+linear[...,3])[..., numpy.newaxis]
 
 
 def convert_stokes_to_circular(stokes, polaxis=1):
-    """ Convert Stokes IQUV to Circular (complex image)
+    """ Convert Stokes IQUV to Circular
 
     :param stokes: [...,4] Stokes vector in I,Q,U,V (can be complex)
     :param polaxis: Axis of stokes with polarisation (default 1)
@@ -219,7 +210,7 @@ def convert_stokes_to_circular(stokes, polaxis=1):
 
 
 def convert_circular_to_stokes(circular, polaxis=1):
-    """ Convert Circular to Stokes IQUV (complex image)
+    """ Convert Circular to Stokes IQUV
 
     :param circular: [...,4] linear vector in RR, RL, LR, LL sequence
     :param polaxis: Axis of circular with polarisation (default 1)
@@ -235,7 +226,6 @@ def convert_circular_to_stokes(circular, polaxis=1):
 
     return polmatrixmultiply(conversion_matrix, circular, polaxis)
 
-
 def convert_circular_to_stokesI(circular, polaxis=1):
     """ Convert Circular to Stokes I
 
@@ -246,7 +236,7 @@ def convert_circular_to_stokesI(circular, polaxis=1):
     Equation 4.58 TMS, inverted with numpy.linalg.inv
     """
 
-    return 0.5 * (circular[..., 0] + circular[..., 3])[..., numpy.newaxis]
+    return 0.5 * (circular[...,0] + circular[...,3])[..., numpy.newaxis]
 
 
 def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, polaxis=1):
@@ -259,7 +249,7 @@ def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, po
         elif opf == PolarisationFrame("stokesI"):
             return convert_linear_to_stokesI(polvec, polaxis)
         else:
-            raise ValueError("Unknown polarisation conversion: linear to {}".format(opf))
+            raise ValueError("Unknown polarisation conversion")
 
     if ipf == PolarisationFrame("circular"):
         if opf == PolarisationFrame("stokesIQUV"):
@@ -267,7 +257,7 @@ def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, po
         elif opf == PolarisationFrame("stokesI"):
             return convert_circular_to_stokesI(polvec, polaxis)
         else:
-            raise ValueError("Unknown polarisation conversion: circular to {}".format(opf))
+            raise ValueError("Unknown polarisation conversion")
 
     if ipf == PolarisationFrame("stokesIQUV"):
         if opf == PolarisationFrame("linear"):
@@ -275,7 +265,7 @@ def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, po
         elif opf == PolarisationFrame("circular"):
             return convert_stokes_to_circular(polvec, polaxis)
         else:
-            raise ValueError("Unknown polarisation conversion: stokesIQUV to {}".format(opf))
+            raise ValueError("Unknown polarisation conversion")
 
     if ipf == PolarisationFrame("stokesI"):
         if opf == PolarisationFrame("stokesI"):

@@ -17,7 +17,7 @@ from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.calibration.operations import qa_gaintable, create_gaintable_from_blockvisibility, apply_gaintable
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.processing_components.image.operations import copy_image, create_empty_image_like
-from rascil.processing_components.imaging import dft_skycomponent_visibility, \
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility, \
     create_image_from_visibility
 from rascil.processing_components.skycomponent.operations import create_skycomponent, insert_skycomponent
 from rascil.processing_components.simulation import simulate_gaintable
@@ -98,9 +98,9 @@ class TestPipelinesFunctions(unittest.TestCase):
                                            polarisation_frame=PolarisationFrame("stokesI"))
                 comps.append(comp)
         if block:
-            dft_skycomponent_visibility(vt, comps)
+            predict_skycomponent_visibility(vt, comps)
         else:
-            dft_skycomponent_visibility(vt, comps)
+            predict_skycomponent_visibility(vt, comps)
         insert_skycomponent(model, comps)
         self.comps = comps
         self.model = copy_image(model)

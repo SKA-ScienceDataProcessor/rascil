@@ -30,7 +30,6 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestPipelineMPC(unittest.TestCase):
     def setUp(self):
 
-        numpy.random.seed(180555)
         rsexecute.set_client()
 
         self.persist = os.getenv("RASCIL_PERSIST", False)

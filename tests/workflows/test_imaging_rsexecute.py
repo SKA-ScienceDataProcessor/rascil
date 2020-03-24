@@ -22,7 +22,7 @@ from rascil.workflows.shared.imaging.imaging_shared import sum_invert_results
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image, qa_image
-from rascil.processing_components.imaging import dft_skycomponent_visibility
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, insert_unittest_errors, create_unittest_components
 from rascil.processing_components.simulation import create_named_configuration
@@ -116,7 +116,7 @@ class TestImaging(unittest.TestCase):
         
         self.model_list = rsexecute.compute(self.model_list, sync=True)
         
-        self.vis_list = [rsexecute.execute(dft_skycomponent_visibility)(self.vis_list[freqwin],
+        self.vis_list = [rsexecute.execute(predict_skycomponent_visibility)(self.vis_list[freqwin],
                                                                              self.components_list[freqwin])
                          for freqwin, _ in enumerate(self.frequency)]
         centre = self.freqwin // 2
@@ -362,7 +362,7 @@ class TestImaging(unittest.TestCase):
         
         assert numpy.max(numpy.abs(vis_list[centre].vis)) < 1e-15, numpy.max(numpy.abs(vis_list[centre].vis))
         
-        predicted_vis_list = [rsexecute.execute(dft_skycomponent_visibility)(vis_list[freqwin],
+        predicted_vis_list = [rsexecute.execute(predict_skycomponent_visibility)(vis_list[freqwin],
                                                                                   self.components_list[freqwin])
                               for freqwin, _ in enumerate(self.frequency)]
         predicted_vis_list = rsexecute.compute(predicted_vis_list, sync=True)

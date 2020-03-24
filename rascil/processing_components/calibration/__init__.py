@@ -3,7 +3,6 @@
 """
 from .chain_calibration import *
 from .iterators import *
-from .jones import *
 from .operations import *
 from .pointing import *
 from .rcal import *

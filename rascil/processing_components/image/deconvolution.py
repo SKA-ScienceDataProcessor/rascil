@@ -80,10 +80,10 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
     :return: component image, residual image
 
     See also
-        :py:func:`rascil.processing_components.arrays.cleaners.hogbom`
-        :py:func:`rascil.processing_components.arrays.cleaners.hogbom_complex`
-        :py:func:`rascil.processing_components.arrays.cleaners.msclean`
-        :py:func:`rascil.processing_components.arrays.cleaners.msmfsclean`
+        :py:func:`rascil.processing_components.arrays.hogbom`
+        :py:func:`rascil.processing_components.arrays.hogbom_complex`
+        :py:func:`rascil.processing_components.arrays.msclean`
+        :py:func:`rascil.processing_components.arrays.msmfsclean`
 
     """
     
@@ -196,18 +196,17 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
         comp_array = numpy.zeros(dirty_taylor.data.shape)
         residual_array = numpy.zeros(dirty_taylor.data.shape)
         for pol in range(dirty_taylor.data.shape[1]):
-            # Always use the Stokes I PSF
-            if psf_taylor.data[0, 0, :, :].max():
+            if psf_taylor.data[0, pol, :, :].max():
                 log.info("deconvolve_cube %s: Processing pol %d" % (prefix, pol))
                 if window is None:
                     comp_array[:, pol, :, :], residual_array[:, pol, :, :] = \
-                        msmfsclean(dirty_taylor.data[:, pol, :, :], psf_taylor.data[:, 0, :, :],
+                        msmfsclean(dirty_taylor.data[:, pol, :, :], psf_taylor.data[:, pol, :, :],
                                    None, gain, thresh, niter, scales, fracthresh, findpeak, prefix)
                 else:
                     log.info('deconvolve_cube %s: Clean window has %d valid pixels'
                              % (prefix, int(numpy.sum(window[0,pol]))))
                     comp_array[:, pol, :, :], residual_array[:, pol, :, :] = \
-                        msmfsclean(dirty_taylor.data[:, pol, :, :], psf_taylor.data[:, 0, :, :],
+                        msmfsclean(dirty_taylor.data[:, pol, :, :], psf_taylor.data[:, pol, :, :],
                                    window[0, pol, :, :], gain, thresh, niter, scales, fracthresh,
                                    findpeak, prefix)
             else:

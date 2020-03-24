@@ -18,7 +18,7 @@ from rascil.processing_components.calibration.operations import gaintable_summar
 from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import copy_visibility, create_blockvisibility
-from rascil.processing_components.imaging import dft_skycomponent_visibility
+from rascil.processing_components.imaging.base import predict_skycomponent_visibility
 
 log = logging.getLogger('logger')
 
@@ -52,7 +52,7 @@ class TestCalibrationOperations(unittest.TestCase):
                                           channel_bandwidth=self.channel_bandwidth,
                                           weight=1.0,
                                           polarisation_frame=PolarisationFrame(data_pol_frame))
-        self.vis = dft_skycomponent_visibility(self.vis, self.comp)
+        self.vis = predict_skycomponent_visibility(self.vis, self.comp)
 
     def test_create_gaintable_from_visibility(self):
         for spf, dpf in[('stokesI', 'stokesI'), ('stokesIQUV', 'linear'), ('stokesIQUV', 'circular')]:
