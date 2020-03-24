@@ -488,6 +488,7 @@ class Image:
         """
         s = "Image:\n"
         s += "\tShape: %s\n" % str(self.data.shape)
+        s += "\tData type: %s\n" % str(self.data.dtype)
         s += "\tWCS: %s\n" % self.wcs.__repr__()
         s += "\tPolarisation frame: %s\n" % str(self.polarisation_frame.type)
         return s
@@ -734,7 +735,7 @@ class Skycomponent:
 
         bm = create_low_test_beam(model=model)
         sc = apply_beam_to_skycomponent(sc, bm)
-        vis = predict_skycomponent_visibility(vis, sc)
+        vis = dft_skycomponent_visibility(vis, sc)
     """
     
     def __init__(self,

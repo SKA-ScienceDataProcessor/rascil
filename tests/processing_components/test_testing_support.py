@@ -14,7 +14,7 @@ from astropy.coordinates import SkyCoord
 from rascil.data_models.memory_data_models import Skycomponent
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.image.operations import export_image_to_fits
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.imaging.primary_beams import create_low_test_beam
 from rascil.processing_components.simulation import create_test_image_from_s3, create_test_image, \
     create_blockvisibility_iterator, create_low_test_image_from_gleam, \
@@ -257,7 +257,7 @@ class TestTesting_Support(unittest.TestCase):
         self.vis = create_blockvisibility(self.config, self.times, self.frequency, phasecentre=self.phasecentre,
                                           weight=1.0, polarisation_frame=PolarisationFrame('stokesI'),
                                           channel_bandwidth=self.channel_bandwidth)
-        self.vis = predict_skycomponent_visibility(self.vis, sc)
+        self.vis = dft_skycomponent_visibility(self.vis, sc)
         cvt = convert_blockvisibility_to_visibility(self.vis)
         assert cvt.cindex is not None
 

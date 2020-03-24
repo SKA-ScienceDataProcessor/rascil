@@ -15,7 +15,7 @@ from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.calibration import apply_gaintable
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls, calibrate_chain
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, gaintable_summary
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import copy_visibility, create_blockvisibility
@@ -54,7 +54,7 @@ class TestCalibrationChain(unittest.TestCase):
         self.vis = create_blockvisibility(self.lowcore, self.times, self.frequency, phasecentre=self.phasecentre,
                                           channel_bandwidth=self.channel_bandwidth, weight=1.0,
                                           polarisation_frame=PolarisationFrame(data_pol_frame))
-        self.vis = predict_skycomponent_visibility(self.vis, self.comp)
+        self.vis = dft_skycomponent_visibility(self.vis, self.comp)
     
     def test_calibrate_T_function(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0])

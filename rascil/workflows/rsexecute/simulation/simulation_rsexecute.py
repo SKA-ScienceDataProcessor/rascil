@@ -38,7 +38,7 @@ from rascil.processing_components.simulation.simulation_helpers import plot_poin
     plot_gaintable
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.visibility import convert_blockvisibility_to_visibility, \
-    convert_visibility_to_blockvisibility
+    convert_visibility_to_blockvisibility, calculate_blockvisibility_hourangles
 from rascil.processing_components.visibility import copy_visibility
 from rascil.processing_components.visibility import create_blockvisibility, \
     create_visibility
@@ -545,15 +545,14 @@ def create_surface_errors_gaintable_rsexecute_workflow(band, sub_bvis_list,
         return vpa
 
     def find_vp(band, vis):
-        ha = numpy.pi * numpy.average(vis.time) / 43200.0
+        ha = calculate_blockvisibility_hourangles(vis).to('rad').value
         dec = vis.phasecentre.dec.rad
         latitude = vis.configuration.location.lat.rad
         az, el = hadec_to_azel(ha, dec, latitude)
 
         el_deg = el * 180.0 / numpy.pi
         el_table = max(0.0,
-                       min(90.1, elevation_sampling * ((
-                                                               el_deg + elevation_sampling / 2.0) // elevation_sampling)))
+                       min(90.1, elevation_sampling * ((el_deg + elevation_sampling / 2.0) // elevation_sampling)))
         return get_band_vp(band, el_table)
 
     def find_vp_nominal(band):

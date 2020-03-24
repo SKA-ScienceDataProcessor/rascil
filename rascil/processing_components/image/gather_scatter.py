@@ -33,7 +33,7 @@ def image_scatter_facets(im: Image, facets=1, overlap=0, taper=None) -> List[Ima
     :return: list of subimages
 
     See also:
-        :py:func:`processing_components.image.image_raster_iter`
+        :py:func:`processing_components.image.iterators.image_raster_iter`
     """
     return [flat_facet for flat_facet in image_raster_iter(im, facets=facets, overlap=overlap,
                                                            taper=taper)]
@@ -59,7 +59,7 @@ def image_gather_facets(image_list: List[Image], im: Image, facets=1, overlap=0,
     :return: list of subimages
 
     See also
-        :py:func:`rascil.processing_components.image.image_raster_iter`
+        :py:func:`rascil.processing_components.image.iterators.image_raster_iter`
     """
     out = create_empty_image_like(im)
     if overlap > 0:
@@ -110,7 +110,7 @@ def image_scatter_channels(im: Image, subimages=None) -> List[Image]:
     :return: list of subimages
 
     See also
-        :py:func:`rascil.processing_components.image.image_channel_iter`
+        :py:func:`rascil.processing_components.image.iterators.image_channel_iter`
     """
 
     assert image_is_canonical(im)

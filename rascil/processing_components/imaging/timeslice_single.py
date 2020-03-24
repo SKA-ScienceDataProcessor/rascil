@@ -58,13 +58,10 @@ Ignoring changes in the normalisation term, we have:
 """
 
 from typing import Union
-
 import numpy
 
 from rascil.data_models.memory_data_models import Visibility, Image, BlockVisibility
-
 from rascil.processing_components.image.operations import reproject_image
-
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
 
 

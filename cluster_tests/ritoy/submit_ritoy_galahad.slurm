@@ -1,6 +1,6 @@
 #!/bin/bash
 #!
-#! Dask job script for P3
+#! Dask job script for GALAHAD
 #! Tim Cornwell
 #!
 
@@ -50,8 +50,6 @@ echo -e "Running dask-scheduler: `which dask-scheduler`"
 
 cd $SLURM_SUBMIT_DIR
 echo -e "Changed directory to `pwd`.\n"
-
-module load slurm
 
 JOBID=${SLURM_JOB_ID}
 echo ${SLURM_JOB_NODELIST}

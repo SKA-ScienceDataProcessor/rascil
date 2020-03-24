@@ -18,7 +18,7 @@ from rascil.processing_components.griddata.operations import create_griddata_fro
 from rascil.processing_components.griddata import create_convolutionfunction_from_image
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.calibration.pointing import create_pointingtable_from_blockvisibility
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import simulate_gaintable, create_test_image
 from rascil.processing_components.simulation.pointing import simulate_pointingtable
 from rascil.processing_components.simulation import create_named_configuration
@@ -50,7 +50,7 @@ class TestBufferDataModelHelpers(unittest.TestCase):
                                           phasecentre=self.phasecentre,
                                           polarisation_frame=PolarisationFrame("linear"),
                                           weight=1.0, meta={"RASCIL":0.0})
-        self.vis = predict_skycomponent_visibility(self.vis, self.comp)
+        self.vis = dft_skycomponent_visibility(self.vis, self.comp)
         
         config = {"buffer": {"directory": self.dir},
                   "vislist": {"name": "test_bufferblockvisibility.hdf", "data_model": "BlockVisibility"}}
@@ -204,7 +204,7 @@ class TestBufferDataModelHelpers(unittest.TestCase):
 
     def test_readwritegriddata(self):
         im = create_test_image()
-        gd = create_griddata_from_image(im)
+        gd = create_griddata_from_image(im, None)
         config = {"buffer": {"directory": self.dir},
                   "griddata": {"name": "test_buffergriddata.hdf", "data_model": "GridData"}}
         bdm = BufferGridData(config["buffer"], config["griddata"], gd)
