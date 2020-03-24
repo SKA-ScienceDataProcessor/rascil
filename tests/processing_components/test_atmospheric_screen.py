@@ -101,17 +101,22 @@ class TestAtmosphericScreen(unittest.TestCase):
                                                           frequency=self.frequency,
                                                           polarisation_frame=PolarisationFrame('stokesI'),
                                                           radius=1.5 * numpy.pi / 180.0)
-        s3_components = filter_skycomponents_by_flux(s3_components, 0.0, 10.0)
+
+        assert len(s3_components) > 0, "No S3 components selected"
 
         pb_s3_components = apply_beam_to_skycomponent(s3_components, beam)
 
-        actual_components = filter_skycomponents_by_flux(pb_s3_components, flux_min=1.0)
+        actual_components = filter_skycomponents_by_flux(pb_s3_components, flux_max=10.0)
 
-        gaintables = create_gaintable_from_screen(self.vis, actual_components, screen)
+        assert len(actual_components) > 0, "No components after applying primary beam"
+
+        gaintables = create_gaintable_from_screen(self.vis, actual_components, screen, height=3e3,
+                                                  type_atmosphere="troposphere")
         assert len(gaintables) == len(actual_components), len(gaintables)
-        assert gaintables[0].gain.shape == (3, 94, 1, 1, 1), gaintables[0].gain.shape
+        assert gaintables[0].gain.shape == (3, 63, 1, 1, 1), gaintables[0].gain.shape
 
     def test_grid_gaintable_to_screen(self):
+        self.actualSetup()
         screen = import_image_from_fits(rascil_data_path('models/test_mpc_screen.fits'))
         beam = create_test_image(cellsize=0.0015, phasecentre=self.vis.phasecentre,
                                  frequency=self.frequency)
@@ -141,6 +146,7 @@ class TestAtmosphericScreen(unittest.TestCase):
         if self.persist: export_image_to_fits(weights, rascil_path('test_results/test_mpc_screen_gridded_weights.fits'))
 
     def test_plot_gaintable_to_screen(self):
+        self.actualSetup()
         screen = import_image_from_fits(rascil_data_path('models/test_mpc_screen.fits'))
         beam = create_test_image(cellsize=0.0015, phasecentre=self.vis.phasecentre,
                                  frequency=self.frequency)

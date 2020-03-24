@@ -94,9 +94,11 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
             for ant in range(nant):
                 pp0 = pp[ant][0:2]
                 # Using narrow band approach - we should loop over frequency
-                worldloc = [pp0[0], pp0[1], ha, numpy.average(vis.frequency)]
                 try:
+                    worldloc = [pp0[0], pp0[1], ha, numpy.average(vis.frequency)]
                     pixloc = screen.wcs.wcs_world2pix([worldloc], 0)[0].astype('int')
+                    if type_atmosphere == 'troposphere':
+                        pixloc[3] = 0
                     scr[ant] = screen_to_phase * screen.data[pixloc[3], pixloc[2], pixloc[1], pixloc[0]]
                     number_good += 1
                 except (ValueError, IndexError):
