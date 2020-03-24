@@ -12,13 +12,14 @@ from scipy.interpolate import RectBivariateSpline
 from rascil.data_models.memory_data_models import BlockVisibility
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
-from rascil.processing_components.visibility import create_visibility_from_rows, calculate_blockvisibility_hourangles
+from rascil.processing_components.visibility import create_visibility_from_rows, \
+    calculate_blockvisibility_hourangles, calculate_blockvisibility_azel
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 
 log = logging.getLogger('logger')
 
 def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_slices=None, order=3, use_radec=False,
-                                             **kwargs):
+                                             elevation_limit=15.0*numpy.pi/180.0, **kwargs):
     """ Create gaintables for a set of zernikes
 
     :param vis:
@@ -63,54 +64,63 @@ def simulate_gaintable_from_voltage_patterns(vis, sc, vp_list, vp_coeffs, vis_sl
         # voltage pattern
         for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
                 v = create_visibility_from_rows(vis, rows)
-                ha = numpy.average(calculate_blockvisibility_hourangles(v))
-                har = s2r * ha
-                
+                ha = numpy.average(calculate_blockvisibility_hourangles(v).to('rad').value)
+
                 # Calculate the az el for this hourangle and the phasecentre declination
-                azimuth_centre, elevation_centre = hadec_to_azel(har, vis.phasecentre.dec.rad, latitude)
-        
+                azimuth_centre, elevation_centre = calculate_blockvisibility_azel(v)
+                azimuth_centre = azimuth_centre.to('rad').value
+                elevation_centre = elevation_centre.to('rad').value
+
                 for icomp, comp in enumerate(sc):
-                    antgain = numpy.zeros([nant], dtype='complex')
-                    # Calculate the location of the component in AZELGEO, then add the pointing offset
-                    # for each antenna
-                    hacomp = comp.direction.ra.rad - vis.phasecentre.ra.rad + har
-                    deccomp = comp.direction.dec.rad
-                    azimuth_comp, elevation_comp = hadec_to_azel(hacomp, deccomp, latitude)
-                    
-                    for ant in range(nant):
-                        for ivp, vp in enumerate(vp_list):
-                            nchan, npol, ny, nx = vp.data.shape
-                            wcs_azel = vp.wcs.deepcopy()
-            
-                            az_comp = azimuth_centre * r2d
-                            el_comp = elevation_centre * r2d
-                        
-                            # We use WCS sensible coordinate handling by labelling the axes misleadingly
-                            wcs_azel.wcs.crval[0] = az_comp
-                            wcs_azel.wcs.crval[1] = el_comp
-                            wcs_azel.wcs.ctype[0] = 'RA---SIN'
-                            wcs_azel.wcs.ctype[1] = 'DEC--SIN'
-        
-                            worldloc = [azimuth_comp*r2d, elevation_comp*r2d,
-                                        vp.wcs.wcs.crval[2], vp.wcs.wcs.crval[3]]
-                            try:
-                                pixloc = wcs_azel.sub(2).wcs_world2pix([worldloc[:2]], 1)[0]
-                                assert pixloc[0] > 2
-                                assert pixloc[0] < nx - 3
-                                assert pixloc[1] > 2
-                                assert pixloc[1] < ny - 3
-                                gain = real_splines[ivp].ev(pixloc[1], pixloc[0]) \
-                                       + 1j * imag_splines[ivp](pixloc[1], pixloc[0])
-                                antgain[ant] += vp_coeffs[ant, ivp] * gain
-                                number_good += 1
-                            except (ValueError, AssertionError):
-                                number_bad += 1
-                                antgain[ant] = 0.0
-                                
-                        antgain[ant] = 1.0/antgain[ant]
-                    
-                    gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, numpy.newaxis, numpy.newaxis]
+
+                    if elevation_centre >= elevation_limit:
+
+                        antgain = numpy.zeros([nant], dtype='complex')
+                        # Calculate the location of the component in AZELGEO, then add the pointing offset
+                        # for each antenna
+                        hacomp = comp.direction.ra.rad - vis.phasecentre.ra.rad + ha
+                        deccomp = comp.direction.dec.rad
+                        azimuth_comp, elevation_comp = hadec_to_azel(hacomp, deccomp, latitude)
+
+                        for ant in range(nant):
+                            for ivp, vp in enumerate(vp_list):
+                                nchan, npol, ny, nx = vp.data.shape
+                                wcs_azel = vp.wcs.deepcopy()
+
+                                az_comp = azimuth_centre * r2d
+                                el_comp = elevation_centre * r2d
+
+                                # We use WCS sensible coordinate handling by labelling the axes misleadingly
+                                wcs_azel.wcs.crval[0] = az_comp
+                                wcs_azel.wcs.crval[1] = el_comp
+                                wcs_azel.wcs.ctype[0] = 'RA---SIN'
+                                wcs_azel.wcs.ctype[1] = 'DEC--SIN'
+
+                                worldloc = [azimuth_comp*r2d, elevation_comp*r2d,
+                                            vp.wcs.wcs.crval[2], vp.wcs.wcs.crval[3]]
+                                try:
+                                    pixloc = wcs_azel.sub(2).wcs_world2pix([worldloc[:2]], 1)[0]
+                                    assert pixloc[0] > 2
+                                    assert pixloc[0] < nx - 3
+                                    assert pixloc[1] > 2
+                                    assert pixloc[1] < ny - 3
+                                    gain = real_splines[ivp].ev(pixloc[1], pixloc[0]) \
+                                           + 1j * imag_splines[ivp](pixloc[1], pixloc[0])
+                                    antgain[ant] += vp_coeffs[ant, ivp] * gain
+                                    number_good += 1
+                                except (ValueError, AssertionError):
+                                    number_bad += 1
+                                    antgain[ant] = 1.0
+
+                            antgain[ant] = 1.0/antgain[ant]
+
+                        gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, numpy.newaxis, numpy.newaxis]
+                        gaintables[icomp].phasecentre = comp.direction
+                else:
+                    gaintables[icomp].gain[...] = 1.0 + 0.0j
                     gaintables[icomp].phasecentre = comp.direction
+                    number_bad += nant
+
     else:
         assert isinstance(vis, BlockVisibility)
         number_bad = 0
