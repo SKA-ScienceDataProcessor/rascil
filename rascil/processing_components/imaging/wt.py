@@ -5,7 +5,7 @@ https://gitlab.com/ska-telescope/py-wtowers
 
 """
 
-__all__ = ['vis2dirty', 'predict_wt', 'invert_wt']
+__all__ = ['vis2dirty', 'gcf2wkern', 'predict_wt', 'invert_wt']
 
 import logging
 from typing import Union
@@ -18,35 +18,75 @@ from rascil.data_models.polarisation import convert_pol_frame
 from rascil.processing_components.image.operations import copy_image, image_is_canonical
 from rascil.processing_components.imaging.base import shift_vis_to_image, normalize_sumwt
 from rascil.processing_components.visibility.base import copy_visibility
+from rascil.processing_components.griddata import convert_kernel_to_list
 
 log = logging.getLogger(__name__)
 
 try:
     import wtowers.wtowers as wtowers
     
-    def vis2dirty(grid_size, theta, wtvis):
-    	uvgrid = numpy.zeros(grid_size*grid_size, dtype=numpy.complex128)
-    	flops = wtowers.grid_simple_func(uvgrid, grid_size, theta, wtvis)
-    	# Fill a hermitian conjugated part of the uv_grid plane
-    	wtowers.make_hermitian_func(uvgrid, grid_size)
+    def vis2dirty(grid_size, theta, wtvis, wtkern=None, subgrid_size=None, margin=None, winc=None):
+        uvgrid = numpy.zeros(grid_size*grid_size, dtype=numpy.complex128)
+        if wtkern is None:
+               # Simple gridding
+             flops = wtowers.grid_simple_func(uvgrid, grid_size, theta, wtvis)
+        else:
+             if subgrid_size == None or margin == None or winc == None:
+                 # W-projection gridding
+                 flops = wtowers.grid_wprojection_func(uvgrid, grid_size, theta, wtvis, wtkern)
+             else:
+                 # W-towers gridding
+                 flops = wtowers.grid_wtowers_func(uvgrid, grid_size, theta, wtvis, wtkern, subgrid_size, margin, winc)                        	
+	# Fill a hermitian conjugated part of the uv_grid plane
+        wtowers.make_hermitian_func(uvgrid, grid_size)
     	# Create a dirty image and show 
-    	uvgrid = uvgrid.reshape((grid_size,grid_size))
-    	img = numpy.fft.fft2(numpy.fft.fftshift(uvgrid))
-    	img = numpy.fft.fftshift(img)
-    	dirty = numpy.real(img)
-    	return dirty
+        uvgrid = uvgrid.reshape((grid_size,grid_size))
+        img = numpy.fft.fft2(numpy.fft.fftshift(uvgrid))
+        img = numpy.fft.fftshift(img)
+        dirty = numpy.real(img)
+        return dirty
 
-    def dirty2vis(dirty, grid_size, theta, wtvis):
+    def dirty2vis(dirty, grid_size, theta, wtvis, wtkern=None, subgrid_size=None, margin=None, winc=None):
     	# 1. Make uvgrid
-    	uvgrid = numpy.fft.ifft2(numpy.fft.fftshift(dirty))
-    	uvgrid = numpy.fft.fftshift(uvgrid)
+        uvgrid = numpy.fft.ifft2(numpy.fft.fftshift(dirty))
+        uvgrid = numpy.fft.fftshift(uvgrid)
     	# 2. Make degridding
-    	flops = wtowers.degrid_simple_func(wtvis,uvgrid.reshape((grid_size*grid_size)),grid_size, theta)
+        if wtkern is None:
+             # Simple degridding
+             flops = wtowers.degrid_simple_func(wtvis,uvgrid.reshape((grid_size*grid_size)),grid_size, theta)
+        else:
+             if subgrid_size == None or margin == None or winc == None:
+                  # W-projection degridding
+                  flops = wtowers.degrid_wprojection_func(wtvis,uvgrid.reshape((grid_size*grid_size)),grid_size, theta, wtkern)
+             else:
+                  # W-towers degridding
+                  flops = wtowers.degrid_wtowers_func(wtvis,uvgrid.reshape((grid_size*grid_size)),grid_size, theta, wtkern, subgrid_size, margin, winc)                        	
     	# 3. Return wtvis
-    	return wtvis
+        return wtvis
 
 
-    def predict_wt(bvis: BlockVisibility, model: Image, **kwargs) -> \
+    def gcf2wkern(gcfcf, wtkern):
+    	# Get data and metadata from the input gcfcf
+    	plane_count,wplanes,wmin,wmax,wstep,size_y,size_x,oversampling = convert_kernel_to_list(gcfcf)
+    	# Allocate memory for wtkern structure
+    	status = wtowers.wkernel_allocate_func(wtkern, plane_count,size_x,size_y)
+    	# Copy the rest of the metadata to wtkern
+    	wtkern.w_min = wmin[0]
+    	wtkern.w_max = wmax[0]
+    	wtkern.w_step = wstep
+    	wtkern.oversampling = oversampling
+    	# Copy w-kernels into wtkern.kern_by_w
+    	for i in range(plane_count):
+        	wtkern.kern_by_w[i].w = wplanes[i][0][0]
+        	for iy in range(size_y):
+            		for ix in range(size_x):
+                		idx = ix + iy*size_x
+                		wtkern.kern_by_w[i].data[2*idx]   = numpy.real(wplanes[i][1][ix][iy])
+                		wtkern.kern_by_w[i].data[2*idx+1] = numpy.imag(wplanes[i][1][ix][iy])
+    	return wtkern
+
+
+    def predict_wt(bvis: BlockVisibility, model: Image, gcfcf=None, **kwargs) -> \
             BlockVisibility:
         """ Predict using convolutional degridding.
         
@@ -64,6 +104,11 @@ try:
             return bvis
 
         newbvis = copy_visibility(bvis, zero=True)
+
+        # Read wtowers-related parameters
+        subgrid_size= get_parameter(kwargs, "subgrid_size")
+        margin      = get_parameter(kwargs, "margin")
+        winc        = get_parameter(kwargs, "winc")        
         
         # Create an empty vis_data structure
         wtvis = wtowers.VIS_DATA()
@@ -93,6 +138,12 @@ try:
         # Fill stats
         status = wtowers.fill_stats_func(wtvis)
         
+	# Fill wkern structure if gcfcf is provided
+        wtkern = None
+        if gcfcf is not None:
+             wtkern = wtowers.W_KERNEL_DATA()
+             wtkern = gcf2wkern(gcfcf, wtkern)       
+
         # Extracting data from BlockVisibility
         freq = bvis.frequency  # frequency, Hz
         nrows, nants, _, vnchan, vnpol = bvis.vis.shape
@@ -130,7 +181,7 @@ try:
                 # Fill the frequency
                 for ibl in range(wtvis.bl_count):
                     wtvis.bl[ibl].freq[0] = freq[vchan]
-                wtvis = dirty2vis(model.data[imchan, vpol, :, :].T.astype(numpy.float64), grid_size, theta, wtvis)
+                wtvis = dirty2vis(model.data[imchan, vpol, :, :].T.astype(numpy.float64), grid_size, theta, wtvis, wtkern=wtkern, subgrid_size=subgrid_size, margin=margin, winc=winc)
                 
                 
                 # Fill the vis and frequency data in wtvis
@@ -148,7 +199,7 @@ try:
         return shift_vis_to_image(newbvis, model, tangent=True, inverse=True)
 
     
-    def invert_wt(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True,
+    def invert_wt(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True, gcfcf=None,
                   **kwargs) -> (Image, numpy.ndarray):
         """ Invert using py-wtowers module
         
@@ -171,12 +222,10 @@ try:
 
         im = copy_image(model)
 
-        #ng-related######
-        #nthreads = get_parameter(kwargs, "threads", 4)
-        #epsilon = get_parameter(kwargs, "epsilon", 1e-12)
-        #do_wstacking = get_parameter(kwargs, "do_wstacking", True)
-        #verbosity = get_parameter(kwargs, "verbosity", 0)
-        ##################
+        # Read wtowers-related parameters
+        subgrid_size= get_parameter(kwargs, "subgrid_size")
+        margin      = get_parameter(kwargs, "margin")
+        winc        = get_parameter(kwargs, "winc")        
         
         sbvis = copy_visibility(bvis)
         sbvis = shift_vis_to_image(sbvis, im, tangent=True, inverse=False)
@@ -209,6 +258,12 @@ try:
         # Fill stats
         status = wtowers.fill_stats_func(wtvis)
         
+	# Fill wkern structure if gcfcf is provided
+        wtkern = None
+        if gcfcf is not None:
+             wtkern = wtowers.W_KERNEL_DATA()
+             wtkern = gcf2wkern(gcfcf, wtkern)       
+
         vis = bvis.vis
         
         freq = sbvis.frequency  # frequency, Hz
@@ -287,7 +342,7 @@ try:
                 status = wtowers.fill_stats_func(wtvis)
                 
                 # Get dirty image for this frequency
-                dirty = vis2dirty(grid_size, theta, wtvis)
+                dirty = vis2dirty(grid_size, theta, wtvis, wtkern=wtkern, subgrid_size=subgrid_size, margin=margin, winc=winc)
                 
                 #dirty = ng.ms2dirty(
                 #    fuvw, freq[vchan:vchan+1], ms_1d, wgt_1d,
