@@ -23,7 +23,8 @@ import warnings
 from typing import Union, List
 
 import numpy
-from astropy.coordinates import SkyCoord
+from astropy.time import Time
+from astropy.coordinates import Angle
 
 from rascil.data_models.memory_data_models import BlockVisibility, Visibility, \
     QA
@@ -571,3 +572,34 @@ def convert_blockvisibility_to_stokesI(vis):
                            integration_time=vis.integration_time,
                            polarisation_frame=polarisation_frame,
                            source=vis.source, meta=vis.meta)
+
+
+def calculate_blockvisibility_hourangles(bvis, direction=None):
+    """ Return hour angles for a BlockVisibility
+
+    :param bvis:
+    :param Direction of source
+    :return:
+    """
+    if direction is None:
+        direction = bvis.phasecentre
+
+    from astroplan import Observer
+    site = Observer(location=bvis.configuration.location)
+    utc = Time(bvis.time / 86400.0, format='mjd', scale='utc')
+    return site.target_hour_angle(utc, direction).wrap_at('180d')
+
+def calculate_blockvisibility_azel(bvis, direction=None):
+    """ Return az el for a BlockVisibility
+
+    :param bvis:
+    :param direction:
+    :return:
+    """
+    if direction is None:
+        direction = bvis.phasecentre
+
+    site = Observer(location=bvis.configuration.location)
+    utc = Time(bvis.time / 86400.0, format='mjd', scale='utc')
+    altaz = site.altaz(utc, direction)
+    return altaz.az.wrap_at('180d'), altaz.alt
