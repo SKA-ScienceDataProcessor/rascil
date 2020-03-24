@@ -218,7 +218,7 @@ def convert_kernel_to_list(gcfcf):
     size_x = nx * oversampling
     wplanes = list()
     for wplane in range(nw):
-        w = cf.grid_wcs.sub([4]).wcs_pix2world(wplane, 0)
+        w = cf.grid_wcs.sub([5]).wcs_pix2world(wplane, 0)
         wslice = numpy.zeros([size_y, size_x], dtype='complex')
         for y in range(ny):
             for x in range(ny):
@@ -239,8 +239,8 @@ def convert_kernel_to_list(gcfcf):
     # double w_min, w_max, w_step;
     # int size_x, size_y;
     # int oversampling;
-    wmin = cf.grid_wcs.sub([4]).wcs_pix2world(0, 0)
-    wmax = cf.grid_wcs.sub([4]).wcs_pix2world(nw - 1, 0)
+    wmin = cf.grid_wcs.sub([5]).wcs_pix2world(0, 0)
+    wmax = cf.grid_wcs.sub([5]).wcs_pix2world(nw - 1, 0)
     wstep = cf.grid_wcs.wcs.cdelt[4]
 
     return (nw, wplanes, wmin, wmax, wstep, size_y, size_x, oversampling)

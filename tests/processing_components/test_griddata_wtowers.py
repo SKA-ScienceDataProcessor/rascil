@@ -34,7 +34,7 @@ class TestGridDataKernels(unittest.TestCase):
 
     def test_fill_wterm_to_list(self):
         gcfcf = create_awterm_convolutionfunction(self.image, make_pb=None, nw=201, wstep=8.0, oversampling=8,
-                                                  support=60, use_aaf=True)
+                                                  support=30, use_aaf=True)
 
         wtowers = convert_kernel_to_list(gcfcf)
         print(wtowers)
@@ -43,7 +43,7 @@ class TestGridDataKernels(unittest.TestCase):
         make_pb = functools.partial(create_pb_generic, diameter=35.0, blockage=0.0, use_local=False)
         pb = make_pb(self.image)
         gcfcf = create_awterm_convolutionfunction(self.image, make_pb=make_pb, nw=201, wstep=8, oversampling=8,
-                                                  support=60, use_aaf=True)
+                                                  support=30, use_aaf=True)
         wtowers = convert_kernel_to_list(gcfcf)
         print(wtowers)
 
