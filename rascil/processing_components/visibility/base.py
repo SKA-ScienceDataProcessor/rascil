@@ -15,10 +15,8 @@ import logging
 import re
 from typing import Union
 
-from astroplan import Observer
-import astropy.constants as constants
 import numpy
-from astropy import units as u
+from astropy import units as u, constants as constants
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
 from astropy.time import Time
@@ -136,6 +134,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
 
     # Do each hour angle in turn
     row = 0
+    from astroplan import Observer
     site = Observer(config.location)
     stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
     if stime.masked:
@@ -273,6 +272,7 @@ def create_blockvisibility(config: Configuration,
 
     # Do each hour angle in turn
     itime = 0
+    from astroplan import Observer
     site = Observer(config.location)
     stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
     if stime.masked:

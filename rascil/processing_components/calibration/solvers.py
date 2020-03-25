@@ -68,36 +68,44 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
             x = numpy.sum((pointvis.vis[vis_rows] * pointvis.weight[vis_rows])*(1-pointvis.flags[vis_rows]), axis=0)
             xwt = numpy.sum(pointvis.weight[vis_rows]*(1-pointvis.flags[vis_rows]), axis=0)
             mask = numpy.abs(xwt) > 0.0
-            x_shape = x.shape
-            x[mask] = x[mask] / xwt[mask]
-            x[~mask] = 0.0
-            x = x.reshape(x_shape)
-            
-            if vis.npol > 1:
-                if crosspol:
-                    gt.data['gain'][row, ...], gt.data['weight'][row, ...], gt.data['residual'][row, ...] = \
-                        solve_antenna_gains_itsubs_matrix(gt.data['gain'][row, ...], gt.data['weight'][row, ...],
-                                                          x, xwt, phase_only=phase_only, niter=niter,
-                                                          tol=tol)
+            if numpy.sum(mask) > 0:
+                x_shape = x.shape
+                x[mask] = x[mask] / xwt[mask]
+                x[~mask] = 0.0
+                xwt[mask] = xwt[mask] / numpy.max(xwt[mask])
+                x = x.reshape(x_shape)
+                
+                if vis.npol > 1:
+                    if crosspol:
+                        gt.data['gain'][row, ...], gt.data['weight'][row, ...], gt.data['residual'][row, ...] = \
+                            solve_antenna_gains_itsubs_matrix(gt.data['gain'][row, ...], gt.data['weight'][row, ...],
+                                                              x, xwt, phase_only=phase_only, niter=niter,
+                                                              tol=tol)
+                    else:
+                        gt.data['gain'][row, ...], gt.data['weight'][row, ...], gt.data['residual'][row, ...] = \
+                            solve_antenna_gains_itsubs_vector(gt.data['gain'][row, ...], gt.data['weight'][row, ...],
+                                                              x, xwt, phase_only=phase_only, niter=niter,
+                                                              tol=tol)
+                
                 else:
-                    gt.data['gain'][row, ...], gt.data['weight'][row, ...], gt.data['residual'][row, ...] = \
-                        solve_antenna_gains_itsubs_vector(gt.data['gain'][row, ...], gt.data['weight'][row, ...],
+                    gt.data['gain'][row, ...], gt.data['weight'][row, ...], \
+                    gt.data['residual'][row, ...] = \
+                        solve_antenna_gains_itsubs_scalar(gt.data['gain'][row, ...],
+                                                          gt.data['weight'][row, ...],
                                                           x, xwt, phase_only=phase_only, niter=niter,
                                                           tol=tol)
-            
+                
+                if normalise_gains and not phase_only:
+                    gabs = numpy.average(numpy.abs(gt.data['gain'][row]))
+                    gt.data['gain'][row] /= gabs
             else:
-                gt.data['gain'][row, ...], gt.data['weight'][row, ...], \
-                gt.data['residual'][row, ...] = \
-                    solve_antenna_gains_itsubs_scalar(gt.data['gain'][row, ...],
-                                                      gt.data['weight'][row, ...],
-                                                      x, xwt, phase_only=phase_only, niter=niter,
-                                                      tol=tol)
-            
-            if normalise_gains and not phase_only:
-                gabs = numpy.average(numpy.abs(gt.data['gain'][row]))
-                gt.data['gain'][row] /= gabs
+                gt.data['gain'][row, ...] = 1.0 + 0.0j
+                gt.data['weight'][row, ...] = 0.0
+                gt.data['residual'][row, ...] = 0.0
+
         else:
             log.warning("Gaintable {0}, vis time mismatch {1}".format(gt.time, vis.time))
+
     
     assert isinstance(gt, GainTable), "gt is not a GainTable: %r" % gt
     
