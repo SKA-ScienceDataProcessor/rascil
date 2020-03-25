@@ -232,7 +232,7 @@ class TestPipelineMPC(unittest.TestCase):
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
         assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.612302213476137) < 1e-7, \
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.598727511029446) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)
@@ -292,7 +292,7 @@ class TestPipelineMPC(unittest.TestCase):
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
         assert recovered_mpccal_components[0].name == 'Segment 0', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 1.1383322602852144) < 1e-6, \
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 1.138095494391862) < 1e-6, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)
@@ -349,8 +349,8 @@ class TestPipelineMPC(unittest.TestCase):
 
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
-        assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.84424351572139) < 1e-7, \
+        assert recovered_mpccal_components[0].name == 'Segment 5', recovered_mpccal_components[0].name
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.799342328930813) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)
@@ -406,16 +406,17 @@ class TestPipelineMPC(unittest.TestCase):
 
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
-        assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.844243515677736) < 1e-7, \
+        assert recovered_mpccal_components[0].name == 'Segment 5', recovered_mpccal_components[0].name
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.799342328930813) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)
         gaintables = [th.gaintable for th in self.theta_list]
         newscreen, weights = grid_gaintable_to_screen(self.all_skymodel_noniso_blockvis, gaintables, newscreen)
-        if self.persist: export_image_to_fits(newscreen, rascil_path('test_results/test_mpccal_no_edge_screen.fits'))
-        if self.persist: export_image_to_fits(weights,
-                                              rascil_path('test_results/test_mpccal_no_edge_screenweights.fits'))
+        if self.persist:
+            export_image_to_fits(newscreen, rascil_path('test_results/test_mpccal_no_edge_screen.fits'))
+        if self.persist:
+            export_image_to_fits(weights, rascil_path('test_results/test_mpccal_no_edge_screenweights.fits'))
 
         rsexecute.close()
 
@@ -464,7 +465,7 @@ class TestPipelineMPC(unittest.TestCase):
 
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
-        assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
+        assert recovered_mpccal_components[0].name == 'Segment 5', recovered_mpccal_components[0].name
         assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.84424351572139) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
 
