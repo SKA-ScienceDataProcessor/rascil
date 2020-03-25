@@ -24,7 +24,7 @@ from typing import Union, List
 
 import numpy
 from astropy.time import Time
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, SkyCoord
 
 from rascil.data_models.memory_data_models import BlockVisibility, Visibility, \
     QA
