@@ -60,8 +60,8 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
     :returns: Generator of images
 
     See also
-        :py:func:`rascil.processing_components.image.image_gather_facets`
-        :py:func:`rascil.processing_components.image.image_scatter_facets`
+        :py:func:`rascil.processing_components.image.gather_scatter.image_gather_facets`
+        :py:func:`rascil.processing_components.image.gather_scatter.image_scatter_facets`
     """
 
     assert image_is_canonical(im)
@@ -175,8 +175,8 @@ def image_channel_iter(im: Image, subimages=1) -> collections.abc.Iterable:
     :returns: Generator of images
 
     See also
-        :py:func:`rascil.processing_components.image.image_gather_channels`
-        :py:func:`rascil.processing_components.image.image_scatter_channels`
+        :py:func:`rascil.processing_components.image.gather_scatter.image_gather_channels`
+        :py:func:`rascil.processing_components.image.gather_scatter.image_scatter_channels`
     """
 
     assert image_is_canonical(im)

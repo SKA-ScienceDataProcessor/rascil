@@ -56,8 +56,10 @@ import logging
 
 import numpy
 
-from rascil.processing_components.visibility import convert_visibility_to_blockvisibility, convert_blockvisibility_to_visibility
-from rascil.processing_components.calibration.operations import apply_gaintable, create_gaintable_from_blockvisibility, qa_gaintable
+from rascil.processing_components.visibility import convert_visibility_to_blockvisibility, \
+    convert_blockvisibility_to_visibility
+from rascil.processing_components.calibration.operations import apply_gaintable, \
+    create_gaintable_from_blockvisibility, qa_gaintable
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.processing_components.calibration.solvers import solve_gaintable
 

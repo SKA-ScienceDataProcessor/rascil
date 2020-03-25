@@ -18,7 +18,7 @@ from rascil.data_models.data_model_helpers import export_gaintable_to_hdf5
 from rascil.workflows.serial.pipelines.pipeline_serial import ical_list_serial_workflow, continuum_imaging_list_serial_workflow
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.image.operations import export_image_to_fits, qa_image, smooth_image
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
 from rascil.processing_components.simulation import create_named_configuration
@@ -36,7 +36,7 @@ log.addHandler(logging.StreamHandler(sys.stdout))
 class TestPipelines(unittest.TestCase):
     
     def setUp(self):
-        
+        numpy.random.seed(180555)
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         self.persist = os.getenv("RASCIL_PERSIST", False)
@@ -62,7 +62,7 @@ class TestPipelines(unittest.TestCase):
         if dopol:
             self.vis_pol = PolarisationFrame('linear')
             self.image_pol = PolarisationFrame('stokesIQUV')
-            f = numpy.array([100.0, 20.0, -10.0, 1.0])
+            f = numpy.array([100.0, 20.0, 0.0, 0.0])
         else:
             self.vis_pol = PolarisationFrame('stokesI')
             self.image_pol = PolarisationFrame('stokesI')
@@ -94,7 +94,7 @@ class TestPipelines(unittest.TestCase):
                                 for freqwin, m in enumerate(self.model_imagelist)]
         
         self.blockvis_list = [
-            predict_skycomponent_visibility(self.blockvis_list[freqwin], self.components_list[freqwin])
+            dft_skycomponent_visibility(self.blockvis_list[freqwin], self.components_list[freqwin])
             for freqwin, _ in enumerate(self.blockvis_list)]
         
         self.model_imagelist = [insert_skycomponent(self.model_imagelist[freqwin], self.components_list[freqwin])
@@ -119,7 +119,7 @@ class TestPipelines(unittest.TestCase):
     
     @unittest.skip("Too expensive to run in Jenkins")
     def test_continuum_imaging_pipeline(self):
-        self.actualSetUp(add_errors=False, zerow=True)
+        self.actualSetUp(add_errors=True, zerow=True)
         clean, residual, restored = \
             continuum_imaging_list_serial_workflow(self.vis_list,
                                                    model_imagelist=self.model_imagelist,
@@ -134,19 +134,48 @@ class TestPipelines(unittest.TestCase):
                                                    restore_facets=4, psfwidth=1.0)
         centre = len(clean) // 2
         if self.persist:
-            export_image_to_fits(clean[centre], '%s/test_pipelines_continuum_imaging_pipeline_serial_clean.fits' % self.dir)
+            export_image_to_fits(clean[centre],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_serial_clean.fits' % self.dir)
             export_image_to_fits(residual[centre][0],
-                                '%s/test_pipelines_continuum_imaging_pipeline_serial_residual.fits' % self.dir)
+                                 '%s/test_pipelines_continuum_imaging_pipeline_serial_residual.fits' % self.dir)
             export_image_to_fits(restored[centre],
-                                '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
-        
+                                 '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
+
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96056316339507) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.4027437530187419) < 1.0e-7, str(qa)
-    
+        assert numpy.abs(qa.data['max'] - 99.96056316339504) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4027437530187405) < 1.0e-7, str(qa)
+
+    @unittest.skip("Too expensive to run in Jenkins")
+    def test_continuum_imaging_pipeline_pol(self):
+        self.actualSetUp(add_errors=True, zerow=True, dopol=True)
+        clean, residual, restored = \
+            continuum_imaging_list_serial_workflow(self.vis_list,
+                                                   model_imagelist=self.model_imagelist,
+                                                   context='2d',
+                                                   algorithm='mmclean', facets=1,
+                                                   scales=[0, 3, 10],
+                                                   niter=1000, fractional_threshold=0.1, threshold=0.1,
+                                                   nmoment=3,
+                                                   nmajor=5, gain=0.1,
+                                                   deconvolve_facets=4, deconvolve_overlap=32,
+                                                   deconvolve_taper='tukey', psf_support=64,
+                                                   restore_facets=4, psfwidth=1.0)
+        centre = len(clean) // 2
+        if self.persist:
+            export_image_to_fits(clean[centre],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_serial_clean.fits' % self.dir)
+            export_image_to_fits(residual[centre][0],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_serial_residual.fits' % self.dir)
+            export_image_to_fits(restored[centre],
+                                 '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
+
+        qa = qa_image(restored[centre])
+        assert numpy.abs(qa.data['max'] - 99.96056316339504) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.40274375301874366) < 1.0e-7, str(qa)
+
     @unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline(self):
-        self.actualSetUp(add_errors=False)
+        self.actualSetUp(add_errors=True)
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 1
         controls['T']['timeslice'] = 'auto'
@@ -174,12 +203,45 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96329339612933) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.39885052949469246) < 1.0e-7, str(qa)
-    
+        assert numpy.abs(qa.data['max'] - 99.96261980728406) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.39938488382834186) < 1.0e-7, str(qa)
+
+    @unittest.skip("Too expensive to run in Jenkins")
+    def test_ical_pipeline_pol(self):
+        self.actualSetUp(add_errors=True, dopol=True)
+        controls = create_calibration_controls()
+        controls['T']['first_selfcal'] = 1
+        controls['T']['timeslice'] = 'auto'
+
+        clean, residual, restored, gt_list = \
+            ical_list_serial_workflow(self.vis_list,
+                                      model_imagelist=self.model_imagelist,
+                                      context='2d',
+                                      algorithm='mmclean', facets=1,
+                                      scales=[0, 3, 10],
+                                      niter=1000, fractional_threshold=0.1, threshold=0.1,
+                                      nmoment=3,
+                                      nmajor=5, gain=0.1,
+                                      deconvolve_facets=4, deconvolve_overlap=32,
+                                      deconvolve_taper='tukey', psf_support=64,
+                                      restore_facets=4, psfwidth=1.0,
+                                      calibration_context='T', controls=controls, do_selfcal=True,
+                                      global_solution=False)
+        centre = len(clean) // 2
+        if self.persist:
+            export_image_to_fits(clean[centre], '%s/test_pipelines_ical_pipeline_serial_clean.fits' % self.dir)
+            export_image_to_fits(residual[centre][0], '%s/test_pipelines_ical_pipeline_serial_residual.fits' % self.dir)
+            export_image_to_fits(restored[centre], '%s/test_pipelines_ical_pipeline_serial_restored.fits' % self.dir)
+            export_gaintable_to_hdf5(gt_list[centre]['T'], '%s/test_pipelines_ical_pipeline_serial_gaintable.hdf5' %
+                                     self.dir)
+
+        qa = qa_image(restored[centre])
+        assert numpy.abs(qa.data['max'] - 88.14505612880944) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 2.0367842796227698) < 1.0e-7, str(qa)
+
     @unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline_global(self):
-        self.actualSetUp(add_errors=False)
+        self.actualSetUp(add_errors=True)
         controls = create_calibration_controls()
         controls['T']['first_selfcal'] = 1
         controls['T']['timeslice'] = 'auto'
@@ -209,8 +271,8 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96167141746571) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.40137591446730764) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.96050610983261) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4022144753225296) < 1.0e-7, str(qa)
 
 
 if __name__ == '__main__':

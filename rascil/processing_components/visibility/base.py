@@ -16,6 +16,7 @@ import re
 from typing import Union
 
 import numpy
+from astroplan import Observer
 from astropy import units as u, constants as constants
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
@@ -25,9 +26,9 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility, \
     Configuration
 from rascil.data_models.polarisation import PolarisationFrame, ReceptorFrame, \
     correlate_polarisation
+from rascil.processing_components.util import skycoord_to_lmn, simulate_point
 from rascil.processing_components.util.coordinate_support import xyz_to_uvw, uvw_to_xyz, \
-    skycoord_to_lmn, \
-    simulate_point, hadec_to_azel
+    hadec_to_azel
 
 log = logging.getLogger('logger')
 
@@ -95,7 +96,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     :return: Visibility
     """
     assert phasecentre is not None, "Must specify phase centre"
-    
+
     if utc_time is None:
         utc_time = Time("2020-01-01T00:00:00", format='isot', scale='utc')
 
@@ -134,7 +135,6 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
 
     # Do each hour angle in turn
     row = 0
-    from astroplan import Observer
     site = Observer(config.location)
     stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
     if stime.masked:
@@ -228,7 +228,7 @@ def create_blockvisibility(config: Configuration,
     :return: BlockVisibility
     """
     assert phasecentre is not None, "Must specify phase centre"
-    
+
     if utc_time is None:
         utc_time = Time("2020-01-01T00:00:00", format='isot', scale='utc')
 
@@ -241,7 +241,7 @@ def create_blockvisibility(config: Configuration,
 
     ntimes = 0
     n_flagged = 0
-    
+
     for iha, ha in enumerate(times):
 
         # Calculate the positions of the antennas as seen for this hour angle
@@ -257,7 +257,7 @@ def create_blockvisibility(config: Configuration,
         log.info('create_visibility: flagged %d/%d times below elevation limit %f (rad)' %
                  (n_flagged, ntimes, elevation_limit))
     else:
-        log.debug('create_visibility: created %d times' % (ntimes))
+        log.debug('create_blockvisibility: created %d times' % (ntimes))
 
     npol = polarisation_frame.npol
     nchan = len(frequency)
@@ -297,7 +297,7 @@ def create_blockvisibility(config: Configuration,
                     ruvw[itime, a2, a1, :] = (ant_pos[a2, :] - ant_pos[a1, :])
                     ruvw[itime, a1, a2, :] = (ant_pos[a1, :] - ant_pos[a2, :])
             if itime > 0:
-                rintegrationtime[itime] = rtimes[itime] - rtimes[itime-1]
+                rintegrationtime[itime] = rtimes[itime] - rtimes[itime - 1]
             itime += 1
 
     if itime > 1:
@@ -390,10 +390,7 @@ def phaserotate_visibility(vis: Union[Visibility, BlockVisibility],
     newvis = copy_visibility(vis)
 
     if isinstance(vis, Visibility):
-        phasor = simulate_point(newvis.uvw, l, m)
-
-        if len(newvis.vis.shape) > len(phasor.shape):
-            phasor = phasor[:, numpy.newaxis]
+        phasor = calculate_visibility_phasor(newphasecentre, newvis)
 
         if inverse:
             newvis.data['vis'] *= phasor
@@ -417,21 +414,13 @@ def phaserotate_visibility(vis: Union[Visibility, BlockVisibility],
                                  dec=newvis.phasecentre.dec.rad)
                 newvis.data['uvw'][...] = \
                     xyz_to_uvw(xyz, ha=-newphasecentre.ra.rad,
-                               dec=newphasecentre.dec.rad)[
-                        ...]
+                               dec=newphasecentre.dec.rad)[...]
             newvis.phasecentre = newphasecentre
         return newvis
 
     elif isinstance(vis, BlockVisibility):
 
-        k = numpy.array(vis.frequency) / constants.c.to('m s^-1').value
-
-        uvw = vis.uvw[..., numpy.newaxis] * k
-        phasor = numpy.ones_like(vis.vis, dtype='complex')
-        _, _, _, nchan, npol = vis.vis.shape
-        for chan in range(nchan):
-            phasor[:, :, :, chan, :] = simulate_point(uvw[..., chan], l, m)[
-                ..., numpy.newaxis]
+        phasor = calculate_blockvisibility_phasor(newphasecentre, newvis)
 
         if inverse:
             newvis.data['vis'] *= phasor
@@ -1084,3 +1073,32 @@ def create_visibility_from_uvfits(fitsname, channum=None, ack=False, antnum=None
             for v in
             create_blockvisibility_from_uvfits(fitsname=fitsname, channum=channum,
                                                ack=ack, antnum=antnum)]
+
+
+def calculate_visibility_phasor(direction, vis):
+    """ Calculate the phasor for a direction for a Visibility
+
+    :param direction:
+    :param vis:
+    :return:
+    """
+    l, m, n = skycoord_to_lmn(direction, vis.phasecentre)
+    phasor = simulate_point(vis.uvw, l, m)[..., numpy.newaxis]
+    return phasor
+
+
+def calculate_blockvisibility_phasor(direction, vis):
+    """ Calculate the phasor for a component for a BlockVisibility
+
+    :param comp:
+    :param vis:
+    :return:
+    """
+    ntimes, nant, _, nchan, npol = vis.vis.shape
+    k = numpy.array(vis.frequency) / constants.c.to('m s^-1').value
+    l, m, n = skycoord_to_lmn(direction, vis.phasecentre)
+    uvw = vis.uvw[..., numpy.newaxis] * k
+    phasor = numpy.ones([ntimes, nant, nant, nchan, npol], dtype='complex')
+    for chan in range(nchan):
+        phasor[:, :, :, chan, :] = simulate_point(uvw[..., chan], l, m)[..., numpy.newaxis]
+    return phasor

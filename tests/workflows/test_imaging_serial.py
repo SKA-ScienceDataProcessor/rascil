@@ -17,7 +17,7 @@ from rascil.workflows.serial.imaging.imaging_serial import zero_list_serial_work
     weight_list_serial_workflow, residual_list_serial_workflow, restore_list_serial_workflow
 from rascil.processing_components import convert_blockvisibility_to_visibility
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image, qa_image
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
     insert_skycomponent
 from rascil.processing_components.griddata import apply_bounding_box_convolutionfunction
@@ -39,7 +39,7 @@ class TestImaging(unittest.TestCase):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         
-        self.persist = os.getenv("RASCIL_PERSIST", False)
+        self.persist = os.getenv("RASCIL_PERSIST", True)
     
     def tearDown(self):
         pass
@@ -104,7 +104,7 @@ class TestImaging(unittest.TestCase):
                                                self.components_list[freqwin])
                            for freqwin, _ in enumerate(self.frequency)]
         
-        self.vis_list = [predict_skycomponent_visibility(self.vis_list[freqwin],
+        self.vis_list = [dft_skycomponent_visibility(self.vis_list[freqwin],
                                                          self.components_list[freqwin])
                          for freqwin, _ in enumerate(self.frequency)]
         centre = self.freqwin // 2
@@ -347,7 +347,7 @@ class TestImaging(unittest.TestCase):
         
         assert numpy.max(numpy.abs(vis_list[centre].vis)) < 1e-15, numpy.max(numpy.abs(vis_list[centre].vis))
         
-        predicted_vis_list = [predict_skycomponent_visibility(vis_list[freqwin], self.components_list[freqwin])
+        predicted_vis_list = [dft_skycomponent_visibility(vis_list[freqwin], self.components_list[freqwin])
                               for freqwin, _ in enumerate(self.frequency)]
         assert numpy.max(numpy.abs(predicted_vis_list[centre].vis)) > 0.0, \
             numpy.max(numpy.abs(predicted_vis_list[centre].vis))

@@ -12,7 +12,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
@@ -93,7 +93,7 @@ class TestImagingNG(unittest.TestCase):
         
         self.model = insert_skycomponent(self.model, self.components)
         
-        self.blockvis = predict_skycomponent_visibility(self.blockvis, self.components)
+        self.blockvis = dft_skycomponent_visibility(self.blockvis, self.components)
 
         # Calculate the model convolved with a Gaussian.
         

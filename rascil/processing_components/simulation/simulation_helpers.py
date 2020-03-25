@@ -22,6 +22,8 @@ from rascil.processing_components.image.operations import show_image
 from rascil.processing_components.imaging.primary_beams import create_pb
 from rascil.processing_components.skycomponent.base import copy_skycomponent
 from rascil.processing_components.skycomponent.operations import apply_beam_to_skycomponent
+from rascil.processing_components.visibility.operations import calculate_blockvisibility_azel, \
+    calculate_blockvisibility_hourangles
 
 log = logging.getLogger('logger')
 
@@ -58,7 +60,7 @@ def find_times_above_elevation_limit(start_times, end_times, location, phasecent
     return valid_start_times
 
 
-def plot_visibility(vis_list, title='Visibility', y='amp', x='uvdist', **kwargs):
+def plot_visibility(vis_list, title='Visibility', y='amp', x='uvdist', plot_file=None, **kwargs):
     """ Standard plot of visibility
 
     :param vis_list:
@@ -77,9 +79,12 @@ def plot_visibility(vis_list, title='Visibility', y='amp', x='uvdist', **kwargs)
     plt.xlabel(x)
     plt.ylabel(y)
     plt.title(title)
-    
+    if plot_file is not None:
+        plt.savefig(plot_file)
+    plt.show(block=False)
 
-def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV coverage', **kwargs):
+
+def plot_uvcoverage(vis_list, ax=None, plot_file=None, title='UV coverage', **kwargs):
     """ Standard plot of uv coverage
 
     :param vis_list:
@@ -106,9 +111,12 @@ def plot_uvcoverage(vis_list, ax=None, plot_file='uvcoverage.png', title='UV cov
     plt.xlabel('U (wavelengths)')
     plt.ylabel('V (wavelengths)')
     plt.title(title)
+    if plot_file is not None:
+        plt.savefig(plot_file)
+    plt.show(block=False)
 
 
-def plot_azel(bvis_list, plot_file='azel.png', **kwargs):
+def plot_azel(bvis_list, plot_file=None, **kwargs):
     """ Standard plot of az el coverage
     
     :param bvis_list:
@@ -118,22 +126,22 @@ def plot_azel(bvis_list, plot_file='azel.png', **kwargs):
     """
     plt.clf()
     r2d = 180.0 / numpy.pi
+
     for ibvis, bvis in enumerate(bvis_list):
-        ha = numpy.pi * bvis.time / 43200.0
-        dec = bvis.phasecentre.dec.rad
-        latitude = bvis.configuration.location.lat.rad
-        az, el = hadec_to_azel(ha, dec, latitude)
+        ha = calculate_blockvisibility_hourangles(bvis).value
+        az, el = calculate_blockvisibility_azel(bvis)
         if ibvis == 0:
-            plt.plot(bvis.time, r2d * az, '.', color='r', label='Azimuth (deg)')
-            plt.plot(bvis.time, r2d * el, '.', color='b', label='Elevation (deg)')
+            plt.plot(ha, az.deg, '.', color='r', label='Azimuth (deg)')
+            plt.plot(ha, el.deg, '.', color='b', label='Elevation (deg)')
         else:
-            plt.plot(bvis.time, r2d * az, '.', color='r')
-            plt.plot(bvis.time, r2d * el, '.', color='b')
-    plt.xlabel('HA (s)')
+            plt.plot(ha, az.deg, '.', color='r')
+            plt.plot(ha, el.deg, '.', color='b')
+    plt.xlabel('HA (hours)')
     plt.ylabel('Angle')
     plt.legend()
     plt.title('Azimuth and elevation vs hour angle')
-    plt.savefig(plot_file)
+    if plot_file is not None:
+        plt.savefig(plot_file)
     plt.show(block=False)
 
 
@@ -157,7 +165,8 @@ def plot_gaintable(gt_list, title='', value='amp', plot_file='gaintable.png', **
             plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.')
     plt.title(title)
     plt.xlabel('Time (s)')
-    plt.savefig(plot_file)
+    if plot_file is not None:
+        plt.savefig(plot_file)
     plt.show(block=False)
 
 def plot_pointingtable(pt_list, plot_file, title, **kwargs):
@@ -186,7 +195,8 @@ def plot_pointingtable(pt_list, plot_file, title, **kwargs):
     plt.title("%s az, el rms %.2f %.2f (arcsec)" % (title, rms_az, rms_el))
     plt.xlabel('Time (s)')
     plt.ylabel('Offset (arcsec)')
-    plt.savefig(plot_file)
+    if plot_file is not None:
+        plt.savefig(plot_file)
     plt.show(block=False)
 
 

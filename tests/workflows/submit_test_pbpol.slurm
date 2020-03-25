@@ -76,7 +76,11 @@ for host in `cat hostfile.$JOBID`; do
 done
 echo "Scheduler and workers now running"
 
-CMD="python ./cluster_test_ritoy.py ${scheduler}:8786 | tee ritoy.log"
+#! We need to tell dask Client (inside python) where the scheduler is running
+export RASCIL_DASK_SCHEDULER=${scheduler}:8786
+echo "Scheduler is running at ${scheduler}"
+
+CMD="python test_primary_beams_pol_rsexecute.py"
 echo "About to execute $CMD"
 
 eval $CMD

@@ -11,7 +11,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
@@ -85,7 +85,7 @@ class TestImaging(unittest.TestCase):
         
         self.model = insert_skycomponent(self.model, self.components)
         
-        self.bvis = predict_skycomponent_visibility(self.bvis, self.components)
+        self.bvis = dft_skycomponent_visibility(self.bvis, self.components)
     
     
     @unittest.skipUnless(run_ms_tests, "requires the 'casacore' module")
