@@ -25,7 +25,7 @@ from rascil.processing_components.imaging.base import predict_2d, invert_2d, cre
 
 log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARN)
 log.addHandler(logging.StreamHandler(sys.stdout))
 
 
