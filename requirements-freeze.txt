@@ -147,7 +147,6 @@ traitlets==4.3.3
 twine==3.1.1
 typing-extensions==3.7.4.1
 urllib3==1.25.8
-vmprof==0.4.15
 wcwidth==0.1.8
 webencodings==0.5.1
 widgetsnbextension==3.5.1
