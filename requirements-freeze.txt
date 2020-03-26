@@ -112,7 +112,6 @@ PyWavelets==1.1.1
 PyYAML==5.3
 pyzmq==18.1.1
 qtconsole==4.6.0
-rascil==0.1.4
 readme-renderer==24.0
 reproject==0.6
 requests==2.22.0
