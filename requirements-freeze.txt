@@ -72,7 +72,6 @@ natsort==7.0.1
 nbconvert==5.6.1
 nbformat==5.0.4
 networkx==2.4
-nifty-gridder==0.0.1
 notebook==6.0.3
 numba==0.48.0
 numpy==1.18.2
