@@ -8,10 +8,11 @@
 #
 name: rascil_env
 channels:
-  - astropy>=4.0
   - defaults
   - conda-forge
 dependencies:
+  - astropy
+  - astroplan
   - numpy
   - scipy
   - scikit-image
@@ -25,7 +26,6 @@ dependencies:
   - jupyter
   - sphinx
   - sphinx_rtd_theme
-  - astropy
   - photutils
   - reproject
   - numba
