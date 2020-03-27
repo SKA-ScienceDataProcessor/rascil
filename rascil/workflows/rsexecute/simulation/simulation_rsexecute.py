@@ -9,6 +9,7 @@ __all__ = ['simulate_list_rsexecute_workflow', 'corrupt_list_rsexecute_workflow'
            'create_standard_mid_simulation_rsexecute_workflow',
            'create_standard_low_simulation_rsexecute_workflow',
            'create_surface_errors_gaintable_rsexecute_workflow',
+           'create_polarisation_gaintable_rsexecute_workflow',
            'create_atmospheric_errors_gaintable_rsexecute_workflow']
 
 import logging
@@ -30,6 +31,7 @@ from rascil.processing_components.simulation import create_configuration_from_MI
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import simulate_gaintable, \
     create_gaintable_from_screen
+from rascil.processing_components.simulation import simulate_gaintable_from_voltage_pattern
 from rascil.processing_components.simulation.pointing import \
     simulate_gaintable_from_pointingtable
 from rascil.processing_components.simulation.pointing import simulate_pointingtable, \
@@ -609,21 +611,15 @@ def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
         vp.data[:, 3, ...] = vp.data[:, 0, ...]
         return vp
 
-    error_pt_list = [rsexecute.execute(create_pointingtable_from_blockvisibility)(bvis)
-                     for bvis in sub_bvis_list]
-    no_error_pt_list = [rsexecute.execute(create_pointingtable_from_blockvisibility)(bvis)
-                        for bvis in sub_bvis_list]
-    
     vp_nominal_list = [rsexecute.execute(find_vp_nominal)(band) for bv in sub_bvis_list]
     vp_actual_list = [rsexecute.execute(find_vp_actual)(band) for bv in sub_bvis_list]
     
     # Create the gain tables, one per Visibility and per component
-    no_error_gt_list = [rsexecute.execute(simulate_gaintable_from_pointingtable)
-                        (bvis, sub_components, no_error_pt_list[ibv],
-                         vp_nominal_list[ibv], use_radec=use_radec)
+    no_error_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
+                        (bvis, sub_components, vp_nominal_list[ibv], use_radec=use_radec)
                         for ibv, bvis in enumerate(sub_bvis_list)]
-    error_gt_list = [rsexecute.execute(simulate_gaintable_from_pointingtable)
-                     (bvis, sub_components, error_pt_list[ibv], vp_actual_list[ibv],
+    error_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
+                     (bvis, sub_components, vp_actual_list[ibv],
                       use_radec=use_radec)
                      for ibv, bvis in enumerate(sub_bvis_list)]
     if show:
