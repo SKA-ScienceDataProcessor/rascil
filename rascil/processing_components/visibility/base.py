@@ -16,7 +16,6 @@ import re
 from typing import Union
 
 import numpy
-from astroplan import Observer
 from astropy import units as u, constants as constants
 from astropy.coordinates import SkyCoord
 from astropy.io import fits
