@@ -72,10 +72,10 @@ def tapered_disk(r, radius, blockage=0.0, taper='gaussian', edge=1.0):
     return result
 
 
-def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=True):
+def create_vp(model=None, telescope='MID', pointingcentre=None, padding=4, use_local=True):
     """ Create an image containing the dish voltage pattern for a number of cases
 
-    :param model: Template image
+    :param model: Template image (Can be None for some cases)
     :param telescope:
     :return: Primary beam image
     """

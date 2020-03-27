@@ -233,7 +233,9 @@ def find_pb_width_null(pbtype, frequency, **kwargs):
 
 
 def create_simulation_components(context, phasecentre, frequency, pbtype, offset_dir, flux_limit,
-                                 pbradius, pb_npixel, pb_cellsize, show=False, fov='10'):
+                                 pbradius, pb_npixel, pb_cellsize, show=False, fov=10,
+                                 polarisation_frame=PolarisationFrame("stokesI"),
+                                 filter_by_primary_beam=True):
     """ Construct components for simulation
     
     :param context:
@@ -267,9 +269,15 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
             dec=(dec + offset[1]) * units.deg,
             frame='icrs', equinox='J2000')
 
-        original_components = [
-            Skycomponent(flux=[[1.0]], direction=odirection, frequency=frequency,
-                         polarisation_frame=PolarisationFrame('stokesI'))]
+        if polarisation_frame.type == "stokesIQUV":
+            original_components = [
+                Skycomponent(flux=[[1.0, 0.0, 0.0, 0.0]], direction=odirection, frequency=frequency,
+                             polarisation_frame=PolarisationFrame('stokesIQUV'))]
+        else:
+            original_components = [
+                Skycomponent(flux=[[1.0]], direction=odirection, frequency=frequency,
+                             polarisation_frame=PolarisationFrame('stokesI'))]
+
 
         offset_direction = odirection
 
@@ -290,10 +298,15 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
                 ra=(ra + offset[0] / numpy.cos(numpy.pi * dec / 180.0)) * units.deg,
                 dec=(dec + offset[1]) * units.deg,
                 frame='icrs', equinox='J2000')
+            if polarisation_frame.type == "stokesIQUV":
+                original_components.append(
+                    Skycomponent(flux=[[1.0, 0.0, 0.0, 0.0]], direction=odirection, frequency=frequency,
+                                 polarisation_frame=PolarisationFrame('stokesIQUV')))
+            else:
+                original_components.append(
+                    Skycomponent(flux=[[1.0]], direction=odirection, frequency=frequency,
+                                 polarisation_frame=PolarisationFrame('stokesI')))
 
-            original_components.append(
-                Skycomponent(flux=[[1.0]], direction=odirection, frequency=frequency,
-                             polarisation_frame=PolarisationFrame('stokesI')))
         for o in original_components:
             print(o)
 
@@ -311,11 +324,16 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
         offset_direction = SkyCoord(ra=(ra + offset[0] / numpy.cos(numpy.pi * dec / 180.0)) * units.deg,
                                     dec=(dec + offset[1]) * units.deg,
                                     frame='icrs', equinox='J2000')
-        
-        original_components = [Skycomponent(flux=[[1.0]], direction=offset_direction, frequency=frequency,
-                                            polarisation_frame=PolarisationFrame('stokesI'))]
-    
-    
+
+        if polarisation_frame.type == "stokesIQUV":
+            original_components = [
+                Skycomponent(flux=[[1.0, 0.0, 0.0, 0.0]], direction=offset_direction, frequency=frequency,
+                             polarisation_frame=PolarisationFrame('stokesIQUV'))]
+        else:
+            original_components = [
+                Skycomponent(flux=[[1.0]], direction=offset_direction, frequency=frequency,
+                             polarisation_frame=PolarisationFrame('stokesI'))]
+
     else:
         offset = [0.0, 0.0]
         # Make a skymodel from S3
@@ -326,38 +344,39 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
         
         original_components = create_test_skycomponents_from_s3(flux_limit=flux_limit / 100.0,
                                                                 phasecentre=phasecentre,
-                                                                polarisation_frame=PolarisationFrame("stokesI"),
+                                                                polarisation_frame=polarisation_frame,
                                                                 frequency=numpy.array(frequency),
                                                                 radius=pbradius,
                                                                 fov=fov)
         log.info("create_simulation_components: %d components before application of primary beam" %
               (len(original_components)))
         
-        pbmodel = create_image(npixel=pb_npixel,
-                               cellsize=pb_cellsize,
-                               phasecentre=phasecentre,
-                               frequency=frequency,
-                               polarisation_frame=PolarisationFrame(
-                                   "stokesI"))
-        pb = create_pb(pbmodel, "MID_GAUSS", pointingcentre=phasecentre, use_local=False)
-        pb_applied_components = [copy_skycomponent(c) for c in original_components]
-        pb_applied_components = apply_beam_to_skycomponent(pb_applied_components, pb)
-        filtered_components = []
-        for icomp, comp in enumerate(pb_applied_components):
-            if comp.flux[0, 0] > flux_limit:
-                total_flux += comp.flux[0, 0]
-                if abs(comp.flux[0, 0]) > max_flux:
-                    max_flux = abs(comp.flux[0, 0])
-                filtered_components.append(original_components[icomp])
-        log.info("create_simulation_components: %d components > %.3f Jy after application of primary beam" %
-              (len(filtered_components), flux_limit))
-        log.info("create_simulation_components: Strongest components is %g (Jy)" % max_flux)
-        log.info("create_simulation_components: Total flux in components is %g (Jy)" % total_flux)
-        original_components = [copy_skycomponent(c) for c in filtered_components]
-        if show:
-            plt.clf()
-            show_image(pb, components=original_components)
-            plt.show(block=False)
+        if filter_by_primary_beam:
+            pbmodel = create_image(npixel=pb_npixel,
+                                   cellsize=pb_cellsize,
+                                   phasecentre=phasecentre,
+                                   frequency=frequency,
+                                   polarisation_frame=PolarisationFrame(
+                                       "stokesI"))
+            pb = create_pb(pbmodel, "MID_GAUSS", pointingcentre=phasecentre, use_local=False)
+            pb_applied_components = [copy_skycomponent(c) for c in original_components]
+            pb_applied_components = apply_beam_to_skycomponent(pb_applied_components, pb)
+            filtered_components = []
+            for icomp, comp in enumerate(pb_applied_components):
+                if comp.flux[0, 0] > flux_limit:
+                    total_flux += comp.flux[0, 0]
+                    if abs(comp.flux[0, 0]) > max_flux:
+                        max_flux = abs(comp.flux[0, 0])
+                    filtered_components.append(original_components[icomp])
+            log.info("create_simulation_components: %d components > %.3f Jy after application of primary beam" %
+                  (len(filtered_components), flux_limit))
+            log.info("create_simulation_components: Strongest components is %g (Jy)" % max_flux)
+            log.info("create_simulation_components: Total flux in components is %g (Jy)" % total_flux)
+            original_components = [copy_skycomponent(c) for c in filtered_components]
+            if show:
+                plt.clf()
+                show_image(pb, components=original_components)
+                plt.show(block=False)
         
         log.info("create_simulation_components: Created %d components" % len(original_components))
         # Primary beam points to the phasecentre
