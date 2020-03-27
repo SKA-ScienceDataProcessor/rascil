@@ -42,8 +42,10 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
 
     nchan, npol, ny, nx = vp.data.shape
 
-    real_spline = RectBivariateSpline(range(ny), range(nx), vp.data[0, 0, ...].real, kx=order, ky=order)
-    imag_spline = RectBivariateSpline(range(ny), range(nx), vp.data[0, 0, ...].imag, kx=order, ky=order)
+    real_spline = [RectBivariateSpline(range(ny), range(nx), vp.data[0, pol, ...].real, kx=order, ky=order)
+                   for pol in range(npol)]
+    imag_spline = [RectBivariateSpline(range(ny), range(nx), vp.data[0, pol, ...].imag, kx=order, ky=order)
+                   for pol in range(npol)]
 
     if not use_radec:
         assert isinstance(vis, BlockVisibility)
@@ -76,7 +78,7 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
 
                 if elevation_centre >= elevation_limit:
 
-                    antgain = numpy.zeros([nant], dtype='complex')
+                    antgain = numpy.zeros([nant, npol], dtype='complex')
 
                     # Calculate the azel of this component
                     azimuth_comp, elevation_comp = calculate_blockvisibility_azel(v, comp.direction)
@@ -96,22 +98,23 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                         wcs_azel.wcs.ctype[0] = 'RA---SIN'
                         wcs_azel.wcs.ctype[1] = 'DEC--SIN'
 
-                        worldloc = [azimuth_comp * r2d, elevation_comp * r2d,
-                                    vp.wcs.wcs.crval[2], vp.wcs.wcs.crval[3]]
-                        try:
-                            pixloc = wcs_azel.sub(2).wcs_world2pix([worldloc[:2]], 1)[0]
-                            assert pixloc[0] > 2
-                            assert pixloc[0] < nx - 3
-                            assert pixloc[1] > 2
-                            assert pixloc[1] < ny - 3
-                            gain = real_spline.ev(pixloc[1], pixloc[0]) + 1j * imag_spline(pixloc[1], pixloc[0])
-                            antgain[ant] = 1.0 / (scale * gain)
-                            number_good += 1
-                        except (ValueError, AssertionError):
-                            number_bad += 1
-                            antgain[ant] = 1.0
+                        for pol in range(npol):
+                            worldloc = [azimuth_comp * r2d, elevation_comp * r2d,
+                                        vp.wcs.wcs.crval[2], vp.wcs.wcs.crval[3]]
+                            try:
+                                pixloc = wcs_azel.sub(2).wcs_world2pix([worldloc[:2]], 1)[0]
+                                assert pixloc[0] > 2
+                                assert pixloc[0] < nx - 3
+                                assert pixloc[1] > 2
+                                assert pixloc[1] < ny - 3
+                                gain = real_spline[pol].ev(pixloc[1], pixloc[0]) + 1j * imag_spline[pol].ev(pixloc[1], pixloc[0])
+                                antgain[ant, pol] = scale * gain
+                                number_good += 1
+                            except (ValueError, AssertionError):
+                                number_bad += 1
+                                antgain[ant, pol] = 1.0
 
-                        gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, numpy.newaxis, numpy.newaxis]
+                        gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
                         gaintables[icomp].phasecentre = comp.direction
                 else:
                     gaintables[icomp].gain[...] = 1.0 + 0.0j
@@ -143,8 +146,8 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
             pointing_ha = pt.pointing[pt_rows]
 
             for icomp, comp in enumerate(sc):
-                antgain = numpy.zeros([nant], dtype='complex')
-                antwt = numpy.zeros([nant])
+                antgain = numpy.zeros([nant, npol], dtype='complex')
+                antwt = numpy.zeros([nant, pol])
                 # Calculate the location of the component in AZELGEO, then add the pointing offset
                 # for each antenna
                 ra_comp = comp.direction.ra.rad
@@ -160,25 +163,31 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                     wcs_azel.wcs.ctype[0] = 'RA---SIN'
                     wcs_azel.wcs.ctype[1] = 'DEC--SIN'
 
-                    worldloc = [ra_comp * r2d, dec_comp * r2d,
-                                vp.wcs.wcs.crval[2], vp.wcs.wcs.crval[3]]
-                    try:
-                        pixloc = wcs_azel.sub(2).wcs_world2pix([worldloc[:2]], 1)[0]
-                        assert pixloc[0] > 2
-                        assert pixloc[0] < nx - 3
-                        assert pixloc[1] > 2
-                        assert pixloc[1] < ny - 3
-                        gain = real_spline.ev(pixloc[1], pixloc[0]) + 1j * imag_spline(pixloc[1], pixloc[0])
-                        antgain[ant] = 1.0 / (scale * gain)
-                        antwt[ant] = 1.0
-                        number_good += 1
-                    except (ValueError, AssertionError):
-                        number_bad += 1
-                        antgain[ant] = 1e15
-                        antwt[ant] = 0.0
+                    for pol in range(npol):
+                        worldloc = [ra_comp * r2d, dec_comp * r2d,
+                                    vp.wcs.wcs.crval[2], vp.wcs.wcs.crval[3]]
+                        try:
+                            pixloc = wcs_azel.sub(2).wcs_world2pix([worldloc[:2]], 1)[0]
+                            assert pixloc[0] > 2
+                            assert pixloc[0] < nx - 3
+                            assert pixloc[1] > 2
+                            assert pixloc[1] < ny - 3
+                            gain = real_spline[pol].ev(pixloc[1], pixloc[0]) + 1j * imag_spline[pol].ev(pixloc[1], pixloc[0])
+                            if numpy.abs(gain) > 0.0:
+                                antgain[ant, pol] = 1.0 / (scale * gain)
+                                antwt[ant, pol] = 1.0
+                            else:
+                                antgain[ant, pol] = 0.0
+                                antwt[ant, pol] = 0.0
+                            antwt[ant, pol] = 1.0
+                            number_good += 1
+                        except (ValueError, AssertionError):
+                            number_bad += 1
+                            antgain[ant, pol] = 1e15
+                            antwt[ant, pol] = 0.0
 
-                gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, numpy.newaxis, numpy.newaxis]
-                gaintables[icomp].weight[iha, :, :, :] = antwt[:, numpy.newaxis, numpy.newaxis, numpy.newaxis]
+                gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
+                gaintables[icomp].weight[iha, :, :, :] = antwt[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
                 gaintables[icomp].phasecentre = comp.direction
 
     assert number_good > 0, "simulate_gaintable_from_pointingtable: No points inside the voltage pattern image"
