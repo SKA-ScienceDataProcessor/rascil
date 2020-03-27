@@ -1,5 +1,5 @@
 aotools
-astropy>=4.0
+astropy<4.0
 astroplan
 bokeh
 dask

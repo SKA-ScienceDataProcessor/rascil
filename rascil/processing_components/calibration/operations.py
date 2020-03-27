@@ -12,7 +12,7 @@ import logging
 from typing import Union
 
 import numpy.linalg
-from astropy.visualization import time_support
+#from astropy.visualization import time_support
 from astropy.time import Time
 
 from rascil.data_models.memory_data_models import GainTable, BlockVisibility, QA, assert_vis_gt_compatible
@@ -293,9 +293,11 @@ def gaintable_plot(gt: GainTable, cc="T", title='', ants=None, channels=None, la
         labels = ['' for ant in ants]
         
 
-    with time_support(format = 'iso', scale = 'utc'):
+    # with time_support(format = 'iso', scale = 'utc'):
+    if True:
         
-        time_axis = Time(gt.time/86400.0, format='mjd', out_subfmt='str')
+        # time_axis = Time(gt.time/86400.0, format='mjd', out_subfmt='str')
+        time_axis = gt.time / 86400.0
    
         if cc == "B":
 
