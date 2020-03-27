@@ -48,7 +48,7 @@ class TestPointingSimulation(unittest.TestCase):
         rsexecute.set_client(use_dask=True)
         self.persist = True
     
-    def simulation(self, args, time_series='wind', band='B2', context='singlesource', vp_directory='',
+    def simulation(self, args, time_series='wind', band='B2',
                    image_polarisation_frame=PolarisationFrame("stokesI"),
                    vis_polarisation_frame=PolarisationFrame("stokesI")):
         
@@ -94,8 +94,6 @@ class TestPointingSimulation(unittest.TestCase):
                                                                        shared_directory,
                                                                        polarisation_frame=vis_polarisation_frame)
         future_bvis_list = rsexecute.persist(bvis_graph)
-        vis_graph = [rsexecute.execute(convert_blockvisibility_to_visibility)(bv) for bv in future_bvis_list]
-        future_vis_list = rsexecute.persist(vis_graph, sync=True)
         
         # We need the HWHM of the primary beam, and the location of the nulls
         HWHM_deg, null_az_deg, null_el_deg = find_pb_width_null(pbtype, frequency)
@@ -104,7 +102,7 @@ class TestPointingSimulation(unittest.TestCase):
         
         FOV_deg = 8.0 * 1.36e9 / frequency[0]
         
-        advice_list = rsexecute.execute(advise_wide_field)(future_vis_list[0], guard_band_image=1.0, delA=0.02,
+        advice_list = rsexecute.execute(advise_wide_field)(future_bvis_list[0], guard_band_image=1.0, delA=0.02,
                                                            verbose=False)
         advice = rsexecute.compute(advice_list, sync=True)
         pb_npixel = 1024
@@ -117,7 +115,9 @@ class TestPointingSimulation(unittest.TestCase):
                                                                              pbtype, offset_dir, flux_limit,
                                                                              pbradius * HWHM, pb_npixel, pb_cellsize,
                                                                              polarisation_frame=image_polarisation_frame,
-                                                                             filter_by_primary_beam=False)
+                                                                             filter_by_primary_beam=True)
+        
+        print("There are {} components".format(len(original_components)))
         
         vp_list = [rsexecute.execute(create_image_from_visibility)(bv, npixel=pb_npixel, frequency=frequency,
                                                                    nchan=nfreqwin, cellsize=pb_cellsize,
@@ -128,19 +128,10 @@ class TestPointingSimulation(unittest.TestCase):
                    for vp in vp_list]
         future_vp_list = rsexecute.persist(vp_list)
         
-        # Make one image per component
-        future_model_list = [rsexecute.execute(create_image_from_visibility)(future_vis_list[0], npixel=npixel,
-                                                                             frequency=frequency,
-                                                                             nchan=nfreqwin, cellsize=cellsize,
-                                                                             phasecentre=offset_direction,
-                                                                             polarisation_frame=image_polarisation_frame)
-                             for i, _ in enumerate(original_components)]
-        
         a2r = numpy.pi / (3600.0 * 1800)
         
-        no_error_gtl = None
-        error_gtl = None
         if time_series == '':
+            # Random pointing errors
             global_pointing_error = global_pe
             static_pointing_error = static_pe
             pointing_error = dynamic_pe
@@ -154,9 +145,8 @@ class TestPointingSimulation(unittest.TestCase):
                                                                     global_pointing_error=a2r * global_pointing_error,
                                                                     seed=seed,
                                                                     show=False, basename=basename)
-        
         elif time_series == 'wind':
-            
+            # Wind-induced pointing errors
             no_error_gtl, error_gtl = \
                 create_pointing_errors_gaintable_rsexecute_workflow(future_bvis_list, original_components,
                                                                     sub_vp_list=future_vp_list,
@@ -166,17 +156,20 @@ class TestPointingSimulation(unittest.TestCase):
                                                                     seed=seed,
                                                                     show=False, basename=basename)
         elif time_series == 'gravity':
+            # Dish surface sag due to gravity
             no_error_gtl, error_gtl = \
                 create_surface_errors_gaintable_rsexecute_workflow(band, future_bvis_list, original_components,
                                                                    vp_directory=vp_directory, use_radec=use_radec,
                                                                    show=False, basename=basename)
         elif time_series == 'polarisation':
+            # Polarised beams
             no_error_gtl, error_gtl = \
                 create_polarisation_gaintable_rsexecute_workflow(band, future_bvis_list, original_components,
                                                                  basename=basename, show=True)
         else:
             raise ValueError("Unknown type of error %s" % time_series)
         
+        # Perform uniform weighting
         future_remodel_list = [rsexecute.execute(create_image_from_visibility)(v, npixel=npixel,
                                                                                frequency=frequency,
                                                                                nchan=nfreqwin, cellsize=cellsize,
@@ -187,6 +180,13 @@ class TestPointingSimulation(unittest.TestCase):
         future_bvis_list = weight_list_rsexecute_workflow(future_bvis_list, future_remodel_list)
         
         # Now make all the residual images
+        # Make one image per component
+        future_model_list = [rsexecute.execute(create_image_from_visibility)(future_bvis_list[0], npixel=npixel,
+                                                                             frequency=frequency,
+                                                                             nchan=nfreqwin, cellsize=cellsize,
+                                                                             phasecentre=offset_direction,
+                                                                             polarisation_frame=image_polarisation_frame)
+                             for i, _ in enumerate(original_components)]
         vis_comp_chunk_dirty_list = \
             calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list, original_components,
                                                                   future_model_list,
@@ -214,7 +214,7 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--rmax', type=float, default=2e3, help='Maximum distance of station from centre (m)')
         parser.add_argument('--band', type=str, default='B2', help="Band")
         parser.add_argument('--integration_time', type=float, default=600, help='Integration time (s)')
-        parser.add_argument('--time_range', type=float, nargs=2, default=[-6.0, 6.0], help='Time range in hours')
+        parser.add_argument('--time_range', type=float, nargs=2, default=[-4.0, 4.0], help='Time range in hours')
         
         parser.add_argument('--npixel', type=int, default=1024, help='Number of pixels in image')
         parser.add_argument('--use_natural', type=str, default='True', help='Use natural weighting?')
@@ -226,7 +226,7 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--pbradius', type=float, default=1.0, help='Radius of sources to include (in HWHM)')
         parser.add_argument('--pbtype', type=str, default='MID', help='Primary beam model: MID or MID_GAUSS')
         parser.add_argument('--seed', type=int, default=18051955, help='Random number seed')
-        parser.add_argument('--flux_limit', type=float, default=0.3, help='Flux limit (Jy)')
+        parser.add_argument('--flux_limit', type=float, default=0.01, help='Flux limit (Jy)')
         
         # Control parameters
         parser.add_argument('--use_radec', type=str, default="False", help='Calculate in RADEC (false)?')
@@ -241,7 +241,7 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--serial', type=str, default='False', help='Use serial processing?')
         
         # Simulation parameters
-        parser.add_argument('--time_chunk', type=float, default=1800.0, help="Time for a chunk (s)")
+        parser.add_argument('--time_chunk', type=float, default=8*3600.0, help="Time for a chunk (s)")
         parser.add_argument('--time_series', type=str, default='wind', help="Type of time series")
         parser.add_argument('--global_pe', type=float, nargs=2, default=[0.0, 0.0], help='Global pointing error')
         parser.add_argument('--static_pe', type=float, nargs=2, default=[0.0, 0.0],

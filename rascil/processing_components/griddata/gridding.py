@@ -182,6 +182,7 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
         griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
 
     nrows, nants, _, nvchan, nvpol = vis.vis.shape
+    nichan, nipol, _, _, _ = griddata.data.shape
 
     fvist = vis.flagged_vis.reshape([nrows * nants * nants, nvchan, nvpol]).T
     fwtt = vis.flagged_imaging_weight.reshape([nrows * nants * nants, nvchan, nvpol]).T
@@ -193,6 +194,8 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
     du = gu // 2
     dv = gv // 2
 
+    sumwt = numpy.zeros([nichan, nipol])
+    
     for vchan in range(nvchan):
         imchan = vis_to_im[vchan]
         pu_grid, pu_offset, pv_grid, pv_offset, pwg_grid, pwg_fraction, pwc_grid, pwc_fraction = \
@@ -211,8 +214,7 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
                 (pv_grid[row] - dv):(pv_grid[row] + dv), \
                 (pu_grid[row] - du):(pu_grid[row] + du)] \
                     += subcf * fvist[pol, vchan, row] * fwtt[pol, vchan, row]
-
-    sumwt = numpy.sum(fwtt[..., :], axis=2).T
+                sumwt[imchan, pol] += fwtt[pol, vchan, row]
 
     cf.data = numpy.conjugate(cf.data)
     return griddata, sumwt
