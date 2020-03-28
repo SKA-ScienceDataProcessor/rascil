@@ -11,14 +11,13 @@ import copy
 import logging
 from typing import Union
 
+import matplotlib.pyplot as plt
 import numpy.linalg
 #from astropy.visualization import time_support
 from astropy.time import Time
 
 from rascil.data_models.memory_data_models import GainTable, BlockVisibility, QA, assert_vis_gt_compatible
 from rascil.data_models.polarisation import ReceptorFrame
-
-import matplotlib.pyplot as plt
 
 log = logging.getLogger('logger')
 
@@ -61,6 +60,7 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
             
             # Lookup the gain for this set of visibilities
             gain = gt.data['gain'][row]
+            cgain = numpy.conjugate(gt.data['gain'][row])
             gainwt = gt.data['weight'][row]
             
             # The shape of the mueller matrix is
@@ -91,32 +91,36 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
                         applied[sub_vis_row, :, :, chan, 0][antantwt == 0.0] = 0.0
             else:
                 
-                smueller = numpy.ones([nant, nant, nchan, nrec ** 2, nrec ** 2], dtype='complex')
-                has_inverse = numpy.zeros([nant, nant, nchan], dtype='bool')
-                for a1 in range(vis.nants - 1):
-                    for a2 in range(a1 + 1, vis.nants):
+                has_inverse_ant = numpy.zeros([nant, nchan], dtype='bool')
+                if inverse:
+                    igain = gain.copy()
+                    cigain = cgain.copy()
+                    for a1 in range(vis.nants):
                         for chan in range(nchan):
-                            if inverse:
-                                try:
-                                    m = numpy.kron(gain[a1, chan, :, :],
-                                                   numpy.conjugate(gain[a2, chan, :, :]))
-                                    smueller[a2, a1, chan] = numpy.linalg.inv(m)
-                                    has_inverse[a2, a1, chan] = True
-                                except numpy.linalg.linalg.LinAlgError:
-                                    has_inverse[a2, a1, chan] = False
-                            else:
-                                smueller[a2, a1, chan] = numpy.kron(gain[a1, chan, :, :],
-                                                                    numpy.conjugate(gain[a2, chan, :, :]))
-                for sub_vis_row in range(original.shape[0]):
-                    for a1 in range(vis.nants - 1):
-                        for a2 in range(a1 + 1, vis.nants):
-                            for chan in range(nchan):
-                                if (not inverse) or has_inverse[a2, a1, chan]:
+                            try:
+                                igain[a1, chan, :, :] = numpy.linalg.inv(gain[a1, chan, :, :])
+                                cigain[a1, chan, :, :] = numpy.conjugate(igain[a1, chan, :, :])
+                                has_inverse_ant[a1, chan] = True
+                            except numpy.linalg.linalg.LinAlgError:
+                                has_inverse_ant[a1, chan] = False
+               
+                    for sub_vis_row in range(original.shape[0]):
+                        for a1 in range(vis.nants - 1):
+                            for a2 in range(a1 + 1, vis.nants):
+                                for chan in range(nchan):
+                                    if has_inverse_ant[a1, chan] and has_inverse_ant[a2, chan]:
+                                        cfs = original[sub_vis_row, a2, a1, chan, ...].reshape([2,2])
+                                        applied[sub_vis_row, a2, a1, chan, ...] = \
+                                            (igain[a1, chan, :, :] @ cfs @ cigain[a2, chan, :, :]).reshape([4])
+                else:
+                    for sub_vis_row in range(original.shape[0]):
+                        for a1 in range(vis.nants - 1):
+                            for a2 in range(a1 + 1, vis.nants):
+                                for chan in range(nchan):
+                                    cfs = original[sub_vis_row, a2, a1, chan, ...].reshape([2, 2])
                                     applied[sub_vis_row, a2, a1, chan, ...] = \
-                                        numpy.matmul(smueller[a2, a1, chan], original[sub_vis_row, a2, a1, chan, ...])
-                                else:
-                                    applied[sub_vis_row, a2, a1, chan, ...] = original[sub_vis_row, a2, a1, chan, ...]
-
+                                        (gain[a1, chan, :, :] @ cfs @ cgain[a2, chan, :, :]).reshape([4])
+            
             vis.data['vis'][vis_rows] = applied
     
     return vis
@@ -280,17 +284,18 @@ def gaintable_plot(gt: GainTable, cc="T", title='', ants=None, channels=None, la
     :param kwargs:
     :return:
     """
-
+    
     if ants is None:
         ants = range(gt.nants)
     if channels is None:
         channels = range(gt.nchan)
-        
-
+    
     if gt.configuration is not None:
         labels = [gt.configuration.names[ant] for ant in ants]
     else:
         labels = ['' for ant in ants]
+    
+    with time_support(format='iso', scale='utc'):
         
 
     # with time_support(format = 'iso', scale = 'utc'):
@@ -300,53 +305,53 @@ def gaintable_plot(gt: GainTable, cc="T", title='', ants=None, channels=None, la
         time_axis = gt.time / 86400.0
    
         if cc == "B":
-
+            
             fig, ax = plt.subplots(3, 1, sharex=True)
             
             residual = gt.residual[:, channels, 0, 0]
             ax[0].imshow(residual, cmap=cmap)
             ax[0].set_title("{title} RMS residual {cc}".format(title=title, cc=cc))
             ax[0].set_ylabel('RMS residual (Jy)')
-    
+            
             amp = numpy.abs(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
             ax[1].imshow(amp, cmap=cmap)
             ax[1].set_ylabel('Amplitude')
             ax[1].set_title("{title} Amplitude {cc}".format(title=title, cc=cc))
             ax[1].xaxis.set_tick_params(labelsize='small')
-
+            
             phase = numpy.angle(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
             ax[2].imshow(phase, cmap=cmap)
             ax[2].set_ylabel('Phase (radian)')
             ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
             ax[2].xaxis.set_tick_params(labelsize='small')
-
+        
         else:
-
+            
             fig, ax = plt.subplots(3, 1, sharex=True)
-
+            
             residual = gt.residual[:, channels, 0, 0]
             ax[0].plot(time_axis, residual, '.')
             ax[1].set_ylabel('Residual fit (Jy)')
             ax[0].set_title("{title} Residual {cc}".format(title=title, cc=cc))
-
+            
             for ant in ants:
                 amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
                 ax[1].plot(time_axis[amp[:, 0] > min_amp],
-                              amp[amp[:, 0] > min_amp], '.',
-                              label=labels[ant])
+                           amp[amp[:, 0] > min_amp], '.',
+                           label=labels[ant])
             ax[1].set_ylabel('Amplitude (Jy)')
             ax[1].set_title("{title} Amplitude {cc}".format(title=title, cc=cc))
-
+            
             for ant in ants:
                 amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
                 angle = numpy.angle(gt.gain[:, ant, channels, 0, 0])
                 ax[2].plot(time_axis[amp[:, 0] > min_amp],
-                              angle[amp[:, 0] > min_amp], '.', label=labels[ant])
+                           angle[amp[:, 0] > min_amp], '.', label=labels[ant])
             ax[2].set_ylabel('Phase (rad)')
             ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
             ax[2].xaxis.set_tick_params(labelsize=8)
             plt.xticks(rotation=0)
-    
+            
             if gt.configuration is not None:
                 if len(gt.configuration.names) < label_max:
                     ax[1].legend()
