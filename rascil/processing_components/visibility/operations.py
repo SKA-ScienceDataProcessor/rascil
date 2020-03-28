@@ -23,7 +23,6 @@ import logging
 from typing import Union, List
 
 import numpy
-from astroplan import Observer
 from astropy.time import Time
 from astropy.coordinates import Angle, SkyCoord
 
@@ -510,6 +509,7 @@ def calculate_blockvisibility_hourangles(bvis, direction=None):
     if direction is None:
         direction = bvis.phasecentre
 
+    from astroplan import Observer
     site = Observer(location=bvis.configuration.location)
     utc = Time(bvis.time / 86400.0, format='mjd', scale='utc')
     return site.target_hour_angle(utc, direction).wrap_at('180d')
