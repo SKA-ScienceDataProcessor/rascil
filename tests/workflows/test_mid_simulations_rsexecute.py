@@ -226,7 +226,7 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--pbradius', type=float, default=1.0, help='Radius of sources to include (in HWHM)')
         parser.add_argument('--pbtype', type=str, default='MID', help='Primary beam model: MID or MID_GAUSS')
         parser.add_argument('--seed', type=int, default=18051955, help='Random number seed')
-        parser.add_argument('--flux_limit', type=float, default=0.003, help='Flux limit (Jy)')
+        parser.add_argument('--flux_limit', type=float, default=0.001, help='Flux limit (Jy)')
         
         # Control parameters
         parser.add_argument('--use_radec', type=str, default="False", help='Calculate in RADEC (false)?')
