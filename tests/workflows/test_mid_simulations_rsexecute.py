@@ -165,7 +165,8 @@ class TestPointingSimulation(unittest.TestCase):
             # Polarised beams
             no_error_gtl, error_gtl = \
                 create_polarisation_gaintable_rsexecute_workflow(band, future_bvis_list, original_components,
-                                                                 basename="Polarisation gain table", show=True)
+                                                                 basename="Polarisation gain table",
+                                                                 show=False)
         else:
             raise ValueError("Unknown type of error %s" % time_series)
         
@@ -216,14 +217,14 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--integration_time', type=float, default=600, help='Integration time (s)')
         parser.add_argument('--time_range', type=float, nargs=2, default=[-4.0, 4.0], help='Time range in hours')
         
-        parser.add_argument('--npixel', type=int, default=1536, help='Number of pixels in image')
+        parser.add_argument('--npixel', type=int, default=2048, help='Number of pixels in image')
         parser.add_argument('--use_natural', type=str, default='True', help='Use natural weighting?')
         
         parser.add_argument('--snapshot', type=str, default='False', help='Do snapshot only?')
         parser.add_argument('--opposite', type=str, default='False',
                             help='Move source to opposite side of pointing centre')
         parser.add_argument('--offset_dir', type=float, nargs=2, default=[1.0, 0.0], help='Multipliers for null offset')
-        parser.add_argument('--pbradius', type=float, default=1.0, help='Radius of sources to include (in HWHM)')
+        parser.add_argument('--pbradius', type=float, default=1.5, help='Radius of sources to include (in HWHM)')
         parser.add_argument('--pbtype', type=str, default='MID', help='Primary beam model: MID or MID_GAUSS')
         parser.add_argument('--seed', type=int, default=18051955, help='Random number seed')
         parser.add_argument('--flux_limit', type=float, default=0.001, help='Flux limit (Jy)')

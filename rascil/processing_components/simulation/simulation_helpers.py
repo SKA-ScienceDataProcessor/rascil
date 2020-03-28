@@ -20,7 +20,8 @@ from rascil.processing_components.image import create_image
 from rascil.processing_components.image.operations import show_image
 from rascil.processing_components.imaging.primary_beams import create_pb
 from rascil.processing_components.skycomponent.base import copy_skycomponent
-from rascil.processing_components.skycomponent.operations import apply_beam_to_skycomponent
+from rascil.processing_components.skycomponent.operations import apply_beam_to_skycomponent, \
+    filter_skycomponents_by_flux
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.visibility.operations import calculate_blockvisibility_azel, \
     calculate_blockvisibility_hourangles
@@ -245,19 +246,24 @@ def find_pb_width_null(pbtype, frequency, **kwargs):
 def create_simulation_components(context, phasecentre, frequency, pbtype, offset_dir, flux_limit,
                                  pbradius, pb_npixel, pb_cellsize, show=False, fov=10,
                                  polarisation_frame=PolarisationFrame("stokesI"),
-                                 filter_by_primary_beam=True):
+                                 filter_by_primary_beam=True, flux_max=10.0):
     """ Construct components for simulation
     
-    :param context:
-    :param phasecentre:
-    :param frequency:
-    :param pbtype:
+    :param context: singlesource or null or s3sky
+    :param phasecentre: Centre of components
+    :param frequency: Frequency
+    :param pbtype: Type of primary beam
     :param offset_dir:
-    :param flux_limit:
-    :param pbradius:
-    :param pb_npixel:
-    :param pb_cellsize:
-    :param fov: FOV in degrees (used to select catalog
+    :param flux_limit: Lower limit flux
+    :param pbradius: Radius of components in radians
+    :param pb_npixel: Number of pixels in the primary beam model
+    :param pb_cellsize: Cellsize in primary beam model
+    :param fov: FOV in degrees (used to select catalog)
+    :param flux_max: Maximum flux in model before application of primary beam
+    :param filter_by_primary_beam: Filter components by primary beam
+    :param polarisation_frame:
+    :param show:
+
     :return:
     """
     
@@ -351,14 +357,17 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
         log.info("create_simulation_components: Constructing s3sky components")
         from rascil.processing_components.simulation import create_test_skycomponents_from_s3
         
-        original_components = create_test_skycomponents_from_s3(flux_limit=flux_limit / 100.0,
+        all_components = create_test_skycomponents_from_s3(flux_limit=flux_limit / 100.0,
                                                                 phasecentre=phasecentre,
                                                                 polarisation_frame=polarisation_frame,
                                                                 frequency=numpy.array(frequency),
                                                                 radius=pbradius,
                                                                 fov=fov)
+        original_components = filter_skycomponents_by_flux(all_components, flux_max=flux_max)
         log.info("create_simulation_components: %d components before application of primary beam" %
                  (len(original_components)))
+        
+
         
         if filter_by_primary_beam:
             pbmodel = create_image(npixel=pb_npixel,
