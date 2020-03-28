@@ -621,14 +621,15 @@ def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
                         (bvis, sub_components, vp_nominal_list[ibv], use_radec=use_radec)
                         for ibv, bvis in enumerate(sub_bvis_list)]
     error_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
-                     (bvis, sub_components, vp_actual_list[ibv],
-                      use_radec=use_radec)
+                     (bvis, sub_components, vp_actual_list[ibv], use_radec=use_radec)
                      for ibv, bvis in enumerate(sub_bvis_list)]
     if show:
         plot_file = 'voltage_pattern_gaintable.png'
-        tmp_gt_list = rsexecute.compute(error_gt_list, sync=True)
-        plot_gaintable(tmp_gt_list, plot_file=plot_file, title=basename)
-    
+        error_gt_list = rsexecute.compute(error_gt_list, sync=True)
+        plot_gaintable(error_gt_list, plot_file=plot_file, title=basename + " errors")
+        no_error_gt_list = rsexecute.compute(no_error_gt_list, sync=True)
+        plot_gaintable(no_error_gt_list, plot_file=plot_file, title=basename + " nominal")
+
     return no_error_gt_list, error_gt_list
 
 

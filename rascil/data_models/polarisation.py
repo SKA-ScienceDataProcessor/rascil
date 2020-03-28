@@ -59,6 +59,14 @@ class ReceptorFrame:
 
     def valid(self, name):
         return name in self.rec_frames.keys()
+    
+    @property
+    def names(self):
+        """ Names
+        
+        :return:
+        """
+        return list(self.translations.keys())
 
     def __eq__(self, a):
         return self.type == a.type
@@ -117,6 +125,14 @@ class PolarisationFrame:
         """ Number of correlated polarisations
         """
         return len(list(self.translations.keys()))
+
+    @property
+    def names(self):
+        """ Names
+
+        :return:
+        """
+        return list(self.translations.keys())
 
 
 def polmatrixmultiply(cm, vec, polaxis=1):

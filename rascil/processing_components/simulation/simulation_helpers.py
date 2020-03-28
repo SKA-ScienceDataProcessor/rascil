@@ -158,6 +158,7 @@ def plot_gaintable(gt_list, title='', value='amp', plot_file='gaintable.png', **
     plt.clf()
     for gt in gt_list:
         nrec = gt[0].nrec
+        names = gt[0].receptor_frame.names
         if nrec > 1:
             recs = [0, 1]
         else:
@@ -166,12 +167,13 @@ def plot_gaintable(gt_list, title='', value='amp', plot_file='gaintable.png', **
             amp = numpy.abs(gt[0].gain[:, 0, 0, rec, rec])
             if value == 'phase':
                 y = numpy.angle(gt[0].gain[:, 0, 0, rec, rec])
-                plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.')
+                plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.', label=names[rec])
             else:
                 y = amp
-                plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.')
+                plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.', label=names[rec])
     plt.title(title)
     plt.xlabel('Time (s)')
+    plt.legend()
     if plot_file is not None:
         plt.savefig(plot_file)
     plt.show(block=False)
