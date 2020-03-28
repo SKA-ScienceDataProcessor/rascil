@@ -47,3 +47,5 @@ dist/
 noarch/
 
 rascil.egg-info/
+
+examples/random/
