@@ -607,8 +607,10 @@ def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
 
     def find_vp_nominal(band):
         vp = find_vp_actual(band)
+        vpsym = 0.5 * (vp.data[:, 0, ...] + vp.data[:, 3, ...])
         vp.data[:, 1:2, ...] = 0.0 + 0.0j
-        vp.data[:, 3, ...] = vp.data[:, 0, ...]
+        vp.data[:, 0, ...] = vpsym
+        vp.data[:, 3, ...] = vpsym
         return vp
 
     vp_nominal_list = [rsexecute.execute(find_vp_nominal)(band) for bv in sub_bvis_list]
