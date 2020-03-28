@@ -24,6 +24,9 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
                                             **kwargs):
     """ Create gaintables from a list of components and voltagr patterns
 
+    :param elevation_limit:
+    :param use_radec:
+    :param vis_slices:
     :param vis:
     :param sc: Sky components for which pierce points are needed
     :param vp: Voltage pattern in AZELGEO frame
@@ -49,29 +52,20 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
         
         assert vis.configuration.mount[0] == 'azel', "Mount %s not supported yet" % vis.configuration.mount[0]
         
-        # The time in the Visibility is hour angle in seconds!
         number_bad = 0
         number_good = 0
         
-        r2d = 180.0 / numpy.pi
-        s2r = numpy.pi / 43200.0
         # For each hourangle, we need to calculate the location of a component
         # in AZELGEO. With that we can then look up the relevant gain from the
         # voltage pattern
         for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
             v = create_visibility_from_rows(vis, rows)
             azimuth_centre, elevation_centre = calculate_blockvisibility_azel(v)
-            azimuth_centre = azimuth_centre.to('deg').value
-            elevation_centre = elevation_centre.to('deg').value
+            azimuth_centre = azimuth_centre[0].to('deg').value
+            elevation_centre = elevation_centre[0].to('deg').value
             
             # Calculate the az el for this time
             wcs_azel = vp.wcs.sub(2).deepcopy()
-            
-            # We use WCS sensible coordinate handling by labelling the axes misleadingly
-            wcs_azel.wcs.crval[0] = azimuth_centre
-            wcs_azel.wcs.crval[1] = elevation_centre
-            wcs_azel.wcs.ctype[0] = 'RA---SIN'
-            wcs_azel.wcs.ctype[1] = 'DEC--SIN'
             
             for icomp, comp in enumerate(sc):
                 
@@ -82,11 +76,18 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
                     
                     # Calculate the azel of this component
                     azimuth_comp, elevation_comp = calculate_blockvisibility_azel(v, comp.direction)
+                    cosel = numpy.cos(elevation_comp[0]).value
                     azimuth_comp = azimuth_comp[0].to('deg').value
                     elevation_comp = elevation_comp[0].to('deg').value
-                    
+                    if azimuth_comp - azimuth_centre > 180.0:
+                        azimuth_centre += 360.0
+                    elif azimuth_comp - azimuth_centre < -180.0:
+                        azimuth_centre -= 360.0
+
                     try:
-                        worldloc = [[azimuth_comp, elevation_comp]]
+                        worldloc = [[(azimuth_comp-azimuth_centre)*cosel, elevation_comp-elevation_centre]]
+                        # radius = numpy.sqrt(((azimuth_comp-azimuth_centre)*cosel)**2 +
+                        #                     (elevation_comp-elevation_centre)**2)
                         pixloc = wcs_azel.wcs_world2pix(worldloc, 1)[0]
                         assert pixloc[0] > 2
                         assert pixloc[0] < nx - 3
@@ -100,11 +101,11 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
                             ag = antgain[ant, :].reshape([2, 2])
                             ag = numpy.linalg.inv(ag)
                             antgain[ant, :] = ag.reshape([4])
-                            
                             number_good += 1
                     except (ValueError, AssertionError):
                         number_bad += 1
-                        antgain[...] = 1.0
+                        antgain[...] = 0.0
+                        antwt[...] = 0.0
                     
                     gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
                     gaintables[icomp].weight[iha, :, :, :] = antwt[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
@@ -146,8 +147,8 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
                 dec_comp = comp.direction.dec.rad
                 for ant in range(nant):
                     wcs_azel = vp.wcs.deepcopy()
-                    ra_pointing = (ra_centre + pointing_ha[0, ant, 0, 0, 0] / numpy.cos(dec_centre)) * r2d
-                    dec_pointing = (dec_centre + pointing_ha[0, ant, 0, 0, 1]) * r2d
+                    ra_pointing = ra_centre * r2d
+                    dec_pointing = dec_centre * r2d
                     
                     # We use WCS sensible coordinate handling by labelling the axes misleadingly
                     wcs_azel.wcs.crval[0] = ra_pointing
@@ -243,8 +244,8 @@ def simulate_gaintable_from_zernikes(vis, sc, vp_list, vp_coeffs, vis_slices=Non
             
             # Calculate the az el for this hourangle and the phasecentre declination
             azimuth_centre, elevation_centre = calculate_blockvisibility_azel(v)
-            azimuth_centre = azimuth_centre.to('rad').value
-            elevation_centre = elevation_centre.to('rad').value
+            azimuth_centre = azimuth_centre.to('deg').value
+            elevation_centre = elevation_centre.to('deg').value
             
             for icomp, comp in enumerate(sc):
                 
@@ -262,12 +263,9 @@ def simulate_gaintable_from_zernikes(vis, sc, vp_list, vp_coeffs, vis_slices=Non
                             nchan, npol, ny, nx = vp.data.shape
                             wcs_azel = vp.wcs.deepcopy()
                             
-                            az_comp = azimuth_centre * r2d
-                            el_comp = elevation_centre * r2d
-                            
                             # We use WCS sensible coordinate handling by labelling the axes misleadingly
-                            wcs_azel.wcs.crval[0] = az_comp
-                            wcs_azel.wcs.crval[1] = el_comp
+                            wcs_azel.wcs.crval[0] = azimuth_centre
+                            wcs_azel.wcs.crval[1] = elevation_centre
                             wcs_azel.wcs.ctype[0] = 'RA---SIN'
                             wcs_azel.wcs.ctype[1] = 'DEC--SIN'
                             

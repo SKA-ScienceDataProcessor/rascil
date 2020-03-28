@@ -45,7 +45,7 @@ mpl_logger.setLevel(logging.WARNING)
 class TestPointingSimulation(unittest.TestCase):
     
     def setUp(self) -> None:
-        rsexecute.set_client(use_dask=True)
+        rsexecute.set_client(use_dask=True, n_workers=4, threads_per_worker=1)
         self.persist = True
     
     def simulation(self, args, time_series='wind', band='B2',
@@ -165,7 +165,7 @@ class TestPointingSimulation(unittest.TestCase):
             # Polarised beams
             no_error_gtl, error_gtl = \
                 create_polarisation_gaintable_rsexecute_workflow(band, future_bvis_list, original_components,
-                                                                 basename=basename, show=True)
+                                                                 basename="Polarisation gain table", show=True)
         else:
             raise ValueError("Unknown type of error %s" % time_series)
         
@@ -210,13 +210,13 @@ class TestPointingSimulation(unittest.TestCase):
         
         # Observation definition
         parser.add_argument('--ra', type=float, default=+15.0, help='Right ascension (degrees)')
-        parser.add_argument('--declination', type=float, default=-35.0, help='Declination (degrees)')
+        parser.add_argument('--declination', type=float, default=-45.0, help='Declination (degrees)')
         parser.add_argument('--rmax', type=float, default=2e3, help='Maximum distance of station from centre (m)')
         parser.add_argument('--band', type=str, default='B2', help="Band")
         parser.add_argument('--integration_time', type=float, default=600, help='Integration time (s)')
         parser.add_argument('--time_range', type=float, nargs=2, default=[-4.0, 4.0], help='Time range in hours')
         
-        parser.add_argument('--npixel', type=int, default=2048, help='Number of pixels in image')
+        parser.add_argument('--npixel', type=int, default=1536, help='Number of pixels in image')
         parser.add_argument('--use_natural', type=str, default='True', help='Use natural weighting?')
         
         parser.add_argument('--snapshot', type=str, default='False', help='Do snapshot only?')
@@ -226,7 +226,7 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--pbradius', type=float, default=1.0, help='Radius of sources to include (in HWHM)')
         parser.add_argument('--pbtype', type=str, default='MID', help='Primary beam model: MID or MID_GAUSS')
         parser.add_argument('--seed', type=int, default=18051955, help='Random number seed')
-        parser.add_argument('--flux_limit', type=float, default=0.01, help='Flux limit (Jy)')
+        parser.add_argument('--flux_limit', type=float, default=0.003, help='Flux limit (Jy)')
         
         # Control parameters
         parser.add_argument('--use_radec', type=str, default="False", help='Calculate in RADEC (false)?')
