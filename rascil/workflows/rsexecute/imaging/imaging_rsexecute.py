@@ -6,7 +6,7 @@ __all__ = ['predict_list_rsexecute_workflow', 'invert_list_rsexecute_workflow', 
            'restore_list_rsexecute_workflow', 'deconvolve_list_rsexecute_workflow',
            'deconvolve_list_channel_rsexecute_workflow', 'weight_list_rsexecute_workflow',
            'taper_list_rsexecute_workflow', 'zero_list_rsexecute_workflow', 'subtract_list_rsexecute_workflow',
-           'sum_invert_results_rsexecute']
+           'sum_invert_results_rsexecute', 'sum_predict_results_rsexecute']
 
 
 import collections
@@ -681,6 +681,21 @@ def subtract_list_rsexecute_workflow(vis_list, model_vislist):
               for i in range(len(vis_list))]
     return rsexecute.optimize(result)
 
+
+def sum_predict_results_rsexecute(bvis_list, split=2):
+    """ Sum a set of predict results
+
+    :param bvis_list: List of (image, sum weights) tuples
+    :param split: Split into
+    :return: BlockVis
+    """
+    if len(bvis_list) > split:
+        centre = len(bvis_list) // split
+        result = [sum_predict_results_rsexecute(bvis_list[:centre]),
+                  sum_predict_results_rsexecute(bvis_list[centre:])]
+        return rsexecute.execute(sum_predict_results, nout=2)(result)
+    else:
+        return rsexecute.execute(sum_predict_results, nout=2)(bvis_list)
 
 def sum_invert_results_rsexecute(image_list, split=2):
     """ Sum a set of invert results with appropriate weighting

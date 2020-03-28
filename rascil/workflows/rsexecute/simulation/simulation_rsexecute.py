@@ -48,7 +48,7 @@ from rascil.processing_components.visibility import create_blockvisibility, \
     create_visibility
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.workflows.rsexecute.imaging.imaging_rsexecute import \
-    invert_list_rsexecute_workflow
+    invert_list_rsexecute_workflow, sum_predict_results_rsexecute
 from rascil.workflows.rsexecute.skymodel.skymodel_rsexecute import \
     predict_skymodel_list_compsonly_rsexecute_workflow
 
@@ -195,12 +195,14 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
                                                           sub_model_list,
                                                           no_error_gt_list, error_gt_list,
                                                           context='2d',
-                                                          residual=True):
+                                                          residual=True,
+                                                          sum_vis=True):
     """Calculate residual image corresponding to a set of gaintables
 
     The visibility difference for a set of components for error and no error gaintables
     are calculated and the residual images constructed
 
+    :param sum_vis:
     :param sub_bvis_list: List of vis (or graph)
     :param sub_components: List of components (or graph)
     :param sub_model_list: List of models (or graph)
@@ -259,21 +261,30 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
             [rsexecute.execute(convert)(error_bvis_list[ibvis][icomp])
              for icomp, _ in enumerate(sub_components)]
             for ibvis, _ in enumerate(error_bvis_list)]
-    
-    # Now for each visibility/component, we make the component dirty images. We just add these
-    # component dirty images since the weights should be the same
-    def sum_images(images):
-        sum_image = create_empty_image_like(images[0][0])
-        for im in images:
-            sum_image.data += im[0].data
-        return sum_image, images[0][1]
-    
-    dirty_list = list()
-    for vis in error_vis_list:
-        result = invert_list_rsexecute_workflow(vis, sub_model_list, context=context)
-        dirty_list.append(rsexecute.execute(sum_images)(result))
-    
-    return dirty_list
+        
+    if sum_vis:
+        sum_error_vis_list = \
+            [sum_predict_results_rsexecute([error_vis_list[ivis][icomp]
+                                                             for icomp, _ in enumerate(sub_components)])
+                                                             for ivis, _ in enumerate(error_vis_list)]
+        return invert_list_rsexecute_workflow(sum_error_vis_list, sub_model_list, context=context)
+
+    else:
+        
+        # Now for each visibility/component, we make the component dirty images. We just add these
+        # component dirty images since the weights should be the same
+        def sum_images(images):
+            sum_image = create_empty_image_like(images[0][0])
+            for im in images:
+                sum_image.data += im[0].data
+            return sum_image, images[0][1]
+        
+        dirty_list = list()
+        for vis in error_vis_list:
+            result = invert_list_rsexecute_workflow(vis, sub_model_list, context=context)
+            dirty_list.append(rsexecute.execute(sum_images)(result))
+        
+        return dirty_list
 
 
 def calculate_selfcal_residual_from_gaintables_rsexecute_workflow(sub_bvis_list,
