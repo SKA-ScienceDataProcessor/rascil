@@ -293,7 +293,6 @@ class TestPointingSimulation(unittest.TestCase):
             error_dirty, sumwt = self.simulation(args, 'gravity')
             
             qa = qa_image(error_dirty)
-            print(qa)
 
             numpy.testing.assert_almost_equal(qa.data['max'], 2.2055849698035616e-06, 12)
             numpy.testing.assert_almost_equal(qa.data['min'], -6.838117387793031e-07, 12)
@@ -302,7 +301,7 @@ class TestPointingSimulation(unittest.TestCase):
     def test_polarisation(self):
         
         args = self.get_args()
-        args.fluxlimit = 0.1
+        args.fluxlimit = 1.0
         args.npixel = 1024
         
         error_dirty, sumwt = self.simulation(args, 'polarisation',
