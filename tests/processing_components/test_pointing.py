@@ -30,7 +30,7 @@ log.setLevel(logging.WARNING)
 class TestPointing(unittest.TestCase):
     def setUp(self):
         from rascil.data_models.parameters import rascil_path
-        self.doplot = True
+        self.doplot = False
 
         self.midcore = create_named_configuration('MID', rmax=300.0)
         self.nants = len(self.midcore.names)
@@ -194,8 +194,12 @@ class TestPointing(unittest.TestCase):
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
 
     def test_create_gaintable_from_pointingtable_GRASP(self):
-        comp = create_skycomponent(direction=self.phasecentre, flux=[[1.0]], frequency=self.frequency,
-                                   polarisation_frame=PolarisationFrame('stokesI'))
+        self.vis = create_blockvisibility(self.midcore, self.times, self.frequency,
+                                          channel_bandwidth=self.channel_bandwidth,
+                                          phasecentre=self.phasecentre, weight=1.0,
+                                          polarisation_frame=PolarisationFrame('linear'))
+        comp = create_skycomponent(direction=self.phasecentre, flux=[[1.0, 0.0, 0.0, 0.0]], frequency=self.frequency,
+                                   polarisation_frame=PolarisationFrame('stokesIQUV'))
 
         pt = create_pointingtable_from_blockvisibility(self.vis)
         pt = simulate_pointingtable(pt, pointing_error=0.0, static_pointing_error=None,
@@ -209,7 +213,7 @@ class TestPointing(unittest.TestCase):
             plt.plot(gt[0].time, numpy.imag(1.0 / gt[0].gain[:, 0, 0, 0, 0]), '.')
             plt.title('test_create_gaintable_from_pointingtable_global_dynamic')
             plt.show(block=False)
-        assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape
+        assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 2, 2), gt[0].gain.shape
 
 
 if __name__ == '__main__':

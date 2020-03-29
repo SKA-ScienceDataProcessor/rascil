@@ -46,6 +46,8 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
     imag_spline = [RectBivariateSpline(range(ny), range(nx), vp.data[0, pol, ...].imag, kx=order, ky=order)
                    for pol in range(npol)]
     
+    assert npol == vis.npol, "Voltage pattern and visibility have incompatible polarisations"
+    
     if not use_radec:
         assert isinstance(vis, BlockVisibility)
         assert vp.wcs.wcs.ctype[0] == 'AZELGEO long', vp.wcs.wcs.ctype[0]
@@ -64,7 +66,6 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
         # voltage pattern
         for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
             v = create_visibility_from_rows(vis, rows)
-            ha = calculate_blockvisibility_hourangles(v).to('rad').value
             pt_rows = (pt.time == v.time)
             assert numpy.sum(pt_rows) > 0
             pointing_ha = pt.pointing[pt_rows]
@@ -74,7 +75,9 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
             
             # Calculate the az el for this hourangle and the phasecentre declination
             for icomp, comp in enumerate(sc):
-                
+    
+                nrec = gaintables[icomp].nrec
+
                 if elevation_centre >= elevation_limit:
                     
                     antgain = numpy.zeros([nant, npol], dtype='complex')
@@ -114,7 +117,7 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                             number_bad += 1
                             antgain[ant, :] = 1.0
                         
-                        gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
+                        gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, nrec, nrec])
                         gaintables[icomp].phasecentre = comp.direction
                 else:
                     gaintables[icomp].gain[...] = 1.0 + 0.0j
@@ -146,8 +149,11 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
             pointing_ha = pt.pointing[pt_rows]
             
             for icomp, comp in enumerate(sc):
+
+                nrec = gaintables[icomp].nrec
+
                 antgain = numpy.zeros([nant, npol], dtype='complex')
-                antwt = numpy.zeros([nant, pol])
+                antwt = numpy.zeros([nant, npol])
                 # Calculate the location of the component in AZELGEO, then add the pointing offset
                 # for each antenna
                 ra_comp = comp.direction.ra.rad
@@ -187,8 +193,8 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                             antgain[ant, pol] = 1e15
                             antwt[ant, pol] = 0.0
                 
-                gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
-                gaintables[icomp].weight[iha, :, :, :] = antwt[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
+                gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, nrec, nrec])
+                gaintables[icomp].weight[iha, :, :, :] = antwt[:, numpy.newaxis, :].reshape([nant, nchan, nrec, nrec])
                 gaintables[icomp].phasecentre = comp.direction
     
     assert number_good > 0, "simulate_gaintable_from_pointingtable: No points inside the voltage pattern image"
