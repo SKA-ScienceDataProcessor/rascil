@@ -134,6 +134,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
 
     # Do each hour angle in turn
     row = 0
+    from astroplan import Observer
     site = Observer(config.location)
     stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
     if stime.masked:
