@@ -227,7 +227,7 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--pbradius', type=float, default=1.5, help='Radius of sources to include (in HWHM)')
         parser.add_argument('--pbtype', type=str, default='MID', help='Primary beam model: MID or MID_GAUSS')
         parser.add_argument('--seed', type=int, default=18051955, help='Random number seed')
-        parser.add_argument('--flux_limit', type=float, default=0.001, help='Flux limit (Jy)')
+        parser.add_argument('--flux_limit', type=float, default=0.03, help='Flux limit (Jy)')
         
         # Control parameters
         parser.add_argument('--use_radec', type=str, default="False", help='Calculate in RADEC (false)?')
@@ -258,46 +258,61 @@ class TestPointingSimulation(unittest.TestCase):
         
         return args
     
-    @unittest.skip("Needs reworking")
     def test_wind(self):
         
-        error_dirty, sumwt = self.simulation(self.get_args(), 'wind')
+        args = self.get_args()
+        args.fluxlimit = 0.1
+
+        error_dirty, sumwt = self.simulation(args, 'wind')
         
         qa = qa_image(error_dirty)
-        
-        numpy.testing.assert_almost_equal(qa.data['max'], 1.2440965953105578e-06, 12)
-        numpy.testing.assert_almost_equal(qa.data['min'], -3.836051633637655e-06, 12)
-        numpy.testing.assert_almost_equal(qa.data['rms'], 5.840397284050296e-07, 12)
+
+        numpy.testing.assert_almost_equal(qa.data['max'], 0.0001549626149499648, 12)
+        numpy.testing.assert_almost_equal(qa.data['min'], -9.025636018869514e-05, 12)
+        numpy.testing.assert_almost_equal(qa.data['rms'], 4.530933602609382e-06, 12)
     
-    @unittest.skip("Needs reworking")
     def test_random(self):
         
-        error_dirty, sumwt = self.simulation(self.get_args(), '')
+        args = self.get_args()
+        args.fluxlimit = 0.1
+
+        error_dirty, sumwt = self.simulation(args, '')
         
         qa = qa_image(error_dirty)
-        
-        numpy.testing.assert_almost_equal(qa.data['max'], 2.2055849698035616e-06, 12)
-        numpy.testing.assert_almost_equal(qa.data['min'], -6.838117387793031e-07, 12)
-        numpy.testing.assert_almost_equal(qa.data['rms'], 3.7224203394509413e-07, 12)
+
+        numpy.testing.assert_almost_equal(qa.data['max'], 2.1094978960646913e-05, 12)
+        numpy.testing.assert_almost_equal(qa.data['min'], -1.3196934940913428e-05, 12)
+        numpy.testing.assert_almost_equal(qa.data['rms'], 1.4297877176652153e-06, 12)
     
     def test_gravity(self):
         
+        args = self.get_args()
+        args.fluxlimit = 0.1
+
         if os.path.isdir(rascil_path('models/interpolated')):
-            error_dirty, sumwt = self.simulation(self.get_args(), 'gravity')
+            error_dirty, sumwt = self.simulation(args, 'gravity')
             
             qa = qa_image(error_dirty)
-            
+            print(qa)
+
             numpy.testing.assert_almost_equal(qa.data['max'], 2.2055849698035616e-06, 12)
             numpy.testing.assert_almost_equal(qa.data['min'], -6.838117387793031e-07, 12)
             numpy.testing.assert_almost_equal(qa.data['rms'], 3.7224203394509413e-07, 12)
     
     def test_polarisation(self):
         
-        error_dirty, sumwt = self.simulation(self.get_args(), 'polarisation',
+        args = self.get_args()
+        args.fluxlimit = 0.1
+        
+        error_dirty, sumwt = self.simulation(args, 'polarisation',
                                              image_polarisation_frame=PolarisationFrame("stokesIQUV"),
                                              vis_polarisation_frame=PolarisationFrame("linear"))
         qa = qa_image(error_dirty)
         print(qa)
-        
+
+        numpy.testing.assert_almost_equal(qa.data['max'], 0.0006993683563000592, 12)
+        numpy.testing.assert_almost_equal(qa.data['min'], -0.003906907076467131, 12)
+        numpy.testing.assert_almost_equal(qa.data['rms'], 1.0212342546208077e-05, 12)
+
         if self.persist:
             export_image_to_fits(error_dirty, "{}/test_mid_simulation_polarisation.fits".format(results_dir))
