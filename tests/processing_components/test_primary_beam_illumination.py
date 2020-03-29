@@ -30,6 +30,7 @@ class TestPrimaryBeams(unittest.TestCase):
         self.dir = rascil_path('test_results')
         
         self.persist = os.getenv("RASCIL_PERSIST", False)
+        self.plot = False
     
     def createVis(self, config='MID', dec=-35.0, rmax=1e3, freq=1e9):
         self.frequency = numpy.linspace(freq, 1.5 * freq, 3)
@@ -55,8 +56,9 @@ class TestPrimaryBeams(unittest.TestCase):
         self.createVis(freq=1.4e9)
         cellsize = 8 * numpy.pi / 180.0 / 280
         model = create_image_from_visibility(self.vis, npixel=512, cellsize=cellsize, override_cellsize=False)
-        plt.clf()
-        fig, axs = plt.subplots(5, 5, gridspec_kw={'hspace': 0, 'wspace': 0})
+        if self.plot:
+            plt.clf()
+            fig, axs = plt.subplots(5, 5, gridspec_kw={'hspace': 0, 'wspace': 0})
         # (r ** 2 + rho * (dx * dy) + diff * (dx ** 2 - dy ** 2))
         for irho, rho in enumerate([-0.1, -0.05, 0.0, 0.05, 0.1]):
             for idiff, diff in enumerate([-0.2, -0.15, -0.1, -0.05, 0.0]):
@@ -66,11 +68,12 @@ class TestPrimaryBeams(unittest.TestCase):
                 vp.data = numpy.real(vp_data)
                 if self.persist: export_image_to_fits(vp, "%s/test_voltage_pattern_real_%s_rho%.3f_diff%.3f.fits" %
                                      (self.dir, "MID_TAPER", rho, diff))
-                ax = axs[irho, idiff]
-                ax.imshow(vp.data[0,0])#, vmax=0.1, vmin=-0.01)
-                ax.axis('off')
+                if self.plot:
+                    ax = axs[irho, idiff]
+                    ax.imshow(vp.data[0,0])#, vmax=0.1, vmin=-0.01)
+                    ax.axis('off')
 
-        plt.show(block=False)
+        if self.plot: plt.show(block=False)
 
 if __name__ == '__main__':
     unittest.main()
