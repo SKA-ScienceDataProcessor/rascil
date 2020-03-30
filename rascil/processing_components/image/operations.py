@@ -25,7 +25,8 @@ __all__ = ['add_image',
            'show_components',
            'show_image',
            'smooth_image',
-           "scale_and_rotate_image"]
+           "scale_and_rotate_image",
+           "apply_voltage_pattern"]
 
 import copy
 import warnings
@@ -41,6 +42,7 @@ from reproject import reproject_interp
 
 from rascil.data_models.memory_data_models import Image, QA
 from rascil.data_models.parameters import get_parameter
+from rascil.data_models.polarisation import convert_pol_frame
 
 import logging
 
@@ -48,6 +50,7 @@ from rascil.data_models.polarisation import PolarisationFrame, convert_stokes_to
     convert_linear_to_stokes, convert_circular_to_stokes
 
 from rascil.processing_components.fourier_transforms import w_beam, fft, ifft
+from rascil.processing_components.calibration import apply_jones
 
 warnings.simplefilter('ignore', FITSFixedWarning)
 log = logging.getLogger('logger')
@@ -1005,3 +1008,61 @@ def scale_and_rotate_image(im, angle=0.0, scale=None, order=5):
 
     return newim
 
+
+def apply_voltage_pattern(im: Image, vp: Image, inverse=False, **kwargs) -> Image:
+    """Apply a voltage pattern to an image
+    
+    For each pixel, the
+    
+    I_{corrected}(l,m) = vp(l,m) I(l,m) jones(j,m).H
+
+    :param im: Image to have jones applied
+    :param vp: Jones image to be applied
+    :param inverse: Apply the inverse (default=False)
+    :return: input Image with Jones applied
+
+    """
+    assert isinstance(im, Image)
+    assert isinstance(vp, Image)
+    
+    newim = create_empty_image_like(im)
+    
+    if inverse:
+        log.debug('apply_gaintable: Apply inverse voltage pattern image')
+    else:
+        log.debug('apply_gaintable: Apply voltage pattern image')
+    
+    is_scalar = vp.shape[1] == 1
+    if is_scalar:
+        log.debug('apply_voltage_pattern: Scalar voltage pattern')
+        
+    nchan, npol, ny, nx = im.shape
+    
+    assert im.shape == vp.shape
+    
+    if is_scalar:
+        if inverse:
+            for chan in range(nchan):
+                pb = (vp.data[chan, 0, ...] * numpy.conjugate(vp.data[chan, 0, ...])).real
+                newim.data[chan, 0, ...] *= pb
+        else:
+            for chan in range(nchan):
+                pb = (vp.data[chan, 0, ...] * numpy.conjugate(vp.data[chan, 0, ...])).real
+                mask = pb > 0.0
+                newim.data[chan, 0, ...][mask] /= pb[mask]
+    else:
+        polim = convert_stokes_to_polimage(im, vp.polarisation_frame)
+        assert npol == 4
+        im_t = numpy.transpose(polim.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
+        vp_t = numpy.transpose(vp.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
+        newim_t = numpy.zeros([nchan, ny, nx, 2, 2], dtype='complex')
+        for chan in range(nchan):
+            for y in range(ny):
+                for x in range(nx):
+                    newim_t[chan, y, x] = apply_jones(vp_t[chan, y, x], im_t[chan, y, x], inverse)
+
+        newim.data = newim_t.reshape([nchan, ny, nx, 4]).transpose((0, 3, 1, 2))
+        newim.polarisation_frame = vp.polarisation_frame
+        newim = convert_polimage_to_stokes(newim)
+
+        return newim
