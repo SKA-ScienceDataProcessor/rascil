@@ -29,31 +29,28 @@ __all__ = ['add_image',
            "apply_voltage_pattern"]
 
 import copy
+import logging
 import warnings
 
+import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
-from astropy.wcs import FITSFixedWarning
-import numpy
 from astropy.io import fits
+from astropy.wcs import FITSFixedWarning
 from astropy.wcs import WCS
 from astropy.wcs.utils import skycoord_to_pixel
 from reproject import reproject_interp
 
 from rascil.data_models.memory_data_models import Image, QA
 from rascil.data_models.parameters import get_parameter
-from rascil.data_models.polarisation import convert_pol_frame
-
-import logging
-
 from rascil.data_models.polarisation import PolarisationFrame, convert_stokes_to_linear, convert_stokes_to_circular, \
     convert_linear_to_stokes, convert_circular_to_stokes
-
-from rascil.processing_components.fourier_transforms import w_beam, fft, ifft
 from rascil.processing_components.calibration import apply_jones
+from rascil.processing_components.fourier_transforms import w_beam, fft, ifft
 
 warnings.simplefilter('ignore', FITSFixedWarning)
 log = logging.getLogger('logger')
+
 
 def image_is_canonical(im: Image):
     """ Is this Image canonical format?
@@ -63,17 +60,18 @@ def image_is_canonical(im: Image):
     """
     if im is None:
         return True
-
+    
     canonical = True
     canonical = canonical and len(im.shape) == 4
     canonical = canonical and im.wcs.wcs.ctype[0] == 'RA---SIN' and im.wcs.wcs.ctype[1] == 'DEC--SIN'
     canonical = canonical and im.wcs.wcs.ctype[2] == 'STOKES'
     canonical = canonical and (im.wcs.wcs.ctype[3] == 'FREQ' or im.wcs.wcs.ctype[3] == "MOMENT")
-
+    
     if not canonical:
         log.debug("image_is_canonical: Image is not canonical 4D image with axes RA---SIN, DEC--SIN, STOKES, FREQ")
-
+    
     return canonical
+
 
 def export_image_to_fits(im: Image, fitsfile: str = 'imaging.fits'):
     """ Write an image to fits
@@ -107,7 +105,7 @@ def import_image_from_fits(fitsfile: str) -> Image:
     fim.data = hdulist[0].data
     fim.wcs = WCS(fitsfile)
     hdulist.close()
-
+    
     if len(fim.data) == 2:
         fim.polarisation_frame = PolarisationFrame('stokesI')
     else:
@@ -119,14 +117,14 @@ def import_image_from_fits(fitsfile: str) -> Image:
             new_data[:, 1] = fim.data[:, 2]
             new_data[:, 2] = fim.data[:, 3]
             fim.data = new_data
-
+        
         except ValueError:
             fim.polarisation_frame = PolarisationFrame('stokesI')
-
+    
     log.debug("import_image_from_fits: created %s image of shape %s, size %.3f (GB)" %
               (fim.data.dtype, str(fim.shape), image_sizeof(fim)))
     log.debug("import_image_from_fits: Max, min in %s = %.6f, %.6f" % (fitsfile, fim.data.max(), fim.data.min()))
-
+    
     assert isinstance(fim, Image)
     return fim
 
@@ -142,9 +140,28 @@ def reproject_image(im: Image, newwcs: WCS, shape=None) -> (Image, Image):
     :param shape: Desired shape
     :return: Reprojected Image, Footprint Image
     """
-
+    
     assert isinstance(im, Image), im
-    rep, foot = reproject_interp((im.data, im.wcs), newwcs, shape, order='bicubic')
+    nchan, npol, ny, nx = im.shape
+    if im.data.dtype == 'complex':
+        rep_real = numpy.zeros_like(im.data, dtype='float')
+        rep_imag = numpy.zeros_like(im.data, dtype='float')
+        foot = numpy.zeros_like(im.data, dtype='float')
+        for chan in range(nchan):
+            for pol in range(npol):
+                rep_real[chan, pol], foot[chan, pol] = reproject_interp((im.data.real[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
+                rep_imag[chan, pol], foot[chan, pol] = reproject_interp((im.data.imag[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
+        rep = rep_real + 1j * rep_imag
+    else:
+        rep = numpy.zeros_like(im.data)
+        foot = numpy.zeros_like(im.data, dtype='float')
+        for chan in range(nchan):
+            for pol in range(npol):
+                rep[chan, pol], foot[chan, pol] = reproject_interp((im.data[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
+    
+    if numpy.sum(foot.data) < 1e-12:
+        log.warning("reproject_image: no valid points in reprojection")
+        
     return create_image_from_array(rep, newwcs, im.polarisation_frame), create_image_from_array(foot, newwcs,
                                                                                                 im.polarisation_frame)
 
@@ -160,9 +177,9 @@ def add_image(im1: Image, im2: Image) -> Image:
     assert image_is_canonical(im1)
     assert isinstance(im2, Image), im2
     assert image_is_canonical(im2)
-
+    
     assert im1.polarisation_frame == im2.polarisation_frame
-
+    
     return create_image_from_array(im1.data + im2.data, im1.wcs, im1.polarisation_frame)
 
 
@@ -184,7 +201,7 @@ def qa_image(im, context="") -> QA:
             'medianabs': numpy.median(numpy.abs(im.data)),
             'medianabsdevmedian': numpy.median(numpy.abs(im.data - numpy.median(im.data))),
             'median': numpy.median(im.data)}
-
+    
     qa = QA(origin="qa_image", data=data, context=context)
     return qa
 
@@ -205,35 +222,35 @@ def show_image(im: Image, fig=None, title: str = '', pol=0, chan=0, cm='Greys', 
     :return:
     """
     import matplotlib.pyplot as plt
-
+    
     assert isinstance(im, Image), im
-
+    
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=im.wcs.sub([1, 2]))
-
+    
     if len(im.data.shape) == 4:
         data_array = numpy.real(im.data[chan, pol, :, :])
     else:
         data_array = numpy.real(im.data)
-
+    
     if vmax is None:
         vmax = vscale * numpy.max(data_array)
     if vmin is None:
         vmin = vscale * numpy.min(data_array)
-
+    
     cm = ax.imshow(data_array, origin='lower', cmap=cm, vmax=vmax, vmin=vmin)
-
+    
     ax.set_xlabel(im.wcs.wcs.ctype[0])
     ax.set_ylabel(im.wcs.wcs.ctype[1])
     ax.set_title(title)
-
+    
     fig.colorbar(cm, orientation='vertical', shrink=0.7)
-
+    
     if components is not None:
         for sc in components:
             x, y = skycoord_to_pixel(sc.direction, im.wcs, 0, 'wcs')
             ax.plot(x, y, marker='+', color='red')
-
+    
     return fig
 
 
@@ -247,18 +264,18 @@ def show_components(im, comps, npixels=128, fig=None, vmax=None, vmin=None, titl
     :return:
     """
     import matplotlib.pyplot as plt
-
+    
     if vmax is None:
         vmax = numpy.max(im.data[0, 0, ...])
     if vmin is None:
         vmin = numpy.min(im.data[0, 0, ...])
-
+    
     if not fig:
         fig = plt.figure()
     plt.clf()
-
+    
     assert image_is_canonical(im)
-
+    
     for isc, sc in enumerate(comps):
         newim = copy_image(im)
         plt.subplot(111, projection=newim.wcs.sub([1, 2]))
@@ -285,12 +302,12 @@ def smooth_image(model: Image, width=1.0, normalise=True):
     """
     assert isinstance(model, Image), model
     assert image_is_canonical(model)
-
+    
     from astropy.convolution.kernels import Gaussian2DKernel
     from astropy.convolution import convolve_fft
-
+    
     kernel = Gaussian2DKernel(width)
-
+    
     cmodel = create_empty_image_like(model)
     nchan, npol, _, _ = model.shape
     for pol in range(npol):
@@ -300,7 +317,7 @@ def smooth_image(model: Image, width=1.0, normalise=True):
                                                         allow_huge=True)
     if normalise and isinstance(kernel, Gaussian2DKernel):
         cmodel.data *= 2 * numpy.pi * width ** 2
-
+    
     return cmodel
 
 
@@ -328,32 +345,32 @@ def calculate_image_frequency_moments(im: Image, reference_frequency=None, nmome
     """
     assert isinstance(im, Image)
     assert image_is_canonical(im)
-
+    
     assert nmoment > 0
     nchan, npol, ny, nx = im.shape
     channels = numpy.arange(nchan)
     freq = im.wcs.sub(['spectral']).wcs_pix2world(channels, 0)[0]
-
+    
     assert nmoment <= nchan, "Number of moments %d cannot exceed the number of channels %d" % (nmoment, nchan)
-
+    
     if reference_frequency is None:
         reference_frequency = numpy.average(freq)
     log.debug("calculate_image_frequency_moments: Reference frequency = %.3f (MHz)" % (reference_frequency / 1e6))
-
+    
     moment_data = numpy.zeros([nmoment, npol, ny, nx])
-
+    
     for moment in range(nmoment):
         for chan in range(nchan):
             weight = numpy.power((freq[chan] - reference_frequency) / reference_frequency, moment)
             moment_data[moment, ...] += im.data[chan, ...] * weight
-
+    
     moment_wcs = copy.deepcopy(im.wcs)
     moment_wcs.wcs.ctype[3] = 'MOMENT'
     moment_wcs.wcs.crval[3] = 0.0
     moment_wcs.wcs.crpix[3] = 1.0
     moment_wcs.wcs.cdelt[3] = 1.0
     moment_wcs.wcs.cunit[3] = ''
-
+    
     return create_image_from_array(moment_data, moment_wcs, im.polarisation_frame)
 
 
@@ -382,31 +399,31 @@ def calculate_image_from_frequency_moments(im: Image, moment_image: Image, refer
     nchan, npol, ny, nx = im.shape
     nmoment, mnpol, mny, mnx = moment_image.shape
     assert nmoment > 0
-
+    
     assert npol == mnpol
     assert ny == mny
     assert nx == mnx
-
+    
     assert moment_image.wcs.wcs.ctype[3] == 'MOMENT', "Second image should be a moment image"
-
+    
     channels = numpy.arange(nchan)
     freq = im.wcs.sub(['spectral']).wcs_pix2world(channels, 0)[0]
-
+    
     if reference_frequency is None:
         reference_frequency = numpy.average(freq)
     log.debug("calculate_image_from_frequency_moments: Reference frequency = %.3f (MHz)" % (reference_frequency))
-
+    
     newim = copy_image(im)
-
+    
     newim.data[...] = 0.0
-
+    
     for moment in range(nmoment):
         for chan in range(nchan):
             weight = numpy.power((freq[chan] - reference_frequency) / reference_frequency, moment)
             newim.data[chan, ...] += moment_image.data[moment, ...] * weight
-
+    
     assert image_is_canonical(newim)
-
+    
     return newim
 
 
@@ -422,10 +439,10 @@ def remove_continuum_image(im: Image, degree=1, mask=None):
     """
     assert isinstance(im, Image)
     assert image_is_canonical(im)
-
+    
     if mask is not None:
         assert numpy.sum(mask) > 2 * degree, "Insufficient channels for fit"
-
+    
     nchan, npol, ny, nx = im.shape
     channels = numpy.arange(nchan)
     frequency = im.wcs.sub(['spectral']).wcs_pix2world(channels, 0)[0]
@@ -434,7 +451,7 @@ def remove_continuum_image(im: Image, degree=1, mask=None):
     wt = numpy.ones_like(frequency)
     if mask is not None:
         wt[mask] = 0.0
-
+    
     for pol in range(npol):
         for y in range(ny):
             for x in range(nx):
@@ -459,11 +476,11 @@ def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame)
         :py:func:`rascil.data_models.polarisation.convert_circular_to_stokes`
         :py:func:`rascil.data_models.polarisation.convert_linear_to_stokes`
     """
-
+    
     assert isinstance(im, Image)
     assert image_is_canonical(im)
     assert isinstance(polarisation_frame, PolarisationFrame)
-
+    
     if polarisation_frame == PolarisationFrame('linear'):
         cimarr = convert_stokes_to_linear(im.data)
         return create_image_from_array(cimarr, im.wcs, polarisation_frame)
@@ -493,7 +510,7 @@ def convert_polimage_to_stokes(im: Image):
     """
     assert isinstance(im, Image)
     assert im.data.dtype == 'complex'
-
+    
     if im.polarisation_frame == PolarisationFrame('linear'):
         cimarr = convert_linear_to_stokes(im.data)
         return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
@@ -527,9 +544,9 @@ def create_window(template, window_type, **kwargs):
 
 
     """
-
+    
     assert image_is_canonical(template)
-
+    
     window = create_empty_image_like(template)
     if window_type == 'quarter':
         qx = template.shape[3] // 4
@@ -552,7 +569,7 @@ def create_window(template, window_type, **kwargs):
         log.info("create_mask: Mask covers entire image")
     else:
         raise ValueError("Window shape %s is not recognized" % window_type)
-
+    
     return window
 
 
@@ -588,17 +605,17 @@ def create_image(npixel=512, cellsize=0.000015, polarisation_frame=PolarisationF
         :py:mod:`rascil.processing_components.simulation`
 
     """
-
+    
     if phasecentre is None:
         phasecentre = SkyCoord(ra=+15.0 * u.deg, dec=-35.0 * u.deg, frame='icrs', equinox='J2000')
-
+    
     if polarisation_frame is None:
         polarisation_frame = PolarisationFrame("stokesI")
-
+    
     npol = polarisation_frame.npol
     if nchan is None:
         nchan = len(frequency)
-
+    
     shape = [nchan, npol, npixel, npixel]
     w = WCS(naxis=4)
     # The negation in the longitude is needed by definition of RA, DEC
@@ -609,7 +626,7 @@ def create_image(npixel=512, cellsize=0.000015, polarisation_frame=PolarisationF
     w.naxis = 4
     w.wcs.radesys = 'ICRS'
     w.wcs.equinox = 2000.0
-
+    
     return create_image_from_array(numpy.zeros(shape, dtype=dtype), w, polarisation_frame=polarisation_frame)
 
 
@@ -630,17 +647,17 @@ def create_image_from_array(data: numpy.array, wcs: WCS, polarisation_frame: Pol
     """
     fim = Image()
     fim.polarisation_frame = polarisation_frame
-
+    
     fim.data = data
     if wcs is None:
         fim.wcs = None
     else:
         fim.wcs = wcs.deepcopy()
-
+    
     if image_sizeof(fim) >= 1.0:
         log.debug("create_image_from_array: created %s image of shape %s, size %.3f (GB)" %
                   (fim.data.dtype, str(fim.shape), image_sizeof(fim)))
-
+    
     assert isinstance(fim, Image), "Type is %s" % type(fim)
     return fim
 
@@ -678,9 +695,9 @@ def polarisation_frame_from_wcs(wcs, shape) -> PolarisationFrame:
     :returns: Polarisation_Frame object
     """
     # The third axis should be stokes:
-
+    
     polarisation_frame = None
-
+    
     if len(shape) == 2:
         polarisation_frame = PolarisationFrame("stokesI")
     else:
@@ -694,9 +711,10 @@ def polarisation_frame_from_wcs(wcs, shape) -> PolarisationFrame:
                 return polarisation_frame
     if polarisation_frame is None:
         raise ValueError("Cannot determine polarisation code")
-
+    
     assert isinstance(polarisation_frame, PolarisationFrame)
     return polarisation_frame
+
 
 def copy_image(im: Image):
     """ Copy an image
@@ -706,10 +724,10 @@ def copy_image(im: Image):
     :param im:
     :return: Image
     """
-
+    
     if im is None:
         return im
-
+    
     assert isinstance(im, Image), im
     fim = Image()
     fim.polarisation_frame = im.polarisation_frame
@@ -878,8 +896,8 @@ def fft_image(im, template_image=None):
         ft_wcs.wcs.cdelt[1] = template_image.wcs.wcs.cdelt[1]
         ft_data = fft(im.data.astype('complex'))
         return create_image_from_array(ft_data, wcs=ft_wcs, polarisation_frame=im.polarisation_frame)
-
-
+    
+    
     else:
         raise NotImplementedError("Cannot FFT specified axes {0}, {1}".format(im.wcs.wcs.ctype[0], im.wcs.wcs.ctype[1]))
 
@@ -895,18 +913,18 @@ def pad_image(im: Image, shape):
     :param shape: Shape in 4 dimensions
     :return: Padded image
     """
-
+    
     if im.shape == shape:
         return im
     else:
         newwcs = copy.deepcopy(im.wcs)
         newwcs.wcs.crpix[0] = im.wcs.wcs.crpix[0] + shape[3] // 2 - im.shape[3] // 2
         newwcs.wcs.crpix[1] = im.wcs.wcs.crpix[1] + shape[2] // 2 - im.shape[2] // 2
-
+        
         for axis, _ in enumerate(im.shape):
             if shape[axis] < im.shape[axis]:
                 raise ValueError("Padded shape %s is smaller than input shape %s" % (shape, im.shape))
-
+        
         newdata = numpy.zeros(shape, dtype=im.data.dtype)
         ystart = shape[2] // 2 - im.shape[2] // 2
         yend = ystart + im.shape[2]
@@ -933,30 +951,31 @@ def create_w_term_like(im: Image, w, phasecentre=None, remove_shift=False, dopol
     :param dopol: Do screen in polarisation?
     :return: Image
     """
-
+    
     assert image_is_canonical(im)
     fim_shape = list(im.shape)
     if not dopol:
         fim_shape[1] = 1
-
+    
     fim_array = numpy.zeros(fim_shape, dtype='complex')
     fim = create_image_from_array(fim_array, wcs=im.wcs, polarisation_frame=im.polarisation_frame)
-
+    
     cellsize = abs(fim.wcs.wcs.cdelt[0]) * numpy.pi / 180.0
     nchan, npol, _, npixel = fim_shape
     if phasecentre is SkyCoord:
         wcentre = phasecentre.to_pixel(im.wcs, origin=0)
     else:
         wcentre = [im.wcs.wcs.crpix[0] - 1.0, im.wcs.wcs.crpix[1] - 1.0]
-
+    
     fim.data[:, :, ...] = w_beam(npixel, npixel * cellsize, w=w, cx=wcentre[0], cy=wcentre[1],
                                  remove_shift=remove_shift)
-
+    
     fov = npixel * cellsize
     fresnel = numpy.abs(w) * (0.5 * fov) ** 2
     log.debug('create_w_term_image: For w = %.1f, field of view = %.6f, Fresnel number = %.2f' % (w, fov, fresnel))
-
+    
     return fim
+
 
 def scale_and_rotate_image(im, angle=0.0, scale=None, order=5):
     """ Scale and then rotate and image in x, y axes
@@ -970,7 +989,7 @@ def scale_and_rotate_image(im, angle=0.0, scale=None, order=5):
     :return:
     """
     from scipy.ndimage.interpolation import affine_transform
-
+    
     nchan, npol, ny, nx = im.shape
     c_in = 0.5 * numpy.array([ny, nx])
     c_out = 0.5 * numpy.array([ny, nx])
@@ -979,7 +998,7 @@ def scale_and_rotate_image(im, angle=0.0, scale=None, order=5):
     inv_rot = rot.T
     if scale is None:
         scale = [1.0, 1.0]
-
+    
     newim = copy_image(im)
     inv_scale = numpy.diag(scale)
     inv_transform = numpy.dot(inv_scale, inv_rot)
@@ -1005,11 +1024,11 @@ def scale_and_rotate_image(im, angle=0.0, scale=None, order=5):
                                                          output_shape=(ny, nx))
             else:
                 raise ValueError("Cannot process data type {}".format(im.data.dtype))
-
+    
     return newim
 
 
-def apply_voltage_pattern(im: Image, vp: Image, inverse=False, **kwargs) -> Image:
+def apply_voltage_pattern(im: Image, vp: Image, inverse=False, min_det=1e-1, **kwargs) -> Image:
     """Apply a voltage pattern to an image
     
     For each pixel, the
@@ -1035,7 +1054,7 @@ def apply_voltage_pattern(im: Image, vp: Image, inverse=False, **kwargs) -> Imag
     is_scalar = vp.shape[1] == 1
     if is_scalar:
         log.debug('apply_voltage_pattern: Scalar voltage pattern')
-        
+    
     nchan, npol, ny, nx = im.shape
     
     assert im.shape == vp.shape
@@ -1059,10 +1078,10 @@ def apply_voltage_pattern(im: Image, vp: Image, inverse=False, **kwargs) -> Imag
         for chan in range(nchan):
             for y in range(ny):
                 for x in range(nx):
-                    newim_t[chan, y, x] = apply_jones(vp_t[chan, y, x], im_t[chan, y, x], inverse)
-
+                    newim_t[chan, y, x] = apply_jones(vp_t[chan, y, x], im_t[chan, y, x], inverse, min_det=min_det)
+        
         newim.data = newim_t.reshape([nchan, ny, nx, 4]).transpose((0, 3, 1, 2))
         newim.polarisation_frame = vp.polarisation_frame
         newim = convert_polimage_to_stokes(newim)
-
+        
         return newim
