@@ -24,7 +24,8 @@ __all__ = ['add_image',
            'reproject_image',
            'show_components',
            'show_image',
-           'smooth_image']
+           'smooth_image',
+           "scale_and_rotate_image"]
 
 import copy
 import warnings
@@ -953,3 +954,54 @@ def create_w_term_like(im: Image, w, phasecentre=None, remove_shift=False, dopol
     log.debug('create_w_term_image: For w = %.1f, field of view = %.6f, Fresnel number = %.2f' % (w, fov, fresnel))
 
     return fim
+
+def scale_and_rotate_image(im, angle=0.0, scale=None, order=5):
+    """ Scale and then rotate and image in x, y axes
+
+    Applies scale then rotates
+
+    :param im: Image
+    :param angle: Angle in radians
+    :param scale: Scale [scale_x, scale_y]
+    :param order: Order of interpolation (0-5)
+    :return:
+    """
+    from scipy.ndimage.interpolation import affine_transform
+
+    nchan, npol, ny, nx = im.shape
+    c_in = 0.5 * numpy.array([ny, nx])
+    c_out = 0.5 * numpy.array([ny, nx])
+    rot = numpy.array([[numpy.cos(angle), -numpy.sin(angle)],
+                       [numpy.sin(angle), numpy.cos(angle)]])
+    inv_rot = rot.T
+    if scale is None:
+        scale = [1.0, 1.0]
+
+    newim = copy_image(im)
+    inv_scale = numpy.diag(scale)
+    inv_transform = numpy.dot(inv_scale, inv_rot)
+    offset = c_in - numpy.dot(inv_transform, c_out)
+    for chan in range(nchan):
+        for pol in range(npol):
+            if im.data.dtype == "complex":
+                newim.data[chan, pol] = affine_transform(im.data[chan, pol].real,
+                                                         inv_transform,
+                                                         offset=offset,
+                                                         order=order,
+                                                         output_shape=(ny, nx)) + \
+                                        1.0j * affine_transform(im.data[chan, pol].imag,
+                                                                inv_transform,
+                                                                offset=offset,
+                                                                order=order,
+                                                                output_shape=(ny, nx))
+            elif im.data.dtype == "float":
+                newim.data[chan, pol] = affine_transform(im.data[chan, pol].real,
+                                                         inv_transform,
+                                                         offset=offset,
+                                                         order=order,
+                                                         output_shape=(ny, nx))
+            else:
+                raise ValueError("Cannot process data type {}".format(im.data.dtype))
+
+    return newim
+
