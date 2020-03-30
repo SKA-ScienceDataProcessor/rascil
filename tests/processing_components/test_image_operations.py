@@ -12,7 +12,7 @@ from rascil.data_models.parameters import rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, \
     copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like, \
-    import_image_from_fits, create_vp
+    import_image_from_fits, create_vp, apply_voltage_pattern
 from rascil.processing_components.image.operations import export_image_to_fits, \
     calculate_image_frequency_moments, calculate_image_from_frequency_moments, add_image, qa_image, reproject_image, \
     convert_polimage_to_stokes, \
@@ -211,6 +211,29 @@ class TestImage(unittest.TestCase):
             vp.data = vp.data.real
             fitsfile = '{}/test_vp_affine_real.fits'.format(self.dir)
             export_image_to_fits(vp, fitsfile=fitsfile)
+
+    def test_apply_voltage_pattern(self):
+    
+        vp = create_vp(telescope='MID_FEKO_B2')
+        # vp = scale_and_rotate_image(vp, 30.0 * numpy.pi / 180.0, [1.0, 2.0])
+        cellsize = vp.wcs.wcs.cdelt[1] * numpy.pi / 180.0
+        m31image = create_test_image(cellsize=cellsize, frequency=[1.36e9], canonical=True)
+        padded = pad_image(m31image, [1, 1, 1024, 1024])
+        padded.data = numpy.repeat(padded.data, repeats=4, axis=1)
+        padded.polarisation_frame = PolarisationFrame("stokesIQUV")
+        padded.data[:, 1:, ...] = 0.0
+        applied = apply_voltage_pattern(padded, vp)
+        unapplied = apply_voltage_pattern(applied, vp, inverse=True)
+        self.persist = True
+        if self.persist:
+            applied.data = applied.data.real
+            fitsfile = '{}/test_apply_voltage_pattern_real.fits'.format(self.dir)
+            export_image_to_fits(applied, fitsfile=fitsfile)
+            unapplied.data = unapplied.data.real
+            fitsfile = '{}/test_apply_voltage_pattern_inv_real.fits'.format(self.dir)
+            export_image_to_fits(unapplied, fitsfile=fitsfile)
+            
+        assert numpy.max(numpy.abs(unapplied.data-padded.data)) < 1e-12
 
 
 if __name__ == '__main__':

@@ -425,8 +425,8 @@ def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycompon
                 # comp_flux = vp.data[:, :, y, x] * comp_flux_cstokes * numpy.vp.data[:, :, y, x]
                 for chan in range(nchan):
                     ej = vp.data[chan, :, y, x].reshape([2, 2])
-                    cfs = comp_flux_cstokes[chan]
-                    comp_flux[chan, :] = apply_jones(ej, cfs, inverse)
+                    cfs = comp_flux_cstokes[chan].reshape([2,2])
+                    comp_flux[chan, :] = apply_jones(ej, cfs, inverse).reshape([4])
 
                 total_flux += comp_flux
                 if inverse:
