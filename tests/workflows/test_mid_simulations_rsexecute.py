@@ -301,17 +301,18 @@ class TestPointingSimulation(unittest.TestCase):
     def test_polarisation(self):
         
         args = self.get_args()
-        args.fluxlimit = 1.0
-        args.npixel = 1024
+        args.fluxlimit = 3.0
+        args.npixel = 512
+        args.integration_time = 1800.0
         
         error_dirty, sumwt = self.simulation(args, 'polarisation',
                                              image_polarisation_frame=PolarisationFrame("stokesIQUV"),
                                              vis_polarisation_frame=PolarisationFrame("linear"))
         qa = qa_image(error_dirty)
 
-        numpy.testing.assert_almost_equal(qa.data['max'], 0.0008047588309779688, 12)
-        numpy.testing.assert_almost_equal(qa.data['min'], -0.003848599358075767, 12)
-        numpy.testing.assert_almost_equal(qa.data['rms'], 1.3752315381622576e-05, 12)
+        numpy.testing.assert_almost_equal(qa.data['max'], 0.0008523028870029411, 12)
+        numpy.testing.assert_almost_equal(qa.data['min'], -0.003816208516624811, 12)
+        numpy.testing.assert_almost_equal(qa.data['rms'], 2.478984146453474e-05, 12)
 
         if self.persist:
             export_image_to_fits(error_dirty, "{}/test_mid_simulation_polarisation.fits".format(results_dir))
