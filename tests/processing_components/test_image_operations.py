@@ -11,11 +11,12 @@ import numpy
 from rascil.data_models.parameters import rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, \
-    copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like, import_image_from_fits
+    copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like, \
+    import_image_from_fits, create_vp
 from rascil.processing_components.image.operations import export_image_to_fits, \
     calculate_image_frequency_moments, calculate_image_from_frequency_moments, add_image, qa_image, reproject_image, \
     convert_polimage_to_stokes, \
-    convert_stokes_to_polimage, smooth_image
+    convert_stokes_to_polimage, smooth_image, scale_and_rotate_image
 from rascil.processing_components.simulation import create_test_image, create_low_test_image_from_gleam
 
 log = logging.getLogger('logger')
@@ -201,6 +202,15 @@ class TestImage(unittest.TestCase):
 
         with self.assertRaises(IndexError):
             padded = pad_image(m31image, [1, 1])
+
+    def test_scale_and_rotate(self):
+    
+        vp = create_vp(telescope='MID_FEKO_B2')
+        vp = scale_and_rotate_image(vp, 30.0 * numpy.pi / 180.0, [1.0, 2.0])
+        if self.persist:
+            vp.data = vp.data.real
+            fitsfile = '{}/test_vp_affine_real.fits'.format(self.dir)
+            export_image_to_fits(vp, fitsfile=fitsfile)
 
 
 if __name__ == '__main__':
