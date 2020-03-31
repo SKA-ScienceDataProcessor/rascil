@@ -1,5 +1,4 @@
-"""Unit tests for primary beam application with polarisation
-
+""" Unit tests for Jones matrix application
 
 """
 
@@ -31,7 +30,7 @@ class TestJones(unittest.TestCase):
                      numpy.array([100.0, 1.0, -10.0, +60.0])):
             vpol = PolarisationFrame("linear")
             cpol = PolarisationFrame("stokesIQUV")
-            cflux = convert_pol_frame(flux, cpol, vpol)
+            cflux = convert_pol_frame(flux, cpol, vpol).reshape([2,2])
 
             diagonal = numpy.array([[1.0 + 0.0j, 0.0 + 0.0j],
                                     [0.0 + 0.0j, 1.0 + 0.0]])
@@ -45,7 +44,7 @@ class TestJones(unittest.TestCase):
             for ej in (diagonal, skew, leakage, unbalanced):
                 try:
                     jflux = apply_jones(ej, cflux, inverse=False)
-                    rflux = apply_jones(ej, jflux, inverse=True)
+                    rflux = apply_jones(ej, jflux, inverse=True).reshape([4])
                     rflux = convert_pol_frame(rflux, vpol, cpol)
                     assert_array_almost_equal(flux, numpy.real(rflux), 12)
                     # print("{0} {1} {2} succeeded".format(vpol, str(ej), str(flux)))
@@ -55,19 +54,6 @@ class TestJones(unittest.TestCase):
                     print("{0} {1} {2} failed".format(vpol, str(ej), str(flux)))
                     nfailures += 1
         assert nfailures == 0, "{0} tests succeeded, {1} failed".format(nsucceeded, nfailures)
-
-    def test_apply_null_jones(self):
-        flux = numpy.array([100.0, 1.0, -10.0, +60.0])
-        vpol = PolarisationFrame("linear")
-        cpol = PolarisationFrame("stokesIQUV")
-        cflux = convert_pol_frame(flux, cpol, vpol)
-
-        null = numpy.array([[0.0 + 0.0j, 0.0 + 0.0j],
-                            [0.0 + 0.0j, 0.0 + 0.0]])
-
-        with self.assertRaises(numpy.linalg.LinAlgError):
-            jflux = apply_jones(null, cflux, inverse=False)
-            rflux = apply_jones(null, jflux, inverse=True)
 
 
 if __name__ == '__main__':
