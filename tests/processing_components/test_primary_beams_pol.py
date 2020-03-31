@@ -13,7 +13,7 @@ from astropy.coordinates import SkyCoord
 from numpy.testing import assert_array_almost_equal
 
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.image import export_image_to_fits, reproject_image, apply_voltage_pattern, qa_image
+from rascil.processing_components.image import export_image_to_fits, reproject_image, apply_voltage_pattern_to_image, qa_image
 from rascil.processing_components.imaging import create_image_from_visibility, invert_2d, \
     advise_wide_field, weight_blockvisibility
 from rascil.processing_components.imaging.dft import dft_skycomponent_visibility, idft_visibility_skycomponent
@@ -182,7 +182,7 @@ class TestPrimaryBeamsPol(unittest.TestCase):
             vpbeam.wcs.wcs.crval[1] = polimage.wcs.wcs.crval[1]
 
             vpbeam_regrid, footprint = reproject_image(vpbeam, polimage.wcs, polimage.shape)
-            polimage_corrected = apply_voltage_pattern(polimage, vpbeam_regrid, inverse=True, min_det=0.3)
+            polimage_corrected = apply_voltage_pattern_to_image(polimage, vpbeam_regrid, inverse=True, min_det=0.3)
 
             export_image_to_fits(polimage_corrected,
                                  "{0}/test_primary_beams_pol_corrected_case{1}.fits".format(self.dir, case))

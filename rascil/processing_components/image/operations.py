@@ -26,7 +26,7 @@ __all__ = ['add_image',
            'show_image',
            'smooth_image',
            "scale_and_rotate_image",
-           "apply_voltage_pattern"]
+           "apply_voltage_pattern_to_image"]
 
 import copy
 import logging
@@ -146,17 +146,17 @@ def reproject_image(im: Image, newwcs: WCS, shape=None) -> (Image, Image):
     if image_is_canonical(im):
         nchan, npol, ny, nx = im.shape
         if im.data.dtype == 'complex':
-            rep_real = numpy.zeros_like(im.data, dtype='float')
-            rep_imag = numpy.zeros_like(im.data, dtype='float')
-            foot = numpy.zeros_like(im.data, dtype='float')
+            rep_real = numpy.zeros(shape, dtype='float')
+            rep_imag = numpy.zeros(shape, dtype='float')
+            foot = numpy.zeros(shape, dtype='float')
             for chan in range(nchan):
                 for pol in range(npol):
                     rep_real[chan, pol], foot[chan, pol] = reproject_interp((im.data.real[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
                     rep_imag[chan, pol], foot[chan, pol] = reproject_interp((im.data.imag[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
             rep = rep_real + 1j * rep_imag
         else:
-            rep = numpy.zeros_like(im.data)
-            foot = numpy.zeros_like(im.data, dtype='float')
+            rep = numpy.zeros(shape, dtype='float')
+            foot = numpy.zeros(shape, dtype='float')
             for chan in range(nchan):
                 for pol in range(npol):
                     rep[chan, pol], foot[chan, pol] = reproject_interp((im.data[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
@@ -1043,19 +1043,22 @@ def scale_and_rotate_image(im, angle=0.0, scale=None, order=5):
     return newim
 
 
-def apply_voltage_pattern(im: Image, vp: Image, inverse=False, min_det=1e-1, **kwargs) -> Image:
+def apply_voltage_pattern_to_image(im: Image, vp: Image, inverse=False, min_det=1e-1, **kwargs) -> Image:
     """Apply a voltage pattern to an image
     
-    For each pixel, the
+    For each pixel, the application is as follows:
     
     I_{corrected}(l,m) = vp(l,m) I(l,m) jones(j,m).H
 
     :param im: Image to have jones applied
     :param vp: Jones image to be applied
     :param inverse: Apply the inverse (default=False)
-    :return: input Image with Jones applied
-
+    :param min_det: Minimum determinant to correct
+    :return: new Image with Jones applied
     """
+    
+    assert image_is_canonical(im)
+    
     assert isinstance(im, Image)
     assert isinstance(vp, Image)
     
@@ -1067,14 +1070,13 @@ def apply_voltage_pattern(im: Image, vp: Image, inverse=False, min_det=1e-1, **k
         log.debug('apply_gaintable: Apply voltage pattern image')
     
     is_scalar = vp.shape[1] == 1
-    if is_scalar:
-        log.debug('apply_voltage_pattern: Scalar voltage pattern')
-    
+
     nchan, npol, ny, nx = im.shape
     
     assert im.shape == vp.shape
     
     if is_scalar:
+        log.debug('apply_voltage_pattern_to_image: Scalar voltage pattern')
         if inverse:
             for chan in range(nchan):
                 pb = (vp.data[chan, 0, ...] * numpy.conjugate(vp.data[chan, 0, ...])).real
@@ -1085,6 +1087,7 @@ def apply_voltage_pattern(im: Image, vp: Image, inverse=False, min_det=1e-1, **k
                 mask = pb > 0.0
                 newim.data[chan, 0, ...][mask] /= pb[mask]
     else:
+        log.debug('apply_voltage_pattern_to_image: Full Jones voltage pattern')
         polim = convert_stokes_to_polimage(im, vp.polarisation_frame)
         assert npol == 4
         im_t = numpy.transpose(polim.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
