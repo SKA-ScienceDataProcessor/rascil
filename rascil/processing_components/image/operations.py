@@ -142,25 +142,40 @@ def reproject_image(im: Image, newwcs: WCS, shape=None) -> (Image, Image):
     """
     
     assert isinstance(im, Image), im
-    nchan, npol, ny, nx = im.shape
-    if im.data.dtype == 'complex':
-        rep_real = numpy.zeros_like(im.data, dtype='float')
-        rep_imag = numpy.zeros_like(im.data, dtype='float')
-        foot = numpy.zeros_like(im.data, dtype='float')
-        for chan in range(nchan):
-            for pol in range(npol):
-                rep_real[chan, pol], foot[chan, pol] = reproject_interp((im.data.real[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
-                rep_imag[chan, pol], foot[chan, pol] = reproject_interp((im.data.imag[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
-        rep = rep_real + 1j * rep_imag
-    else:
-        rep = numpy.zeros_like(im.data)
-        foot = numpy.zeros_like(im.data, dtype='float')
-        for chan in range(nchan):
-            for pol in range(npol):
-                rep[chan, pol], foot[chan, pol] = reproject_interp((im.data[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
     
-    if numpy.sum(foot.data) < 1e-12:
-        log.warning("reproject_image: no valid points in reprojection")
+    if image_is_canonical(im):
+        nchan, npol, ny, nx = im.shape
+        if im.data.dtype == 'complex':
+            rep_real = numpy.zeros_like(im.data, dtype='float')
+            rep_imag = numpy.zeros_like(im.data, dtype='float')
+            foot = numpy.zeros_like(im.data, dtype='float')
+            for chan in range(nchan):
+                for pol in range(npol):
+                    rep_real[chan, pol], foot[chan, pol] = reproject_interp((im.data.real[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
+                    rep_imag[chan, pol], foot[chan, pol] = reproject_interp((im.data.imag[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
+            rep = rep_real + 1j * rep_imag
+        else:
+            rep = numpy.zeros_like(im.data)
+            foot = numpy.zeros_like(im.data, dtype='float')
+            for chan in range(nchan):
+                for pol in range(npol):
+                    rep[chan, pol], foot[chan, pol] = reproject_interp((im.data[chan, pol], im.wcs.sub(2)), newwcs.sub(2), shape[2:], order='bicubic')
+        
+        if numpy.sum(foot.data) < 1e-12:
+            log.warning("reproject_image: no valid points in reprojection")
+    elif len(im.shape)==2:
+        if im.data.dtype == 'complex':
+            rep_real, foot = reproject_interp((im.data.real, im.wcs), newwcs, shape, order='bicubic')
+            rep_imag, foot = reproject_interp((im.data.imag, im.wcs), newwcs, shape, order='bicubic')
+            rep = rep_real + 1j * rep_imag
+        else:
+            rep, foot = reproject_interp((im.data, im.wcs), newwcs, shape, order='bicubic')
+    
+        if numpy.sum(foot.data) < 1e-12:
+            log.warning("reproject_image: no valid points in reprojection")
+
+    else:
+        raise ValueError("Cannot reproject image with shape {}".format(im.shape))
         
     return create_image_from_array(rep, newwcs, im.polarisation_frame), create_image_from_array(foot, newwcs,
                                                                                                 im.polarisation_frame)
