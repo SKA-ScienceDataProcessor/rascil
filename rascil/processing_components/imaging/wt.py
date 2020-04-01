@@ -67,23 +67,30 @@ try:
 
     def gcf2wkern(gcfcf, wtkern):
     	# Get data and metadata from the input gcfcf
-    	plane_count,wplanes,wmin,wmax,wstep,size_y,size_x,oversampling = convert_kernel_to_list(gcfcf)
+        plane_count,wplanes,wmin,wmax,wstep,size_y,size_x,oversampling = convert_kernel_to_list(gcfcf)
     	# Allocate memory for wtkern structure
-    	status = wtowers.wkernel_allocate_func(wtkern, plane_count,size_x,size_y)
+        status = wtowers.wkernel_allocate_func(wtkern, plane_count,size_x,size_y,oversampling)
     	# Copy the rest of the metadata to wtkern
-    	wtkern.w_min = wmin[0]
-    	wtkern.w_max = wmax[0]
-    	wtkern.w_step = wstep
-    	wtkern.oversampling = oversampling
+        wtkern.w_min = wmin[0]
+        wtkern.w_max = wmax[0]
+        wtkern.w_step = wstep
+        wtkern.oversampling = oversampling
     	# Copy w-kernels into wtkern.kern_by_w
-    	for i in range(plane_count):
-        	wtkern.kern_by_w[i].w = wplanes[i][0][0]
-        	for iy in range(size_y):
-            		for ix in range(size_x):
-                		idx = ix + iy*size_x
-                		wtkern.kern_by_w[i].data[2*idx]   = numpy.real(wplanes[i][1][ix][iy])
-                		wtkern.kern_by_w[i].data[2*idx+1] = numpy.imag(wplanes[i][1][ix][iy])
-    	return wtkern
+        for i in range(plane_count):
+             wtkern.kern_by_w[i].w = wplanes[i][0][0]
+             wplanes_f = numpy.asarray(wplanes[0][1]).flatten()
+ #       	for iy in range(size_y):
+ #           		for ix in range(size_x):
+ #               		for offy in range(oversampling):
+ #                   			for offx in range(oversampling):
+ #               				idx = ix + iy*size_x
+ #               				wtkern.kern_by_w[i].data[2*idx]   = numpy.real(wplanes[i][1][offy][offx][ix][iy])
+ #               				wtkern.kern_by_w[i].data[2*idx+1] = numpy.imag(wplanes[i][1][offy][offx][ix][iy])
+             for idx in range(wplanes_f.shape[0]):
+                  wtkern.kern_by_w[i].data[2*idx]   = numpy.real(wplanes_f[idx])
+                  wtkern.kern_by_w[i].data[2*idx+1] = numpy.imag(wplanes_f[idx])
+
+        return wtkern
 
 
     def predict_wt(bvis: BlockVisibility, model: Image, gcfcf=None, **kwargs) -> \

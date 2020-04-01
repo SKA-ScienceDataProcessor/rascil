@@ -214,23 +214,31 @@ def convert_kernel_to_list(gcfcf):
     """
     gcf, cf = gcfcf
     nchan, npol, nw, oversampling, _, ny, nx = cf.shape
-    size_y = ny * oversampling
-    size_x = nx * oversampling
+#    size_y = ny * oversampling
+#    size_x = nx * oversampling
+    size_y = ny
+    size_x = nx
+
     wplanes = list()
     for wplane in range(nw):
         w = cf.grid_wcs.sub([5]).wcs_pix2world(wplane, 0)
-        wslice = numpy.zeros([size_y, size_x], dtype='complex')
+        wslice = numpy.zeros([oversampling, oversampling, size_y, size_x], dtype='complex')
+#        wslice = numpy.zeros([size_y, size_x], dtype='complex')
         for y in range(ny):
             for x in range(ny):
                 for offy in range(oversampling):
                     for offx in range(oversampling):
-                        wslice[offy + oversampling * y, offx + oversampling * x] = cf.data[
+                        wslice[offy, offx, y, x] = cf.data[
                             0, 0, wplane, offy, offx, y, x]
+#                        wslice[offy + oversampling * y, offx + oversampling * x] = cf.data[
+#                            0, 0, wplane, offy, offx, y, x]
         wplanes.append((w, wslice))
         if wplane == 0:
             import matplotlib.pyplot as plt
             plt.clf()
-            plt.imshow(numpy.real(wslice))
+            plt.imshow(numpy.real(wslice[int(oversampling/2),int(oversampling/2),:,:]))
+#            plt.imshow(numpy.real(wslice))
+
             plt.show(block=False)
 
     # int plane_count;
