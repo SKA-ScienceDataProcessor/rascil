@@ -13,8 +13,12 @@ from typing import Union
 
 import matplotlib.pyplot as plt
 import numpy.linalg
+<<<<<<< HEAD
 #from astropy.visualization import time_support
+=======
+>>>>>>> SIM-372-PA_tracking
 from astropy.time import Time
+from astropy.visualization import time_support
 
 from rascil.data_models.memory_data_models import GainTable, BlockVisibility, QA, assert_vis_gt_compatible
 from rascil.data_models.polarisation import ReceptorFrame
@@ -297,6 +301,7 @@ def gaintable_plot(gt: GainTable, cc="T", title='', ants=None, channels=None, la
     
     with time_support(format='iso', scale='utc'):
         
+<<<<<<< HEAD
 
     # with time_support(format = 'iso', scale = 'utc'):
     if True:
@@ -304,6 +309,10 @@ def gaintable_plot(gt: GainTable, cc="T", title='', ants=None, channels=None, la
         # time_axis = Time(gt.time/86400.0, format='mjd', out_subfmt='str')
         time_axis = gt.time / 86400.0
    
+=======
+        time_axis = Time(gt.time / 86400.0, format='mjd', out_subfmt='str')
+        
+>>>>>>> SIM-372-PA_tracking
         if cc == "B":
             
             fig, ax = plt.subplots(3, 1, sharex=True)
