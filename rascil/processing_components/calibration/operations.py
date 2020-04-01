@@ -295,64 +295,59 @@ def gaintable_plot(gt: GainTable, cc="T", title='', ants=None, channels=None, la
     else:
         labels = ['' for ant in ants]
     
-    with time_support(format='iso', scale='utc'):
-        
-
     # with time_support(format = 'iso', scale = 'utc'):
-    if True:
-        
         # time_axis = Time(gt.time/86400.0, format='mjd', out_subfmt='str')
-        time_axis = gt.time / 86400.0
-   
-        if cc == "B":
-            
-            fig, ax = plt.subplots(3, 1, sharex=True)
-            
-            residual = gt.residual[:, channels, 0, 0]
-            ax[0].imshow(residual, cmap=cmap)
-            ax[0].set_title("{title} RMS residual {cc}".format(title=title, cc=cc))
-            ax[0].set_ylabel('RMS residual (Jy)')
-            
-            amp = numpy.abs(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
-            ax[1].imshow(amp, cmap=cmap)
-            ax[1].set_ylabel('Amplitude')
-            ax[1].set_title("{title} Amplitude {cc}".format(title=title, cc=cc))
-            ax[1].xaxis.set_tick_params(labelsize='small')
-            
-            phase = numpy.angle(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
-            ax[2].imshow(phase, cmap=cmap)
-            ax[2].set_ylabel('Phase (radian)')
-            ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
-            ax[2].xaxis.set_tick_params(labelsize='small')
+    time_axis = gt.time / 86400.0
+
+    if cc == "B":
         
-        else:
-            
-            fig, ax = plt.subplots(3, 1, sharex=True)
-            
-            residual = gt.residual[:, channels, 0, 0]
-            ax[0].plot(time_axis, residual, '.')
-            ax[1].set_ylabel('Residual fit (Jy)')
-            ax[0].set_title("{title} Residual {cc}".format(title=title, cc=cc))
-            
-            for ant in ants:
-                amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
-                ax[1].plot(time_axis[amp[:, 0] > min_amp],
-                           amp[amp[:, 0] > min_amp], '.',
-                           label=labels[ant])
-            ax[1].set_ylabel('Amplitude (Jy)')
-            ax[1].set_title("{title} Amplitude {cc}".format(title=title, cc=cc))
-            
-            for ant in ants:
-                amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
-                angle = numpy.angle(gt.gain[:, ant, channels, 0, 0])
-                ax[2].plot(time_axis[amp[:, 0] > min_amp],
-                           angle[amp[:, 0] > min_amp], '.', label=labels[ant])
-            ax[2].set_ylabel('Phase (rad)')
-            ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
-            ax[2].xaxis.set_tick_params(labelsize=8)
-            plt.xticks(rotation=0)
-            
-            if gt.configuration is not None:
-                if len(gt.configuration.names) < label_max:
-                    ax[1].legend()
-                    ax[1][1].legend()
+        fig, ax = plt.subplots(3, 1, sharex=True)
+        
+        residual = gt.residual[:, channels, 0, 0]
+        ax[0].imshow(residual, cmap=cmap)
+        ax[0].set_title("{title} RMS residual {cc}".format(title=title, cc=cc))
+        ax[0].set_ylabel('RMS residual (Jy)')
+        
+        amp = numpy.abs(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
+        ax[1].imshow(amp, cmap=cmap)
+        ax[1].set_ylabel('Amplitude')
+        ax[1].set_title("{title} Amplitude {cc}".format(title=title, cc=cc))
+        ax[1].xaxis.set_tick_params(labelsize='small')
+        
+        phase = numpy.angle(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
+        ax[2].imshow(phase, cmap=cmap)
+        ax[2].set_ylabel('Phase (radian)')
+        ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
+        ax[2].xaxis.set_tick_params(labelsize='small')
+    
+    else:
+        
+        fig, ax = plt.subplots(3, 1, sharex=True)
+        
+        residual = gt.residual[:, channels, 0, 0]
+        ax[0].plot(time_axis, residual, '.')
+        ax[1].set_ylabel('Residual fit (Jy)')
+        ax[0].set_title("{title} Residual {cc}".format(title=title, cc=cc))
+        
+        for ant in ants:
+            amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
+            ax[1].plot(time_axis[amp[:, 0] > min_amp],
+                       amp[amp[:, 0] > min_amp], '.',
+                       label=labels[ant])
+        ax[1].set_ylabel('Amplitude (Jy)')
+        ax[1].set_title("{title} Amplitude {cc}".format(title=title, cc=cc))
+        
+        for ant in ants:
+            amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
+            angle = numpy.angle(gt.gain[:, ant, channels, 0, 0])
+            ax[2].plot(time_axis[amp[:, 0] > min_amp],
+                       angle[amp[:, 0] > min_amp], '.', label=labels[ant])
+        ax[2].set_ylabel('Phase (rad)')
+        ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
+        ax[2].xaxis.set_tick_params(labelsize=8)
+        plt.xticks(rotation=0)
+        
+        if gt.configuration is not None:
+            if len(gt.configuration.names) < label_max:
+                ax[1].legend()
+                ax[1][1].legend()
