@@ -33,7 +33,7 @@ log.setLevel(logging.DEBUG)
 
 class TestPrimaryBeamsPolGraph(unittest.TestCase):
     def setUp(self):
-        rsexecute.set_client(use_dask=False, n_workers=4)
+        rsexecute.set_client(use_dask=True, n_workers=4)
 
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
@@ -51,18 +51,19 @@ class TestPrimaryBeamsPolGraph(unittest.TestCase):
         self.config = create_named_configuration(config, rmax=rmax)
         self.times = numpy.linspace(-300.0, 300.0, 3) * numpy.pi / 43200.0
         nants = self.config.xyz.shape[0]
-        self.npixel = 1024
+        self.npixel = 512
         self.fov = 4
         self.cellsize = numpy.pi * self.fov / (self.npixel * 180.0)
         assert nants > 1
         assert len(self.config.names) == nants
         assert len(self.config.mount) == nants
 
+    @unittest.skip("Too large for CI/CD")
     def test_apply_voltage_pattern_image_s3(self):
-        self.createVis(rmax=2.5e3)
+        self.createVis(rmax=1e3)
         telescope = 'MID_FEKO_B2'
         vpol = PolarisationFrame("linear")
-        self.times = numpy.linspace(-6, +6, 30) * numpy.pi / 12.0
+        self.times = numpy.linspace(-4, +4, 8) * numpy.pi / 12.0
         bvis = create_blockvisibility(self.config, self.times, self.frequency,
                                       channel_bandwidth=self.channel_bandwidth,
                                       phasecentre=self.phasecentre, weight=1.0,
@@ -78,13 +79,11 @@ class TestPrimaryBeamsPolGraph(unittest.TestCase):
         vpbeam.wcs.wcs.crval[0] = pbmodel.wcs.wcs.crval[0]
         vpbeam.wcs.wcs.crval[1] = pbmodel.wcs.wcs.crval[1]
 
-        s3_components = create_test_skycomponents_from_s3(flux_limit=0.001,
+        s3_components = create_test_skycomponents_from_s3(flux_limit=0.1,
                                                           phasecentre=self.phasecentre,
                                                           frequency=self.frequency,
                                                           polarisation_frame=PolarisationFrame('stokesI'),
                                                           radius=1.5 * numpy.pi / 180.0)
-
-        print(len(s3_components))
 
         for comp in s3_components:
             comp.polarisation_frame = PolarisationFrame('stokesIQUV')

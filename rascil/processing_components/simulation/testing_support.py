@@ -345,7 +345,11 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
                 if numpy.max(flux) > flux_limit:
                     ras.append(ra)
                     decs.append(dec)
-                    fluxes.append([[f] for f in flux])
+                    if polarisation_frame == PolarisationFrame("stokesIQUV"):
+                        polscale = numpy.array([1.0, 0.0, 0.0, 0.0])
+                        fluxes.append(numpy.outer(flux, polscale))
+                    else:
+                        fluxes.append([[f] for f in flux])
                     names.append("S3_%s" % row[0])
             r += 1
 

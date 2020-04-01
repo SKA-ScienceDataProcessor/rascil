@@ -22,7 +22,7 @@ docs:
     - mkdir -p docs/build/html
     - mkdir -p test_results
   script:
-    - PYTHONPATH=`pwd` make -k -j -C docs html
+    - PYTHONPATH=`pwd` make -k -C docs html
   after_script:
     - mv docs/build/html html
   artifacts:

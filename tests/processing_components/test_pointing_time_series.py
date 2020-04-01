@@ -26,7 +26,7 @@ log.setLevel(logging.WARNING)
 class TestPointing(unittest.TestCase):
     def setUp(self):
         from rascil.data_models.parameters import rascil_path, rascil_data_path
-        self.doplot = True
+        self.doplot = False
         
         self.midcore = create_named_configuration('MID', rmax=100.0)
         self.nants = len(self.midcore.names)

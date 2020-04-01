@@ -1,20 +1,22 @@
 import numpy
 
 
-def apply_jones(ej, cfs, inverse=False):
+def apply_jones(ej, cfs, inverse=False, min_det=1e-6):
     """ Apply Jones matrix (or inverse)
 
     :param ej: 2x2 Jones matrix
-    :param cfs: 4 vector of stokes
+    :param cfs: 2x2 matrix of stokes
     :param inverse: Calculate the inverse
+    :param min_det: Minimum determinant in invert
     :return:
     """
-    cfs = cfs.reshape([2, 2])
-    assert ej.shape == (2, 2)
     if inverse:
-        inv_ej = numpy.linalg.inv(ej)
-        inv_cej = numpy.conjugate(inv_ej).T
-        return (inv_ej @ cfs @ inv_cej).reshape([4])
+        if numpy.abs(numpy.linalg.det(ej)) > min_det:
+            inv_ej = numpy.linalg.inv(ej)
+            inv_cej = numpy.conjugate(inv_ej).T
+            return inv_ej @ cfs @ inv_cej
+        else:
+            return 0.0 * cfs
     else:
         cej = numpy.conjugate(ej).T
-        return (ej @ cfs @ cej).reshape([4])
+        return ej @ cfs @ cej

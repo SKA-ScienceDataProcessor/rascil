@@ -1,6 +1,5 @@
 """ Unit tests for image operations
 
-
 """
 import logging
 import os
@@ -11,11 +10,12 @@ import numpy
 from rascil.data_models.parameters import rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components import create_image, create_image_from_array, polarisation_frame_from_wcs, \
-    copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like, import_image_from_fits
+    copy_image, create_empty_image_like, fft_image, pad_image, create_w_term_like, \
+    import_image_from_fits, create_vp, apply_voltage_pattern_to_image
 from rascil.processing_components.image.operations import export_image_to_fits, \
     calculate_image_frequency_moments, calculate_image_from_frequency_moments, add_image, qa_image, reproject_image, \
     convert_polimage_to_stokes, \
-    convert_stokes_to_polimage, smooth_image
+    convert_stokes_to_polimage, smooth_image, scale_and_rotate_image
 from rascil.processing_components.simulation import create_test_image, create_low_test_image_from_gleam
 
 log = logging.getLogger('logger')
@@ -201,6 +201,38 @@ class TestImage(unittest.TestCase):
 
         with self.assertRaises(IndexError):
             padded = pad_image(m31image, [1, 1])
+
+    def test_scale_and_rotate(self):
+    
+        vp = create_vp(telescope='MID_FEKO_B2')
+        vp = scale_and_rotate_image(vp, 30.0 * numpy.pi / 180.0, [1.0, 2.0])
+        if self.persist:
+            vp.data = vp.data.real
+            fitsfile = '{}/test_vp_affine_real.fits'.format(self.dir)
+            export_image_to_fits(vp, fitsfile=fitsfile)
+
+    def test_apply_voltage_pattern(self):
+    
+        vp = create_vp(telescope='MID_FEKO_B2')
+        # vp = scale_and_rotate_image(vp, 30.0 * numpy.pi / 180.0, [1.0, 2.0])
+        cellsize = vp.wcs.wcs.cdelt[1] * numpy.pi / 180.0
+        m31image = create_test_image(cellsize=cellsize, frequency=[1.36e9], canonical=True)
+        padded = pad_image(m31image, [1, 1, 1024, 1024])
+        padded.data = numpy.repeat(padded.data, repeats=4, axis=1)
+        padded.polarisation_frame = PolarisationFrame("stokesIQUV")
+        padded.data[:, 1:, ...] = 0.0
+        applied = apply_voltage_pattern_to_image(padded, vp)
+        unapplied = apply_voltage_pattern_to_image(applied, vp, inverse=True, min_det=1e-12)
+        if self.persist:
+            applied.data = applied.data.real
+            fitsfile = '{}/test_apply_voltage_pattern_real.fits'.format(self.dir)
+            export_image_to_fits(applied, fitsfile=fitsfile)
+            unapplied.data = unapplied.data.real
+            fitsfile = '{}/test_apply_voltage_pattern_inv_real.fits'.format(self.dir)
+            export_image_to_fits(unapplied, fitsfile=fitsfile)
+            
+        err = numpy.max(numpy.abs(unapplied.data-padded.data))
+        assert err < 1e-12, err
 
 
 if __name__ == '__main__':
