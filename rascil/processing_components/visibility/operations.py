@@ -305,8 +305,7 @@ def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
     newvis.data['flags'][newvis.data['flags'] < nchan] = 0
     newvis.data['flags'][newvis.data['flags'] > 1] = 1
     
-    newvis.data['vis'][..., 0, :] = numpy.sum(
-        vis.data['vis'] * vis.flagged_weight, axis=-2)
+    newvis.data['vis'][..., 0, :] = numpy.sum(vis.data['vis'] * vis.flagged_weight, axis=-2)
     newvis.data['weight'][..., 0, :] = numpy.sum(vis.flagged_weight, axis=-2)
     newvis.data['imaging_weight'][..., 0, :] = numpy.sum(
         vis.flagged_imaging_weight, axis=-2)
@@ -319,7 +318,7 @@ def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
 
 def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=None) \
         -> List[BlockVisibility]:
-    """ Average visibility by groups of channels, returning new visibility
+    """ Average visibility by groups of channels, returning list of new visibility
 
     :param vis: BlockVisibility
     :param channel_average: Number of channels to average
@@ -357,19 +356,20 @@ def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=Non
                             polarisation_frame=vis.polarisation_frame,
                             source=vis.source,
                             meta=vis.meta)
+        vf = vis.flags[..., group[0]:group[1], :]
+        vfv = vis.flagged_vis[..., group[0]:group[1], :]
+        vfw = vis.flagged_weight[..., group[0]:group[1], :]
+        vfiw = vis.flagged_imaging_weight[..., group[0]:group[1], :]
         
-        newvis.data['flags'][..., 0, :] = numpy.sum(vis.flags[..., group[0]:group[1], :], axis=-2)
+        newvis.data['flags'][..., 0, :] = numpy.sum(vf, axis=-2)
         newvis.data['flags'][newvis.data['flags'] < nchan] = 0
         newvis.data['flags'][newvis.data['flags'] > 1] = 1
         
-        newvis.data['vis'][..., 0, :] = numpy.sum(vis.flagged_vis[..., group[0]:group[1], :]
-                                                  * vis.flagged_weight[..., group[0]:group[1], :], axis=-2)
-        newvis.data['weight'][..., 0, :] = numpy.sum(vis.flagged_weight[..., group[0]:group[1], :], axis=-2)
-        newvis.data['imaging_weight'][..., 0, :] = numpy.sum(
-            vis.flagged_imaging_weight[..., group[0]:group[1], :], axis=-2)
+        newvis.data['vis'][..., 0, :] = numpy.sum(vfv * vfw, axis=-2)
+        newvis.data['weight'][..., 0, :] = numpy.sum(vfw, axis=-2)
+        newvis.data['imaging_weight'][..., 0, :] = numpy.sum(vfiw, axis=-2)
         mask = newvis.flagged_weight > 0.0
-        newvis.data['vis'][mask] = newvis.data['vis'][mask] / \
-                                   newvis.flagged_weight[mask]
+        newvis.data['vis'][mask] = newvis.data['vis'][mask] / newvis.flagged_weight[mask]
         
         newvis_list.append(newvis)
     

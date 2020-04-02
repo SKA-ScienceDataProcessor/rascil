@@ -1022,6 +1022,8 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
             polarisation_frame = PolarisationFrame('circular')
         elif numpy.array_equal(corr_type, [-1, -4]):
             polarisation_frame = PolarisationFrame('circularnp')
+        elif numpy.array_equal(corr_type, [-5, -6, -7, -8]):
+            polarisation_frame = PolarisationFrame('linear')
         elif numpy.array_equal(corr_type, [-5, -8]):
             polarisation_frame = PolarisationFrame('linearnp')
         else:
