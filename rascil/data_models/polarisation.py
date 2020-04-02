@@ -223,11 +223,10 @@ def convert_linear_to_stokes(linear, polaxis=1):
     return polmatrixmultiply(conversion_matrix, linear, polaxis)
 
 
-def convert_linear_to_stokesI(linear, polaxis=1):
+def convert_linear_to_stokesI(linear):
     """ Convert Linear to Stokes I
 
     :param linear: [...,4] linear vector in XX, XY, YX, YY sequence
-    :param polaxis: Axis of linear with polarisation (default 1)
     :return: Complex I
 
     Equation 4.58 TMS, inverted with numpy.linalg.inv
@@ -281,11 +280,10 @@ def convert_circular_to_stokes(circular, polaxis=1):
     return polmatrixmultiply(conversion_matrix, circular, polaxis)
 
 
-def convert_circular_to_stokesI(circular, polaxis=1):
+def convert_circular_to_stokesI(circular):
     """ Convert Circular to Stokes I
 
     :param circular: [...,4] linear vector in RR, RL, LR, LL sequence
-    :param polaxis: Axis of circular with polarisation (default 1)
     :return: Complex I
 
     Equation 4.58 TMS, inverted with numpy.linalg.inv
@@ -305,25 +303,25 @@ def convert_pol_frame(polvec, ipf: PolarisationFrame, opf: PolarisationFrame, po
         if opf == PolarisationFrame("stokesIQUV"):
             return convert_linear_to_stokes(polvec, polaxis)
         elif opf == PolarisationFrame("stokesI"):
-            return convert_linear_to_stokesI(polvec, polaxis)
+            return convert_linear_to_stokesI(polvec)
 
     if ipf == PolarisationFrame("linearnp"):
         if opf == PolarisationFrame("stokesIQ"):
             return convert_linear_to_stokes(polvec, polaxis)
         elif opf == PolarisationFrame("stokesI"):
-            return convert_linear_to_stokesI(polvec, polaxis)
+            return convert_linear_to_stokesI(polvec)
 
     if ipf == PolarisationFrame("circular"):
         if opf == PolarisationFrame("stokesIQUV"):
             return convert_circular_to_stokes(polvec, polaxis)
         elif opf == PolarisationFrame("stokesI"):
-            return convert_circular_to_stokesI(polvec, polaxis)
+            return convert_circular_to_stokesI(polvec)
 
     if ipf == PolarisationFrame("circularnp"):
         if opf == PolarisationFrame("stokesIV"):
             return convert_circular_to_stokes(polvec, polaxis)
         elif opf == PolarisationFrame("stokesI"):
-            return convert_circular_to_stokesI(polvec, polaxis)
+            return convert_circular_to_stokesI(polvec)
 
     if ipf == PolarisationFrame("stokesIQUV"):
         if opf == PolarisationFrame("linear"):
