@@ -673,6 +673,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
     vis_list = list()
     for field in fields:
         ftab = table(msname, ack=ack).query('FIELD_ID==%d' % field, style='')
+        assert ftab.nrows() > 0, "Empty selection for FIELD_ID=%d" % (field)
         for dd in dds:
             # Now get info from the subtables
             ddtab = table('%s/DATA_DESCRIPTION' % msname, ack=False)
@@ -784,15 +785,25 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             
             # Get configuration
             anttab = table('%s/ANTENNA' % msname, ack=False)
-            ids = numpy.arange(anttab.nrows())
             names = numpy.array(anttab.getcol('NAME'))
             
-            ant_map = numpy.zeros(anttab.nrows(), dtype='int')
-            mount = anttab.getcol('MOUNT')
-            diameter = anttab.getcol('DISH_DIAMETER')
-            xyz = anttab.getcol('POSITION')
-            nants = anttab.nrows()
-            ids = list(range(len(names)))
+            ant_map = list()
+            actual = 0
+            for i, name in enumerate(names):
+                if name != "":
+                    ant_map.append(actual)
+                    actual += 1
+                else:
+                    ant_map.append(-1)
+            
+            mount = numpy.array(anttab.getcol('MOUNT'))[names != '']
+            diameter = numpy.array(anttab.getcol('DISH_DIAMETER'))[names != '']
+            xyz = numpy.array(anttab.getcol('POSITION'))[names != '']
+            names = numpy.array(anttab.getcol('NAME'))[names != '']
+            nants = len(names)
+            
+            antenna1 = list(map(lambda i: ant_map[i], antenna1))
+            antenna2 = list(map(lambda i: ant_map[i], antenna2))
             
             configuration = Configuration(name='', data=None, location=None,
                                           names=names, xyz=xyz, mount=mount, frame="geocentric",
