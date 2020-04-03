@@ -1,6 +1,4 @@
-""" Unit tests for Fourier transform processors
-
-
+""" Unit tests for visibility weighting
 """
 import os
 import logging
@@ -28,13 +26,13 @@ log.setLevel(logging.WARNING)
 
 class TestWeighting(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path, rascil_data_path
+        from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         self.npixel = 512
 
         self.persist = os.getenv("RASCIL_PERSIST", False)
 
-    def actualSetUp(self, time=None, frequency=None, dospectral=False, dopol=False):
+    def actualSetUp(self, time=None, dospectral=False, image_pol=PolarisationFrame("stokesI")):
         self.lowcore = create_named_configuration('LOWBD2', rmax=600)
         self.times = (numpy.pi / 12.0) * numpy.linspace(-3.0, 3.0, 5)
         
@@ -50,17 +48,21 @@ class TestWeighting(unittest.TestCase):
             self.frequency = numpy.array([1e8])
             self.channel_bandwidth = numpy.array([1e7])
             
-        if dopol:
-            self.vis_pol = PolarisationFrame('linear')
-            self.image_pol = PolarisationFrame('stokesIQUV')
-        else:
-            self.vis_pol = PolarisationFrame('stokesI')
-            self.image_pol = PolarisationFrame('stokesI')
-
-        if dopol:
-            f = numpy.array([100.0, 20.0, -10.0, 1.0])
-        else:
+        self.image_pol = image_pol
+        if image_pol == PolarisationFrame("stokesI"):
+            self.vis_pol = PolarisationFrame("stokesI")
             f = numpy.array([100.0])
+        elif image_pol == PolarisationFrame("stokesIQUV"):
+            self.vis_pol = PolarisationFrame("linear")
+            f = numpy.array([100.0, 20.0, -10.0, 1.0])
+        elif image_pol == PolarisationFrame("stokesIQ"):
+            self.vis_pol = PolarisationFrame("linearnp")
+            f = numpy.array([100.0, 20.0])
+        elif image_pol == PolarisationFrame("stokesIV"):
+            self.vis_pol = PolarisationFrame("circularnp")
+            f = numpy.array([100.0, 20.0])
+        else:
+            raise ValueError("Polarisation {} not supported".format(image_pol))
 
         if dospectral:
             numpy.array([f, 0.8 * f, 0.6 * f])
