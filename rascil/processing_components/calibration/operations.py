@@ -49,7 +49,7 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
         log.debug('apply_gaintable: Apply gaintable')
     
     is_scalar = gt.gain.shape[-2:] == (1, 1)
-    if is_scalar:
+    if vis.npol == 1:
         log.debug('apply_gaintable: scalar gains')
     
     row_numbers = numpy.array(list(range(len(vis.time))), dtype='int')
@@ -69,7 +69,7 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
             original = vis.vis[vis_rows]
             applied = copy.copy(vis.vis[vis_rows])
             appliedwt = copy.copy(vis.weight[vis_rows])
-            if is_scalar:
+            if vis.npol == 1:
                 if inverse:
                     lgain = numpy.ones_like(gain)
                     lgain[numpy.abs(gain) > 0.0] = 1.0 / gain[numpy.abs(gain) > 0.0]
@@ -89,8 +89,38 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
                         antantwt = numpy.outer(gainwt[:, chan, 0, 0], gainwt[:, chan, 0, 0])
                         appliedwt[sub_vis_row, :, :, chan, 0] = antantwt
                         applied[sub_vis_row, :, :, chan, 0][antantwt == 0.0] = 0.0
-            else:
-                
+            elif vis.npol == 2:
+                has_inverse_ant = numpy.zeros([nant, nchan], dtype='bool')
+                if inverse:
+                    igain = gain.copy()
+                    cigain = cgain.copy()
+                    for a1 in range(vis.nants):
+                        for chan in range(nchan):
+                            try:
+                                igain[a1, chan, :, :] = numpy.linalg.inv(gain[a1, chan, :, :])
+                                cigain[a1, chan, :, :] = numpy.conjugate(igain[a1, chan, :, :])
+                                has_inverse_ant[a1, chan] = True
+                            except numpy.linalg.linalg.LinAlgError:
+                                has_inverse_ant[a1, chan] = False
+        
+                    for sub_vis_row in range(original.shape[0]):
+                        for a1 in range(vis.nants - 1):
+                            for a2 in range(a1 + 1, vis.nants):
+                                for chan in range(nchan):
+                                    if has_inverse_ant[a1, chan] and has_inverse_ant[a2, chan]:
+                                        cfs = numpy.diag(original[sub_vis_row, a2, a1, chan, ...])
+                                        applied[sub_vis_row, a2, a1, chan, ...] = \
+                                            numpy.diag(igain[a1, chan, :, :] @ cfs @ cigain[a2, chan, :, :]).reshape([2])
+                else:
+                    for sub_vis_row in range(original.shape[0]):
+                        for a1 in range(vis.nants - 1):
+                            for a2 in range(a1 + 1, vis.nants):
+                                for chan in range(nchan):
+                                    cfs = numpy.diag(original[sub_vis_row, a2, a1, chan, ...])
+                                    applied[sub_vis_row, a2, a1, chan, ...] = \
+                                        numpy.diag(gain[a1, chan, :, :] @ cfs @ cgain[a2, chan, :, :]).reshape([2])
+
+            elif vis.npol == 4:
                 has_inverse_ant = numpy.zeros([nant, nchan], dtype='bool')
                 if inverse:
                     igain = gain.copy()

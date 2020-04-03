@@ -499,7 +499,13 @@ def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame)
     if polarisation_frame == PolarisationFrame('linear'):
         cimarr = convert_stokes_to_linear(im.data)
         return create_image_from_array(cimarr, im.wcs, polarisation_frame)
+    elif polarisation_frame == PolarisationFrame('linearnp'):
+        cimarr = convert_stokes_to_linear(im.data)
+        return create_image_from_array(cimarr, im.wcs, polarisation_frame)
     elif polarisation_frame == PolarisationFrame('circular'):
+        cimarr = convert_stokes_to_circular(im.data)
+        return create_image_from_array(cimarr, im.wcs, polarisation_frame)
+    elif polarisation_frame == PolarisationFrame('circularnp'):
         cimarr = convert_stokes_to_circular(im.data)
         return create_image_from_array(cimarr, im.wcs, polarisation_frame)
     elif polarisation_frame == PolarisationFrame('stokesI'):
@@ -529,9 +535,15 @@ def convert_polimage_to_stokes(im: Image):
     if im.polarisation_frame == PolarisationFrame('linear'):
         cimarr = convert_linear_to_stokes(im.data)
         return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
+    elif im.polarisation_frame == PolarisationFrame('linearnp'):
+        cimarr = convert_linear_to_stokes(im.data)
+        return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQ'))
     elif im.polarisation_frame == PolarisationFrame('circular'):
         cimarr = convert_circular_to_stokes(im.data)
         return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
+    elif im.polarisation_frame == PolarisationFrame('circularnp'):
+        cimarr = convert_circular_to_stokes(im.data)
+        return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIV'))
     elif im.polarisation_frame == PolarisationFrame('stokesI'):
         return create_image_from_array(numpy.real(im.data), im.wcs, PolarisationFrame('stokesI'))
     else:

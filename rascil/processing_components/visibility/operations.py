@@ -2,7 +2,8 @@
 
 """
 
-__all__ = ['append_visibility', 'sort_visibility',
+__all__ = ['append_visibility',
+           'sort_visibility',
            'concatenate_blockvisibility_frequency',
            'concatenate_visibility',
            'subtract_visibility',

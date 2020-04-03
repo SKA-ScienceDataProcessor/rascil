@@ -35,7 +35,9 @@ class ReceptorFrame:
     
     rec_frames = {
         'circular': {'R': 0, 'L': 1},
+        'circularnp': {'R': 0, 'L': 1},
         'linear': {'X': 0, 'Y': 1},
+        'linearnp': {'X': 0, 'Y': 1},
         'stokesI': {'I': 0}
     }
     
@@ -189,7 +191,7 @@ def convert_stokes_to_linear(stokes, polaxis=1):
     Equation 4.58 TMS
     """
     if stokes.shape[polaxis] == 2:
-        conversion_matrix = numpy.array([[1, 0],
+        conversion_matrix = numpy.array([[1, 1],
                                          [1, -1]])
     
     else:

@@ -1,8 +1,8 @@
 """ Unit tests for imaging using nifty gridder
 
 """
-import os
 import logging
+import os
 import sys
 import unittest
 
@@ -18,11 +18,11 @@ from rascil.processing_components.simulation import ingest_unittest_visibility, 
     create_unittest_model, create_unittest_components
 from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
     insert_skycomponent
-from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
-from rascil.processing_components.visibility.base import copy_visibility
+from rascil.processing_components.visibility import copy_visibility, convert_blockvisibility_to_visibility
 
 try:
     import nifty_gridder
+    
     run_ng_tests = True
 #            except ModuleNotFoundError:
 except ImportError:
@@ -38,14 +38,15 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestImagingNG(unittest.TestCase):
     def setUp(self):
         
-        from rascil.data_models.parameters import rascil_path, rascil_data_path
+        from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         
-        self.persist = os.getenv("RASCIL_PERSIST", False)
-
+        self.persist = os.getenv("RASCIL_PERSIST", True)
+        
         self.verbosity = 0
     
-    def actualSetUp(self, freqwin=1, block=True, dospectral=True, dopol=False, zerow=False, do_shift=False):
+    def actualSetUp(self, freqwin=1, block=True, dospectral=True,
+                    image_pol=PolarisationFrame('stokesI'), zerow=False):
         
         self.npixel = 512
         self.low = create_named_configuration('LOWBD2', rmax=750.0)
@@ -55,16 +56,24 @@ class TestImagingNG(unittest.TestCase):
         self.times = numpy.linspace(-3.0, +3.0, self.ntimes) * numpy.pi / 12.0
         
         if freqwin > 1:
-            self.frequency = numpy.linspace(0.99e8, 1.01e8, self.freqwin)
+            self.frequency = numpy.linspace(0.8e8, 1.2e8, self.freqwin)
             self.channelwidth = numpy.array(freqwin * [self.frequency[1] - self.frequency[0]])
         else:
             self.frequency = numpy.array([1e8])
             self.channelwidth = numpy.array([1e6])
         
-        if dopol:
+        if image_pol == PolarisationFrame('stokesIQUV'):
             self.blockvis_pol = PolarisationFrame('linear')
-            self.image_pol = PolarisationFrame('stokesIQUV')
+            self.image_pol = image_pol
             f = numpy.array([100.0, 20.0, -10.0, 1.0])
+        elif image_pol == PolarisationFrame('stokesIQ'):
+            self.blockvis_pol = PolarisationFrame('linearnp')
+            self.image_pol = image_pol
+            f = numpy.array([100.0, 20.0])
+        elif image_pol == PolarisationFrame('stokesIV'):
+            self.blockvis_pol = PolarisationFrame('circularnp')
+            self.image_pol = image_pol
+            f = numpy.array([100.0, 20.0])
         else:
             self.blockvis_pol = PolarisationFrame('stokesI')
             self.image_pol = PolarisationFrame('stokesI')
@@ -86,7 +95,7 @@ class TestImagingNG(unittest.TestCase):
                                                    zerow=zerow)
         
         self.vis = convert_blockvisibility_to_visibility(self.blockvis)
-
+        
         self.model = create_unittest_model(self.vis, self.image_pol, npixel=self.npixel, nchan=freqwin)
         
         self.components = create_unittest_components(self.model, flux)
@@ -94,7 +103,7 @@ class TestImagingNG(unittest.TestCase):
         self.model = insert_skycomponent(self.model, self.components)
         
         self.blockvis = dft_skycomponent_visibility(self.blockvis, self.components)
-
+        
         # Calculate the model convolved with a Gaussian.
         
         self.cmodel = smooth_image(self.model)
@@ -129,10 +138,10 @@ class TestImagingNG(unittest.TestCase):
         #     plt.clf()
         #     show_image(dirty[0], pol=pol)
         #     plt.show(block=False)
-
+        
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_ng_%s_residual.fits' %
                                               (self.dir, name))
-
+        
         # assert numpy.max(numpy.abs(dirty[0].data)), "Residual image is empty"
         
         maxabs = numpy.max(numpy.abs(dirty[0].data))
@@ -142,10 +151,10 @@ class TestImagingNG(unittest.TestCase):
                      name='predict_ng', **kwargs):
         
         # dirty = invert_ng(self.blockvis, self.model, dopsf=False, normalize=True, **kwargs)
-        from rascil.processing_components.imaging.ng import predict_ng, invert_ng
+        from rascil.processing_components.imaging.ng import invert_ng
         dirty = invert_ng(self.blockvis, self.model, normalize=True, verbosity=self.verbosity,
                           **kwargs)
-
+        
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_ng_%s_dirty.fits' %
                                               (self.dir, name))
         
@@ -156,52 +165,80 @@ class TestImagingNG(unittest.TestCase):
         #     plt.clf()
         #     show_image(dirty[0], pol=pol)
         #     plt.show(block=False)
-
-
         assert numpy.max(numpy.abs(dirty[0].data)), "Image is empty"
-
+        
         if check_components:
             self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
-
+    
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_predict_ng(self):
         self.actualSetUp()
-        self._predict_base(name='predict')
-
+        self._predict_base(name='predict_ng')
+    
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_predict_ng_IQUV(self):
+        self.actualSetUp(image_pol=PolarisationFrame("stokesIQUV"))
+        self._predict_base(name='predict_ng_IQUV')
+    
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_predict_ng_IQ(self):
+        self.actualSetUp(image_pol=PolarisationFrame("stokesIQ"))
+        self._predict_base(name='predict_ng_IQ')
+    
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_predict_ng_IV(self):
+        self.actualSetUp(image_pol=PolarisationFrame("stokesIV"))
+        self._predict_base(name='predict_ng_IV')
+    
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_ng(self):
         self.actualSetUp()
-        self._invert_base(name='invert', positionthreshold=2.0, check_components=True)
-
+        self._invert_base(name='invert_ng', positionthreshold=2.0, check_components=True)
+    
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
-    def test_predict_ng_pol(self):
-        self.actualSetUp(dopol=True)
-        self._predict_base(name='predict_pol')
-
+    def test_invert_ng_IQUV(self):
+        self.actualSetUp(image_pol=PolarisationFrame("stokesIQUV"))
+        self._invert_base(name='invert_ng_IQUV', positionthreshold=2.0, check_components=True)
+    
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
-    def test_invert_ng_pol(self):
-        self.actualSetUp(dopol=True)
-        self._invert_base(name='invert_pol', positionthreshold=2.0, check_components=False)
-
+    def test_invert_ng_IQ(self):
+        self.actualSetUp(image_pol=PolarisationFrame("stokesIQ"))
+        self._invert_base(name='invert_ng_IQ', positionthreshold=2.0, check_components=True)
+    
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_invert_ng_IV(self):
+        self.actualSetUp(image_pol=PolarisationFrame("stokesIV"))
+        self._invert_base(name='invert_ng_IV', positionthreshold=2.0, check_components=True)
+    
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_predict_ng_spec(self):
         self.actualSetUp(dospectral=True, freqwin=5)
         self._predict_base(name='predict_spec')
-
+    
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_ng_spec(self):
         self.actualSetUp(dospectral=True, freqwin=5)
         self._invert_base(name='invert_spec', positionthreshold=2.0, check_components=False)
+    
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_predict_ng_spec_IQUV(self):
+        self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQUV"))
+        self._predict_base(name='predict_spec_pol_IQUV')
+    
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_invert_ng_spec_IQUV(self):
+        self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQUV"))
+        self._invert_base(name='invert_spec_pol_IQUV', positionthreshold=2.0, check_components=False)
 
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
-    def test_predict_ng_spec_pol(self):
-        self.actualSetUp(dospectral=True, freqwin=5, dopol=True)
-        self._predict_base(name='predict_spec_pol')
+    def test_predict_ng_spec_IQ(self):
+        self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQ"))
+        self._predict_base(name='predict_spec_pol_IQ')
 
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
-    def test_invert_ng_spec_pol(self):
-        self.actualSetUp(dospectral=True, freqwin=5, dopol=True)
-        self._invert_base(name='invert_spec_pol', positionthreshold=2.0, check_components=False)
+    def test_invert_ng_spec_IQ(self):
+        self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQ"))
+        self._invert_base(name='invert_spec_pol_IQ', positionthreshold=2.0, check_components=False)
 
 
 if __name__ == '__main__':

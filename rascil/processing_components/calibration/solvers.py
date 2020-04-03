@@ -65,8 +65,8 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
     for row in range(gt.ntimes):
         vis_rows = numpy.abs(vis.time - gt.time[row]) < gt.interval[row] / 2.0
         if numpy.sum(vis_rows) > 0:
-            x = numpy.sum((pointvis.vis[vis_rows] * pointvis.weight[vis_rows])*(1-pointvis.flags[vis_rows]), axis=0)
-            xwt = numpy.sum(pointvis.weight[vis_rows]*(1-pointvis.flags[vis_rows]), axis=0)
+            x = numpy.sum((pointvis.vis[vis_rows] * pointvis.weight[vis_rows]) * (1 - pointvis.flags[vis_rows]), axis=0)
+            xwt = numpy.sum(pointvis.weight[vis_rows] * (1 - pointvis.flags[vis_rows]), axis=0)
             mask = numpy.abs(xwt) > 0.0
             if numpy.sum(mask) > 0:
                 x_shape = x.shape
@@ -75,7 +75,18 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
                 xwt[mask] = xwt[mask] / numpy.max(xwt[mask])
                 x = x.reshape(x_shape)
                 
-                if vis.npol > 1:
+                if vis.npol == 1:
+                    gt.data['gain'][row, ...], gt.data['weight'][row, ...], gt.data['residual'][row, ...] = \
+                        solve_antenna_gains_itsubs_scalar(gt.data['gain'][row, ...],
+                                                          gt.data['weight'][row, ...],
+                                                          x, xwt, phase_only=phase_only, niter=niter,
+                                                          tol=tol)
+                elif vis.npol == 2:
+                    gt.data['gain'][row, ...], gt.data['weight'][row, ...], gt.data['residual'][row, ...] = \
+                        solve_antenna_gains_itsubs_nocrossdata(gt.data['gain'][row, ...], gt.data['weight'][row, ...],
+                                                               x, xwt, phase_only=phase_only, niter=niter,
+                                                               tol=tol)
+                elif vis.npol == 4:
                     if crosspol:
                         gt.data['gain'][row, ...], gt.data['weight'][row, ...], gt.data['residual'][row, ...] = \
                             solve_antenna_gains_itsubs_matrix(gt.data['gain'][row, ...], gt.data['weight'][row, ...],
@@ -102,10 +113,9 @@ def solve_gaintable(vis: BlockVisibility, modelvis: BlockVisibility = None, gt=N
                 gt.data['gain'][row, ...] = 1.0 + 0.0j
                 gt.data['weight'][row, ...] = 0.0
                 gt.data['residual'][row, ...] = 0.0
-
+        
         else:
             log.warning("Gaintable {0}, vis time mismatch {1}".format(gt.time, vis.time))
-
     
     assert isinstance(gt, GainTable), "gt is not a GainTable: %r" % gt
     
@@ -221,7 +231,7 @@ def solve_antenna_gains_itsubs_vector(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
     x(antenna2, antenna1) = gain(antenna1) conj(gain(antenna2))
 
     See Appendix D, section D.1 in:
-    
+
     J. P. Hamaker, “Understanding radio polarimetry - IV. The full-coherency analogue of
     scalar self-calibration: Self-alignment, dynamic range and polarimetric fidelity,” Astronomy
     and Astrophysics Supplement Series, vol. 143, no. 3, pp. 515–534, May 2000.
@@ -280,6 +290,90 @@ def solve_antenna_gains_itsubs_vector(gain, gwt, x, xwt, niter=30, tol=1e-8, pha
 
 
 def gain_substitution_vector(gain, x, xwt):
+    nants, nchan, nrec, _ = gain.shape
+    newgain = numpy.ones_like(gain, dtype='complex128')
+    if nrec > 0:
+        newgain[..., 0, 1] = 0.0
+        newgain[..., 1, 0] = 0.0
+    gwt = numpy.zeros_like(gain, dtype='double')
+    
+    # We are going to work with Jones 2x2 matrix formalism so everything has to be
+    # converted to that format
+    x = x.reshape(nants, nants, nchan, nrec, nrec)
+    xwt = xwt.reshape(nants, nants, nchan, nrec, nrec)
+    
+    if nrec > 0:
+        gain[..., 0, 1] = 0.0
+        gain[..., 1, 0] = 0.0
+    
+    for rec in range(nrec):
+        n_top = numpy.einsum('ik...,ijk...->jk...', gain[..., rec, rec], x[:, :, :, rec, rec] * xwt[:, :, :, rec, rec])
+        n_bot = numpy.einsum('ik...,ijk...->jk...', gain[:, :, rec, rec] * numpy.conjugate(gain[:, :, rec, rec]),
+                             xwt[..., rec, rec]).real
+        newgain[:, :, rec, rec][n_bot[:].all() > 0.0] = n_top[n_bot[:].all() > 0.0] / n_bot[n_bot[:].all() > 0.0]
+        newgain[:, :, rec, rec][n_bot[:].all() <= 0.0] = 0.0
+        gwt[:, :, rec, rec] = n_bot
+        gwt[:, :, rec, rec][n_bot[:].all() <= 0.0] = 0.0
+    return newgain, gwt
+    
+    # for ant1 in range(nants):
+    #     for chan in range(nchan):
+    #         # Loop over e.g. 'RR', 'LL, or 'xx', 'YY' ignoring cross terms
+    #         for rec in range(nrec):
+    #             top = numpy.sum(x[:, ant1, chan, rec, rec] *
+    #                             gain[:, chan, rec, rec] * xwt[:, ant1, chan, rec, rec], axis=0)
+    #             bot = numpy.sum((gain[:, chan, rec, rec] * numpy.conjugate(gain[:, chan, rec, rec]) *
+    #                              xwt[:, ant1, chan, rec, rec]).real, axis=0)
+    #
+    #             if bot > 0.0:
+    #                 newgain[ant1, chan, rec, rec] = top / bot
+    #                 gwt[ant1, chan, rec, rec] = bot
+    #             else:
+    #                 newgain[ant1, chan, rec, rec] = 0.0
+    #                 gwt[ant1, chan, rec, rec] = 0.0
+    # # assert(newgain1==newgain).all()
+    # # assert(gwt1==gwt).all()
+    # return newgain, gwt
+
+
+def solve_antenna_gains_itsubs_nocrossdata(gain, gwt, x, xwt, niter=30, tol=1e-8, phase_only=True, refant=0):
+    """Solve for the antenna gains using full matrix expressions, but no cross hands
+
+    x(antenna2, antenna1) = gain(antenna1) conj(gain(antenna2))
+
+    See Appendix D, section D.1 in:
+
+    J. P. Hamaker, “Understanding radio polarimetry - IV. The full-coherency analogue of
+    scalar self-calibration: Self-alignment, dynamic range and polarimetric fidelity,” Astronomy
+    and Astrophysics Supplement Series, vol. 143, no. 3, pp. 515–534, May 2000.
+
+    :param gain: gains
+    :param gwt: gain weight
+    :param x: Equivalent point source visibility[nants, nants, ...]
+    :param xwt: Equivalent point source weight [nants, nants, ...]
+    :param niter: Number of iterations
+    :param tol: tolerance on solution change
+    :param phase_only: Do solution for only the phase? (default True)
+    :param refant: Reference antenna for phase (default=0.0)
+    :return: gain [nants, ...], weight [nants, ...]
+    """
+    
+    # This implementation is sub-optimal. TODO: Reimplement IQ, IV calibration
+    nants, _, nchan, npol = x.shape
+    assert npol == 2
+    newshape = (nants, nants, nchan, 4)
+    x_fill = numpy.zeros(newshape, dtype='complex')
+    x_fill[..., 0] = x[..., 0]
+    x_fill[..., 3] = x[..., 1]
+    xwt_fill = numpy.zeros(newshape, dtype='float')
+    xwt_fill[..., 0] = xwt[..., 0]
+    xwt_fill[..., 3] = xwt[..., 1]
+    
+    return solve_antenna_gains_itsubs_vector(gain, gwt, x_fill, xwt_fill, niter=niter, tol=tol, phase_only=phase_only,
+                                             refant=refant)
+
+
+def gain_substitution_nocross(gain, x, xwt):
     nants, nchan, nrec, _ = gain.shape
     newgain = numpy.ones_like(gain, dtype='complex128')
     if nrec > 0:
