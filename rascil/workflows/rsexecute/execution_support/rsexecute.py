@@ -219,7 +219,8 @@ class _rsexecutebase():
             raise ValueError('use_dask and use_dlg cannot be specified together')
 
         if isinstance(self._client, Client):
-            print("Removing existing client")
+            if self._verbose:
+                print("Removing existing client")
             self.client.close()
 
         if use_dask:
