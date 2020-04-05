@@ -93,13 +93,13 @@ def fit_uvwplane(vis: Union[Visibility, BlockVisibility], remove=False) -> (Imag
     nvis = len(vis.data)
     before = numpy.max(numpy.abs(vis.w))
     p, q = fit_uvwplane_only(vis)
-    residual = vis.data['uvw'][:, 2] - (p * vis.u + q * vis.v)
+    residual = vis.data['uvw'][..., 2] - (p * vis.u + q * vis.v)
     after = numpy.max(numpy.abs(residual))
     if numpy.abs(p) > 1e-7 or numpy.abs(q) > 1e-7:
         log.debug('fit_uvwplane: Fit to %d rows reduces max abs w from %.1f to %.1f m'
                 % (nvis, before, after))
     if remove:
-        vis.data['uvw'][:, 2] -= p * vis.u + q * vis.v
+        vis.data['uvw'][..., 2] -= p * vis.u + q * vis.v
     return vis, p, q
 
 

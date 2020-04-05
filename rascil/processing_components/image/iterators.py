@@ -128,6 +128,9 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
     
             result = numpy.outer(t, t)
             return result
+        
+        def taper_flat():
+            return numpy.ones([dx, dx])
 
         i = 0
         for fy in range(facets):
@@ -150,7 +153,7 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
                         elif taper == 'tukey':
                             flat.data[..., :, :] = taper_tukey()
                         else:
-                            flat.data[...] = 1.0
+                            flat.data[..., :, :] = taper_flat()
                         yield flat
                     else:
                         yield subim

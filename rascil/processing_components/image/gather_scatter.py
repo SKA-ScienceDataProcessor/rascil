@@ -71,16 +71,16 @@ def image_gather_facets(image_list: List[Image], im: Image, facets=1, overlap=0,
         
         if return_flat:
             i = 0
-            for sum_flat_facet in image_raster_iter(sum_flats, facets=facets, overlap=overlap, taper=None):
+            for sum_flat_facet in image_raster_iter(sum_flats, facets=facets, overlap=overlap, taper=taper):
                 sum_flat_facet.data[...] += flats[i].data[...]
                 i += 1
     
             return sum_flats
         else:
             i = 0
-            for out_facet, sum_flat_facet in zip(image_raster_iter(out, facets=facets, overlap=overlap, taper=None),
+            for out_facet, sum_flat_facet in zip(image_raster_iter(out, facets=facets, overlap=overlap, taper=taper),
                                                  image_raster_iter(sum_flats, facets=facets, overlap=overlap,
-                                                                   taper=None)):
+                                                                   taper=taper)):
                 out_facet.data[...] += flats[i].data * image_list[i].data[...]
                 sum_flat_facet.data[...] += flats[i].data[...]
                 i += 1

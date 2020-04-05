@@ -9,9 +9,10 @@ import numpy
 
 from rascil.data_models.polarisation import PolarisationFrame
 
-from rascil.processing_components.image.iterators import image_raster_iter, image_channel_iter, image_null_iter
+from rascil.processing_components.image.iterators import image_raster_iter, image_channel_iter, \
+    image_null_iter
 
-from rascil.processing_components.image.operations import create_empty_image_like
+from rascil.processing_components.image.operations import create_empty_image_like, pad_image
 from rascil.processing_components.simulation import create_test_image
 
 log = logging.getLogger('logger')
@@ -19,13 +20,18 @@ log = logging.getLogger('logger')
 log.setLevel(logging.WARNING)
 
 class TestImageIterators(unittest.TestCase):
+    
+    def get_test_image(self):
+        testim = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
+        return pad_image(testim, [1, 1, 512, 512])
+    
     def test_raster(self):
         
-        m31original = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
+        m31original = self.get_test_image()
         assert numpy.max(numpy.abs(m31original.data)), "Original is empty"
         
         for nraster in [1, 2, 4, 8, 9]:
-            m31model = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
+            m31model = self.get_test_image()
             for patch in image_raster_iter(m31model, facets=nraster):
                 assert patch.data.shape[3] == (m31model.data.shape[3] // nraster), \
                     "Number of pixels in each patch: %d not as expected: %d" % (patch.data.shape[3],
@@ -41,7 +47,7 @@ class TestImageIterators(unittest.TestCase):
 
     def test_raster_exception(self):
     
-        m31original = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
+        m31original = self.get_test_image()
         assert numpy.max(numpy.abs(m31original.data)), "Original is empty"
     
         for nraster, overlap in [(-1, -1), (-1, 0), (2, 128), (1e6, 127)]:
@@ -51,69 +57,6 @@ class TestImageIterators(unittest.TestCase):
                 for patch in image_raster_iter(m31model, facets=nraster, overlap=overlap):
                     patch.data *= 2.0
             
-    def test_raster_overlap(self):
-    
-        m31original = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
-        assert numpy.max(numpy.abs(m31original.data)), "Original is empty"
-        flat = create_empty_image_like(m31original)
-    
-        for nraster, overlap in [(1, 0),  (1, 16), (4, 8), (4, 16), (8, 8), (16, 4), (9, 5)]:
-            m31model = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
-            for patch, flat_patch in zip(image_raster_iter(m31model, facets=nraster, overlap=overlap),
-                                         image_raster_iter(flat, facets=nraster, overlap=overlap)):
-                patch.data *= 2.0
-                flat_patch.data[...] += 1.0
-        
-            assert numpy.max(numpy.abs(m31model.data)), "Raster is empty for %d" % nraster
-
-    def test_raster_overlap_linear(self):
-    
-        m31original = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
-        assert numpy.max(numpy.abs(m31original.data)), "Original is empty"
-        flat = create_empty_image_like(m31original)
-    
-        for nraster, overlap in [(1, 0), (1, 16), (4, 8), (4, 16), (8, 8), (16, 4), (9, 5)]:
-            m31model = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
-            for patch, flat_patch in zip(image_raster_iter(m31model, facets=nraster, overlap=overlap,
-                                                           taper='linear'),
-                                         image_raster_iter(flat, facets=nraster, overlap=overlap)):
-                patch.data *= 2.0
-                flat_patch.data[...] += 1.0
-        
-            assert numpy.max(numpy.abs(m31model.data)), "Raster is empty for %d" % nraster
-
-    def test_raster_overlap_quadratic(self):
-    
-        m31original = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
-        assert numpy.max(numpy.abs(m31original.data)), "Original is empty"
-        flat = create_empty_image_like(m31original)
-    
-        for nraster, overlap in [(1, 0), (1, 16), (4, 8), (4, 16), (8, 8), (16, 4), (9, 5)]:
-            m31model = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
-            for patch, flat_patch in zip(image_raster_iter(m31model, facets=nraster, overlap=overlap,
-                                                           taper='quadratic'),
-                                         image_raster_iter(flat, facets=nraster, overlap=overlap)):
-                patch.data *= 2.0
-                flat_patch.data[...] += 1.0
-        
-            assert numpy.max(numpy.abs(m31model.data)), "Raster is empty for %d" % nraster
-
-    def test_raster_overlap_tukey(self):
-    
-        m31original = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
-        assert numpy.max(numpy.abs(m31original.data)), "Original is empty"
-        flat = create_empty_image_like(m31original)
-    
-        for nraster, overlap in [(1, 0), (1, 16), (4, 8), (4, 16), (8, 8), (16, 4), (9, 5)]:
-            m31model = create_test_image(polarisation_frame=PolarisationFrame('stokesI'))
-            for patch, flat_patch in zip(image_raster_iter(m31model, facets=nraster, overlap=overlap,
-                                                           taper='tukey'),
-                                         image_raster_iter(flat, facets=nraster, overlap=overlap)):
-                patch.data *= 2.0
-                flat_patch.data[...] += 1.0
-        
-            assert numpy.max(numpy.abs(m31model.data)), "Raster is empty for %d" % nraster
-
     def test_channelise(self):
         m31cube = create_test_image(polarisation_frame=PolarisationFrame('stokesI'),
                                         frequency=numpy.linspace(1e8,1.1e8, 128))

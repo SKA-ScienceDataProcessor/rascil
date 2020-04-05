@@ -358,7 +358,7 @@ def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=Non
                             source=vis.source,
                             meta=vis.meta)
         vf = vis.flags[..., group[0]:group[1], :]
-        vfv = vis.flagged_vis[..., group[0]:group[1], :]
+        vfvw = vis.flagged_vis[..., group[0]:group[1], :] * vis.weight[..., group[0]:group[1], :]
         vfw = vis.flagged_weight[..., group[0]:group[1], :]
         vfiw = vis.flagged_imaging_weight[..., group[0]:group[1], :]
         
@@ -366,7 +366,7 @@ def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=Non
         newvis.data['flags'][newvis.data['flags'] < nchan] = 0
         newvis.data['flags'][newvis.data['flags'] > 1] = 1
         
-        newvis.data['vis'][..., 0, :] = numpy.sum(vfv * vfw, axis=-2)
+        newvis.data['vis'][..., 0, :] = numpy.sum(vfvw, axis=-2)
         newvis.data['weight'][..., 0, :] = numpy.sum(vfw, axis=-2)
         newvis.data['imaging_weight'][..., 0, :] = numpy.sum(vfiw, axis=-2)
         mask = newvis.flagged_weight > 0.0
