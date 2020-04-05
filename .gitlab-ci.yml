@@ -36,8 +36,7 @@ unittests:
     - pip install -r requirements-freeze.txt
   script:
     - pip install pytest pytest-xdist pytest-cov
-    - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage
-    - --durations=30 --forked
+    - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
     - HOME=`pwd` py.test -n 4 tests/data_models tests/processing_components tests/workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
   artifacts:
     paths:
