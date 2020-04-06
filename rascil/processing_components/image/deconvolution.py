@@ -227,7 +227,7 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
     elif algorithm == 'hogbom':
         log.info("deconvolve_cube %s: Hogbom clean of each polarisation and channel separately"
                  % prefix)
-        gain = get_parameter(kwargs, 'gain', 0.7)
+        gain = get_parameter(kwargs, 'gain', 0.1)
         assert 0.0 < gain < 2.0, "Loop gain must be between 0 and 2"
         thresh = get_parameter(kwargs, 'threshold', 0.0)
         assert thresh >= 0.0
@@ -257,7 +257,7 @@ def deconvolve_cube(dirty: Image, psf: Image, prefix='', **kwargs) -> (Image, Im
         residual_image = create_image_from_array(residual_array, dirty.wcs, dirty.polarisation_frame)
     elif algorithm == 'hogbom-complex':
         log.info("deconvolve_cube_complex: Hogbom-complex clean of each polarisation and channel separately")
-        gain = get_parameter(kwargs, 'gain', 0.7)
+        gain = get_parameter(kwargs, 'gain', 0.1)
         assert 0.0 < gain < 2.0, "Loop gain must be between 0 and 2"
         thresh = get_parameter(kwargs, 'threshold', 0.0)
         assert thresh >= 0.0
