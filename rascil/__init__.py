@@ -4,11 +4,10 @@ from . import processing_components
 from . import workflows
 
 from .processing_components.util.installation_checks import check_data_directory
-from astropy.utils import iers
+from astropy.utils import iers, data
 
 check_data_directory()
 
-# This turns off all downloads of the IERS tables. This is a hack until astropy
-# addresses the multiple reader behaviour of the cache reader/updater.
-# TODO: Fix IERS table updates when astropy chanes cache access
-iers.conf.auto_max_age = None
+# iers.conf.auto_max_age = None
+iers.conf.remote_timeout = 100.0
+data.conf.download_cache_lock_attempts = 10

@@ -22,7 +22,7 @@ docs:
     - mkdir -p docs/build/html
     - mkdir -p test_results
   script:
-    - PYTHONPATH=`pwd` make -k -C docs html
+    - PYTHONPATH=`pwd` HOME=`pwd` make -k -C docs html
   after_script:
     - mv docs/build/html html
   artifacts:
@@ -36,8 +36,8 @@ unittests:
     - pip install -r requirements-freeze.txt
   script:
     - pip install pytest pytest-xdist pytest-cov
-    - py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
-    - py.test -n 4 tests/data_models tests/processing_components tests/workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
+    - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
+    - HOME=`pwd` py.test -n 4 tests/data_models tests/processing_components tests/workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
   artifacts:
     paths:
       - coverage

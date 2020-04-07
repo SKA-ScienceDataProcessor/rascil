@@ -54,7 +54,7 @@ class TestCalibrationSolvers(unittest.TestCase):
                                           polarisation_frame=PolarisationFrame(data_pol_frame))
         self.vis = dft_skycomponent_visibility(self.vis, self.comp)
 
-    def test_solve_gaintable_scalar(self):
+    def test_solve_gaintable_stokesI(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0], ntimes=300)
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
@@ -67,7 +67,7 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
 
-    def test_solve_gaintable_scalar_phaseonly(self):
+    def test_solve_gaintable_stokesI_phaseonly(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0])
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
@@ -80,7 +80,7 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
 
-    def test_solve_gaintable_scalar_repeat(self):
+    def test_solve_gaintable_stokesI_repeat(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0])
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
@@ -96,7 +96,7 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
 
-    def test_solve_gaintable_scalar_repeat_apply(self):
+    def test_solve_gaintable_stokesI_repeat_apply(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0])
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
@@ -113,7 +113,7 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) < 1e-8
 
-    def test_solve_gaintable_scalar_small_n_large_t(self):
+    def test_solve_gaintable_stokesI_small_n_large_t(self):
         # Select only 6 stations
         self.actualSetup('stokesI', 'stokesI', f=[100.0], ntimes=4000, rmax=83)
         gt = create_gaintable_from_blockvisibility(self.vis)
@@ -128,7 +128,7 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
 
-    def test_solve_gaintable_scalar_timeslice(self):
+    def test_solve_gaintable_stokesI_timeslice(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0], ntimes=10)
         gt = create_gaintable_from_blockvisibility(self.vis, timeslice=120.0)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
@@ -141,7 +141,7 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
 
-    def test_solve_gaintable_scalar_normalise(self):
+    def test_solve_gaintable_stokesI_normalise(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0])
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
@@ -155,7 +155,7 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
     
-    def test_solve_gaintable_scalar_bandpass(self):
+    def test_solve_gaintable_stokesI_bandpass(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0], vnchan=128)
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
@@ -167,7 +167,7 @@ class TestCalibrationSolvers(unittest.TestCase):
         assert residual < 3e-8, "Max residual = %s" % (residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
 
-    def test_solve_gaintable_scalar_pointsource(self):
+    def test_solve_gaintable_stokesI_pointsource(self):
         self.actualSetup('stokesI', 'stokesI', f=[100.0])
         gt = create_gaintable_from_blockvisibility(self.vis)
         log.info("Created gain table: %s" % (gaintable_summary(gt)))
@@ -199,54 +199,71 @@ class TestCalibrationSolvers(unittest.TestCase):
         residual = numpy.max(gtsol.residual)
         assert residual < residual_tol, "%s %s Max residual = %s" % (spf, dpf, residual)
         assert numpy.max(numpy.abs(gtsol.gain - 1.0)) > 0.1
-    
-    def test_solve_gaintable_vector_phase_only_linear(self):
+
+    def test_solve_gaintable_stokesIQUV_phase_only_linear(self):
         self.core_solve('stokesIQUV', 'linear', phase_error=0.1, phase_only=True,
                         leakage=0.0, f=[100.0, 50.0, 0.0, 0.0])
-    
-    def test_solve_gaintable_vector_phase_only_circular(self):
+
+    def test_solve_gaintable_stokesIQUV_phase_only_circular(self):
         self.core_solve('stokesIQUV', 'circular', phase_error=0.1, phase_only=True,
                         leakage=0.0, f=[100.0, 0.0, 0.0, 50.0])
-    
-    def test_solve_gaintable_vector_large_phase_only_linear(self):
+
+    def test_solve_gaintable_stokesIQUV_phase_only_linearnp(self):
+        self.core_solve('stokesIQ', 'linearnp', phase_error=0.1, phase_only=True,
+                        leakage=0.0, f=[100.0, 50.0])
+
+    def test_solve_gaintable_stokesIQUV_phase_only_circularnp(self):
+        self.core_solve('stokesIV', 'circularnp', phase_error=0.1, phase_only=True,
+                        leakage=0.0, f=[100.0, 50.0])
+
+    def test_solve_gaintable_stokesIQUV_large_phase_only_linear(self):
         self.core_solve('stokesIQUV', 'linear', phase_error=10.0, phase_only=True,
                         leakage=0.0, f=[100.0, 50.0, 0.0, 0.0])
     
-    def test_solve_gaintable_vector_large_phase_only_circular(self):
+    def test_solve_gaintable_stokesIQUV_large_phase_only_circular(self):
         self.core_solve('stokesIQUV', 'circular', phase_error=10.0,
                         leakage=0.0, phase_only=True, f=[100.0, 0.0, 0.0, 50.0])
     
-    def test_solve_gaintable_vector_both_linear(self):
+    def test_solve_gaintable_stokesIQUV_both_linear(self):
         self.core_solve('stokesIQUV', 'linear', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.0, phase_only=False, f=[100.0, 50.0, 0.0, 0.0])
     
-    def test_solve_gaintable_vector_both_circular(self):
+    def test_solve_gaintable_stokesIQUV_both_circular(self):
         self.core_solve('stokesIQUV', 'circular', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.0, phase_only=False, f=[100.0, 0.0, 0.0, 50.0])
-    
-    def test_solve_gaintable_matrix_both_linear(self):
+
+    def test_solve_gaintable_stokesIV_both_circularnp(self):
+        self.core_solve('stokesIV', 'circularnp', phase_error=0.1, amplitude_error=0.01,
+                        leakage=0.0, phase_only=False, f=[100.0, 50.0])
+
+    def test_solve_gaintable_stokesIQUV_crosspol_both_linear(self):
         self.core_solve('stokesIQUV', 'linear', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.0, residual_tol=1e-8, crosspol=True,
                         phase_only=False, f=[100.0, 50.0, 0.0, 0.0])
 
+    def test_solve_gaintable_stokesIQ_crosspol_both_linearnp(self):
+        self.core_solve('stokesIQ', 'linearnp', phase_error=0.1, amplitude_error=0.01,
+                        leakage=0.0, residual_tol=1e-8, crosspol=True,
+                        phase_only=False, f=[100.0, 50.0])
+
     @unittest.skip("Cross hands not working")
-    def test_solve_gaintable_matrix_both_linear_cross(self):
+    def test_solve_gaintable_stokesIQUV_crosspol_both_linear_cross(self):
         self.core_solve('stokesIQUV', 'linear', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.1, residual_tol=1e-6, crosspol=True,
                         phase_only=False, f=[100.0, 50.0, 10.0, -20.0])
 
-    def test_solve_gaintable_matrix_both_circular(self):
+    def test_solve_gaintable_stokesIQUV_crosspol_both_circular(self):
         self.core_solve('stokesIQUV', 'circular', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.0, residual_tol=1e-8, crosspol=True,
                         phase_only=False, f=[100.0, 0.0, 0.0, 50.0])
 
     @unittest.skip("Cross hands not working")
-    def test_solve_gaintable_matrix_both_circular_cross(self):
+    def test_solve_gaintable_stokesIQUV_crosspol_both_circular_cross(self):
         self.core_solve('stokesIQUV', 'circular', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.1, residual_tol=1e-6, crosspol=True,
                         phase_only=False, f=[100.0, 10.0, -20.0, 50.0])
 
-    def test_solve_gaintable_matrix_both_circular_channel(self):
+    def test_solve_gaintable_stokesIQUV_crosspol_both_circular_channel(self):
         self.core_solve('stokesIQUV', 'circular', phase_error=0.1, amplitude_error=0.01,
                         leakage=0.0, residual_tol=1e-6, crosspol=True, vnchan=4,
                         phase_only=False, f=[100.0, 0.0, 0.0, 50.0])

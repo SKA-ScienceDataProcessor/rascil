@@ -46,7 +46,7 @@ def predict_wstack_single(vis, model, remove=True, gcfcf=None, **kwargs) -> Visi
     :return: resulting visibility (in place works)
     """
 
-    assert isinstance(vis, Visibility), vis
+    assert isinstance(vis, Visibility), "wstack requires Visibility format not BlockVisibility"
     assert image_is_canonical(model)
 
     vis.data['vis'][...] = 0.0
@@ -101,7 +101,7 @@ def invert_wstack_single(vis: Visibility, im: Image, dopsf, normalize=True, remo
     
     kwargs['imaginary'] = True
     
-    assert isinstance(vis, Visibility), vis
+    assert isinstance(vis, Visibility), "wstack requires Visibility format not BlockVisibility"
     
     # We might want to do wprojection so we remove the average w
     w_average = numpy.average(vis.w)

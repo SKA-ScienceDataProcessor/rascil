@@ -2,7 +2,8 @@
 
 """
 
-__all__ = ['append_visibility', 'sort_visibility',
+__all__ = ['append_visibility',
+           'sort_visibility',
            'concatenate_blockvisibility_frequency',
            'concatenate_visibility',
            'subtract_visibility',
@@ -24,7 +25,6 @@ from typing import Union, List
 
 import numpy
 from astropy.time import Time
-from astropy.coordinates import Angle, SkyCoord
 
 from rascil.data_models.memory_data_models import BlockVisibility, Visibility, \
     QA
@@ -45,12 +45,12 @@ def append_visibility(vis: Union[Visibility, BlockVisibility],
     :param othervis:
     :return: Visibility vis + othervis
     """
-
+    
     if vis is None:
         return othervis
-
+    
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
-
+    
     assert vis.polarisation_frame == othervis.polarisation_frame, "Polarisation frames differ"
     assert abs(
         vis.phasecentre.ra.value - othervis.phasecentre.ra.value) < 1e-15, "RAs differ"
@@ -60,7 +60,7 @@ def append_visibility(vis: Union[Visibility, BlockVisibility],
     assert vis.source == othervis.source, "Not the same source"
     if isinstance(vis, BlockVisibility):
         assert numpy.max(numpy.abs(vis.frequency - othervis.frequency)) < 1e-6
-
+    
     vis.data = numpy.hstack((vis.data, othervis.data))
     return vis
 
@@ -87,9 +87,9 @@ def concatenate_visibility(vis_list, sort=True):
     if isinstance(vis_list, Visibility) or isinstance(vis_list,
                                                       BlockVisibility):
         return vis_list
-
+    
     assert len(vis_list) > 0
-
+    
     vis = None
     for v in vis_list:
         if vis is None:
@@ -98,12 +98,12 @@ def concatenate_visibility(vis_list, sort=True):
             assert v.polarisation_frame == vis.polarisation_frame
             assert v.phasecentre.separation(vis.phasecentre).value < 1e-15
             vis.data = numpy.hstack((vis.data, v.data))
-
+    
     assert vis is not None
-
+    
     if sort:
         vis = sort_visibility(vis, ['index'])
-
+    
     return vis
 
 
@@ -115,9 +115,9 @@ def concatenate_blockvisibility_frequency(bvis_list):
     :param bvis_list: List of BlockVisibility
     :return: BlockVisibility
     """
-
+    
     assert len(bvis_list) > 0
-
+    
     nvis = bvis_list[0].nvis
     time = bvis_list[0].time
     frequency = numpy.array(
@@ -132,7 +132,7 @@ def concatenate_blockvisibility_frequency(bvis_list):
     flags = numpy.zeros([nvis, nants, nants, nchan, npol], dtype='int')
     weight = numpy.ones([nvis, nants, nants, nchan, npol])
     imaging_weight = numpy.ones([nvis, nants, nants, nchan, npol])
-
+    
     echan = 0
     for ibv, bvis in enumerate(bvis_list):
         schan = echan
@@ -141,7 +141,7 @@ def concatenate_blockvisibility_frequency(bvis_list):
         vis[..., schan:echan, :] = bvis.flagged_vis[...]
         weight[..., schan:echan, :] = bvis.flagged_weight[...]
         imaging_weight[..., schan:echan, :] = bvis.flagged_imaging_weight[...]
-
+    
     result = BlockVisibility(vis=vis, flags=flags, weight=weight,
                              imaging_weight=imaging_weight, uvw=uvw, time=time,
                              integration_time=integration_time,
@@ -169,11 +169,11 @@ def subtract_visibility(vis, model_vis, inplace=False):
         assert isinstance(model_vis, BlockVisibility), model_vis
     else:
         raise RuntimeError("Types of vis and model visibility are invalid")
-
+    
     assert vis.vis.shape == model_vis.vis.shape, "Observed %s and model visibilities %s have different shapes" \
                                                  % (vis.vis.shape,
                                                     model_vis.vis.shape)
-
+    
     if inplace:
         vis.data['vis'] = vis.data['vis'] - model_vis.data['vis']
         return vis
@@ -192,7 +192,7 @@ def qa_visibility(vis: Union[Visibility, BlockVisibility], context=None) -> QA:
     :return: QA
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
-
+    
     avis = numpy.abs(vis.vis)
     data = {'maxabs': numpy.max(avis),
             'minabs': numpy.min(avis),
@@ -216,10 +216,10 @@ def remove_continuum_blockvisibility(vis: BlockVisibility, degree=1,
     :return: BlockVisibility
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
-
+    
     if mask is not None:
         assert numpy.sum(mask) > 2 * degree, "Insufficient channels for fit"
-
+    
     nchan = len(vis.frequency)
     # TODO: optimise loop
     x = (vis.frequency - vis.frequency[nchan // 2]) / (
@@ -252,12 +252,12 @@ def divide_visibility(vis: BlockVisibility, modelvis: BlockVisibility):
     :return:
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
-
+    
     x = numpy.zeros_like(vis.vis)
     xwt = numpy.abs(modelvis.vis) ** 2 * vis.flagged_weight
     mask = xwt > 0.0
     x[mask] = vis.vis[mask] / modelvis.vis[mask]
-
+    
     pointsource_vis = BlockVisibility(data=None, flags=vis.flags,
                                       frequency=vis.frequency,
                                       channel_bandwidth=vis.channel_bandwidth,
@@ -277,9 +277,9 @@ def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
     :param vis: BlockVisibility
     :return: BlockVisibility
     """
-
+    
     assert isinstance(vis, BlockVisibility), vis
-
+    
     vis_shape = list(vis.vis.shape)
     ntimes, nants, _, nchan, npol = vis_shape
     vis_shape[-2] = 1
@@ -301,40 +301,39 @@ def integrate_visibility_by_channel(vis: BlockVisibility) -> BlockVisibility:
                              polarisation_frame=vis.polarisation_frame,
                              source=vis.source,
                              meta=vis.meta)
-
+    
     newvis.data['flags'][..., 0, :] = numpy.sum(vis.flags, axis=-2)
     newvis.data['flags'][newvis.data['flags'] < nchan] = 0
     newvis.data['flags'][newvis.data['flags'] > 1] = 1
-
-    newvis.data['vis'][..., 0, :] = numpy.sum(
-        vis.data['vis'] * vis.flagged_weight, axis=-2)
+    
+    newvis.data['vis'][..., 0, :] = numpy.sum(vis.data['vis'] * vis.flagged_weight, axis=-2)
     newvis.data['weight'][..., 0, :] = numpy.sum(vis.flagged_weight, axis=-2)
     newvis.data['imaging_weight'][..., 0, :] = numpy.sum(
         vis.flagged_imaging_weight, axis=-2)
     mask = newvis.flagged_weight > 0.0
     newvis.data['vis'][mask] = newvis.data['vis'][mask] / newvis.flagged_weight[
         mask]
-
+    
     return newvis
 
 
 def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=None) \
         -> List[BlockVisibility]:
-    """ Average visibility by groups of channels, returning new visibility
+    """ Average visibility by groups of channels, returning list of new visibility
 
     :param vis: BlockVisibility
     :param channel_average: Number of channels to average
     :return: List[BlockVisibility]
     """
-
+    
     assert isinstance(vis, BlockVisibility), vis
-
+    
     vis_shape = list(vis.vis.shape)
     ntimes, nants, _, nchan, npol = vis_shape
-
+    
     newvis_list = list()
     ochannels = range(nchan)
-
+    
     channels = []
     for i in range(0, nchan, channel_average):
         channels.append([ochannels[i], ochannels[i + channel_average - 1] + 1])
@@ -358,22 +357,23 @@ def average_blockvisibility_by_channel(vis: BlockVisibility, channel_average=Non
                             polarisation_frame=vis.polarisation_frame,
                             source=vis.source,
                             meta=vis.meta)
-
-        newvis.data['flags'][..., 0, :] = numpy.sum(vis.flags[..., group[0]:group[1], :], axis=-2)
+        vf = vis.flags[..., group[0]:group[1], :]
+        vfvw = vis.flagged_vis[..., group[0]:group[1], :] * vis.weight[..., group[0]:group[1], :]
+        vfw = vis.flagged_weight[..., group[0]:group[1], :]
+        vfiw = vis.flagged_imaging_weight[..., group[0]:group[1], :]
+        
+        newvis.data['flags'][..., 0, :] = numpy.sum(vf, axis=-2)
         newvis.data['flags'][newvis.data['flags'] < nchan] = 0
         newvis.data['flags'][newvis.data['flags'] > 1] = 1
-
-        newvis.data['vis'][..., 0, :] = numpy.sum(vis.flagged_vis[..., group[0]:group[1], :]
-                                                  * vis.flagged_weight[..., group[0]:group[1], :], axis=-2)
-        newvis.data['weight'][..., 0, :] = numpy.sum(vis.flagged_weight[..., group[0]:group[1], :], axis=-2)
-        newvis.data['imaging_weight'][..., 0, :] = numpy.sum(
-            vis.flagged_imaging_weight[..., group[0]:group[1], :], axis=-2)
+        
+        newvis.data['vis'][..., 0, :] = numpy.sum(vfvw, axis=-2)
+        newvis.data['weight'][..., 0, :] = numpy.sum(vfw, axis=-2)
+        newvis.data['imaging_weight'][..., 0, :] = numpy.sum(vfiw, axis=-2)
         mask = newvis.flagged_weight > 0.0
-        newvis.data['vis'][mask] = newvis.data['vis'][mask] / \
-                                   newvis.flagged_weight[mask]
-
+        newvis.data['vis'][mask] = newvis.data['vis'][mask] / newvis.flagged_weight[mask]
+        
         newvis_list.append(newvis)
-
+    
     return newvis_list
 
 
@@ -443,7 +443,7 @@ def convert_visibility_to_stokesI(vis):
             ..., numpy.newaxis]
     else:
         raise NameError("Polarisation frame %s unknown" % poldef)
-
+    
     return Visibility(frequency=vis.frequency,
                       channel_bandwidth=vis.channel_bandwidth,
                       phasecentre=vis.phasecentre,
@@ -464,7 +464,7 @@ def convert_blockvisibility_to_stokesI(vis):
    """
     if vis.polarisation_frame == PolarisationFrame('stokesI'):
         return vis
-
+    
     polarisation_frame = PolarisationFrame('stokesI')
     poldef = vis.polarisation_frame
     if poldef == PolarisationFrame('linear'):
@@ -476,6 +476,15 @@ def convert_blockvisibility_to_stokesI(vis):
         vis_imaging_weight = (vis.flagged_imaging_weight[..., 0] +
                               vis.flagged_imaging_weight[..., 3])[
             ..., numpy.newaxis]
+    elif poldef == PolarisationFrame('linearnp'):
+        vis_data = convert_linear_to_stokesI(vis.data['vis'])
+        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 1])[
+            ..., numpy.newaxis]
+        vis_weight = (vis.flagged_weight[..., 0] + vis.flagged_weight[..., 1])[
+            ..., numpy.newaxis]
+        vis_imaging_weight = (vis.flagged_imaging_weight[..., 0] +
+                              vis.flagged_imaging_weight[..., 1])[
+            ..., numpy.newaxis]
     elif poldef == PolarisationFrame('circular'):
         vis_data = convert_circular_to_stokesI(vis.data['vis'])
         vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 3])[
@@ -485,9 +494,18 @@ def convert_blockvisibility_to_stokesI(vis):
         vis_imaging_weight = (vis.flagged_imaging_weight[..., 0] +
                               vis.flagged_imaging_weight[..., 3])[
             ..., numpy.newaxis]
+    elif poldef == PolarisationFrame('circularnp'):
+        vis_data = convert_circular_to_stokesI(vis.data['vis'])
+        vis_flags = numpy.logical_or(vis.flags[..., 0], vis.flags[..., 1])[
+            ..., numpy.newaxis]
+        vis_weight = (vis.flagged_weight[..., 0] + vis.flagged_weight[..., 1])[
+            ..., numpy.newaxis]
+        vis_imaging_weight = (vis.flagged_imaging_weight[..., 0] +
+                              vis.flagged_imaging_weight[..., 1])[
+            ..., numpy.newaxis]
     else:
         raise NameError("Polarisation frame %s unknown" % poldef)
-
+    
     return BlockVisibility(frequency=vis.frequency,
                            channel_bandwidth=vis.channel_bandwidth,
                            phasecentre=vis.phasecentre,
@@ -508,11 +526,12 @@ def calculate_blockvisibility_hourangles(bvis, direction=None):
     """
     if direction is None:
         direction = bvis.phasecentre
-
+    
     from astroplan import Observer
     site = Observer(location=bvis.configuration.location)
     utc = Time(bvis.time / 86400.0, format='mjd', scale='utc')
     return site.target_hour_angle(utc, direction).wrap_at('180d')
+
 
 def calculate_blockvisibility_azel(bvis, direction=None):
     """ Return az el for a BlockVisibility
@@ -523,7 +542,7 @@ def calculate_blockvisibility_azel(bvis, direction=None):
     """
     if direction is None:
         direction = bvis.phasecentre
-
+    
     from astroplan import Observer
     site = Observer(location=bvis.configuration.location)
     utc = Time(bvis.time / 86400.0, format='mjd', scale='utc')

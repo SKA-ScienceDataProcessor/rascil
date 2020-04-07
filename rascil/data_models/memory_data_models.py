@@ -1523,4 +1523,7 @@ def assert_vis_gt_compatible(vis: Union[Visibility, BlockVisibility], gt: GainTa
     :return: Bool
     """
     assert vis.nchan == gt.nchan
-    assert vis.npol == gt.nrec * gt.nrec
+    if vis.npol == 4:
+        assert vis.npol == gt.nrec * gt.nrec
+    elif vis.npol == 2:
+        assert gt.nrec == 2

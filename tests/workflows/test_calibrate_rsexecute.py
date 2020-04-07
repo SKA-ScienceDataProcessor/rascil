@@ -1,4 +1,4 @@
-"""Unit tests for pipelines expressed via dask.delayed
+"""Unit tests for calibration graphs
 
 
 """

@@ -128,6 +128,7 @@ try:
 
         In the imaging and pipeline workflows, this may be invoked using context='ng'.
 
+        :param dopsf: Make the PSF instead of the dirty image
         :param bvis: BlockVisibility to be inverted
         :param im: image template (not changed)
         :param normalize: Normalize by the sum of weights (True)
@@ -147,8 +148,6 @@ try:
         
         sbvis = copy_visibility(bvis)
         sbvis = shift_vis_to_image(sbvis, im, tangent=True, inverse=False)
-        
-        vis = bvis.vis
         
         freq = sbvis.frequency  # frequency, Hz
         
@@ -200,7 +199,7 @@ try:
                                     npixdirty, npixdirty, pixsize, pixsize, epsilon,
                                     do_wstacking=do_wstacking,
                                     nthreads=nthreads, verbosity=verbosity)
-                sumwt[0, pol] += numpy.sum(wgt[:, :, pol], axis=(0, 1))
+                sumwt[0, pol] += numpy.sum(wgtt[pol, 0, :].T, axis=0)
                 im.data[0, pol] += dirty.T
             else:
                 for vchan in range(vnchan):
@@ -213,7 +212,7 @@ try:
                                         npixdirty, npixdirty, pixsize, pixsize, epsilon,
                                         do_wstacking=do_wstacking,
                                         nthreads=nthreads, verbosity=verbosity)
-                    sumwt[ichan, pol] += numpy.sum(wgt[:, vchan, pol])
+                    sumwt[ichan, pol] += numpy.sum(wgtt[pol, ichan, :].T, axis=0)
                     im.data[ichan, pol] += dirty.T
         
         if normalize:

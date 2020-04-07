@@ -36,7 +36,7 @@ class TestPolarisation(unittest.TestCase):
     def test_rec_frame(self):
         rec_frame = ReceptorFrame("linear")
         assert rec_frame.nrec == 2
-        
+
         rec_frame = ReceptorFrame("circular")
         assert rec_frame.nrec == 2
 
@@ -58,47 +58,65 @@ class TestPolarisation(unittest.TestCase):
 
     def test_stokes_linear_conversion(self):
         stokes = numpy.array([1.0, 0.0, 0.0, 0.0])
-        linear = convert_stokes_to_linear(stokes)
+        linear = convert_stokes_to_linear(stokes, 0)
         assert_array_almost_equal(linear, numpy.array([1.0 + 0j, 0.0 + 0j, 0.0 + 0j, 1.0 + 0j]))
-    
+
+        stokes = numpy.array([1.0, 0.0])
+        linearnp = convert_stokes_to_linear(stokes, 0)
+        assert_array_almost_equal(linearnp, numpy.array([1.0 + 0j, 1.0 + 0j]))
+
         stokes = numpy.array([0.0, 1.0, 0.0, 0.0])
-        linear = convert_stokes_to_linear(stokes)
+        linear = convert_stokes_to_linear(stokes, 0)
         assert_array_almost_equal(linear, numpy.array([1.0 + 0j, 0j, 0j, -1.0 + 0j]))
     
         stokes = numpy.array([0.0, 0.0, 1.0, 0.0])
-        linear = convert_stokes_to_linear(stokes)
+        linear = convert_stokes_to_linear(stokes, 0)
         assert_array_almost_equal(linear, numpy.array([0.0 + 0j, 1.0 + 0j, 1.0 + 0j, 0.0 + 0j]))
     
         stokes = numpy.array([0.0, 0.0, 0.0, 1.0])
-        linear = convert_stokes_to_linear(stokes)
+        linear = convert_stokes_to_linear(stokes, 0)
         assert_array_almost_equal(linear, numpy.array([0.0 + 0j, +1.0j, -1.0j, 0.0 + 0j]))
 
     def test_stokes_circular_conversion(self):
         stokes = numpy.array([1.0, 0.0, 0.0, 0.0])
-        circular = convert_stokes_to_circular(stokes)
+        circular = convert_stokes_to_circular(stokes, 0)
         assert_array_almost_equal(circular, numpy.array([1.0 + 0j, 0.0 + 0j, 0.0 + 0j, 1.0 + 0j]))
-    
+
+        stokes = numpy.array([1.0, 0.0])
+        circularcp = convert_stokes_to_circular(stokes, 0)
+        assert_array_almost_equal(circularcp, numpy.array([1.0 + 0j, 1.0 + 0j]))
+
         stokes = numpy.array([0.0, 1.0, 0.0, 0.0])
-        circular = convert_stokes_to_circular(stokes)
+        circular = convert_stokes_to_circular(stokes, 0)
         assert_array_almost_equal(circular, numpy.array([0.0 + 0j, -1j, -1j, 0.0 + 0j]))
     
         stokes = numpy.array([0.0, 0.0, 1.0, 0.0])
-        circular = convert_stokes_to_circular(stokes)
+        circular = convert_stokes_to_circular(stokes, 0)
         assert_array_almost_equal(circular, numpy.array([0.0 + 0j, 1.0 + 0j, -1.0 + 0j, 0.0 + 0j]))
     
         stokes = numpy.array([0.0, 0.0, 0.0, 1.0])
-        circular = convert_stokes_to_circular(stokes)
+        circular = convert_stokes_to_circular(stokes, 0)
         assert_array_almost_equal(circular, numpy.array([1.0 + 0j, +0.0j, 0.0j, -1.0 + 0j]))
 
     def test_stokes_linear_stokes_conversion(self):
         stokes = numpy.array([1, 0.5, 0.2, -0.1])
-        linear = convert_stokes_to_linear(stokes)
-        assert_array_almost_equal(convert_linear_to_stokes(linear).real, stokes, 15)
+        linear = convert_stokes_to_linear(stokes, 0)
+        assert_array_almost_equal(convert_linear_to_stokes(linear, 0).real, stokes, 15)
+
+    def test_stokes_linearnp_stokesIQ_conversion(self):
+        stokes = numpy.array([1, 0.5])
+        linearnp = convert_stokes_to_linear(stokes, 0)
+        assert_array_almost_equal(convert_linear_to_stokes(linearnp, 0).real, stokes, 15)
 
     def test_stokes_circular_stokes_conversion(self):
         stokes = numpy.array([1, 0.5, 0.2, -0.1])
-        circular = convert_stokes_to_circular(stokes)
-        assert_array_almost_equal(convert_circular_to_stokes(circular).real, stokes, 15)
+        circular = convert_stokes_to_circular(stokes, 0)
+        assert_array_almost_equal(convert_circular_to_stokes(circular, 0).real, stokes, 15)
+
+    def test_stokes_circularnp_stokesIV_conversion(self):
+        stokes = numpy.array([1, 0.5])
+        circularnp = convert_stokes_to_circular(stokes, 0)
+        assert_array_almost_equal(convert_circular_to_stokes(circularnp, 0).real, stokes, 15)
 
     def test_image_conversion(self):
         stokes = numpy.array(random.uniform(-1.0, 1.0, [3, 4, 128, 128]))
@@ -114,20 +132,36 @@ class TestPolarisation(unittest.TestCase):
         st = convert_pol_frame(cir, opf, ipf)
         assert_array_almost_equal(st.real, stokes, 15)
 
+    def test_image_auto_conversion_circularnp(self):
+        stokes = numpy.array(random.uniform(-1.0, 1.0, [3, 2, 128, 128]))
+        ipf = PolarisationFrame('stokesIV')
+        opf = PolarisationFrame('circularnp')
+        cir = convert_pol_frame(stokes, ipf, opf, polaxis=1)
+        st = convert_pol_frame(cir, opf, ipf, polaxis=1)
+        assert_array_almost_equal(st.real, stokes, 15)
+
     def test_image_auto_conversion_linear(self):
         stokes = numpy.array(random.uniform(-1.0, 1.0, [3, 4, 128, 128]))
         ipf = PolarisationFrame('stokesIQUV')
         opf = PolarisationFrame('linear')
-        cir = convert_pol_frame(stokes, ipf, opf)
-        st = convert_pol_frame(cir, opf, ipf)
+        cir = convert_pol_frame(stokes, ipf, opf, polaxis=1)
+        st = convert_pol_frame(cir, opf, ipf, polaxis=1)
+        assert_array_almost_equal(st.real, stokes, 15)
+
+    def test_image_auto_conversion_linearnp(self):
+        stokes = numpy.array(random.uniform(-1.0, 1.0, [3, 2, 128, 128]))
+        ipf = PolarisationFrame('stokesIQ')
+        opf = PolarisationFrame('linearnp')
+        cir = convert_pol_frame(stokes, ipf, opf, polaxis=1)
+        st = convert_pol_frame(cir, opf, ipf, polaxis=1)
         assert_array_almost_equal(st.real, stokes, 15)
 
     def test_image_auto_conversion_I(self):
         stokes = numpy.array(random.uniform(-1.0, 1.0, [3, 4, 128, 128]))
         ipf = PolarisationFrame('stokesI')
         opf = PolarisationFrame('stokesI')
-        cir = convert_pol_frame(stokes, ipf, opf)
-        st = convert_pol_frame(cir, opf, ipf)
+        cir = convert_pol_frame(stokes, ipf, opf, polaxis=1)
+        st = convert_pol_frame(cir, opf, ipf, polaxis=1)
         assert_array_almost_equal(st.real, stokes, 15)
 
     def test_vis_conversion(self):
@@ -152,7 +186,7 @@ class TestPolarisation(unittest.TestCase):
         st = convert_pol_frame(cir, opf, ipf, polaxis=2)
         assert_array_almost_equal(st.real, stokes, 15)
         
-    def test_circular_to_linear(self):
+    def test_circular_to_linear_should_fail(self):
         stokes = numpy.array(random.uniform(-1.0, 1.0, [3, 4, 128, 128]))
         ipf = PolarisationFrame('stokesIQUV')
         opf = PolarisationFrame('circular')

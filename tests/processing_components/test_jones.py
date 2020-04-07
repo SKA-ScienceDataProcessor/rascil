@@ -30,7 +30,7 @@ class TestJones(unittest.TestCase):
                      numpy.array([100.0, 1.0, -10.0, +60.0])):
             vpol = PolarisationFrame("linear")
             cpol = PolarisationFrame("stokesIQUV")
-            cflux = convert_pol_frame(flux, cpol, vpol).reshape([2,2])
+            cflux = convert_pol_frame(flux, cpol, vpol, 0).reshape([2,2])
 
             diagonal = numpy.array([[1.0 + 0.0j, 0.0 + 0.0j],
                                     [0.0 + 0.0j, 1.0 + 0.0]])
@@ -45,7 +45,7 @@ class TestJones(unittest.TestCase):
                 try:
                     jflux = apply_jones(ej, cflux, inverse=False)
                     rflux = apply_jones(ej, jflux, inverse=True).reshape([4])
-                    rflux = convert_pol_frame(rflux, vpol, cpol)
+                    rflux = convert_pol_frame(rflux, vpol, cpol, 0)
                     assert_array_almost_equal(flux, numpy.real(rflux), 12)
                     # print("{0} {1} {2} succeeded".format(vpol, str(ej), str(flux)))
                     nsucceeded += 1
