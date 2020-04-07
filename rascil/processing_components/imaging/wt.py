@@ -365,6 +365,179 @@ try:
 
         return im, sumwt
 
+# A part of crocodile.synthesis for wkernel calculation
+
+    def coordinates2(N):
+        """Two dimensional grids of coordinates spanning -1 to 1 in each
+        dimension, with
+
+        1. a step size of 2/N and
+        2. (0,0) at pixel (floor(n/2),floor(n/2))
+
+        :returns: pair (cx,cy) of 2D coordinate arrays
+        """
+
+        N2 = N // 2
+        if N % 2 == 0:
+           return numpy.mgrid[-N2:N2, -N2:N2][::-1] / N
+        else:
+           return numpy.mgrid[-N2:N2+1, -N2:N2+1][::-1] / N
+
+
+    def extract_oversampled(a, xf, yf, Qpx, N):
+        """
+        Extract the (xf-th,yf-th) w-kernel from the oversampled parent
+
+        Offsets are suitable for correcting of fractional coordinates,
+        e.g. an offset of (xf,yf) results in the kernel for an (-xf,-yf)
+        sub-grid offset.
+
+        We do not want to make assumptions about the source grid's symetry
+        here, which means that the grid's side length must be at least
+        Qpx*(N+2) to contain enough information in all circumstances
+
+        :param a: grid from which to extract
+        :param ox: x offset
+        :param oy: y offset
+        :param Qpx: oversampling factor
+        :param N: size of section
+        """
+
+        assert xf >= 0 and xf < Qpx
+        assert yf >= 0 and yf < Qpx
+        # Determine start offset.
+        Na = a.shape[0]
+        my = Na//2 - Qpx*(N//2) - yf
+        mx = Na//2 - Qpx*(N//2) - xf
+        assert mx >= 0 and my >= 0
+        # Extract every Qpx-th pixel
+        mid = a[my : my+Qpx*N : Qpx,
+                 mx : mx+Qpx*N : Qpx]
+        # normalise
+        return Qpx * Qpx * mid
+
+    def pad_mid(ff, N):
+        """
+        Pad a far field image with zeroes to make it the given size.
+
+        Effectively as if we were multiplying with a box function of the
+        original field's size, which is equivalent to a convolution with a
+        sinc pattern in the uv-grid.
+    
+        :param ff: The input far field. Should be smaller than NxN.
+        :param N:  The desired far field size
+
+        """
+
+        N0, N0w = ff.shape
+        if N == N0: return ff
+        assert N > N0 and N0 == N0w
+        return numpy.pad(ff,
+                     pad_width=2*[(N//2-N0//2, (N+1)//2-(N0+1)//2)],
+                     mode='constant',
+                     constant_values=0.0)
+
+    def ifft(a):
+        """ Fourier transformation from grid to image space
+
+        :param a: `uv` grid to transform
+        :returns: an image in `lm` coordinate space
+        """
+        return numpy.fft.fftshift(numpy.fft.ifft2(numpy.fft.ifftshift(a)))
+
+
+    def kernel_coordinates(N, theta, dl=0, dm=0, T=None):
+        """
+        Returns (l,m) coordinates for generation of kernels
+        in a far-field of the given size.
+
+        If coordinate transformations are passed, they must be inverse to
+        the transformations applied to the visibilities using
+        visibility_shift/uvw_transform.
+
+        :param N: Desired far-field resolution
+        :param theta: Field of view size (directional cosines)
+        :param dl: Pattern horizontal shift (see visibility_shift)
+        :param dm: Pattern vertical shift (see visibility_shift)
+        :param T: Pattern transformation matrix (see uvw_transform)
+        :returns: Pair of (m,l) coordinates
+        """
+
+        l,m = coordinates2(N) * theta
+        if not T is None:
+            l,m = T[0,0]*l+T[1,0]*m, T[0,1]*l+T[1,1]*m
+        return l+dl, m+dm
+
+    def w_kernel_function(l, m, w, dl=0, dm=0, T=numpy.eye(2)):
+        """W beam, the fresnel diffraction pattern arising from non-coplanar baselines
+
+        For the w-kernel, shifting the kernel pattern happens to also
+        shift the kernel depending on w. To counter this effect, `dl` or
+        `dm` can be passed so that the kernel ends up approximately
+        centered again. This means that kernels will have to be used at an
+        offset to get the same result, use `visibility_recentre` to
+        achieve this.
+
+        :param l: Horizontal image coordinates
+        :param m: Vertical image coordinates
+        :param N: Size of the grid in pixels
+        :param w: Baseline distance to the projection plane
+        :param dl: Shift the kernel by `dl w` to re-center it after a pattern shift.
+        :param dm: Shift the kernel by `dm w` to re-center it after a pattern shift.
+        :returns: N x N array with the far field
+        """
+
+        r2 = l**2 + m**2
+        assert numpy.all(r2 < 1.0), "Error in image coordinate system: l %s, m %s" % (l, m)
+        ph = 1 - numpy.sqrt(1.0 - r2) - dl * l - dm * m
+        cp = numpy.exp(2j * numpy.pi * w * ph)
+        return cp
+
+    def kernel_oversample(ff, N, Qpx, s):
+        """
+        Takes a farfield pattern and creates an oversampled convolution
+        function.
+
+        If the far field size is smaller than N*Qpx, we will pad it. This
+        essentially means we apply a sinc anti-aliasing kernel by default.
+
+        :param ff: Far field pattern
+        :param N:  Image size without oversampling
+        :param Qpx: Factor to oversample by -- there will be Qpx x Qpx convolution arl
+        :param s: Size of convolution function to extract
+        :returns: Numpy array of shape [ov, ou, v, u], e.g. with sub-pixel
+          offsets as the outer coordinates.
+        """
+
+        # Pad the far field to the required pixel size
+        padff = pad_mid(ff, N*Qpx)
+
+        # Obtain oversampled uv-grid
+        af = ifft(padff)
+
+        # Extract kernels
+        res = [[extract_oversampled(af, x, y, Qpx, s) for x in range(Qpx)] for y in range(Qpx)]
+        return numpy.array(res)
+
+    def w_kernel(theta, w, NpixFF, NpixKern, Qpx, **kwargs):
+        """
+        The middle s pixels of W convolution kernel. (W-KERNel-Aperture-Function)
+
+        :param theta: Field of view (directional cosines)
+        :param w: Baseline distance to the projection plane
+        :param NpixFF: Far field size. Must be at least NpixKern+1 if Qpx > 1, otherwise NpixKern.
+        :param NpixKern: Size of convolution function to extract
+        :param Qpx: Oversampling, pixels will be Qpx smaller in aperture
+          plane than required to minimially sample theta.
+
+        :returns: [Qpx,Qpx,s,s] shaped oversampled convolution kernels
+        """
+        assert NpixFF > NpixKern or (NpixFF == NpixKern and Qpx == 1)
+
+        l,m = kernel_coordinates(NpixFF, theta, **kwargs)
+        kern = w_kernel_function(l,m,w)
+        return kernel_oversample(kern, NpixFF, Qpx, NpixKern)
+
 except ImportError:
     import warnings
     
