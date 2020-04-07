@@ -18,7 +18,7 @@ docs:
   before_script:
     - apt-get update
     - apt-get -y install pandoc
-    - pip install -r requirements-freeze.txt
+    - pip install -r requirements.txt requirements-doc.txt
     - mkdir -p docs/build/html
     - mkdir -p test_results
   script:
@@ -33,7 +33,7 @@ docs:
 unittests:
   stage: build
   before_script:
-    - pip install -r requirements-freeze.txt
+    - pip install -r requirements.txt
   script:
     - pip install pytest pytest-xdist pytest-cov
     - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
