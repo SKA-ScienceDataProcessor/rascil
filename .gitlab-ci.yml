@@ -21,6 +21,10 @@ docs:
     - pip install -r requirements.txt -r requirements-docs.txt
     - mkdir -p docs/build/html
     - mkdir -p test_results
+    - git clone https://github.com/astropy/astroplan
+    - cd astroplan
+    - python setup.py install
+    - cd ..
   script:
     - PYTHONPATH=`pwd` HOME=`pwd` make -k -C docs html
   after_script:
@@ -34,6 +38,10 @@ unittests:
   stage: build
   before_script:
     - pip install -r requirements.txt
+    - git clone https://github.com/astropy/astroplan
+    - cd astroplan
+    - python setup.py install
+    - cd ..
   script:
     - pip install pytest pytest-xdist pytest-cov
     - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
