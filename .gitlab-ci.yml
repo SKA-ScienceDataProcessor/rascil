@@ -3,16 +3,6 @@ image: "python:3.7"
 variables:
   MPLBACKEND: "agg"
 
-data:
-  stage: build
-  script:
-    - tar -zcf rascil_data.tgz data
-  after_script:
-  artifacts:
-    paths:
-      - rascil_data.tgz
-    expire_in: 6 months
-
 docs:
   stage: build
   before_script:
@@ -23,7 +13,7 @@ docs:
     - mkdir -p docs/build/html
     - mkdir -p test_results
     - mkdir -p /build/casacore-3.2.0/data
-    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic - mkdir -p /build/casacore-3.2.0/data
+    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/casacore-3.2.0/data
   script:
     - PYTHONPATH=`pwd` HOME=`pwd` make -k -C docs html
   after_script:
@@ -41,7 +31,7 @@ unittests:
     - pip install -r requirements.txt
     - python -c "import sys;print(sys.path)"
     - mkdir -p /build/casacore-3.2.0/data
-    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic - mkdir -p /build/casacore-3.2.0/data
+    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/casacore-3.2.0/data
   script:
     - pip install pytest pytest-xdist pytest-cov
     - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
@@ -50,6 +40,16 @@ unittests:
     paths:
       - coverage
     expire_in: 1 week
+
+data:
+  stage: build
+  script:
+    - tar -zcf rascil_data.tgz data
+  after_script:
+  artifacts:
+    paths:
+      - rascil_data.tgz
+    expire_in: 6 months
 
 pages:
   stage: deploy

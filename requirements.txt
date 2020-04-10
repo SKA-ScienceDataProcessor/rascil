@@ -11,7 +11,7 @@ numba
 numpy
 paramiko
 photutils
-python-casacore
+python-casacore==3.2.0
 graphviz
 reproject
 scikit-image
