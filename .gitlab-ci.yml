@@ -17,7 +17,7 @@ docs:
   stage: build
   before_script:
     - apt-get update
-    - apt-get -y install pandoc
+    - apt-get -y install pandoc rsync
     - pip install -r requirements.txt -r requirements-docs.txt
     - mkdir -p docs/build/html
     - mkdir -p test_results
@@ -34,6 +34,8 @@ docs:
 unittests:
   stage: build
   before_script:
+    - apt-get update
+    - apt-get -y install rsync
     - pip install -r requirements.txt
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic .
   script:
