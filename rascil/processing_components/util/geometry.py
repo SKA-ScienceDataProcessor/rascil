@@ -23,10 +23,10 @@ log = logging.getLogger('logger')
 def calculate_hourangles(location, utc_time, direction):
     """ Return hour angles for location, utc_time, and direction
 
-    :param utc_time:
-    :param location:
-    :param direction: Direction of source
-    :return: astropy Angle
+    :param utc_time: Time(Iterable)
+    :param location: EarthLocation
+    :param direction: SkyCoord source
+    :return: Angle
     """
     
     assert isinstance(location, EarthLocation)
@@ -39,13 +39,14 @@ def calculate_hourangles(location, utc_time, direction):
     dm.doframe(casa_location)
     casa_direction = dm.direction('j2000', str(direction.ra), str(direction.dec))
     has = list()
+    unit = "rad"
     for utc in utc_time:
         casa_utc_time = dm.epoch('utc', str(utc.mjd) + 'd')
         dm.doframe(casa_utc_time)
         casa_hadec = dm.measure(casa_direction, 'hadec')
-        ha = "{:12f} {}".format(casa_hadec['m0']['value'], casa_hadec['m0']['unit'])
-        has.append(ha)
-    return Angle(has)
+        has.append(casa_hadec['m0']['value'])
+        assert unit == casa_hadec['m0']['unit']
+    return Angle(has, unit=unit)
 
     # from astroplan import Observer
     # site = Observer(location=location)
@@ -55,10 +56,10 @@ def calculate_hourangles(location, utc_time, direction):
 def calculate_transit_time(location, utc_time, direction, fraction_day=0.01):
     """ Find the UTC time of the nearest transit
 
-    :param fraction_day:
-    :param utc_time:
-    :param location:
-    :param direction: Direction of source
+    :param fraction_day: Step in this fraction of day to find transit
+    :param utc_time: Time(Iterable)
+    :param location: EarthLocation
+    :param direction: SkyCoord source
     :return: astropy Time
     """
     assert isinstance(location, EarthLocation)
@@ -85,9 +86,9 @@ def calculate_transit_time(location, utc_time, direction, fraction_day=0.01):
 def calculate_azel(location, utc_time, direction):
     """ Return az el for a location, utc_time, and direction
 
-    :param utc_time:
-    :param location:
-    :param direction: Direction of source
+    :param utc_time: Time(Iterable)
+    :param location: EarthLocation
+    :param direction: SkyCoord source
     :return: astropy Angle, Angle
     """
     assert isinstance(location, EarthLocation)
@@ -102,15 +103,17 @@ def calculate_azel(location, utc_time, direction):
     casa_direction = dm.direction('j2000', str(direction.ra), str(direction.dec))
     azs = list()
     els = list()
+    unit0 = 'rad'
+    unit1 = 'rad'
     for utc in utc_time:
         casa_utc_time = dm.epoch('utc', str(utc.mjd) + 'd')
         dm.doframe(casa_utc_time)
         casa_azel = dm.measure(casa_direction, 'azel')
-        az = "{:12f} {}".format(casa_azel['m0']['value'], casa_azel['m0']['unit'])
-        el = "{:12f} {}".format(casa_azel['m1']['value'], casa_azel['m1']['unit'])
-        azs.append(az)
-        els.append(el)
-    return Angle(azs), Angle(els)
+        assert unit0 == casa_azel['m0']['unit']
+        assert unit1 == casa_azel['m1']['unit']
+        azs.append(casa_azel['m0']['value'])
+        els.append(casa_azel['m1']['value'])
+    return Angle(azs, unit=unit0), Angle(els, unit=unit1)
 
     # from astroplan import Observer
     # site = Observer(location=location)
