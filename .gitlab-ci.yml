@@ -19,12 +19,9 @@ docs:
     - apt-get update
     - apt-get -y install pandoc rsync
     - pip install -r requirements.txt -r requirements-docs.txt
+    - python -c "import sys;print(sys.path)"
     - mkdir -p docs/build/html
     - mkdir -p test_results
-    - ls -lt /
-    - ls -lt /build
-    - ls -lt /build/lib
-    - ls -lt /build/lib/casa
     - mkdir /build/lib/casa/data
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/lib/casa/data
   script:
@@ -42,10 +39,7 @@ unittests:
     - apt-get update
     - apt-get -y install rsync
     - pip install -r requirements.txt
-    - ls -l /
-    - ls -lt /build/
-    - ls -lt /build/lib
-    - ls -lt /build/lib/casa
+    - python -c "import sys;print(sys.path)"
     - mkdir /build/lib/casa/data
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/lib/casa/data
   script:
