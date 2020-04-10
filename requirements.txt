@@ -1,6 +1,5 @@
 aotools
-astropy==4.0.1
-astroplan
+astropy
 bokeh
 dask
 distributed

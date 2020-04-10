@@ -30,16 +30,16 @@ class TestGeometry(unittest.TestCase):
     def test_azel(self):
         azel = calculate_blockvisibility_azel(self.bvis)
         print(azel)
-        numpy.testing.assert_array_almost_equal(azel[0][0].deg, 152.523126)
-        numpy.testing.assert_array_almost_equal(azel[1][0].deg, 24.163175)
+        numpy.testing.assert_array_almost_equal(azel[0][0].deg, 152.418453)
+        numpy.testing.assert_array_almost_equal(azel[1][0].deg, 24.650068)
     
     def test_hourangle(self):
         ha = calculate_blockvisibility_hourangles(self.bvis)
-        numpy.testing.assert_array_almost_equal(ha.deg[0], -89.743265)
+        numpy.testing.assert_array_almost_equal(ha[0].deg, -88.487126)
     
     def test_transit_time(self):
         transit_time = calculate_blockvisibility_transit_time(self.bvis)
-        numpy.testing.assert_array_almost_equal(transit_time.value[0], 2458850.395812)
+        numpy.testing.assert_array_almost_equal(transit_time.mjd, 58849.900683)
 
 
 if __name__ == '__main__':

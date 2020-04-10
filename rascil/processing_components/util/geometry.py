@@ -55,6 +55,7 @@ def calculate_hourangles(location, utc_time, direction):
 def calculate_transit_time(location, utc_time, direction, fraction_day=0.01):
     """ Find the UTC time of the nearest transit
 
+    :param fraction_day:
     :param utc_time:
     :param location:
     :param direction: Direction of source
