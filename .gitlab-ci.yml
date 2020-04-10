@@ -30,7 +30,6 @@ unittests:
     - apt-get -y install rsync
     - pip install -r requirements.txt
     - python -c "import sys;print(sys.path)"
-    - mkdir -p /build/casacore-3.2.0/data
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/
     - ls -l /build/geodetic
   script:
