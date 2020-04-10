@@ -21,6 +21,8 @@ docs:
     - pip install -r requirements.txt -r requirements-docs.txt
     - mkdir -p docs/build/html
     - mkdir -p test_results
+    - ls -lt /
+    - ls -lt /build
     - ls -lt /build/lib
     - ls -lt /build/lib/casa
     - mkdir /build/lib/casa/data
@@ -40,6 +42,8 @@ unittests:
     - apt-get update
     - apt-get -y install rsync
     - pip install -r requirements.txt
+    - ls -l /
+    - ls -lt /build/
     - ls -lt /build/lib
     - ls -lt /build/lib/casa
     - mkdir /build/lib/casa/data
