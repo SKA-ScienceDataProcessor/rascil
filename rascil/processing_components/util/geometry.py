@@ -43,7 +43,7 @@ def calculate_hourangles(location, utc_time, direction):
         casa_utc_time = dm.epoch('utc', str(utc.mjd) + 'd')
         dm.doframe(casa_utc_time)
         casa_hadec = dm.measure(casa_direction, 'hadec')
-        ha = str(casa_hadec['m0']['value']) + casa_hadec['m0']['unit']
+        ha = "{:12f} {}".format(casa_hadec['m0']['value'], casa_hadec['m0']['unit'])
         has.append(ha)
     return Angle(has)
 
@@ -106,8 +106,8 @@ def calculate_azel(location, utc_time, direction):
         casa_utc_time = dm.epoch('utc', str(utc.mjd) + 'd')
         dm.doframe(casa_utc_time)
         casa_azel = dm.measure(casa_direction, 'azel')
-        az = str(casa_azel['m0']['value']) + casa_azel['m0']['unit']
-        el = str(casa_azel['m1']['value']) + casa_azel['m1']['unit']
+        az = "{:12f} {}".format(casa_azel['m0']['value'], casa_azel['m0']['unit'])
+        el = "{:12f} {}".format(casa_azel['m1']['value'], casa_azel['m1']['unit'])
         azs.append(az)
         els.append(el)
     return Angle(azs), Angle(els)

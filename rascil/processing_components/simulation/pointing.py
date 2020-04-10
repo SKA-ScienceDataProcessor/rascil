@@ -71,11 +71,11 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
             pt_rows = (pt.time == v.time)
             assert numpy.sum(pt_rows) > 0
             pointing_ha = pt.pointing[pt_rows]
-            utc_time = Time(numpy.average(v.time)/86400.0, format='mjd', scale='utc')
+            utc_time = Time([numpy.average(v.time)/86400.0], format='mjd', scale='utc')
             azimuth_centre, elevation_centre = calculate_azel(v.configuration.location, utc_time,
                                                               v.phasecentre)
-            azimuth_centre = azimuth_centre.to('rad').value
-            elevation_centre = elevation_centre.to('rad').value
+            azimuth_centre = azimuth_centre[0].to('rad').value
+            elevation_centre = elevation_centre[0].to('rad').value
             
             # Calculate the az el for this hourangle and the phasecentre declination
             for icomp, comp in enumerate(sc):
@@ -87,11 +87,11 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                     antgain = numpy.zeros([nant, npol], dtype='complex')
                     
                     # Calculate the azel of this component
-                    utc_time = Time(numpy.average(v.time) / 86400.0, format='mjd', scale='utc')
+                    utc_time = Time([numpy.average(v.time) / 86400.0], format='mjd', scale='utc')
                     azimuth_comp, elevation_comp = calculate_azel(v.configuration.location, utc_time,
                                                                   comp.direction)
-                    azimuth_comp = azimuth_comp.to('rad').value
-                    elevation_comp = elevation_comp.to('rad').value
+                    azimuth_comp = azimuth_comp[0].to('rad').value
+                    elevation_comp = elevation_comp[0].to('rad').value
                     
                     for ant in range(nant):
                         

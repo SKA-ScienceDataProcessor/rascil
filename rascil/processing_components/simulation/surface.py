@@ -63,7 +63,7 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
         # voltage pattern
         for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
             v = create_visibility_from_rows(vis, rows)
-            utc_time = Time(numpy.average(v.time)/86400.0, format='mjd', scale='utc')
+            utc_time = Time([numpy.average(v.time)/86400.0], format='mjd', scale='utc')
             azimuth_centre, elevation_centre = calculate_azel(v.configuration.location, utc_time,
                                                               vis.phasecentre)
             azimuth_centre = azimuth_centre[0].to('deg').value
@@ -249,11 +249,11 @@ def simulate_gaintable_from_zernikes(vis, sc, vp_list, vp_coeffs, vis_slices=Non
             ha = numpy.average(calculate_blockvisibility_hourangles(v).to('rad').value)
             
             # Calculate the az el for this hourangle and the phasecentre declination
-            utc_time = Time(numpy.average(v.time)/86400.0, format='mjd', scale='utc')
+            utc_time = Time([numpy.average(v.time)/86400.0], format='mjd', scale='utc')
             azimuth_centre, elevation_centre = calculate_azel(v.configuration.location, utc_time,
                                                               vis.phasecentre)
-            azimuth_centre = azimuth_centre.to('deg').value
-            elevation_centre = elevation_centre.to('deg').value
+            azimuth_centre = azimuth_centre[0].to('deg').value
+            elevation_centre = elevation_centre[0].to('deg').value
             
             for icomp, comp in enumerate(sc):
                 
