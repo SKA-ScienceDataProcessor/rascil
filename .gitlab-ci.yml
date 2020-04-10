@@ -22,8 +22,9 @@ docs:
     - python -c "import sys;print(sys.path)"
     - mkdir -p docs/build/html
     - mkdir -p test_results
-    - mkdir /build/lib/casa/data
-    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/lib/casa/data
+    - ls /usr/local/lib/python3.7/site-packages
+    - mkdir -p /usr/local/lib/python3.7/site-packages/casacore/data
+    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /usr/local/lib/python3.7/site-packages/casacore/data
   script:
     - PYTHONPATH=`pwd` HOME=`pwd` make -k -C docs html
   after_script:
@@ -40,8 +41,9 @@ unittests:
     - apt-get -y install rsync
     - pip install -r requirements.txt
     - python -c "import sys;print(sys.path)"
-    - mkdir /build/lib/casa/data
-    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/lib/casa/data
+    - ls /usr/local/lib/python3.7/site-packages
+    - mkdir -p /usr/local/lib/python3.7/site-packages/casacore/data
+    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /usr/local/lib/python3.7/site-packages/casacore/data
   script:
     - pip install pytest pytest-xdist pytest-cov
     - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
