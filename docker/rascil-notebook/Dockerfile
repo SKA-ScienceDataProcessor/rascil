@@ -16,5 +16,5 @@ RUN curl -sL https://deb.nodesource.com/setup_13.x | bash - && \
     apt-get install -y nodejs
 
 RUN pip3 install dask-labextension \
-    && jupyter labextension install @jupyter-widgets/jupyterlab-manager dask-labextension@1.0.1
+    && jupyter labextension install @jupyter-widgets/jupyterlab-manager dask-labextension
 
