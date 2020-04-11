@@ -242,7 +242,7 @@ def create_named_configuration(name: str = 'LOWBD2', **kwargs) -> Configuration:
                                             mount='equatorial', names='ASKAP_%d',
                                             diameter=12.0, name=name, location=location, **kwargs)
     elif name == 'LOFAR':
-        location = EarthLocation(x=[3826923.9] * u.m, y=[460915.1] * u.m, z=[5064643.2] * u.m)
+        location = EarthLocation(x=3826923.9 * u.m, y=460915.1 * u.m, z=5064643.2 * u.m)
         log.info("create_named_configuration: %s\n\t%s\n\t%s" % (name, location.geocentric, location.geodetic))
         assert get_parameter(kwargs, "meta", False) is False
         fc = create_LOFAR_configuration(antfile=rascil_path("data/configurations/LOFAR.csv"), location=location)

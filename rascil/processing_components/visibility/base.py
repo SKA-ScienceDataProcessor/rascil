@@ -26,8 +26,11 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility, \
 from rascil.data_models.polarisation import PolarisationFrame, ReceptorFrame, \
     correlate_polarisation
 from rascil.processing_components.util import skycoord_to_lmn, simulate_point
-from rascil.processing_components.util.coordinate_support import xyz_to_uvw, uvw_to_xyz, \
+from rascil.processing_components.util import xyz_to_uvw, uvw_to_xyz, \
     hadec_to_azel
+from rascil.processing_components.util.geometry import calculate_transit_time
+from rascil.processing_components.visibility.visibility_geometry import calculate_blockvisibility_transit_time, \
+    calculate_blockvisibility_hourangles, calculate_blockvisibility_azel
 
 log = logging.getLogger('logger')
 
@@ -134,9 +137,7 @@ def create_visibility(config: Configuration, times: numpy.array, frequency: nump
     
     # Do each hour angle in turn
     row = 0
-    from astroplan import Observer
-    site = Observer(config.location)
-    stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
+    stime = calculate_transit_time(config.location, utc_time, phasecentre)
     if stime.masked:
         stime = utc_time
     for iha, ha in enumerate(times):
@@ -272,9 +273,7 @@ def create_blockvisibility(config: Configuration,
     
     # Do each hour angle in turn
     itime = 0
-    from astroplan import Observer
-    site = Observer(config.location)
-    stime = site.target_meridian_transit_time(utc_time, phasecentre, which="next", n_grid_points=100)
+    stime = calculate_transit_time(config.location, utc_time, phasecentre)
     if stime.masked:
         stime = utc_time
     
