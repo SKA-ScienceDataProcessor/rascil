@@ -22,7 +22,7 @@ from rascil.processing_components.griddata import grid_visibility_to_griddata, \
     degrid_visibility_from_griddata, fft_griddata_to_image, fft_image_to_griddata, \
     create_griddata_from_image
 from rascil.processing_components.visibility.base import copy_visibility
-from rascil.processing_components.imaging import normalize_sumwt
+from rascil.processing_components.imaging import normalize_sumwt, fill_vis_for_psf
 
 log = logging.getLogger('logger')
 
@@ -103,6 +103,9 @@ def invert_wstack_single(vis: Visibility, im: Image, dopsf, normalize=True, remo
     
     assert isinstance(vis, Visibility), "wstack requires Visibility format not BlockVisibility"
     
+    if dopsf:
+        vis = fill_vis_for_psf(im, vis)
+    
     # We might want to do wprojection so we remove the average w
     w_average = numpy.average(vis.w)
     if remove:
@@ -121,7 +124,8 @@ def invert_wstack_single(vis: Visibility, im: Image, dopsf, normalize=True, remo
     # Calculate w beam and apply to the model. The imaginary part is not needed
     w_beam = create_w_term_like(im, w_average, vis.phasecentre)
     cworkimage = copy_image(cim)
-    cworkimage.data = numpy.conjugate(w_beam.data) * cim.data
+#    cworkimage.data = numpy.conjugate(w_beam.data) * cim.data
+    cworkimage.data = w_beam.data * cim.data
     workimage = convert_polimage_to_stokes(cworkimage)
 
     return workimage, sumwt

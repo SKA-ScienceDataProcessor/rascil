@@ -113,6 +113,16 @@ Click on the 127.0.0.1 URL. We have used the jupyter lab interface instead of ju
 because the former allows control of Dask from the interface. This can be changed in the docker-compose.yml
 file. Note also that the classic notebook interface can be selected at the lab interface.
 
+CASA Measures Tables
+--------------------
+
+We use the CASA measures system for TAI/UTC corrections. These rely upon tables downloaded from NRAO.
+It may happen that the tables become out ofdate. If so do the following at the command prompt inside a
+docker image::
+
+    rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /var/lib/casacore/data
+
+
 Customisability
 ---------------
 

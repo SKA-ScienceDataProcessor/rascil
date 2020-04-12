@@ -20,7 +20,7 @@ extra phase term in the Fourier transform cannot be ignored.
 """
 
 __all__ = ['shift_vis_to_image', 'normalize_sumwt', 'predict_2d', 'invert_2d', 'predict_skycomponent_visibility',
-           'create_image_from_visibility', 'advise_wide_field', 'visibility_recentre']
+           'create_image_from_visibility', 'advise_wide_field', 'visibility_recentre', 'fill_vis_for_psf']
 
 import logging
 from typing import List, Union
@@ -166,21 +166,7 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     svis = copy_visibility(vis)
 
     if dopsf:
-        if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
-            svis.data['vis'][..., 1:4] = 0.0 + 0.0j
-            svis.data['vis'][..., 0] = 1.0 + 0.0j
-            svis.data['vis'][...] = \
-                convert_pol_frame(svis.data['vis'],
-                                  PolarisationFrame("stokesIQUV"),
-                                  vis.polarisation_frame, polaxis=-1)
-        elif im.polarisation_frame == PolarisationFrame("stokesI"):
-            svis.data['vis'][..., :] = 1.0 + 0.0j
-            svis.data['vis'][...] = \
-                convert_pol_frame(svis.data['vis'],
-                                  PolarisationFrame("stokesI"),
-                                  vis.polarisation_frame, polaxis=-1)
-        else:
-            raise ValueError("Cannot calculate PSF for {}".format(im.polarisation_frame))
+        svis = fill_vis_for_psf(im, svis)
 
 
     svis = shift_vis_to_image(svis, im, tangent=True, inverse=False)
@@ -206,6 +192,32 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     result = convert_polimage_to_stokes(result)
 
     return result, sumwt
+
+
+def fill_vis_for_psf(im, svis):
+    """ Fill the visibility for calculation of PSF
+    
+    :param im:
+    :param svis:
+    :return: visibility with unit vis
+    """
+    if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
+        svis.data['vis'][..., 1:4] = 0.0 + 0.0j
+        svis.data['vis'][..., 0] = 1.0 + 0.0j
+        svis.data['vis'][...] = \
+            convert_pol_frame(svis.data['vis'],
+                              PolarisationFrame("stokesIQUV"),
+                              svis.polarisation_frame, polaxis=-1)
+    elif im.polarisation_frame == PolarisationFrame("stokesI"):
+        svis.data['vis'][..., :] = 1.0 + 0.0j
+        svis.data['vis'][...] = \
+            convert_pol_frame(svis.data['vis'],
+                              PolarisationFrame("stokesI"),
+                              svis.polarisation_frame, polaxis=-1)
+    else:
+        raise ValueError("Cannot calculate PSF for {}".format(im.polarisation_frame))
+    
+    return svis
 
 
 def predict_skycomponent_visibility(vis: Union[Visibility, BlockVisibility],
