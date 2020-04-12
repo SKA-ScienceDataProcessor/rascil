@@ -16,15 +16,12 @@ __all__ = ['append_visibility',
            'convert_blockvisibility_to_stokes',
            'convert_blockvisibility_to_stokesI',
            'convert_visibility_to_stokesI',
-           'convert_visibility_to_stokes',
-           'calculate_blockvisibility_hourangles',
-           'calculate_blockvisibility_azel']
+           'convert_visibility_to_stokes']
 
 import logging
 from typing import Union, List
 
 import numpy
-from astropy.time import Time
 
 from rascil.data_models.memory_data_models import BlockVisibility, Visibility, \
     QA
@@ -517,34 +514,3 @@ def convert_blockvisibility_to_stokesI(vis):
                            source=vis.source, meta=vis.meta)
 
 
-def calculate_blockvisibility_hourangles(bvis, direction=None):
-    """ Return hour angles for a BlockVisibility
-
-    :param bvis:
-    :param Direction of source
-    :return:
-    """
-    if direction is None:
-        direction = bvis.phasecentre
-    
-    from astroplan import Observer
-    site = Observer(location=bvis.configuration.location)
-    utc = Time(bvis.time / 86400.0, format='mjd', scale='utc')
-    return site.target_hour_angle(utc, direction).wrap_at('180d')
-
-
-def calculate_blockvisibility_azel(bvis, direction=None):
-    """ Return az el for a BlockVisibility
-
-    :param bvis:
-    :param direction:
-    :return:
-    """
-    if direction is None:
-        direction = bvis.phasecentre
-    
-    from astroplan import Observer
-    site = Observer(location=bvis.configuration.location)
-    utc = Time(bvis.time / 86400.0, format='mjd', scale='utc')
-    altaz = site.altaz(utc, direction)
-    return altaz.az.wrap_at('180d'), altaz.alt

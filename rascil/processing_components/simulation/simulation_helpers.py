@@ -23,8 +23,8 @@ from rascil.processing_components.skycomponent.base import copy_skycomponent
 from rascil.processing_components.skycomponent.operations import apply_beam_to_skycomponent, \
     filter_skycomponents_by_flux
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
-from rascil.processing_components.visibility.operations import calculate_blockvisibility_azel, \
-    calculate_blockvisibility_hourangles
+from rascil.processing_components.visibility.visibility_geometry import calculate_blockvisibility_hourangles, \
+    calculate_blockvisibility_azel
 
 log = logging.getLogger('logger')
 

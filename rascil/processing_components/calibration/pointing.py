@@ -16,7 +16,7 @@ from rascil.data_models.memory_data_models import PointingTable, BlockVisibility
 from rascil.data_models.polarisation import ReceptorFrame
 
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
-from rascil.processing_components.visibility.operations import calculate_blockvisibility_hourangles
+from rascil.processing_components.visibility.visibility_geometry import calculate_blockvisibility_hourangles
 
 log = logging.getLogger('logger')
 

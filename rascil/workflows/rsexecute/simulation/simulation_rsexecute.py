@@ -42,7 +42,8 @@ from rascil.processing_components.simulation.simulation_helpers import plot_poin
     plot_gaintable
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.visibility import convert_blockvisibility_to_visibility, \
-    convert_visibility_to_blockvisibility, calculate_blockvisibility_hourangles
+    convert_visibility_to_blockvisibility
+from rascil.processing_components.visibility import calculate_blockvisibility_hourangles
 from rascil.processing_components.visibility import copy_visibility
 from rascil.processing_components.visibility import create_blockvisibility, \
     create_visibility

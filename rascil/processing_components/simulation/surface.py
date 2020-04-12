@@ -6,14 +6,17 @@ __all__ = ['simulate_gaintable_from_zernikes', 'simulate_gaintable_from_voltage_
 
 import logging
 
+from astropy.time import Time
+
 import numpy
 from scipy.interpolate import RectBivariateSpline
 
 from rascil.data_models.memory_data_models import BlockVisibility
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
-from rascil.processing_components.visibility import create_visibility_from_rows, \
-    calculate_blockvisibility_hourangles, calculate_blockvisibility_azel
+from rascil.processing_components.visibility import create_visibility_from_rows
+from rascil.processing_components.visibility.visibility_geometry import calculate_blockvisibility_hourangles
+from rascil.processing_components.util.geometry import calculate_azel
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 
 log = logging.getLogger('logger')
@@ -60,7 +63,9 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
         # voltage pattern
         for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
             v = create_visibility_from_rows(vis, rows)
-            azimuth_centre, elevation_centre = calculate_blockvisibility_azel(v)
+            utc_time = Time([numpy.average(v.time)/86400.0], format='mjd', scale='utc')
+            azimuth_centre, elevation_centre = calculate_azel(v.configuration.location, utc_time,
+                                                              vis.phasecentre)
             azimuth_centre = azimuth_centre[0].to('deg').value
             elevation_centre = elevation_centre[0].to('deg').value
             
@@ -75,7 +80,8 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
                     antwt = numpy.zeros([nant, npol])
                     
                     # Calculate the azel of this component
-                    azimuth_comp, elevation_comp = calculate_blockvisibility_azel(v, comp.direction)
+                    azimuth_comp, elevation_comp = calculate_azel(v.configuration.location, utc_time,
+                                                                  comp.direction)
                     cosel = numpy.cos(elevation_comp[0]).value
                     azimuth_comp = azimuth_comp[0].to('deg').value
                     elevation_comp = elevation_comp[0].to('deg').value
@@ -243,9 +249,11 @@ def simulate_gaintable_from_zernikes(vis, sc, vp_list, vp_coeffs, vis_slices=Non
             ha = numpy.average(calculate_blockvisibility_hourangles(v).to('rad').value)
             
             # Calculate the az el for this hourangle and the phasecentre declination
-            azimuth_centre, elevation_centre = calculate_blockvisibility_azel(v)
-            azimuth_centre = azimuth_centre.to('deg').value
-            elevation_centre = elevation_centre.to('deg').value
+            utc_time = Time([numpy.average(v.time)/86400.0], format='mjd', scale='utc')
+            azimuth_centre, elevation_centre = calculate_azel(v.configuration.location, utc_time,
+                                                              vis.phasecentre)
+            azimuth_centre = azimuth_centre[0].to('deg').value
+            elevation_centre = elevation_centre[0].to('deg').value
             
             for icomp, comp in enumerate(sc):
                 

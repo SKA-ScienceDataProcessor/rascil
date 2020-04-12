@@ -11,12 +11,14 @@ import logging
 import numpy
 from scipy.interpolate import RectBivariateSpline
 
+from astropy.time import Time
+
 from rascil.data_models.memory_data_models import BlockVisibility
 from rascil.data_models.memory_data_models import PointingTable
 from rascil.data_models.parameters import rascil_data_path
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility
-from rascil.processing_components.visibility import create_visibility_from_rows, \
-    calculate_blockvisibility_hourangles, calculate_blockvisibility_azel
+from rascil.processing_components.visibility import create_visibility_from_rows
+from rascil.processing_components.util.geometry import calculate_azel
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 
 log = logging.getLogger('logger')
@@ -69,9 +71,11 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
             pt_rows = (pt.time == v.time)
             assert numpy.sum(pt_rows) > 0
             pointing_ha = pt.pointing[pt_rows]
-            azimuth_centre, elevation_centre = calculate_blockvisibility_azel(v)
-            azimuth_centre = azimuth_centre.to('rad').value
-            elevation_centre = elevation_centre.to('rad').value
+            utc_time = Time([numpy.average(v.time)/86400.0], format='mjd', scale='utc')
+            azimuth_centre, elevation_centre = calculate_azel(v.configuration.location, utc_time,
+                                                              v.phasecentre)
+            azimuth_centre = azimuth_centre[0].to('rad').value
+            elevation_centre = elevation_centre[0].to('rad').value
             
             # Calculate the az el for this hourangle and the phasecentre declination
             for icomp, comp in enumerate(sc):
@@ -83,9 +87,11 @@ def simulate_gaintable_from_pointingtable(vis, sc, pt, vp, vis_slices=None, scal
                     antgain = numpy.zeros([nant, npol], dtype='complex')
                     
                     # Calculate the azel of this component
-                    azimuth_comp, elevation_comp = calculate_blockvisibility_azel(v, comp.direction)
-                    azimuth_comp = azimuth_comp.to('rad')[0].value
-                    elevation_comp = elevation_comp.to('rad')[0].value
+                    utc_time = Time([numpy.average(v.time) / 86400.0], format='mjd', scale='utc')
+                    azimuth_comp, elevation_comp = calculate_azel(v.configuration.location, utc_time,
+                                                                  comp.direction)
+                    azimuth_comp = azimuth_comp[0].to('rad').value
+                    elevation_comp = elevation_comp[0].to('rad').value
                     
                     for ant in range(nant):
                         

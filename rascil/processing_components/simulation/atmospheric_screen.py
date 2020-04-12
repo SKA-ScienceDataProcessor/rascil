@@ -16,7 +16,8 @@ from rascil.processing_components.calibration.operations import create_gaintable
     create_gaintable_from_rows
 from rascil.processing_components.calibration.iterators import gaintable_timeslice_iter
 from rascil.processing_components.image.operations import copy_image, create_empty_image_like
-from rascil.processing_components.visibility import create_visibility_from_rows, calculate_blockvisibility_hourangles
+from rascil.processing_components.visibility import create_visibility_from_rows
+from rascil.processing_components.visibility.visibility_geometry import calculate_blockvisibility_hourangles
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 from rascil.processing_components.util.coordinate_support import xyz_to_uvw, skycoord_to_lmn
 
@@ -84,7 +85,7 @@ def create_gaintable_from_screen(vis, sc, screen, height=3e5, vis_slices=None, s
     ha_zero = numpy.average(calculate_blockvisibility_hourangles(vis))
     for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
         v = create_visibility_from_rows(vis, rows)
-        ha = numpy.average(calculate_blockvisibility_hourangles(v)-ha_zero).to('rad').value
+        ha = numpy.average(calculate_blockvisibility_hourangles(v) - ha_zero).to('rad').value
         for icomp, comp in enumerate(sc):
             pp = find_pierce_points(station_locations, (comp.direction.ra.rad + t2r * ha) * units.rad,
                                     comp.direction.dec,
