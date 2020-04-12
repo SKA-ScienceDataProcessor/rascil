@@ -36,7 +36,7 @@ class TestPipelineGraphs(unittest.TestCase):
     
     def setUp(self):
         numpy.random.seed(180555)
-        rsexecute.set_client(use_dask=True, processes=False, threads_per_worker=1)
+        rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         self.persist = os.getenv("RASCIL_PERSIST", False)

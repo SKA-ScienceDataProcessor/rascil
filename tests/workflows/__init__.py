@@ -10,7 +10,7 @@ class rsexecuteTestCase(object):
         import os
         from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
         use_dask = os.environ.get('RASCIL_TESTS_USE_DASK', '1') == '1'
-        rsexecute.set_client(use_dask=use_dask)
+        rsexecute.set_client(use_dask=use_dask, processes=True, threads_per_worker=1)
         
     def tearDown(self):
         from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute

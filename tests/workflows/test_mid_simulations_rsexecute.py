@@ -45,7 +45,7 @@ mpl_logger.setLevel(logging.WARNING)
 class TestPointingSimulation(unittest.TestCase):
     
     def setUp(self) -> None:
-        rsexecute.set_client(use_dask=True, processes=False, threads_per_worker=1)
+        rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
         self.persist = os.getenv("RASCIL_PERSIST", False)
 
     def simulation(self, args, time_series='wind', band='B2',

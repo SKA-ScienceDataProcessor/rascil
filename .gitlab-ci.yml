@@ -9,11 +9,9 @@ docs:
     - apt-get update
     - apt-get -y install pandoc rsync
     - pip install -r requirements.txt -r requirements-docs.txt
-    - python -c "import sys;print(sys.path)"
     - mkdir -p docs/build/html
     - mkdir -p test_results
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/
-    - ls -l /build/geodetic
   script:
     - PYTHONPATH=`pwd` HOME=`pwd` make -k -C docs html
   after_script:
@@ -29,9 +27,7 @@ unittests:
     - apt-get update
     - apt-get -y install rsync
     - pip install -r requirements.txt
-    - python -c "import sys;print(sys.path)"
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/
-    - ls -l /build/geodetic
   script:
     - pip install pytest pytest-xdist pytest-cov
     - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
