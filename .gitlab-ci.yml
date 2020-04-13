@@ -27,6 +27,7 @@ unittests:
     - apt-get update
     - apt-get -y install rsync
     - pip install -r requirements.txt
+    - mkdir -p test_results
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/
   script:
     - pip install pytest pytest-xdist pytest-cov
