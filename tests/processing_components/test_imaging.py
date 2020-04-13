@@ -14,7 +14,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.griddata.kernels import create_awterm_convolutionfunction
-from rascil.processing_components.image.operations import export_image_to_fits, smooth_image
+from rascil.processing_components.image.operations import export_image_to_fits, smooth_image, qa_image
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
 from rascil.processing_components.imaging.dft import dft_skycomponent_visibility
 from rascil.processing_components.imaging.primary_beams import create_pb_generic
@@ -253,6 +253,14 @@ class TestImaging2D(unittest.TestCase):
         gcfcf = create_awterm_convolutionfunction(self.model, nw=100, wstep=8.0,
                                                   oversampling=8, support=100, use_aaf=True)
         self._invert_base(name='invert_wterm', positionthreshold=35.0, check_components=False, gcfcf=gcfcf)
+
+    def test_invert_psf(self):
+        self.actualSetUp(zerow=False)
+        psf = invert_2d(self.vis, self.model, dopsf=True)
+
+        if self.persist: export_image_to_fits(psf[0], '%s/test_imaging_2d_psf.fits' % (self.dir))
+        
+        assert numpy.max(numpy.abs(psf[0].data)), "Image is empty"
 
 
 if __name__ == '__main__':

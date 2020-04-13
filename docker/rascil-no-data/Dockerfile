@@ -9,9 +9,10 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && apt-get install -y \
     ca-certificates \
-    gosu git wget curl \
+    gosu git wget curl rsync \
     libxml2-dev liblapack-dev libcfitsio-dev libgtkmm-3.0-dev \
-    cmake g++ build-essential gfortran libpng-dev casacore-dev \
+    cmake g++ build-essential gfortran libpng-dev casacore-dev python-numpy \
+    python-setuptools libboost-python-dev wcslib-dev \
     python3 python3-dev python3-pip python3-setuptools && \
     apt-get clean -y && \
     rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
@@ -34,6 +35,7 @@ RUN mkdir -p /rascil/dask-worker-space && \
     chmod 777 /rascil/dask-worker-space
 
 RUN pip3 install Cython setuptools && \
+    pip3 install python-casacore==3.1.1 --upgrade && \
     pip3 install aotools \
     astropy \
     dask \
@@ -44,16 +46,18 @@ RUN pip3 install Cython setuptools && \
     jupyter_contrib_nbextensions \
     jupyter-server-proxy \
     jupyterlab \
-    "matplotlib<3.1.3" \
+    matplotlib \
     photutils\
-    python-casacore \
     reproject \
     scikit-image \
     scipy \
-    seqfile && \
+    seqfile \
+    tabulate && \
     pip3 install "numpy>=1.16.0" && \
     python3 setup.py build && python3 setup.py install && \
     rm -rf /root/.cache
+
+RUN rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /var/lib/casacore/data
 
 # Use entrypoint script to create a user on the fly and avoid running as root.
 RUN chmod +x /rascil/entrypoint.sh
