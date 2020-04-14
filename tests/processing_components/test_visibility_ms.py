@@ -100,6 +100,10 @@ class TestCreateMS(unittest.TestCase):
         for v in vis_by_channel:
             assert v.vis.data.shape[-1] == 4
             assert v.polarisation_frame.type == "linear"
+            assert numpy.max(numpy.abs(v.vis)) > 0.0
+            assert numpy.max(numpy.abs(v.flagged_vis)) > 0.0
+            assert numpy.sum(v.weight) > 0.0
+            assert numpy.sum(v.flagged_weight) > 0.0
 
     def test_create_list_average_slice_visibility(self):
         if not self.casacore_available:
@@ -118,9 +122,13 @@ class TestCreateMS(unittest.TestCase):
             vis_by_channel.append(v[0])
     
         assert len(vis_by_channel) == 12
-        for v in vis_by_channel:
+        for ivis, v in enumerate(vis_by_channel):
             assert v.vis.data.shape[-1] == 4
             assert v.polarisation_frame.type == "linear"
+            assert numpy.max(numpy.abs(v.vis)) > 0.0, ivis
+            assert numpy.max(numpy.abs(v.flagged_vis)) > 0.0, ivis
+            assert numpy.sum(v.weight) > 0.0, ivis
+            assert numpy.sum(v.flagged_weight) > 0.0, ivis
 
     def test_create_list_single(self):
         if not self.casacore_available:
@@ -160,6 +168,8 @@ class TestCreateMS(unittest.TestCase):
             assert v.vis.data.shape[-1] == 4
             assert v.vis.data.shape[-2] == 1
             assert v.polarisation_frame.type == "linear"
+            assert numpy.max(numpy.abs(v.vis)) > 0.0
+            assert numpy.max(numpy.abs(v.flagged_vis)) > 0.0
 
 if __name__ == '__main__':
     unittest.main()

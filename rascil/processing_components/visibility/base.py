@@ -740,10 +740,9 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                 sumwt = numpy.sum(weight, axis=-2)[..., numpy.newaxis, :]
                 ms_vis[sumwt > 0.0] = ms_vis[sumwt > 0] / sumwt[sumwt > 0.0]
                 ms_vis[sumwt <= 0.0] = 0.0 + 0.0j
-                ms_weight = sumwt
                 ms_flags = sumwt
-                ms_flags[ms_flags > 0.0] = 1.0
-                ms_flags[ms_flags < 0.0] = 0.0
+                ms_flags[ms_flags <= 0.0] = 1.0
+                ms_flags[ms_flags > 0.0] = 0.0
 
             uvw = -1 * ms.getcol('UVW')
             antenna1 = ms.getcol('ANTENNA1')
