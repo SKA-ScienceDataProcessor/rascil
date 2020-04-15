@@ -208,6 +208,20 @@ def fill_vis_for_psf(im, svis):
             convert_pol_frame(svis.data['vis'],
                               PolarisationFrame("stokesIQUV"),
                               svis.polarisation_frame, polaxis=-1)
+    elif im.polarisation_frame == PolarisationFrame("stokesIQ"):
+        svis.data['vis'][..., 1] = 0.0 + 0.0j
+        svis.data['vis'][..., 0] = 1.0 + 0.0j
+        svis.data['vis'][...] = \
+            convert_pol_frame(svis.data['vis'],
+                              PolarisationFrame("stokesIQ"),
+                              svis.polarisation_frame, polaxis=-1)
+    elif im.polarisation_frame == PolarisationFrame("stokesIV"):
+        svis.data['vis'][..., 1] = 0.0 + 0.0j
+        svis.data['vis'][..., 0] = 1.0 + 0.0j
+        svis.data['vis'][...] = \
+            convert_pol_frame(svis.data['vis'],
+                              PolarisationFrame("stokesIV"),
+                              svis.polarisation_frame, polaxis=-1)
     elif im.polarisation_frame == PolarisationFrame("stokesI"):
         svis.data['vis'][..., :] = 1.0 + 0.0j
         svis.data['vis'][...] = \

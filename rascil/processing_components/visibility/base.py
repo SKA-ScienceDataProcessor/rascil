@@ -607,7 +607,8 @@ def list_ms(msname, ack=False):
 def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_chan=None,
                                    ack=False,
                                    datacolumn='DATA', selected_sources=None,
-                                   selected_dds=None):
+                                   selected_dds=None,
+                                   average_channels=False):
     """ Minimal MS to BlockVisibility converter
 
     The MS format is much more general than the RASCIL BlockVisibility so we cut many corners.
@@ -627,6 +628,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
     :param datacolumn: MS data column to read DATA, CORRECTED_DATA, or MODEL_DATA
     :param selected_sources: Sources to select
     :param selected_dds: Data descriptors to select
+    :param average_channels: Average all channels read
     :return: List of BlockVisibility
 
     For example::
@@ -705,6 +707,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                         ms_vis = ms.getcolslice(datacolumn, blc=blc, trc=trc)
                         ms_flags = ms.getcolslice('FLAG', blc=blc, trc=trc)
                         ms_weight = ms.getcol('WEIGHT')
+
                     except IndexError:
                         raise IndexError("channel number exceeds max. within ms")
                 
@@ -730,7 +733,17 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                     ms_weight = ms.getcol('WEIGHT')[:, :]
                 except IndexError:
                     raise IndexError("channel number exceeds max. within ms")
-            
+
+            if average_channels:
+                weight = ms_weight[:, numpy.newaxis, :] * (1.0 - ms_flags)
+                ms_vis = numpy.sum(weight * ms_vis, axis=-2)[..., numpy.newaxis, :]
+                sumwt = numpy.sum(weight, axis=-2)[..., numpy.newaxis, :]
+                ms_vis[sumwt > 0.0] = ms_vis[sumwt > 0] / sumwt[sumwt > 0.0]
+                ms_vis[sumwt <= 0.0] = 0.0 + 0.0j
+                ms_flags = sumwt
+                ms_flags[ms_flags <= 0.0] = 1.0
+                ms_flags[ms_flags > 0.0] = 0.0
+
             uvw = -1 * ms.getcol('UVW')
             antenna1 = ms.getcol('ANTENNA1')
             antenna2 = ms.getcol('ANTENNA2')
@@ -749,7 +762,11 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             cfrequency = spwtab.getcol('CHAN_FREQ')[spwid][channum]
             cchannel_bandwidth = spwtab.getcol('CHAN_WIDTH')[spwid][channum]
             nchan = cfrequency.shape[0]
-            
+            if average_channels:
+                cfrequency = numpy.array([numpy.average(cfrequency)])
+                cchannel_bandwidth = numpy.array([numpy.sum(cchannel_bandwidth)])
+                nchan = cfrequency.shape[0]
+
             # Get polarisation info
             poltab = table('%s/POLARIZATION' % msname, ack=False)
             corr_type = poltab.getcol('CORR_TYPE')[polid]
@@ -865,7 +882,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
     return vis_list
 
 
-def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=None,
+def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=None, average_channels=False,
                               ack=False):
     """ Minimal MS to BlockVisibility converter
 
@@ -882,6 +899,7 @@ def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=No
     :param channum: range of channels e.g. range(17,32), default is None meaning all
     :param start_chan: Starting channel to read
     :param end_chan: End channel to read
+    :param average_channels: Average all channels read
     :return:
     """
     from rascil.processing_components.visibility.coalesce import \
@@ -889,7 +907,9 @@ def create_visibility_from_ms(msname, channum=None, start_chan=None, end_chan=No
     return [convert_blockvisibility_to_visibility(v)
             for v in create_blockvisibility_from_ms(msname=msname, channum=channum,
                                                     start_chan=start_chan,
-                                                    end_chan=end_chan, ack=ack)]
+                                                    end_chan=end_chan,
+                                                    average_channels=average_channels,
+                                                    ack=ack)]
 
 
 def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum=None):
