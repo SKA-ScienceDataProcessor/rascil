@@ -19,7 +19,9 @@ from rascil.processing_components.image.operations import copy_image, create_emp
 from rascil.workflows.shared.imaging import imaging_context
 from rascil.workflows.shared.imaging import sum_invert_results, remove_sumwt, sum_predict_results, \
     threshold_list
-from rascil.processing_components.griddata import grid_weight_to_griddata, griddata_reweight, griddata_merge_weights
+from rascil.processing_components.griddata import grid_visibility_weight_to_griddata, \
+    griddata_visibility_reweight, griddata_merge_weights, \
+    grid_blockvisibility_weight_to_griddata, griddata_blockvisibility_reweight
 from rascil.processing_components.griddata import create_pswf_convolutionfunction
 from rascil.processing_components.griddata import create_griddata_from_image
 from rascil.processing_components.image import  deconvolve_cube, restore_cube
@@ -31,7 +33,7 @@ from rascil.processing_components.imaging import  taper_visibility_gaussian
 from rascil.processing_components.visibility import copy_visibility, create_visibility_from_rows
 from rascil.processing_components.visibility import visibility_scatter, visibility_gather
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def predict_list_serial_workflow(vis_list, model_imagelist, context, vis_slices=1, facets=1,
@@ -145,7 +147,7 @@ def invert_list_serial_workflow(vis_list, template_model_imagelist, dopsf=False,
 
    """
     
-    if not isinstance(template_model_imagelist, collections.Iterable):
+    if not isinstance(template_model_imagelist, collections.abc.Iterable):
         template_model_imagelist = [template_model_imagelist]
     
     c = imaging_context(context)
@@ -301,9 +303,9 @@ def deconvolve_list_serial_workflow(dirty_list, psf_list, model_imagelist, prefi
     
     def deconvolve(dirty, psf, model, facet, gthreshold, msk=None):
         if prefix == '':
-            lprefix = "facet %d" % facet
+            lprefix = "subimage %d" % facet
         else:
-            lprefix = "%s, facet %d" % (prefix, facet)
+            lprefix = "%s, subimage %d" % (prefix, facet)
         
         if nmoment > 0:
             moment0 = calculate_image_frequency_moments(dirty)
@@ -444,8 +446,11 @@ def weight_list_serial_workflow(vis_list, model_imagelist, gcfcf=None, weighting
     def grid_wt(vis, model, g):
         if vis is not None:
             if model is not None:
-                griddata = create_griddata_from_image(model)
-                griddata = grid_weight_to_griddata(vis, griddata, g[0][1])
+                griddata = create_griddata_from_image(model, vis)
+                if isinstance(vis, BlockVisibility):
+                    griddata = grid_blockvisibility_weight_to_griddata(vis, griddata, g[0][1])
+                else:
+                    griddata = grid_visibility_weight_to_griddata(vis, griddata, g[0][1])
                 return griddata
             else:
                 return None
@@ -461,9 +466,12 @@ def weight_list_serial_workflow(vis_list, model_imagelist, gcfcf=None, weighting
             if vis is not None:
                 # Ensure that the griddata has the right axes so that the convolution
                 # function mapping works
-                agd = create_griddata_from_image(model)
+                agd = create_griddata_from_image(model, vis)
                 agd.data = gd[0].data
-                vis = griddata_reweight(vis, agd, g[0][1])
+                if isinstance(vis, BlockVisibility):
+                    vis = griddata_blockvisibility_reweight(vis, agd, g[0][1])
+                else:
+                    vis = griddata_visibility_reweight(vis, agd, g[0][1])
                 return vis
             else:
                 return None

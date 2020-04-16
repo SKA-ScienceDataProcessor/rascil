@@ -14,7 +14,7 @@ import logging
 
 import numpy
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def coordinateBounds(npixel):

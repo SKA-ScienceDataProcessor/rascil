@@ -12,11 +12,11 @@ import numpy
 from astropy import constants as const
 
 from rascil.data_models.memory_data_models import Image
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.processing_components.image.operations import import_image_from_fits, reproject_image
 from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like, fft_image, pad_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def set_pb_header(pb, use_local=True):
@@ -72,14 +72,14 @@ def tapered_disk(r, radius, blockage=0.0, taper='gaussian', edge=1.0):
     return result
 
 
-def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=True):
+def create_vp(model=None, telescope='MID', pointingcentre=None, padding=4, use_local=True):
     """ Create an image containing the dish voltage pattern for a number of cases
 
-
-    :param model: Template image
+    :param model: Template image (Can be None for some cases)
     :param telescope:
     :return: Primary beam image
     """
+
     if telescope == 'MID_GAUSS':
         log.debug("create_vp: Using numeric tapered Gaussian model for MID voltage pattern")
         
@@ -91,29 +91,29 @@ def create_vp(model, telescope='MID', pointingcentre=None, padding=4, use_local=
         return create_vp_generic(model, pointingcentre=pointingcentre, diameter=15.0, blockage=0.0, use_local=use_local)
     elif telescope == 'MID_GRASP':
         log.debug("create_vp: Using GRASP model for MID voltage pattern")
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_GRASP_VP_real.fits'))
-        imag_vp = import_image_from_fits(rascil_path('data/models/MID_GRASP_VP_imag.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_GRASP_VP_real.fits'))
+        imag_vp = import_image_from_fits(rascil_data_path('models/MID_GRASP_VP_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
     elif telescope == 'MID_FEKO_B1':
         log.debug("create_vp: Using FEKO model for MID voltage pattern")
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_B1_45_0765_real.fits'))
-        imag_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_B1_45_0765_imag.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B1_45_0765_real.fits'))
+        imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B1_45_0765_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
     elif telescope == 'MID_FEKO_B2':
         log.debug("create_vp: Using FEKO model for MID voltage pattern")
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_B2_45_1360_real.fits'))
-        imag_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_B2_45_1360_imag.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B2_45_1360_real.fits'))
+        imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_B2_45_1360_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
     elif telescope == 'MID_FEKO_Ku':
         log.debug("create_vp: Using FEKO model for MID voltage pattern")
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_Ku_45_12179_real.fits'))
-        imag_vp = import_image_from_fits(rascil_path('data/models/MID_FEKO_VP_Ku_45_12179_imag.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_Ku_45_12179_real.fits'))
+        imag_vp = import_image_from_fits(rascil_data_path('models/MID_FEKO_VP_Ku_45_12179_imag.fits'))
         real_vp.data = real_vp.data + 1j * imag_vp.data
         real_vp.data /= numpy.max(numpy.abs(real_vp.data))
         return real_vp
@@ -156,7 +156,7 @@ def mosaic_pb(model, telescope, pointingcentres, use_local=True):
     :param pointingcentres: list of pointing centres
     :return:
     """
-    assert isinstance(pointingcentres, collections.Iterable), "Need a list of pointing centres"
+    assert isinstance(pointingcentres, collections.abc.Iterable), "Need a list of pointing centres"
     sumpb = create_empty_image_like(model)
     for pc in pointingcentres:
         pb = create_pb(model, telescope, pointingcentre=pc, use_local=use_local)
@@ -287,7 +287,7 @@ def create_vp_generic_numeric(model, pointingcentre=None, diameter=15.0, blockag
             for pol in range(npol):
                 xfr.data[chan, pol, ...] *= numpy.exp(1j * phase)
         
-        if isinstance(zernikes, collections.Iterable):
+        if isinstance(zernikes, collections.abc.Iterable):
             try:
                 import aotools
             except ModuleNotFoundError:
@@ -331,7 +331,7 @@ def create_low_test_beam(model: Image, use_local=True) -> Image:
     :param model: Template image
     :return: Image
     """
-    beam = import_image_from_fits(rascil_path('data/models/SKA1_LOW_beam.fits'))
+    beam = import_image_from_fits(rascil_data_path('models/SKA1_LOW_beam.fits'))
     
     # Scale the image cellsize to account for the different in frequencies. Eventually we will want to
     # use a frequency cube
@@ -381,7 +381,7 @@ def create_low_test_vp(model: Image, use_local=True) -> Image:
     :return: Image
     """
     
-    beam = import_image_from_fits(rascil_path('data/models/SKA1_LOW_beam.fits'))
+    beam = import_image_from_fits(rascil_data_path('models/SKA1_LOW_beam.fits'))
     beam.data = numpy.sqrt(beam.data).astype('complex')
     
     # Scale the image cellsize to account for the different in frequencies. Eventually we will want to

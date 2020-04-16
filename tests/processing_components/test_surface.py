@@ -13,17 +13,17 @@ from rascil.data_models.memory_data_models import Skycomponent
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.imaging.primary_beams import create_vp_generic_numeric, create_vp
 from rascil.processing_components.simulation import create_named_configuration
-from rascil.processing_components.simulation.surface import simulate_gaintable_from_voltage_patterns
+from rascil.processing_components.simulation.surface import simulate_gaintable_from_zernikes
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components import create_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestSurface(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
-        
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.doplot = True
         
         self.midcore = create_named_configuration('MID', rmax=100.0)
@@ -65,7 +65,7 @@ class TestSurface(unittest.TestCase):
                                                       taper='gaussian',
                                                       edge=0.03162278, zernikes=[zernike], padding=2, use_local=True))
 
-        gt = simulate_gaintable_from_voltage_patterns(self.vis, component, vp_list, vp_coeffs)
+        gt = simulate_gaintable_from_zernikes(self.vis, component, vp_list, vp_coeffs)
 
         import matplotlib.pyplot as plt
         assert gt[0].gain.shape == (self.ntimes, self.nants, 1, 1, 1), gt[0].gain.shape

@@ -5,23 +5,24 @@
 import logging
 import unittest
 
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.processing_components.image.gradients import image_gradients
 from rascil.processing_components.image.operations import export_image_to_fits, show_image, import_image_from_fits
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestPrimaryBeams(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
 
         self.show = False
         self.persist = False
     
     def test_create_gradient(self):
-        real_vp = import_image_from_fits(rascil_path('data/models/MID_GRASP_VP_real.fits'))
+        real_vp = import_image_from_fits(rascil_data_path('models/MID_GRASP_VP_real.fits'))
         gradx, grady = image_gradients(real_vp)
         
         gradxx, gradxy = image_gradients(gradx)

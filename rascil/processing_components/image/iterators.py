@@ -15,7 +15,7 @@ from rascil.processing_components.image.operations import create_image_from_arra
     image_is_canonical
 from rascil.processing_components.util.array_functions import tukey_filter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def image_null_iter(im: Image, facets=1, overlap=0) -> collections.abc.Iterable:
@@ -31,7 +31,7 @@ def image_null_iter(im: Image, facets=1, overlap=0) -> collections.abc.Iterable:
     yield im
 
 
-def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=False) -> collections.Iterable:
+def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=False) -> collections.abc.Iterable:
     """Create an image_raster_iter generator, returning images, optionally with overlaps
 
     The WCS is adjusted appropriately for each raster element. Hence this is a coordinate-aware
@@ -60,8 +60,8 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
     :returns: Generator of images
 
     See also
-        :py:func:`rascil.processing_components.image.image_gather_facets`
-        :py:func:`rascil.processing_components.image.image_scatter_facets`
+        :py:func:`rascil.processing_components.image.gather_scatter.image_gather_facets`
+        :py:func:`rascil.processing_components.image.gather_scatter.image_scatter_facets`
     """
 
     assert image_is_canonical(im)
@@ -128,6 +128,9 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
     
             result = numpy.outer(t, t)
             return result
+        
+        def taper_flat():
+            return numpy.ones([dx, dx])
 
         i = 0
         for fy in range(facets):
@@ -150,14 +153,14 @@ def image_raster_iter(im: Image, facets=1, overlap=0, taper='flat', make_flat=Fa
                         elif taper == 'tukey':
                             flat.data[..., :, :] = taper_tukey()
                         else:
-                            flat.data[...] = 1.0
+                            flat.data[..., :, :] = taper_flat()
                         yield flat
                     else:
                         yield subim
                     i += 1
 
 
-def image_channel_iter(im: Image, subimages=1) -> collections.Iterable:
+def image_channel_iter(im: Image, subimages=1) -> collections.abc.Iterable:
     """Create a image_channel_iter generator, returning images
 
     The WCS is adjusted appropriately for each raster element. Hence this is a coordinate-aware
@@ -175,8 +178,8 @@ def image_channel_iter(im: Image, subimages=1) -> collections.Iterable:
     :returns: Generator of images
 
     See also
-        :py:func:`rascil.processing_components.image.image_gather_channels`
-        :py:func:`rascil.processing_components.image.image_scatter_channels`
+        :py:func:`rascil.processing_components.image.gather_scatter.image_gather_channels`
+        :py:func:`rascil.processing_components.image.gather_scatter.image_scatter_channels`
     """
 
     assert image_is_canonical(im)

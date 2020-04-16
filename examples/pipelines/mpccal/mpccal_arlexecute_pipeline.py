@@ -19,7 +19,7 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from rascil.data_models import SkyModel, rascil_path, PolarisationFrame
+from rascil.data_models import SkyModel, rascil_path, rascil_data_path, PolarisationFrame
 from rascil.processing_components import create_gaintable_from_blockvisibility, \
     export_image_to_fits, \
     remove_neighbouring_components, find_skycomponents, \
@@ -161,7 +161,7 @@ if __name__ == '__main__':
                             reverse=True)
     print("Number of components in simulation %d" % len(all_components))
 
-    screen = import_image_from_fits(rascil_path('data/models/test_mpc_screen.fits'))
+    screen = import_image_from_fits(rascil_data_path('models/test_mpc_screen.fits'))
     all_gaintables = create_gaintable_from_screen(block_vis, all_components, screen)
 
     all_skymodel = [SkyModel(components=[all_components[i]], gaintable=all_gaintables[i])

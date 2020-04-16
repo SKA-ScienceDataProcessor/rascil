@@ -18,14 +18,14 @@ from rascil.workflows.rsexecute.imaging.imaging_rsexecute import invert_list_rse
     residual_list_rsexecute_workflow, restore_list_rsexecute_workflow
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components, insert_unittest_errors
 from rascil.processing_components.skycomponent.operations import insert_skycomponent
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
@@ -33,9 +33,9 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestImagingDeconvolveGraph(unittest.TestCase):
     
     def setUp(self):
-        rsexecute.set_client(verbose=False, memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
-        
-        from rascil.data_models.parameters import rascil_path
+        rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
+    
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         
         self.persist = os.getenv("RASCIL_PERSIST", False)
@@ -98,7 +98,7 @@ class TestImagingDeconvolveGraph(unittest.TestCase):
                                                                                 self.componentlist[freqwin])
                                 for freqwin, _ in enumerate(self.frequency)]
         
-        self.vis_list = [rsexecute.execute(predict_skycomponent_visibility)(self.vis_list[freqwin],
+        self.vis_list = [rsexecute.execute(dft_skycomponent_visibility)(self.vis_list[freqwin],
                                                                              self.componentlist[freqwin])
                          for freqwin, _ in enumerate(self.frequency)]
         

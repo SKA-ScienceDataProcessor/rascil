@@ -21,7 +21,7 @@ import seqfile
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components import show_image, qa_image, export_image_to_fits, \
     create_vp, \

@@ -8,7 +8,7 @@ import numpy
 import logging
 import time
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def hogbom(dirty, psf, window, gain, thresh, niter, fracthresh, prefix=''):

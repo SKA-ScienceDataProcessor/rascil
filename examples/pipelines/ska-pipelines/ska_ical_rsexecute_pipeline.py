@@ -4,8 +4,7 @@ ICAL pipeline
 
 # # Pipeline processing using Dask
 
-from rascil.data_models.parameters import rascil_path
-
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 results_dir = rascil_path('test_results')
 dask_dir = rascil_path('test_results/dask-work-space')
 

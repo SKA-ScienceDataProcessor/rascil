@@ -1,7 +1,7 @@
 """ Unit tests for skycomponents
 
 """
-
+import os
 import logging
 import unittest
 
@@ -13,18 +13,22 @@ from rascil.data_models.polarisation import PolarisationFrame
 
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.skycomponent.operations import insert_skycomponent, create_skycomponent
 from rascil.processing_components.simulation import create_test_image
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestSkycomponentInsert(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+
+        self.persist = os.getenv("RASCIL_PERSIST", False)
+
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.lowcore = create_named_configuration('LOWBD2-CORE')
         self.dir = rascil_path('test_results')
         self.times = (numpy.pi / 12.0) * numpy.linspace(-3.0, 3.0, 7)
@@ -79,9 +83,9 @@ class TestSkycomponentInsert(unittest.TestCase):
                                     polarisation_frame=PolarisationFrame('stokesI'))
 
         self.vis.data['vis'][...] = 0.0
-        self.vis = predict_skycomponent_visibility(self.vis, self.sc)
+        self.vis = dft_skycomponent_visibility(self.vis, self.sc)
         im, sumwt = invert_2d(self.vis, self.model)
-        export_image_to_fits(im, '%s/test_skycomponent_dft.fits' % self.dir)
+        if self.persist: export_image_to_fits(im, '%s/test_skycomponent_dft.fits' % self.dir)
         assert numpy.max(numpy.abs(self.vis.vis.imag)) < 1e-3
     
     def test_insert_skycomponent_nearest(self):

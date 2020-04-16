@@ -19,7 +19,7 @@ from rascil.processing_components.visibility import  vis_null_iter, vis_timeslic
 from rascil.processing_components.imaging import  predict_timeslice_single, invert_timeslice_single
 from rascil.processing_components.imaging import  predict_wstack_single, invert_wstack_single
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def imaging_contexts():
     """Contains all the context information for imaging
@@ -48,6 +48,9 @@ def imaging_contexts():
                        'vis_iterator': vis_timeslice_iter},
                 'facets': {'predict': predict_2d,
                            'invert': invert_2d,
+                           'vis_iterator': vis_null_iter},
+                'facets_ng': {'predict': predict_ng,
+                           'invert': invert_ng,
                            'vis_iterator': vis_null_iter},
                 'facets_timeslice': {'predict': predict_timeslice_single,
                                      'invert': invert_timeslice_single,

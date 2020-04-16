@@ -6,8 +6,7 @@ __all__ = ['predict_list_rsexecute_workflow', 'invert_list_rsexecute_workflow', 
            'restore_list_rsexecute_workflow', 'deconvolve_list_rsexecute_workflow',
            'deconvolve_list_channel_rsexecute_workflow', 'weight_list_rsexecute_workflow',
            'taper_list_rsexecute_workflow', 'zero_list_rsexecute_workflow', 'subtract_list_rsexecute_workflow',
-           'sum_invert_results_rsexecute']
-
+           'sum_invert_results_rsexecute', 'sum_predict_results_rsexecute']
 
 import collections
 import logging
@@ -18,7 +17,9 @@ from rascil.data_models.memory_data_models import Image, Visibility, BlockVisibi
 from rascil.data_models.parameters import get_parameter
 from rascil.processing_components.griddata import create_griddata_from_image
 from rascil.processing_components.griddata import create_pswf_convolutionfunction
-from rascil.processing_components.griddata import grid_weight_to_griddata, griddata_reweight, griddata_merge_weights
+from rascil.processing_components.griddata import grid_visibility_weight_to_griddata, \
+    grid_blockvisibility_weight_to_griddata, griddata_blockvisibility_reweight, \
+    griddata_visibility_reweight, griddata_merge_weights
 from rascil.processing_components.image import calculate_image_frequency_moments
 from rascil.processing_components.image import deconvolve_cube, restore_cube
 from rascil.processing_components.image import image_scatter_facets, image_gather_facets, \
@@ -33,10 +34,11 @@ from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.workflows.shared.imaging import imaging_context, remove_sumwt, sum_predict_results, \
     threshold_list, sum_invert_results
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
+
 
 def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slices=1, facets=1,
-                                     gcfcf=None, **kwargs):
+                                    gcfcf=None, **kwargs):
     """Predict, iterating over both the scattered vis_list and image
     
     The visibility and image are scattered, the visibility is predicted on each part, and then the
@@ -109,7 +111,7 @@ def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slic
                 g = gcfcf[0]
             # Create the graph to divide the visibility into slices. This is by copy.
             sub_vis_lists = rsexecute.execute(visibility_scatter, nout=vis_slices)(subvis,
-                                                                                    vis_iter, vis_slices)
+                                                                                   vis_iter, vis_slices)
             
             image_vis_lists = list()
             # Loop over sub visibility
@@ -131,7 +133,7 @@ def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slic
                 model_imagelist[ivis],
                 facets=facets)
             # Create the graph to divide the visibility into slices. This is by copy.
-            sub_vis_lists = rsexecute.execute(visibility_scatter, nout=vis_slices)\
+            sub_vis_lists = rsexecute.execute(visibility_scatter, nout=vis_slices) \
                 (subvis, vis_iter, vis_slices)
             
             facet_vis_lists = list()
@@ -141,7 +143,7 @@ def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slic
                 # Loop over facets
                 for facet_list in facet_lists:
                     # Predict visibility for this subvisibility from this facet
-                    facet_vis_list = rsexecute.execute(predict_ignore_none, pure=True, nout=1)\
+                    facet_vis_list = rsexecute.execute(predict_ignore_none, pure=True, nout=1) \
                         (sub_vis_list, facet_list, None)
                     facet_vis_results.append(facet_vis_list)
                 # Sum the current sub-visibility over all facets
@@ -155,12 +157,15 @@ def predict_list_rsexecute_workflow(vis_list, model_imagelist, context, vis_slic
 
 
 def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, dopsf=False, normalize=True,
-                                    facets=1, vis_slices=1, gcfcf=None, **kwargs):
+                                   facets=1, overlap=0, taper="tukey", vis_slices=1, gcfcf=None, **kwargs):
     """ Sum results from invert, iterating over the scattered image and vis_list
 
     Note that this call can be converted to a set of rsexecute calls to the serial
     version, using argument use_serial_invert=True
 
+    :param gcfcf:
+    :param taper:
+    :param overlap:
     :param vis_list: list of vis (or graph)
     :param template_model_imagelist: list of template models (or graph)
     :param dopsf: Make the PSF instead of the dirty image
@@ -197,7 +202,7 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
                      facets=facets, gcfcf=gcfcf, **kwargs)[0]
                 for i, _ in enumerate(vis_list)]
     
-    if not isinstance(template_model_imagelist, collections.Iterable):
+    if not isinstance(template_model_imagelist, collections.abc.Iterable):
         template_model_imagelist = [template_model_imagelist]
     
     c = imaging_context(context)
@@ -211,15 +216,19 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
     
     def gather_image_iteration_results(results, template_model):
         result = create_empty_image_like(template_model)
+        flat = create_empty_image_like(template_model)
         i = 0
         sumwt = numpy.zeros([template_model.nchan, template_model.npol])
-        for dpatch in image_scatter_facets(result, facets=facets):
+        for dpatch in image_scatter_facets(result, facets=facets, overlap=overlap, taper=taper):
             assert i < len(results), "Too few results in gather_image_iteration_results"
             if results[i] is not None:
                 assert len(results[i]) == 2, results[i]
-                dpatch.data[...] = results[i][0].data[...]
+                dpatch.data[...] += results[i][0].data[...]
                 sumwt += results[i][1]
                 i += 1
+        flat = image_gather_facets(results, flat, facets=facets, overlap=overlap, taper=taper, return_flat=True)
+        result.data[flat.data > 0.5] /= flat.data[flat.data > 0.5]
+        result.data[flat.data <= 0.5] = 0.0
         return result, sumwt
     
     def invert_ignore_none(vis, model, gg):
@@ -231,7 +240,7 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
     
     # If we are doing facets, we need to create the gcf for each image
     if gcfcf is None and facets == 1:
-        assert len(template_model_imagelist)>0
+        assert len(template_model_imagelist) > 0
         gcfcf = [rsexecute.execute(create_pswf_convolutionfunction)(template_model_imagelist[0])]
     
     # Loop over all vis_lists independently
@@ -243,7 +252,7 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
             else:
                 g = gcfcf[0]
             # Create the graph to divide the visibility into slices. This is by copy.
-            sub_sub_vis_lists = rsexecute.execute(visibility_scatter, nout=vis_slices)\
+            sub_sub_vis_lists = rsexecute.execute(visibility_scatter, nout=vis_slices) \
                 (sub_vis_list, vis_iter, vis_slices=vis_slices)
             
             # Iterate within each sub_sub_vis_list
@@ -252,17 +261,15 @@ def invert_list_rsexecute_workflow(vis_list, template_model_imagelist, context, 
                 vis_results.append(rsexecute.execute(invert_ignore_none, pure=True)
                                    (sub_sub_vis_list, template_model_imagelist[ivis], g))
             results_vislist.append(sum_invert_results_rsexecute(vis_results))
-
+        
         result = results_vislist
     else:
         for ivis, sub_vis_list in enumerate(vis_list):
             # Create the graph to divide an image into facets. This is by reference.
             facet_lists = rsexecute.execute(image_scatter_facets, nout=actual_number_facets ** 2)(
-                template_model_imagelist[
-                    ivis],
-                facets=facets)
+                template_model_imagelist[ivis], facets=facets, overlap=overlap, taper=taper)
             # Create the graph to divide the visibility into slices. This is by copy.
-            sub_sub_vis_lists = rsexecute.execute(visibility_scatter, nout=vis_slices)\
+            sub_sub_vis_lists = rsexecute.execute(visibility_scatter, nout=vis_slices) \
                 (sub_vis_list, vis_iter, vis_slices=vis_slices)
             
             # Iterate within each vis_list
@@ -292,16 +299,16 @@ def residual_list_rsexecute_workflow(vis, model_imagelist, context='2d', gcfcf=N
     """
     model_vis = zero_list_rsexecute_workflow(vis)
     model_vis = predict_list_rsexecute_workflow(model_vis, model_imagelist, context=context,
-                                                 gcfcf=gcfcf, **kwargs)
+                                                gcfcf=gcfcf, **kwargs)
     residual_vis = subtract_list_rsexecute_workflow(vis, model_vis)
     result = invert_list_rsexecute_workflow(residual_vis, model_imagelist, dopsf=False, normalize=True,
-                                             context=context,
-                                             gcfcf=gcfcf, **kwargs)
+                                            context=context,
+                                            gcfcf=gcfcf, **kwargs)
     return rsexecute.optimize(result)
 
 
 def restore_list_rsexecute_workflow(model_imagelist, psf_imagelist, residual_imagelist=None, restore_facets=1,
-                                     restore_overlap=0, restore_taper='tukey', **kwargs):
+                                    restore_overlap=0, restore_taper='tukey', **kwargs):
     """ Create a graph to calculate the restored image
 
     :param model_imagelist: Model list (or graph)
@@ -316,7 +323,7 @@ def restore_list_rsexecute_workflow(model_imagelist, psf_imagelist, residual_ima
     assert len(model_imagelist) == len(psf_imagelist)
     if residual_imagelist is not None:
         assert len(model_imagelist) == len(residual_imagelist)
-
+    
     if restore_facets % 2 == 0 or restore_facets == 1:
         actual_number_facets = restore_facets
     else:
@@ -353,7 +360,7 @@ def restore_list_rsexecute_workflow(model_imagelist, psf_imagelist, residual_ima
     restored_imagelist = [rsexecute.execute(image_gather_facets)
                           (facet_restored_list[i], model_imagelist[i], facets=restore_facets,
                            overlap=restore_overlap, taper=restore_taper)
-                  for i, _ in enumerate(model_imagelist)]
+                          for i, _ in enumerate(model_imagelist)]
     
     return rsexecute.optimize(restored_imagelist)
 
@@ -398,9 +405,9 @@ def deconvolve_list_rsexecute_workflow(dirty_list, psf_list, model_imagelist, pr
     
     def deconvolve(dirty, psf, model, facet, gthreshold, msk=None):
         if prefix == '':
-            lprefix = "facet %d" % facet
+            lprefix = "subimage %d" % facet
         else:
-            lprefix = "%s, facet %d" % (prefix, facet)
+            lprefix = "%s, subimage %d" % (prefix, facet)
         
         if nmoment > 0:
             moment0 = calculate_image_frequency_moments(dirty)
@@ -429,12 +436,12 @@ def deconvolve_list_rsexecute_workflow(dirty_list, psf_list, model_imagelist, pr
     
     scattered_channels_facets_model_list = \
         [rsexecute.execute(image_scatter_facets, nout=deconvolve_number_facets)(m, facets=deconvolve_facets,
-                                                                                 overlap=deconvolve_overlap,
-                                                                                 taper=deconvolve_taper)
+                                                                                overlap=deconvolve_overlap,
+                                                                                taper=deconvolve_taper)
          for m in model_imagelist]
     scattered_facets_model_list = [
         rsexecute.execute(image_gather_channels, nout=1)([scattered_channels_facets_model_list[chan][facet]
-                                                           for chan in range(nchan)])
+                                                          for chan in range(nchan)])
         for facet in range(deconvolve_number_facets)]
     
     # Scatter the separate channel images into deconvolve facets and then gather channels for each facet.
@@ -443,12 +450,12 @@ def deconvolve_list_rsexecute_workflow(dirty_list, psf_list, model_imagelist, pr
     dirty_list_trimmed = rsexecute.execute(remove_sumwt, nout=nchan)(dirty_list)
     scattered_channels_facets_dirty_list = \
         [rsexecute.execute(image_scatter_facets, nout=deconvolve_number_facets)(d, facets=deconvolve_facets,
-                                                                                 overlap=deconvolve_overlap,
-                                                                                 taper=deconvolve_taper)
+                                                                                overlap=deconvolve_overlap,
+                                                                                taper=deconvolve_taper)
          for d in dirty_list_trimmed]
     scattered_facets_dirty_list = [
         rsexecute.execute(image_gather_channels, nout=1)([scattered_channels_facets_dirty_list[chan][facet]
-                                                           for chan in range(nchan)])
+                                                          for chan in range(nchan)])
         for facet in range(deconvolve_number_facets)]
     
     psf_list_trimmed = rsexecute.execute(remove_sumwt, nout=nchan)(psf_list)
@@ -470,7 +477,7 @@ def deconvolve_list_rsexecute_workflow(dirty_list, psf_list, model_imagelist, pr
     
     psf_list_trimmed = [rsexecute.execute(extract_psf)(p, deconvolve_facets) for p in psf_list_trimmed]
     psf_centre = rsexecute.execute(image_gather_channels, nout=1)([psf_list_trimmed[chan]
-                                                                                   for chan in range(nchan)])
+                                                                   for chan in range(nchan)])
     
     # Work out the threshold. Need to find global peak over all dirty_list images
     threshold = get_parameter(kwargs, "threshold", 0.0)
@@ -481,23 +488,23 @@ def deconvolve_list_rsexecute_workflow(dirty_list, psf_list, model_imagelist, pr
     # Find the global threshold. This uses the peak in the average on the frequency axis since we
     # want to use it in a stopping criterion in a moment clean
     global_threshold = rsexecute.execute(threshold_list, nout=1)(scattered_facets_dirty_list, threshold,
-                                                                  fractional_threshold,
-                                                                  use_moment0=use_moment0, prefix=prefix)
+                                                                 fractional_threshold,
+                                                                 use_moment0=use_moment0, prefix=prefix)
     
     facet_list = numpy.arange(deconvolve_number_facets).astype('int')
     if mask is None:
         scattered_results_list = [
             rsexecute.execute(deconvolve, nout=1)(d, psf_centre, m, facet,
-                                                   global_threshold)
+                                                  global_threshold)
             for d, m, facet in zip(scattered_facets_dirty_list, scattered_facets_model_list, facet_list)]
     else:
         mask_list = \
             rsexecute.execute(image_scatter_facets, nout=deconvolve_number_facets)(mask,
-                                                                                    facets=deconvolve_facets,
-                                                                                    overlap=deconvolve_overlap)
+                                                                                   facets=deconvolve_facets,
+                                                                                   overlap=deconvolve_overlap)
         scattered_results_list = [
             rsexecute.execute(deconvolve, nout=1)(d, psf_centre, m, facet,
-                                                   global_threshold, msk)
+                                                  global_threshold, msk)
             for d, m, facet, msk in
             zip(scattered_facets_dirty_list, scattered_facets_model_list, facet_list, mask_list)]
     
@@ -517,9 +524,9 @@ def deconvolve_list_rsexecute_workflow(dirty_list, psf_list, model_imagelist, pr
     
     # The structure is now [[channels] for facets]. We do the reverse transpose to the one above.
     result_list = [rsexecute.execute(image_gather_facets, nout=1)([scattered_channel_results_list[facet][chan]
-                                                                    for facet in range(deconvolve_number_facets)],
-                                                                   model_imagelist[chan], facets=deconvolve_facets,
-                                                                   overlap=deconvolve_overlap)
+                                                                   for facet in range(deconvolve_number_facets)],
+                                                                  model_imagelist[chan], facets=deconvolve_facets,
+                                                                  overlap=deconvolve_overlap)
                    for chan in range(nchan)]
     
     return rsexecute.optimize(result_list)
@@ -552,7 +559,7 @@ def deconvolve_list_channel_rsexecute_workflow(dirty_list, psf_list, model_image
     
     output = rsexecute.execute(create_empty_image_like, nout=1, pure=True)(model_imagelist)
     dirty_lists = rsexecute.execute(image_scatter_channels, nout=subimages, pure=True)(dirty_list[0],
-                                                                                        subimages=subimages)
+                                                                                       subimages=subimages)
     results = [rsexecute.execute(deconvolve_subimage)(dirty_list, psf_list[0])
                for dirty_list in dirty_lists]
     result = rsexecute.execute(image_gather_channels, nout=1, pure=True)(results, output, subimages=subimages)
@@ -581,29 +588,24 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
     
     if gcfcf is None:
         gcfcf = [rsexecute.execute(create_pswf_convolutionfunction)(model_imagelist[centre])]
-        
-    def to_vis(v):
-        if isinstance(v, BlockVisibility):
-            av = convert_blockvisibility_to_visibility(v)
-            return av
-        else:
-            return v
-    
-    avis_list = [rsexecute.execute(to_vis, nout=1)(vis) for vis in vis_list]
     
     def grid_wt(vis, model, g):
         if vis is not None:
             if model is not None:
-                griddata = create_griddata_from_image(model)
-                griddata = grid_weight_to_griddata(vis, griddata, g[0][1])
+                griddata = create_griddata_from_image(model, vis)
+                if isinstance(vis, BlockVisibility):
+                    griddata = grid_blockvisibility_weight_to_griddata(vis, griddata, g[0][1])
+                else:
+                    griddata = grid_visibility_weight_to_griddata(vis, griddata, g[0][1])
+                
                 return griddata
             else:
                 return None
         else:
             return None
     
-    weight_list = [rsexecute.execute(grid_wt, pure=True, nout=1)(avis_list[i], model_imagelist[i],
-                                                                  gcfcf)
+    weight_list = [rsexecute.execute(grid_wt, pure=True, nout=1)(vis_list[i], model_imagelist[i],
+                                                                 gcfcf)
                    for i in range(len(vis_list))]
     
     merged_weight_grid = rsexecute.execute(griddata_merge_weights, nout=1)(weight_list)
@@ -614,27 +616,21 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
             if vis is not None:
                 # Ensure that the griddata has the right axes so that the convolution
                 # function mapping works
-                agd = create_griddata_from_image(model)
+                agd = create_griddata_from_image(model, vis)
                 agd.data = gd[0].data
-                vis = griddata_reweight(vis, agd, g[0][1])
+                if isinstance(vis, BlockVisibility):
+                    vis = griddata_blockvisibility_reweight(vis, agd, g[0][1])
+                else:
+                    vis = griddata_visibility_reweight(vis, agd, g[0][1])
                 return vis
             else:
                 return None
         else:
             return vis
     
-    avis_list = [rsexecute.execute(re_weight, nout=1)(v, model_imagelist[i], merged_weight_grid, gcfcf)
-              for i, v in enumerate(avis_list)]
-
-    def to_bvis(v, ov):
-        if isinstance(ov, BlockVisibility):
-            av = convert_visibility_to_blockvisibility(v)
-            return av
-        else:
-            return v
-
-    result = [rsexecute.execute(to_bvis, nout=1)(vis, ovis) for vis, ovis in zip(avis_list, vis_list)]
-
+    result = [rsexecute.execute(re_weight, nout=1)(v, model_imagelist[i], merged_weight_grid, gcfcf)
+              for i, v in enumerate(vis_list)]
+    
     return rsexecute.optimize(result)
 
 
@@ -686,9 +682,25 @@ def subtract_list_rsexecute_workflow(vis_list, model_vislist):
             return None
     
     result = [rsexecute.execute(subtract_vis, pure=True, nout=1)(vis=vis_list[i],
-                                                                  model_vis=model_vislist[i])
+                                                                 model_vis=model_vislist[i])
               for i in range(len(vis_list))]
     return rsexecute.optimize(result)
+
+
+def sum_predict_results_rsexecute(bvis_list, split=2):
+    """ Sum a set of predict results
+
+    :param bvis_list: List of (image, sum weights) tuples
+    :param split: Split into
+    :return: BlockVis
+    """
+    if len(bvis_list) > split:
+        centre = len(bvis_list) // split
+        result = [sum_predict_results_rsexecute(bvis_list[:centre]),
+                  sum_predict_results_rsexecute(bvis_list[centre:])]
+        return rsexecute.execute(sum_predict_results, nout=2)(result)
+    else:
+        return rsexecute.execute(sum_predict_results, nout=2)(bvis_list)
 
 
 def sum_invert_results_rsexecute(image_list, split=2):
@@ -704,4 +716,3 @@ def sum_invert_results_rsexecute(image_list, split=2):
         return rsexecute.execute(sum_invert_results, nout=2)(result)
     else:
         return rsexecute.execute(sum_invert_results, nout=2)(image_list)
-

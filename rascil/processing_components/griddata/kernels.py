@@ -19,7 +19,7 @@ from rascil.processing_components.image.operations import create_image_from_arra
     create_w_term_like
 from rascil.processing_components.image.operations import reproject_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def create_box_convolutionfunction(im, oversampling=1, support=1):

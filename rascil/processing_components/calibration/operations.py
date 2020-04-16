@@ -9,16 +9,151 @@ __all__ = ['gaintable_summary', 'gaintable_plot', 'qa_gaintable', 'apply_gaintab
 
 import copy
 import logging
-
 from typing import Union
 
+import matplotlib.pyplot as plt
 import numpy.linalg
+#from astropy.visualization import time_support
+from astropy.time import Time
 
 from rascil.data_models.memory_data_models import GainTable, BlockVisibility, QA, assert_vis_gt_compatible
 from rascil.data_models.polarisation import ReceptorFrame
-from rascil.processing_components.visibility.iterators import vis_timeslice_iter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
+
+
+def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs) -> BlockVisibility:
+    """Apply a gain table to a block visibility
+
+    The corrected visibility is::
+
+        V_corrected = {g_i * g_j^*}^-1 V_obs
+
+    If the visibility data are polarised e.g. polarisation_frame("linear") then the inverse operator
+    represents an actual inverse of the gains.
+
+    :param vis: Visibility to have gains applied
+    :param gt: Gaintable to be applied
+    :param inverse: Apply the inverse (default=False)
+    :return: input vis with gains applied
+
+    """
+    assert isinstance(vis, BlockVisibility), "vis is not a BlockVisibility: %r" % vis
+    assert isinstance(gt, GainTable), "gt is not a GainTable: %r" % gt
+    
+    assert_vis_gt_compatible(vis, gt)
+    
+    if inverse:
+        log.debug('apply_gaintable: Apply inverse gaintable')
+    else:
+        log.debug('apply_gaintable: Apply gaintable')
+    
+    is_scalar = gt.gain.shape[-2:] == (1, 1)
+    if vis.npol == 1:
+        log.debug('apply_gaintable: scalar gains')
+    
+    row_numbers = numpy.array(list(range(len(vis.time))), dtype='int')
+    for row in range(gt.ntimes):
+        vis_rows = numpy.abs(vis.time - gt.time[row]) < gt.interval[row] / 2.0
+        vis_rows = row_numbers[vis_rows]
+        if len(vis_rows) > 0:
+            
+            # Lookup the gain for this set of visibilities
+            gain = gt.data['gain'][row]
+            cgain = numpy.conjugate(gt.data['gain'][row])
+            gainwt = gt.data['weight'][row]
+            
+            # The shape of the mueller matrix is
+            nant, nchan, nrec, _ = gain.shape
+            
+            original = vis.vis[vis_rows]
+            applied = copy.copy(vis.vis[vis_rows])
+            appliedwt = copy.copy(vis.weight[vis_rows])
+            if vis.npol == 1:
+                if inverse:
+                    lgain = numpy.ones_like(gain)
+                    lgain[numpy.abs(gain) > 0.0] = 1.0 / gain[numpy.abs(gain) > 0.0]
+                else:
+                    lgain = gain
+                tlgain = lgain.T
+                tclgain = numpy.conjugate(tlgain)
+                
+                smueller = numpy.ones([nchan, nant, nant], dtype='complex')
+                for chan in range(nchan):
+                    smueller[chan, :, :] = numpy.ma.outer(tlgain[0, 0, chan, :],
+                                                          tclgain[0, 0, chan, :]).reshape([nant, nant])
+                for sub_vis_row in range(original.shape[0]):
+                    for chan in range(nchan):
+                        applied[sub_vis_row, :, :, chan, 0] = \
+                            original[sub_vis_row, :, :, chan, 0] * smueller[chan, :, :]
+                        antantwt = numpy.outer(gainwt[:, chan, 0, 0], gainwt[:, chan, 0, 0])
+                        appliedwt[sub_vis_row, :, :, chan, 0] = antantwt
+                        applied[sub_vis_row, :, :, chan, 0][antantwt == 0.0] = 0.0
+            elif vis.npol == 2:
+                has_inverse_ant = numpy.zeros([nant, nchan], dtype='bool')
+                if inverse:
+                    igain = gain.copy()
+                    cigain = cgain.copy()
+                    for a1 in range(vis.nants):
+                        for chan in range(nchan):
+                            try:
+                                igain[a1, chan, :, :] = numpy.linalg.inv(gain[a1, chan, :, :])
+                                cigain[a1, chan, :, :] = numpy.conjugate(igain[a1, chan, :, :])
+                                has_inverse_ant[a1, chan] = True
+                            except numpy.linalg.linalg.LinAlgError:
+                                has_inverse_ant[a1, chan] = False
+        
+                    for sub_vis_row in range(original.shape[0]):
+                        for a1 in range(vis.nants - 1):
+                            for a2 in range(a1 + 1, vis.nants):
+                                for chan in range(nchan):
+                                    if has_inverse_ant[a1, chan] and has_inverse_ant[a2, chan]:
+                                        cfs = numpy.diag(original[sub_vis_row, a2, a1, chan, ...])
+                                        applied[sub_vis_row, a2, a1, chan, ...] = \
+                                            numpy.diag(igain[a1, chan, :, :] @ cfs @ cigain[a2, chan, :, :]).reshape([2])
+                else:
+                    for sub_vis_row in range(original.shape[0]):
+                        for a1 in range(vis.nants - 1):
+                            for a2 in range(a1 + 1, vis.nants):
+                                for chan in range(nchan):
+                                    cfs = numpy.diag(original[sub_vis_row, a2, a1, chan, ...])
+                                    applied[sub_vis_row, a2, a1, chan, ...] = \
+                                        numpy.diag(gain[a1, chan, :, :] @ cfs @ cgain[a2, chan, :, :]).reshape([2])
+
+            elif vis.npol == 4:
+                has_inverse_ant = numpy.zeros([nant, nchan], dtype='bool')
+                if inverse:
+                    igain = gain.copy()
+                    cigain = cgain.copy()
+                    for a1 in range(vis.nants):
+                        for chan in range(nchan):
+                            try:
+                                igain[a1, chan, :, :] = numpy.linalg.inv(gain[a1, chan, :, :])
+                                cigain[a1, chan, :, :] = numpy.conjugate(igain[a1, chan, :, :])
+                                has_inverse_ant[a1, chan] = True
+                            except numpy.linalg.linalg.LinAlgError:
+                                has_inverse_ant[a1, chan] = False
+               
+                    for sub_vis_row in range(original.shape[0]):
+                        for a1 in range(vis.nants - 1):
+                            for a2 in range(a1 + 1, vis.nants):
+                                for chan in range(nchan):
+                                    if has_inverse_ant[a1, chan] and has_inverse_ant[a2, chan]:
+                                        cfs = original[sub_vis_row, a2, a1, chan, ...].reshape([2,2])
+                                        applied[sub_vis_row, a2, a1, chan, ...] = \
+                                            (igain[a1, chan, :, :] @ cfs @ cigain[a2, chan, :, :]).reshape([4])
+                else:
+                    for sub_vis_row in range(original.shape[0]):
+                        for a1 in range(vis.nants - 1):
+                            for a2 in range(a1 + 1, vis.nants):
+                                for chan in range(nchan):
+                                    cfs = original[sub_vis_row, a2, a1, chan, ...].reshape([2, 2])
+                                    applied[sub_vis_row, a2, a1, chan, ...] = \
+                                        (gain[a1, chan, :, :] @ cfs @ cgain[a2, chan, :, :]).reshape([4])
+            
+            vis.data['vis'][vis_rows] = applied
+    
+    return vis
 
 
 def gaintable_summary(gt: GainTable):
@@ -48,12 +183,14 @@ def create_gaintable_from_blockvisibility(vis: BlockVisibility, timeslice=None,
     nants = vis.nants
     
     if timeslice is None or timeslice == 'auto':
-        timeslice = numpy.min(vis.integration_time)
+        utimes = numpy.unique(vis.time)
+        gain_interval = vis.integration_time
+    else:
+        utimes = vis.time[0] + timeslice * numpy.unique(numpy.round((vis.time - vis.time[0]) / timeslice))
+        gain_interval = timeslice * numpy.ones_like(utimes)
     
-    utimes = timeslice * numpy.unique(numpy.round((vis.time - vis.time[0]) / timeslice))
     ntimes = len(utimes)
-    gain_interval = timeslice * numpy.ones([ntimes])
-
+    
     #    log.debug('create_gaintable_from_blockvisibility: times are %s' % str(utimes))
     #    log.debug('create_gaintable_from_blockvisibility: intervals are %s' % str(gain_interval))
     
@@ -71,7 +208,7 @@ def create_gaintable_from_blockvisibility(vis: BlockVisibility, timeslice=None,
         gain[..., 1, 0] = 0.0
     
     gain_weight = numpy.ones(gainshape)
-    gain_time = utimes + vis.time[0]
+    gain_time = utimes
     gain_frequency = ufrequency
     gain_residual = numpy.zeros([ntimes, nfrequency, nrec, nrec])
     
@@ -83,94 +220,6 @@ def create_gaintable_from_blockvisibility(vis: BlockVisibility, timeslice=None,
     assert_vis_gt_compatible(vis, gt)
     
     return gt
-
-
-def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, vis_slices=None, **kwargs) -> BlockVisibility:
-    """Apply a gain table to a block visibility
-    
-    The corrected visibility is::
-    
-        V_corrected = {g_i * g_j^*}^-1 V_obs
-        
-    If the visibility data are polarised e.g. polarisation_frame("linear") then the inverse operator
-    represents an actual inverse of the gains.
-    
-    :param vis: Visibility to have gains applied
-    :param gt: Gaintable to be applied
-    :param inverse: Apply the inverse (default=False)
-    :return: input vis with gains applied
-    
-    """
-    assert isinstance(vis, BlockVisibility), "vis is not a BlockVisibility: %r" % vis
-    assert isinstance(gt, GainTable), "gt is not a GainTable: %r" % gt
-    
-    assert_vis_gt_compatible(vis, gt)
-    
-    if inverse:
-        log.debug('apply_gaintable: Apply inverse gaintable')
-    else:
-        log.debug('apply_gaintable: Apply gaintable')
-    
-    is_scalar = gt.gain.shape[-2:] == (1, 1)
-    if is_scalar:
-        log.debug('apply_gaintable: scalar gains')
-    
-    for chunk, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
-        if numpy.sum(rows) > 0:
-            vistime = numpy.average(vis.time[rows])
-            gaintable_rows = abs(gt.time - vistime) < gt.interval / 2.0
-            
-            # Lookup the gain for this set of visibilities
-            gain = gt.data['gain'][gaintable_rows]
-            gainwt = gt.data['weight'][gaintable_rows]
-            
-            # The shape of the mueller matrix is
-            ntimes, nant, nchan, nrec, _ = gain.shape
-            
-            original = vis.vis[rows]
-            originalwt = vis.weight[rows]
-            applied = copy.deepcopy(original)
-            appliedwt = copy.deepcopy(originalwt)
-            for time in range(ntimes):
-                antantwt = numpy.outer(gainwt, gainwt)
-                if is_scalar:
-                    if inverse:
-                        lgain = numpy.ones_like(gain)
-                        lgain[numpy.abs(gain) > 0.0] = 1.0 / gain[numpy.abs(gain) > 0.0]
-                    else:
-                        lgain = gain
-                    clgain = numpy.conjugate(lgain)
-                    for chan in range(nchan):
-                        smueller = numpy.ma.outer(lgain[time, :, chan, 0],
-                                                  clgain[time, :, chan, 0]).reshape([nant, nant])
-                        applied[time, :, :, chan, 0] = original[time, :, :, chan, 0] * smueller
-                        antantwt = numpy.outer(gainwt[time, :, chan, 0, 0], gainwt[time, :, chan, 0, 0])
-                        applied[time, :, :, chan, 0][antantwt == 0.0] = 0.0
-                        appliedwt[time, :, :, chan, 0][antantwt == 0.0] = 0.0
-                else:
-                    for a1 in range(vis.nants - 1):
-                        for a2 in range(a1 + 1, vis.nants):
-                            for chan in range(nchan):
-                                mueller = numpy.kron(gain[time, a1, chan, :, :],
-                                                     numpy.conjugate(gain[time, a2, chan, :, :]))
-                                if inverse:
-                                    # If the Mueller is singular, ignore it
-                                    try:
-                                        mueller = numpy.linalg.inv(mueller)
-                                        applied[time, a2, a1, chan, :] = \
-                                            numpy.matmul(mueller, original[time, a2, a1, chan, :])
-                                    except numpy.linalg.linalg.LinAlgError:
-                                        applied[time, a2, a1, chan, :] = \
-                                            original[time, a2, a1, chan, :]
-                                else:
-                                    applied[time, a2, a1, chan, :] = \
-                                        numpy.matmul(mueller, original[time, a2, a1, chan, :])
-                                if (gainwt[time, a1, chan, 0, 0] <= 0.0) or (gainwt[time, a1, chan, 0, 0] <= 0.0):
-                                    applied[time, a2, a1, chan, 0] = 0.0
-                                    appliedwt[time, a2, a1, chan, 0] = 0.0
-            
-            vis.data['vis'][rows] = applied
-    return vis
 
 
 def append_gaintable(gt: GainTable, othergt: GainTable) -> GainTable:
@@ -253,43 +302,82 @@ def qa_gaintable(gt: GainTable, context=None) -> QA:
     return QA(origin='qa_gaintable', data=data, context=context)
 
 
-def gaintable_plot(gt: GainTable, ax, title='', value='amp', ants=None,  channels=None,
-                   label_max=10, **kwargs):
+def gaintable_plot(gt: GainTable, cc="T", title='', ants=None, channels=None, label_max=0,
+                   min_amp=1e-5, cmap="rainbow", **kwargs):
     """ Standard plot of gain table
 
     :param gt: Gaintable
-    :param ax: matplotlib axes
+    :param cc: Type of gain table e.g. 'T', 'G, 'B'
     :param value: 'amp' or 'phase' or 'residual'
     :param ants: Antennas to plot
     :param channels: Channels to plot
     :param kwargs:
     :return:
     """
+    
     if ants is None:
         ants = range(gt.nants)
     if channels is None:
         channels = range(gt.nchan)
     
-    if value == "residual":
-        residual = gt.residual[:, channels, 0, 0]
-        ax.plot(gt.time, residual, '.')
+    if gt.configuration is not None:
+        labels = [gt.configuration.names[ant] for ant in ants]
     else:
+        labels = ['' for ant in ants]
+    
+    # with time_support(format = 'iso', scale = 'utc'):
+        # time_axis = Time(gt.time/86400.0, format='mjd', out_subfmt='str')
+    time_axis = gt.time / 86400.0
+
+    if cc == "B":
+        
+        fig, ax = plt.subplots(3, 1, sharex=True)
+        
+        residual = gt.residual[:, channels, 0, 0]
+        ax[0].imshow(residual, cmap=cmap)
+        ax[0].set_title("{title} RMS residual {cc}".format(title=title, cc=cc))
+        ax[0].set_ylabel('RMS residual (Jy)')
+        
+        amp = numpy.abs(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
+        ax[1].imshow(amp, cmap=cmap)
+        ax[1].set_ylabel('Amplitude')
+        ax[1].set_title("{title} Amplitude {cc}".format(title=title, cc=cc))
+        ax[1].xaxis.set_tick_params(labelsize='small')
+        
+        phase = numpy.angle(gt.gain[:, :, channels, 0, 0].reshape([gt.ntimes * gt.nants, gt.nchan]))
+        ax[2].imshow(phase, cmap=cmap)
+        ax[2].set_ylabel('Phase (radian)')
+        ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
+        ax[2].xaxis.set_tick_params(labelsize='small')
+    
+    else:
+        
+        fig, ax = plt.subplots(3, 1, sharex=True)
+        
+        residual = gt.residual[:, channels, 0, 0]
+        ax[0].plot(time_axis, residual, '.')
+        ax[1].set_ylabel('Residual fit (Jy)')
+        ax[0].set_title("{title} Residual {cc}".format(title=title, cc=cc))
+        
         for ant in ants:
-            if gt.configuration is not None:
-                label = gt.configuration.names[ant]
-            else:
-                label = ''
             amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
-            if value == 'amp':
-                ax.plot(gt.time, amp, '.', label=label)
-            else:
-                angle = numpy.angle(gt.gain[:, ant, channels, 0, 0])
-                ax.plot(gt.time, angle, '.', label=label)
-   
+            ax[1].plot(time_axis[amp[:, 0] > min_amp],
+                       amp[amp[:, 0] > min_amp], '.',
+                       label=labels[ant])
+        ax[1].set_ylabel('Amplitude (Jy)')
+        ax[1].set_title("{title} Amplitude {cc}".format(title=title, cc=cc))
+        
+        for ant in ants:
+            amp = numpy.abs(gt.gain[:, ant, channels, 0, 0])
+            angle = numpy.angle(gt.gain[:, ant, channels, 0, 0])
+            ax[2].plot(time_axis[amp[:, 0] > min_amp],
+                       angle[amp[:, 0] > min_amp], '.', label=labels[ant])
+        ax[2].set_ylabel('Phase (rad)')
+        ax[2].set_title("{title} Phase {cc}".format(title=title, cc=cc))
+        ax[2].xaxis.set_tick_params(labelsize=8)
+        plt.xticks(rotation=0)
+        
         if gt.configuration is not None:
             if len(gt.configuration.names) < label_max:
-                ax.legend()
-                
-    ax.set_title(title)
-    ax.set_xlabel('Time (s)')
-    ax.set_ylabel(value)
+                ax[1].legend()
+                ax[1][1].legend()

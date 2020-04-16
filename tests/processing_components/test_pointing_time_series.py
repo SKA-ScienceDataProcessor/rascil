@@ -19,14 +19,14 @@ from rascil.processing_components.simulation.pointing import simulate_pointingta
 from rascil.processing_components.visibility.base import create_blockvisibility
 from rascil.processing_components import create_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestPointing(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
-        
-        self.doplot = True
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
+        self.doplot = False
         
         self.midcore = create_named_configuration('MID', rmax=100.0)
         self.nants = len(self.midcore.names)

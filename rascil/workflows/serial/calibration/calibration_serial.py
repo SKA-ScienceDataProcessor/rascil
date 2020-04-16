@@ -4,7 +4,7 @@
 
 __all__ = ['calibrate_list_serial_workflow']
 
-from rascil.processing_components.calibration.chain_calibration import apply_calibration_chain, solve_calibrate_chain
+from rascil.processing_components.calibration import apply_calibration_chain, solve_calibrate_chain
 from rascil.processing_components.visibility import  convert_visibility_to_blockvisibility
 from rascil.processing_components.visibility import visibility_gather_channel
 from rascil.processing_components.visibility import integrate_visibility_by_channel, \
@@ -34,7 +34,7 @@ def calibrate_list_serial_workflow(vis_list, model_vislist, calibration_context=
         assert gt is not None
         return apply_calibration_chain(vis, gt, calibration_context=calibration_context, **kwargs)
 
-    if global_solution:
+    if global_solution and (len(vis_list) > 1):
         point_vislist = [convert_visibility_to_blockvisibility(v) for v in vis_list]
         point_modelvislist = [convert_visibility_to_blockvisibility(mv)
                               for mv in model_vislist]

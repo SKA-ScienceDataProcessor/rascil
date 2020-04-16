@@ -24,7 +24,7 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.processing_components.visibility.base import create_visibility_from_rows
 from rascil.processing_components.visibility.iterators import vis_timeslice_iter, vis_wslice_iter
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def visibility_scatter(vis: Visibility, vis_iter, vis_slices=1) -> List[Visibility]:
@@ -160,7 +160,8 @@ def visibility_scatter_channel(vis: BlockVisibility) -> List[BlockVisibility]:
     return [extract_channel(vis, channel) for channel, _ in enumerate(vis.frequency)]
 
 
-def visibility_gather_channel(vis_list: List[BlockVisibility], vis: BlockVisibility = None):
+def visibility_gather_channel(vis_list: List[BlockVisibility],
+                              vis: BlockVisibility = None):
     """ Gather a visibility by channel
     
     :param vis_list: List of Visibility
@@ -168,19 +169,17 @@ def visibility_gather_channel(vis_list: List[BlockVisibility], vis: BlockVisibil
     :return:
     """
     
-    cols = ['vis', 'weight', 'imaging_weight', 'flags']
-    
     if vis is None:
         
         vis_shape = numpy.array(vis_list[0].vis.shape)
-        vis_shape[-2] = len(vis_list)
-        for v in vis_list:
-            assert len(v.frequency) == 1
-            assert len(v.channel_bandwidth) == 1
-            
+        vis_shape[-2] = len(vis_list) * vis_shape[-2]
+        
+        gathered_frequency = numpy.concatenate([v.frequency for v in vis_list])
+        gathered_channel_bandwidth = numpy.concatenate([v.channel_bandwidth for v in vis_list])
+        
         vis = BlockVisibility(data=None,
-                              frequency=numpy.array([v.frequency[0] for v in vis_list]),
-                              channel_bandwidth=numpy.array([v.channel_bandwidth[0] for v in vis_list]),
+                              frequency=gathered_frequency,
+                              channel_bandwidth=gathered_channel_bandwidth,
                               phasecentre=vis_list[0].phasecentre,
                               configuration=vis_list[0].configuration,
                               uvw=vis_list[0].uvw,
@@ -193,15 +192,11 @@ def visibility_gather_channel(vis_list: List[BlockVisibility], vis: BlockVisibil
                               polarisation_frame=vis_list[0].polarisation_frame,
                               source=vis_list[0].source,
                               meta=vis_list[0].meta)
-    
-    assert len(vis.frequency) == len(vis_list)
-    
-    for chan, _ in enumerate(vis_list):
-        subvis = vis_list[chan]
-        assert abs(subvis.frequency[0] - vis.frequency[chan]) < 1e-15
-        for col in cols:
-            vis.data[col][..., chan, :] = subvis.data[col][..., 0, :]
-        vis.frequency[chan] = subvis.frequency[0]
+
+    cols = ['vis', 'weight', 'imaging_weight', 'flags']
+
+    for col in cols:
+        vis.data[col] = numpy.concatenate([v.data[col] for v in vis_list], axis=-2)
     
     nchan = vis.vis.shape[-2]
     assert nchan == len(vis.frequency)

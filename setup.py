@@ -22,9 +22,10 @@ if sys.platform == 'darwin':
 # re-use the setuptools build support.
 
 packages = ['rascil']
-package_data = [i for p in packages for i in glob.glob(p + '/*/') + glob.glob(p + '/*/*/') + glob.glob(p + '/*/*/*/')]
+package_data = [i for p in packages for i in
+                glob.glob(p + '/*/') + glob.glob(p + '/*/*/') + glob.glob(p + '/*/*/*/')]
 setup(name='rascil',
-      version='0.1',
+      version='0.1.5',
       python_requires='>=3.6',
       description='Radio Astronomy Simulation, Calibration, and Imaging Library',
       long_description=open('README.md').read(),

@@ -11,12 +11,12 @@ from astropy.coordinates import EarthLocation
 
 from rascil.processing_components.util.coordinate_support import xyz_at_latitude
 from rascil.data_models.memory_data_models import Configuration
-from rascil.data_models.parameters import rascil_path, get_parameter
+from rascil.data_models.parameters import rascil_path, rascil_data_path, get_parameter
 from rascil.processing_components.util.installation_checks import check_data_directory
 
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def create_configuration_from_file(antfile: str, location: EarthLocation = None,
                                    mount: str = 'azel',
@@ -242,7 +242,7 @@ def create_named_configuration(name: str = 'LOWBD2', **kwargs) -> Configuration:
                                             mount='equatorial', names='ASKAP_%d',
                                             diameter=12.0, name=name, location=location, **kwargs)
     elif name == 'LOFAR':
-        location = EarthLocation(x=[3826923.9] * u.m, y=[460915.1] * u.m, z=[5064643.2] * u.m)
+        location = EarthLocation(x=3826923.9 * u.m, y=460915.1 * u.m, z=5064643.2 * u.m)
         log.info("create_named_configuration: %s\n\t%s\n\t%s" % (name, location.geocentric, location.geodetic))
         assert get_parameter(kwargs, "meta", False) is False
         fc = create_LOFAR_configuration(antfile=rascil_path("data/configurations/LOFAR.csv"), location=location)

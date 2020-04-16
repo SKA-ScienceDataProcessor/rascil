@@ -16,16 +16,16 @@ from rascil.processing_components.imaging.base import create_image_from_visibili
 from rascil.processing_components.simulation import ingest_unittest_visibility, create_unittest_model
 from rascil.processing_components.simulation import create_named_configuration
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
 
 class TestImagingFunctions(unittest.TestCase):
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
     
     def actualSetUp(self, add_errors=False, freqwin=1, block=False, dospectral=True, dopol=False):

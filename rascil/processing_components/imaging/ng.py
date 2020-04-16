@@ -14,39 +14,44 @@ from typing import Union
 
 import numpy
 
-from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image
+from rascil.data_models.memory_data_models import Visibility, BlockVisibility, \
+    Image
 from rascil.data_models.parameters import get_parameter
 from rascil.data_models.polarisation import convert_pol_frame
-from rascil.processing_components.image.operations import copy_image, image_is_canonical
-from rascil.processing_components.imaging.base import shift_vis_to_image, normalize_sumwt
+from rascil.processing_components.image.operations import copy_image, \
+    image_is_canonical
+from rascil.processing_components.imaging.base import shift_vis_to_image, \
+    normalize_sumwt
 from rascil.processing_components.visibility.base import copy_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 try:
     import nifty_gridder as ng
     
-    def predict_ng(bvis: Union[BlockVisibility, Visibility], model: Image, **kwargs) -> \
-            Union[BlockVisibility, Visibility]:
+    
+    def predict_ng(bvis: BlockVisibility, model: Image, **kwargs) -> BlockVisibility:
         """ Predict using convolutional degridding.
         
         Nifty-gridder version. https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
     
+        In the imaging and pipeline workflows, this may be invoked using context='ng'.
+
         :param bvis: BlockVisibility to be predicted
         :param model: model image
         :return: resulting BlockVisibility (in place works)
         """
-
+        
         assert isinstance(bvis, BlockVisibility), bvis
         assert image_is_canonical(model)
-
+        
         if model is None:
             return bvis
-
+        
         nthreads = get_parameter(kwargs, "threads", 4)
         epsilon = get_parameter(kwargs, "epsilon", 1e-12)
         do_wstacking = get_parameter(kwargs, "do_wstacking", True)
-        verbosity = get_parameter(kwargs, "verbosity", 2)
+        verbosity = get_parameter(kwargs, "verbosity", 0)
         
         newbvis = copy_visibility(bvis, zero=True)
         
@@ -55,9 +60,8 @@ try:
         nrows, nants, _, vnchan, vnpol = bvis.vis.shape
         
         uvw = newbvis.data['uvw'].reshape([nrows * nants * nants, 3])
-        vis = newbvis.data['vis'].reshape([nrows * nants * nants, vnchan, vnpol])
-        
-        vis[...] = 0.0 + 0.0j  # Make all vis data equal to 0 +0j
+        vist = numpy.zeros([vnpol, vnchan, nants * nants * nrows],
+                           dtype='complex')
         
         # Get the image properties
         m_nchan, m_npol, ny, nx = model.data.shape
@@ -76,37 +80,55 @@ try:
         
         # Make de-gridding over a frequency range and pol fields
         vis_to_im = numpy.round(model.wcs.sub([4]).wcs_world2pix(freq, 0)[0]).astype('int')
-        for vchan in range(vnchan):
-            imchan = vis_to_im[vchan]
-            for vpol in range(vnpol):
-                vis[..., vchan, vpol] = ng.dirty2ms(fuvw.astype(numpy.float64),
-                                    numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64),
-                                    model.data[imchan, vpol, :, :].T.astype(numpy.float64),
-                                    pixsize_x=pixsize,
-                                    pixsize_y=pixsize,
-                                    epsilon=epsilon,
-                                    do_wstacking=do_wstacking,
-                                    nthreads=nthreads,
-                                    verbosity=verbosity)[:,0]
         
-        vis = convert_pol_frame(vis, model.polarisation_frame, bvis.polarisation_frame, polaxis=2)
-        newbvis.data['vis'] = vis.reshape([nrows, nants, nants, vnchan, vnpol])
+        mfs = m_nchan == 1
 
+        if mfs:
+            for vpol in range(vnpol):
+                vist[vpol, : , :] = ng.dirty2ms(fuvw.astype(numpy.float64),
+                                               bvis.frequency.astype(numpy.float64),
+                                               model.data[0, vpol, :, :].T.astype(numpy.float64),
+                                               pixsize_x=pixsize,
+                                               pixsize_y=pixsize,
+                                               epsilon=epsilon,
+                                               do_wstacking=do_wstacking,
+                                               nthreads=nthreads,
+                                               verbosity=verbosity).T
+
+        else:
+            for vpol in range(vnpol):
+                for vchan in range(vnchan):
+                    imchan = vis_to_im[vchan]
+                    vist[vpol, vchan, :] = ng.dirty2ms(fuvw.astype(numpy.float64),
+                                                       numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64),
+                                                       model.data[imchan, vpol, :, :].T.astype(numpy.float64),
+                                                       pixsize_x=pixsize,
+                                                       pixsize_y=pixsize,
+                                                       epsilon=epsilon,
+                                                       do_wstacking=do_wstacking,
+                                                       nthreads=nthreads,
+                                                       verbosity=verbosity)[:, 0]
+        
+        vis = convert_pol_frame(vist.T, model.polarisation_frame, bvis.polarisation_frame, polaxis=2)
+
+        newbvis.data['vis'] = vis.reshape([nrows, nants, nants, vnchan, vnpol])
+        
         # Now we can shift the visibility from the image frame to the original visibility frame
         return shift_vis_to_image(newbvis, model, tangent=True, inverse=True)
-
     
-    def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True,
+    
+    def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False,
+                  normalize: bool = True,
                   **kwargs) -> (Image, numpy.ndarray):
         """ Invert using nifty-gridder module
         
         https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
     
         Use the image im as a template. Do PSF in a separate call.
-    
-        This is at the bottom of the layering i.e. all transforms are eventually expressed in terms
-        of this function. . Any shifting needed is performed here.
-    
+
+        In the imaging and pipeline workflows, this may be invoked using context='ng'.
+
+        :param dopsf: Make the PSF instead of the dirty image
         :param bvis: BlockVisibility to be inverted
         :param im: image template (not changed)
         :param normalize: Normalize by the sum of weights (True)
@@ -114,11 +136,11 @@ try:
     
         """
         assert image_is_canonical(model)
-
+        
         assert isinstance(bvis, BlockVisibility), bvis
-
+        
         im = copy_image(model)
-
+        
         nthreads = get_parameter(kwargs, "threads", 4)
         epsilon = get_parameter(kwargs, "epsilon", 1e-12)
         do_wstacking = get_parameter(kwargs, "do_wstacking", True)
@@ -126,18 +148,16 @@ try:
         
         sbvis = copy_visibility(bvis)
         sbvis = shift_vis_to_image(sbvis, im, tangent=True, inverse=False)
-
-        vis = bvis.vis
         
         freq = sbvis.frequency  # frequency, Hz
         
-        nrows, nants, _, vnchan, vnpol = vis.shape
-        flags = sbvis.flags.reshape([nrows * nants * nants, vnchan, vnpol])
+        nrows, nants, _, vnchan, vnpol = sbvis.vis.shape
         uvw = sbvis.uvw.reshape([nrows * nants * nants, 3])
-        ms =  sbvis.flagged_vis.reshape([nrows * nants * nants, vnchan, vnpol])
+        ms = sbvis.vis.reshape([nrows * nants * nants, vnchan, vnpol])
         wgt = sbvis.flagged_imaging_weight.reshape([nrows * nants * nants, vnchan, vnpol])
         
         if dopsf:
+            flags = sbvis.flags.reshape([nrows * nants * nants, vnchan, vnpol])
             ms[...] = (1 - flags).astype('complex')
         
         if epsilon > 5.0e-6:
@@ -160,42 +180,86 @@ try:
         ms = convert_pol_frame(ms, bvis.polarisation_frame, im.polarisation_frame, polaxis=2)
         # There's a latent problem here with the weights.
         # wgt = numpy.real(convert_pol_frame(wgt, bvis.polarisation_frame, im.polarisation_frame, polaxis=2))
-
+        
         # Set up the conversion from visibility channels to image channels
         vis_to_im = numpy.round(model.wcs.sub([4]).wcs_world2pix(freq, 0)[0]).astype('int')
-        for vchan in range(vnchan):
-            ichan = vis_to_im[vchan]
-            for pol in range(npol):
-                # Nifty gridder likes to receive contiguous arrays
-                ms_1d = numpy.array([ms[row, vchan:vchan+1, pol] for row in range(nrows * nants * nants)], dtype='complex')
-                ms_1d.reshape([ms_1d.shape[0], 1])
-                wgt_1d = numpy.array([wgt[row, vchan:vchan+1, pol] for row in range(nrows * nants * nants)])
-                wgt_1d.reshape([wgt_1d.shape[0], 1])
-                dirty = ng.ms2dirty(
-                    fuvw.astype(numpy.float64),
-                    numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64), ms_1d, wgt_1d,
-                    npixdirty, npixdirty, pixsize, pixsize, epsilon, do_wstacking=do_wstacking,
-                    nthreads=nthreads, verbosity=verbosity)
-                sumwt[ichan, pol] += numpy.sum(wgt[:, vchan, pol])
-                im.data[ichan, pol] += dirty.T
-
+        
+       # Nifty gridder likes to receive contiguous arrays so we transpose
+        # at the beginning
+        
+        mfs = nchan == 1
+        mst = ms.T
+        wgtt = wgt.T
+        for pol in range(npol):
+            if mfs:
+                dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
+                                    bvis.frequency.astype(numpy.float64),
+                                    mst[pol, :, :].T,
+                                    wgtt[pol, :, :].T,
+                                    npixdirty, npixdirty, pixsize, pixsize, epsilon,
+                                    do_wstacking=do_wstacking,
+                                    nthreads=nthreads, verbosity=verbosity)
+                sumwt[0, pol] += numpy.sum(wgtt[pol, 0, :].T, axis=0)
+                im.data[0, pol] += dirty.T
+            else:
+                for vchan in range(vnchan):
+                    ichan = vis_to_im[vchan]
+                    frequency = numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64)
+                    dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
+                                        frequency.astype(numpy.float64),
+                                        mst[pol, vchan, :][..., numpy.newaxis],
+                                        wgtt[pol, vchan, :][..., numpy.newaxis],
+                                        npixdirty, npixdirty, pixsize, pixsize, epsilon,
+                                        do_wstacking=do_wstacking,
+                                        nthreads=nthreads, verbosity=verbosity)
+                    sumwt[ichan, pol] += numpy.sum(wgtt[pol, ichan, :].T, axis=0)
+                    im.data[ichan, pol] += dirty.T
+        
         if normalize:
             im = normalize_sumwt(im, sumwt)
-
-
+        
         return im, sumwt
 
 except ImportError:
     import warnings
     
     warnings.warn('Cannot import nifty_gridder, ng disabled', ImportWarning)
+    
+    
+    def predict_ng(bvis: BlockVisibility, model: Image, **kwargs) -> BlockVisibility:
+        """ Predict using convolutional degridding.
 
-    def predict_ng(bvis: Union[BlockVisibility, Visibility], model: Image, **kwargs) -> \
-            Union[BlockVisibility, Visibility]:
+        Nifty-gridder version. https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
+
+        In the imaging and pipeline workflows, this may be invoked using context='ng'.
+
+        :param bvis: BlockVisibility to be predicted
+        :param model: model image
+        :return: resulting BlockVisibility (in place works)
+        """
+
         log.error("Nifty gridder not available")
         return bvis
-
-    def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True,
+    
+    
+    def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False,
+                  normalize: bool = True,
                   **kwargs) -> (Image, numpy.ndarray):
+        """ Invert using nifty-gridder module
+
+        https://gitlab.mpcdf.mpg.de/ift/nifty_gridder
+
+        Use the image im as a template. Do PSF in a separate call.
+
+        Any shifting needed is performed here.
+
+        In the imaging and pipeline workflows, this may be invoked using context='ng'.
+
+        :param bvis: BlockVisibility to be inverted
+        :param im: image template (not changed)
+        :param normalize: Normalize by the sum of weights (True)
+        :return: (resulting image, sum of the weights for each frequency and polarization)
+
+        """
         log.error("Nifty gridder not available")
         return model, None

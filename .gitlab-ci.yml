@@ -7,11 +7,13 @@ docs:
   stage: build
   before_script:
     - apt-get update
-    - apt-get -y install pandoc
+    - apt-get -y install pandoc rsync
     - pip install -r requirements.txt -r requirements-docs.txt
     - mkdir -p docs/build/html
+    - mkdir -p test_results
+    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/
   script:
-    - PYTHONPATH=`pwd` make -k -j -C docs html
+    - PYTHONPATH=`pwd` HOME=`pwd` make -k -C docs html
   after_script:
     - mv docs/build/html html
   artifacts:
@@ -22,23 +24,39 @@ docs:
 unittests:
   stage: build
   before_script:
-    - pip install -r requirements.txt -r requirements-test.txt
+    - apt-get update
+    - apt-get -y install rsync
+    - pip install -r requirements.txt
+    - mkdir -p test_results
+    - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/
   script:
     - pip install pytest pytest-xdist pytest-cov
-    - py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
-    - py.test -n 4 tests/data_models tests/processing_components tests/workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
+    - HOME=`pwd` py.test tests/workflows/test*rsexecute.py --verbose --cov=rascil --cov-report=html:coverage --durations=30 --forked
+    - HOME=`pwd` py.test -n 4 tests/data_models tests/processing_components tests/workflows/test*serial.py --verbose --cov=rascil --cov-report=html:coverage --cov-append --durations=30 --forked
   artifacts:
     paths:
       - coverage
     expire_in: 1 week
+
+data:
+  stage: build
+  script:
+    - tar -zcf rascil_data.tgz data
+  after_script:
+  artifacts:
+    paths:
+      - rascil_data.tgz
+    expire_in: 6 months
 
 pages:
   stage: deploy
   dependencies:
     - docs
     - unittests
+    - data
   script:
     - mv html public
+    - mv rascil_data.tgz public
     - mv coverage/ public/coverage
   artifacts:
     paths:

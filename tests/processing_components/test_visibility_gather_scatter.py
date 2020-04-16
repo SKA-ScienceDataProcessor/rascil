@@ -18,8 +18,9 @@ from rascil.processing_components.visibility.base import create_visibility, crea
 
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestVisibilityGatherScatter(unittest.TestCase):
     

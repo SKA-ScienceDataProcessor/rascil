@@ -55,13 +55,13 @@ from astropy.wcs.utils import pixel_to_skycoord
 from scipy import interpolate
 
 from rascil.data_models.memory_data_models import Configuration, Image, GainTable, Skycomponent, SkyModel
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 from rascil.processing_components.calibration.operations import create_gaintable_from_blockvisibility, apply_gaintable
 from rascil.processing_components.image.operations import create_image_from_array
 from rascil.processing_components.image.operations import import_image_from_fits
-from rascil.processing_components.imaging.base import predict_2d, predict_skycomponent_visibility, \
+from rascil.processing_components.imaging import predict_2d, dft_skycomponent_visibility, \
     create_image_from_visibility, advise_wide_field
 from rascil.processing_components.imaging.primary_beams import create_pb
 from rascil.processing_components.skycomponent.operations import create_skycomponent, insert_skycomponent, \
@@ -72,7 +72,7 @@ from rascil.processing_components.visibility.coalesce import convert_blockvisibi
 from rascil.processing_components.util.installation_checks import check_data_directory
 
 check_data_directory()
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def create_test_image(canonical=True, cellsize=None, frequency=None, channel_bandwidth=None,
@@ -205,13 +205,13 @@ def create_test_image_from_s3(npixel=16384, polarisation_frame=PolarisationFrame
         else:
             fovstr = '10'
         if flux_limit >= 1e-3:
-            csvfilename = rascil_path('data/models/S3_1400MHz_1mJy_%sdeg.csv' % fovstr)
+            csvfilename = rascil_data_path('models/S3_1400MHz_1mJy_%sdeg.csv' % fovstr)
         else:
-            csvfilename = rascil_path('data/models/S3_1400MHz_100uJy_%sdeg.csv' % fovstr)
+            csvfilename = rascil_data_path('models/S3_1400MHz_100uJy_%sdeg.csv' % fovstr)
         log.info('create_test_image_from_s3: Reading S3 sources from %s ' % csvfilename)
     else:
         assert fov in [10, 20, 40], "Field of view invalid: use one of %s" % ([10, 20, 40])
-        csvfilename = rascil_path('data/models/S3_151MHz_%ddeg.csv' % (fov))
+        csvfilename = rascil_data_path('models/S3_151MHz_%ddeg.csv' % (fov))
         log.info('create_test_image_from_s3: Reading S3 sources from %s ' % csvfilename)
 
     with open(csvfilename) as csvfile:
@@ -317,13 +317,13 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
         else:
             fovstr = '10'
         if flux_limit >= 1e-3:
-            csvfilename = rascil_path('data/models/S3_1400MHz_1mJy_%sdeg.csv' % fovstr)
+            csvfilename = rascil_data_path('models/S3_1400MHz_1mJy_%sdeg.csv' % fovstr)
         else:
-            csvfilename = rascil_path('data/models/S3_1400MHz_100uJy_%sdeg.csv' % fovstr)
+            csvfilename = rascil_data_path('models/S3_1400MHz_100uJy_%sdeg.csv' % fovstr)
         log.info('create_test_skycomponents_from_s3: Reading S3-SEX sources from %s ' % csvfilename)
     else:
         assert fov in [10, 20, 40], "Field of view invalid: use one of %s" % ([10, 20, 40])
-        csvfilename = rascil_path('data/models/S3_151MHz_%ddeg.csv' % (fov))
+        csvfilename = rascil_data_path('models/S3_151MHz_%ddeg.csv' % (fov))
         log.info('create_test_skycomponents_from_s3: Reading S3-SEX sources from %s ' % csvfilename)
 
     skycomps = list()
@@ -345,7 +345,11 @@ def create_test_skycomponents_from_s3(polarisation_frame=PolarisationFrame("stok
                 if numpy.max(flux) > flux_limit:
                     ras.append(ra)
                     decs.append(dec)
-                    fluxes.append([[f] for f in flux])
+                    if polarisation_frame == PolarisationFrame("stokesIQUV"):
+                        polscale = numpy.array([1.0, 0.0, 0.0, 0.0])
+                        fluxes.append(numpy.outer(flux, polscale))
+                    else:
+                        fluxes.append([[f] for f in flux])
                     names.append("S3_%s" % row[0])
             r += 1
 
@@ -694,7 +698,7 @@ def create_blockvisibility_iterator(config: Configuration, times: numpy.array, f
             bvis = convert_visibility_to_blockvisibility(vis)
 
         if components is not None:
-            vis = predict_skycomponent_visibility(bvis, components)
+            vis = dft_skycomponent_visibility(bvis, components)
 
         # Add phase errors
         if phase_error > 0.0 or amplitude_error > 0.0:
@@ -858,6 +862,6 @@ def insert_unittest_errors(vt, seed=180555, calibration_context="TG", amp_errors
                                        timeslice=controls[c]['timeslice'], phase_only=controls[c]['phase_only'],
                                        crosspol=controls[c]['shape'] == 'matrix')
 
-        vt = apply_gaintable(vt, gaintable, timeslice=controls[c]['timeslice'], inverse=True)
+        vt = apply_gaintable(vt, gaintable, inverse=True, timeslice=controls[c]['timeslice'])
 
     return vt

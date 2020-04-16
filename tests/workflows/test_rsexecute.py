@@ -10,13 +10,15 @@ import numpy
 # Import the base and then make a global version
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
+
+log.setLevel(logging.WARNING)
 
 class Testrsexecute(unittest.TestCase):
     
     def setUp(self):
-        rsexecute.set_client(use_dask=True, verbose=False)
-        
+        rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
+
     def tearDown(self):
         rsexecute.close()
     

@@ -16,13 +16,14 @@ from rascil.processing_components.image.gather_scatter import image_gather_facet
     image_scatter_channels
 from rascil.processing_components.simulation import create_test_image
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImageGatherScatters(unittest.TestCase):
     
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         self.persist = os.getenv("RASCIL_PERSIST", False)
 

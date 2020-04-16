@@ -20,9 +20,9 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import simulate_gaintable
 from rascil.processing_components.visibility.base import copy_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
@@ -30,7 +30,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestCalibrateGraphs(unittest.TestCase):
     
     def setUp(self):
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         
         self.persist = os.getenv("RASCIL_PERSIST", False)

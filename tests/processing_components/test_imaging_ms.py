@@ -11,7 +11,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.imaging.base import predict_skycomponent_visibility
+from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
@@ -29,9 +29,9 @@ try:
 except:
     run_ms_tests = False
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
@@ -39,7 +39,7 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestImaging(unittest.TestCase):
     def setUp(self):
         
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
     
     def actualSetUp(self, freqwin=1, block=True, dopol=False):
@@ -85,7 +85,7 @@ class TestImaging(unittest.TestCase):
         
         self.model = insert_skycomponent(self.model, self.components)
         
-        self.bvis = predict_skycomponent_visibility(self.bvis, self.components)
+        self.bvis = dft_skycomponent_visibility(self.bvis, self.components)
     
     
     @unittest.skipUnless(run_ms_tests, "requires the 'casacore' module")

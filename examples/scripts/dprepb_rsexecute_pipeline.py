@@ -9,7 +9,7 @@ import logging
 from dask.distributed import Client
 
 # These are the RASCIL functions we need
-from rascil.data_models import PolarisationFrame, rascil_path
+from rascil.data_models import PolarisationFrame, rascil_path, rascil_data_path
 from rascil.processing_components import create_visibility_from_ms, \
     create_visibility_from_rows, append_visibility, convert_visibility_to_stokes, \
     vis_select_uvrange, deconvolve_cube, restore_cube, export_image_to_fits, qa_image, \
@@ -85,7 +85,7 @@ if __name__ == '__main__':
         context = '2d'
         vis_slices = 1
 
-    input_vis = [rascil_path('data/vis/sim-1.ms'), rascil_path('data/vis/sim-2.ms')]
+    input_vis = [rascil_data_path('vis/sim-1.ms'), rascil_data_path('vis/sim-2.ms')]
 
     import time
 

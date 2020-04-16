@@ -1,0 +1,39 @@
+version: "3.1"
+
+services:
+  scheduler:
+    build:
+      context: ./rascil-ng
+      dockerfile: Dockerfile
+    image: timcornwell/rascil-ng
+    hostname: dask-scheduler
+    volumes:
+      - "${HOME}:${HOME}"
+    ports:
+      - "8786:8786"
+      - "8787:8787"
+    command: ["dask-scheduler", "--local-directory", "/tmp"]
+
+  worker:
+    build:
+      context: ./rascil-ng
+      dockerfile: Dockerfile
+    image: timcornwell/rascil-ng
+    hostname: dask-worker
+    volumes:
+      - "${HOME}:${HOME}"
+    command: ["dask-worker", "--local-directory", "/tmp", "tcp://scheduler:8786"]
+
+  notebook:
+    build:
+      context: ./rascil-notebook
+      dockerfile: Dockerfile
+    image: timcornwell/rascil-notebook
+    hostname: notebook
+    volumes:
+      - "${HOME}:${HOME}"
+    ports:
+      - "8888:8888"
+    environment:
+      - DASK_SCHEDULER_ADDRESS="tcp://scheduler:8786"
+    command: ["jupyter-lab", "--no-browser", "--ip", "0.0.0.0"]

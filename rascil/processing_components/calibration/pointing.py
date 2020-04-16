@@ -16,8 +16,9 @@ from rascil.data_models.memory_data_models import PointingTable, BlockVisibility
 from rascil.data_models.polarisation import ReceptorFrame
 
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
+from rascil.processing_components.visibility.visibility_geometry import calculate_blockvisibility_hourangles
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 def pointingtable_summary(pt: PointingTable):
     """Return string summarizing the Gaintable
@@ -75,7 +76,7 @@ def create_pointingtable_from_blockvisibility(vis: BlockVisibility, pointing_fra
         pointing[..., 0, 1] = 0.0
         pointing[..., 1, 1] = 0.0
 
-    ha = numpy.pi * vis.time / 43200.0
+    ha = calculate_blockvisibility_hourangles(vis).to('rad').value
     dec = vis.phasecentre.dec.rad
     latitude = vis.configuration.location.lat.rad
     az, el = hadec_to_azel(ha, dec, latitude)

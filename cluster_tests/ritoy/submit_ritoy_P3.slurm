@@ -10,9 +10,9 @@
 
 #! sbatch directives begin here ###############################
 #! Name of the job:
-#SBATCH -J SDP_ARL
+#SBATCH -J RITOY
 #! Which project should be charged:
-#SBATCH -A SKA-SDP
+##SBATCH -A SKA-SDP
 #! How many whole nodes should be allocated?
 #SBATCH --nodes=8
 #! How many (MPI) tasks will there be in total? (<= nodes*16)
@@ -22,14 +22,14 @@
 #! How much wallclock time will be required?
 #SBATCH --time=00:20:00
 #! What types of email messages do you wish to receive?
-#SBATCH --mail-type=FAIL
+#SBATCH --mail-type=FAIL,END
+#! Where to send email messages
+#SBATCH --mail-user=realtimcornwell@gmail.com
 #! Uncomment this to prevent the job from being requeued (e.g. if
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 #! Do not change:
-#SBATCH -p compute
-#! What types of email messages do you wish to receive?
-#SBATCH --mail-type=FAIL
+#SBATCH -p CLUSTER
 #! Uncomment this to prevent the job from being requeued (e.g. if
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue

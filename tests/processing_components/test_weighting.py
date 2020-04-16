@@ -1,7 +1,6 @@
-""" Unit tests for Fourier transform processors
-
-
+""" Unit tests for visibility weighting
 """
+import os
 import logging
 import unittest
 
@@ -21,16 +20,19 @@ from rascil.processing_components.imaging.weighting import weight_visibility, ta
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestWeighting(unittest.TestCase):
     def setUp(self):
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
         self.npixel = 512
-    
-    def actualSetUp(self, time=None, frequency=None, dospectral=False, dopol=False):
+
+        self.persist = os.getenv("RASCIL_PERSIST", False)
+
+    def actualSetUp(self, time=None, dospectral=False, image_pol=PolarisationFrame("stokesI")):
         self.lowcore = create_named_configuration('LOWBD2', rmax=600)
         self.times = (numpy.pi / 12.0) * numpy.linspace(-3.0, 3.0, 5)
         
@@ -46,17 +48,21 @@ class TestWeighting(unittest.TestCase):
             self.frequency = numpy.array([1e8])
             self.channel_bandwidth = numpy.array([1e7])
             
-        if dopol:
-            self.vis_pol = PolarisationFrame('linear')
-            self.image_pol = PolarisationFrame('stokesIQUV')
-        else:
-            self.vis_pol = PolarisationFrame('stokesI')
-            self.image_pol = PolarisationFrame('stokesI')
-
-        if dopol:
-            f = numpy.array([100.0, 20.0, -10.0, 1.0])
-        else:
+        self.image_pol = image_pol
+        if image_pol == PolarisationFrame("stokesI"):
+            self.vis_pol = PolarisationFrame("stokesI")
             f = numpy.array([100.0])
+        elif image_pol == PolarisationFrame("stokesIQUV"):
+            self.vis_pol = PolarisationFrame("linear")
+            f = numpy.array([100.0, 20.0, -10.0, 1.0])
+        elif image_pol == PolarisationFrame("stokesIQ"):
+            self.vis_pol = PolarisationFrame("linearnp")
+            f = numpy.array([100.0, 20.0])
+        elif image_pol == PolarisationFrame("stokesIV"):
+            self.vis_pol = PolarisationFrame("circularnp")
+            f = numpy.array([100.0, 20.0])
+        else:
+            raise ValueError("Polarisation {} not supported".format(image_pol))
 
         if dospectral:
             numpy.array([f, 0.8 * f, 0.6 * f])
@@ -81,10 +87,12 @@ class TestWeighting(unittest.TestCase):
         self.componentvis = weight_visibility(self.componentvis, self.model, algoritm='uniform')
         self.componentvis = taper_visibility_gaussian(self.componentvis, beam=size_required)
         psf, sumwt = invert_2d(self.componentvis, self.model, dopsf=True)
-        export_image_to_fits(psf, '%s/test_weighting_gaussian_taper_psf.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(psf, '%s/test_weighting_gaussian_taper_psf.fits' % self.dir)
         xfr = fft_image(psf)
         xfr.data = xfr.data.real.astype('float')
-        export_image_to_fits(xfr, '%s/test_weighting_gaussian_taper_xfr.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(xfr, '%s/test_weighting_gaussian_taper_xfr.fits' % self.dir)
         npixel = psf.data.shape[3]
         sl = slice(npixel // 2 - 7, npixel // 2 + 8)
         fit = fit_2dgaussian(psf.data[0, 0, sl, sl])
@@ -97,7 +105,7 @@ class TestWeighting(unittest.TestCase):
         # Now we need to convert to radians
         size *= numpy.pi * self.model.wcs.wcs.cdelt[1] / 180.0
         # Very impressive! Desired 0.01 Acheived 0.0100006250829
-        assert numpy.abs(size - size_required) < 0.01 * size_required, \
+        assert numpy.abs(size - size_required) < 0.03 * size_required, \
             "Fit should be %f, actually is %f" % (size_required, size)
 
     def test_tapering_Tukey(self):
@@ -105,10 +113,12 @@ class TestWeighting(unittest.TestCase):
         self.componentvis = weight_visibility(self.componentvis, self.model, algoritm='uniform')
         self.componentvis = taper_visibility_tukey(self.componentvis, tukey=1.0)
         psf, sumwt = invert_2d(self.componentvis, self.model, dopsf=True)
-        export_image_to_fits(psf, '%s/test_weighting_tukey_taper_psf.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(psf, '%s/test_weighting_tukey_taper_psf.fits' % self.dir)
         xfr = fft_image(psf)
         xfr.data = xfr.data.real.astype('float')
-        export_image_to_fits(xfr, '%s/test_weighting_tukey_taper_xfr.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(xfr, '%s/test_weighting_tukey_taper_xfr.fits' % self.dir)
 
 
 if __name__ == '__main__':

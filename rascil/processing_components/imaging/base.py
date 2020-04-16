@@ -20,32 +20,30 @@ extra phase term in the Fourier transform cannot be ignored.
 """
 
 __all__ = ['shift_vis_to_image', 'normalize_sumwt', 'predict_2d', 'invert_2d', 'predict_skycomponent_visibility',
-           'create_image_from_visibility', 'advise_wide_field', 'visibility_recentre']
+           'create_image_from_visibility', 'advise_wide_field', 'visibility_recentre', 'fill_vis_for_psf']
 
-import collections
 import logging
 from typing import List, Union
 
-import numpy
 import astropy.constants as constants
 import astropy.units as units
 import astropy.wcs as wcs
+import numpy
 from astropy.wcs.utils import pixel_to_skycoord
 
-from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image, Skycomponent, assert_same_chan_pol
+from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image, Skycomponent
 from rascil.data_models.parameters import get_parameter
-from rascil.data_models.polarisation import convert_pol_frame, PolarisationFrame
+from rascil.data_models.polarisation import PolarisationFrame, convert_pol_frame
 from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
-    fft_griddata_to_image, fft_image_to_griddata, \
-    degrid_visibility_from_griddata
+    grid_blockvisibility_to_griddata, fft_griddata_to_image, fft_image_to_griddata, \
+    degrid_visibility_from_griddata, degrid_blockvisibility_from_griddata
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction
 from rascil.processing_components.griddata.operations import create_griddata_from_image
-from rascil.processing_components.image import create_image_from_array
-from rascil.processing_components.imaging.imaging_params import get_frequency_map
-from rascil.processing_components.util.coordinate_support import simulate_point, skycoord_to_lmn
+from rascil.processing_components.image import create_image_from_array, convert_polimage_to_stokes, \
+    convert_stokes_to_polimage
 from rascil.processing_components.visibility.base import copy_visibility, phaserotate_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def shift_vis_to_image(vis: Union[Visibility, BlockVisibility], im: Image, tangent: bool = True, inverse: bool = False) \
@@ -61,13 +59,13 @@ def shift_vis_to_image(vis: Union[Visibility, BlockVisibility], im: Image, tange
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), "vis is not a Visibility or " \
                                                                             "BlockVisibility: %r" % vis
-    
+
     nchan, npol, ny, nx = im.data.shape
-    
+
     # Convert the FFT definition of the phase center to world coordinates (1 relative)
     # This is the only place in RASCIL where the relationship between the image and visibility
     # frames is defined.
-    
+
     image_phasecentre = pixel_to_skycoord(nx // 2 + 1, ny // 2 + 1, im.wcs, origin=1)
     if vis.phasecentre.separation(image_phasecentre).rad > 1e-15:
         if inverse:
@@ -78,7 +76,7 @@ def shift_vis_to_image(vis: Union[Visibility, BlockVisibility], im: Image, tange
                       (vis.phasecentre, image_phasecentre))
         vis = phaserotate_visibility(vis, image_phasecentre, tangent=tangent, inverse=inverse)
         vis.phasecentre = im.phasecentre
-    
+
     return vis
 
 
@@ -117,28 +115,32 @@ def predict_2d(vis: Union[BlockVisibility, Visibility], model: Image, gcfcf=None
     :param gcfcf: (Grid correction function i.e. in image space, Convolution function i.e. in uv space)
     :return: resulting visibility (in place works)
     """
-    
+
     if model is None:
         return vis
-    
-    assert isinstance(vis, Visibility), vis
+
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
 
     _, _, ny, nx = model.data.shape
-    
+
     if gcfcf is None:
         gcf, cf = create_pswf_convolutionfunction(model,
                                                   support=get_parameter(kwargs, "support", 6),
                                                   oversampling=get_parameter(kwargs, "oversampling", 128))
     else:
         gcf, cf = gcfcf
-    
-    griddata = create_griddata_from_image(model)
-    griddata = fft_image_to_griddata(model, griddata, gcf)
-    vis = degrid_visibility_from_griddata(vis, griddata=griddata, cf=cf)
-    
+
+    griddata = create_griddata_from_image(model, vis)
+    polmodel = convert_stokes_to_polimage(model, vis.polarisation_frame)
+    griddata = fft_image_to_griddata(polmodel, griddata, gcf)
+    if isinstance(vis, Visibility):
+        vis = degrid_visibility_from_griddata(vis, griddata=griddata, cf=cf)
+    else:
+        vis = degrid_blockvisibility_from_griddata(vis, griddata=griddata, cf=cf)
+
     # Now we can shift the visibility from the image frame to the original visibility frame
     svis = shift_vis_to_image(vis, model, tangent=True, inverse=True)
-    
+
     return svis
 
 
@@ -159,13 +161,14 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     :return: resulting image
 
     """
-    assert isinstance(vis, Visibility), vis
-    
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
+
     svis = copy_visibility(vis)
-    
+
     if dopsf:
-        svis.data['vis'][...] = 1.0+0.0j
-    
+        svis = fill_vis_for_psf(im, svis)
+
+
     svis = shift_vis_to_image(svis, im, tangent=True, inverse=False)
 
     if gcfcf is None:
@@ -175,77 +178,62 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     else:
         gcf, cf = gcfcf
 
-    griddata = create_griddata_from_image(im)
-    griddata, sumwt = grid_visibility_to_griddata(svis, griddata=griddata, cf=cf)
-    
-    imaginary = get_parameter(kwargs, "imaginary", False)
-    if imaginary:
-        result0, result1 = fft_griddata_to_image(griddata, gcf, imaginary=imaginary)
-        log.debug("invert_2d: retaining imaginary part of dirty image")
-        if normalize:
-            result0 = normalize_sumwt(result0, sumwt)
-            result1 = normalize_sumwt(result1, sumwt)
-        return result0, sumwt, result1
+    griddata = create_griddata_from_image(im, svis)
+    if isinstance(vis, Visibility):
+        griddata, sumwt = grid_visibility_to_griddata(svis, griddata=griddata, cf=cf)
     else:
-        result = fft_griddata_to_image(griddata, gcf)
-        if normalize:
-            result = normalize_sumwt(result, sumwt)
-        return result, sumwt
+        griddata, sumwt = grid_blockvisibility_to_griddata(svis, griddata=griddata, cf=cf)
+
+    result = fft_griddata_to_image(griddata, gcf)
+
+    if normalize:
+        result = normalize_sumwt(result, sumwt)
+
+    result = convert_polimage_to_stokes(result)
+
+    return result, sumwt
+
+
+def fill_vis_for_psf(im, svis):
+    """ Fill the visibility for calculation of PSF
+    
+    :param im:
+    :param svis:
+    :return: visibility with unit vis
+    """
+    if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
+        svis.data['vis'][..., 1:4] = 0.0 + 0.0j
+        svis.data['vis'][..., 0] = 1.0 + 0.0j
+        svis.data['vis'][...] = \
+            convert_pol_frame(svis.data['vis'],
+                              PolarisationFrame("stokesIQUV"),
+                              svis.polarisation_frame, polaxis=-1)
+    elif im.polarisation_frame == PolarisationFrame("stokesI"):
+        svis.data['vis'][..., :] = 1.0 + 0.0j
+        svis.data['vis'][...] = \
+            convert_pol_frame(svis.data['vis'],
+                              PolarisationFrame("stokesI"),
+                              svis.polarisation_frame, polaxis=-1)
+    else:
+        raise ValueError("Cannot calculate PSF for {}".format(im.polarisation_frame))
+    
+    return svis
 
 
 def predict_skycomponent_visibility(vis: Union[Visibility, BlockVisibility],
                                     sc: Union[Skycomponent, List[Skycomponent]]) -> Union[Visibility, BlockVisibility]:
     """Predict the visibility from a Skycomponent, add to existing visibility, for Visibility or BlockVisibility
 
+    Now replaced by dft_skycomponent_visibility
+
     :param vis: Visibility or BlockVisibility
     :param sc: Skycomponent or list of SkyComponents
     :return: Visibility or BlockVisibility
     """
-    if sc is None:
-        return vis
-    
-    if not isinstance(sc, collections.Iterable):
-        sc = [sc]
 
-    
-    if isinstance(vis, Visibility):
-        
-        _, im_nchan = list(get_frequency_map(vis, None))
-        
-        for comp in sc:
-            assert isinstance(comp, Skycomponent), comp
-            
-            assert_same_chan_pol(vis, comp)
-            
-            l, m, n = skycoord_to_lmn(comp.direction, vis.phasecentre)
-            phasor = simulate_point(vis.uvw, l, m)
-            
-            comp_flux = comp.flux[im_nchan, :]
-            vis.data['vis'][...] += comp_flux[:,:] * phasor[:, numpy.newaxis]
-
-    elif isinstance(vis, BlockVisibility):
-        
-        ntimes, nant, _, nchan, npol = vis.vis.shape
-        
-        k = numpy.array(vis.frequency) / constants.c.to('m s^-1').value
-        
-        for comp in sc:
-            #            assert isinstance(comp, Skycomponent), comp
-            assert_same_chan_pol(vis, comp)
-            
-            flux = comp.flux
-            if comp.polarisation_frame != vis.polarisation_frame:
-                flux = convert_pol_frame(flux, comp.polarisation_frame, vis.polarisation_frame)
-            
-            l, m, n = skycoord_to_lmn(comp.direction, vis.phasecentre)
-            uvw = vis.uvw[..., numpy.newaxis] * k
-            phasor = numpy.ones([ntimes, nant, nant, nchan, npol], dtype='complex')
-            for chan in range(nchan):
-                phasor[:, :, :, chan, :] = simulate_point(uvw[..., chan], l, m)[..., numpy.newaxis]
-            
-            vis.data['vis'][..., :, :] += flux[:, :] * phasor[..., :]
-    
-    return vis
+    log.warning("predict_skycomponent_visibility: deprecated - please use dft_skycomponent_visibility")
+    from rascil.processing_components.imaging.dft import dft_skycomponent_visibility
+    return dft_skycomponent_visibility(vis, sc)
 
 
 def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwargs) -> Image:
@@ -265,25 +253,25 @@ def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwar
     :return: image
 
     See also
-        :py:func:`rascil.processing_components.image.create_image`
+        :py:func:`rascil.processing_components.image.operations.create_image`
     """
     assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), \
         "vis is not a Visibility or a BlockVisibility: %r" % (vis)
-    
+
     log.debug("create_image_from_visibility: Parsing parameters to get definition of WCS")
-    
+
     imagecentre = get_parameter(kwargs, "imagecentre", vis.phasecentre)
     phasecentre = get_parameter(kwargs, "phasecentre", vis.phasecentre)
-    
+
     # Spectral processing options
     ufrequency = numpy.unique(vis.frequency)
     vnchan = len(ufrequency)
-    
+
     frequency = get_parameter(kwargs, "frequency", vis.frequency)
     inchan = get_parameter(kwargs, "nchan", vnchan)
     reffrequency = frequency[0] * units.Hz
     channel_bandwidth = get_parameter(kwargs, "channel_bandwidth", 0.99999999999 * vis.channel_bandwidth[0]) * units.Hz
-    
+
     if (inchan == vnchan) and vnchan > 1:
         log.debug(
             "create_image_from_visibility: Defining %d channel Image at %s, starting frequency %s, and bandwidth %s"
@@ -291,21 +279,21 @@ def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwar
     elif (inchan == 1) and vnchan > 1:
         assert numpy.abs(channel_bandwidth.value) > 0.0, "Channel width must be non-zero for mfs mode"
         log.debug("create_image_from_visibility: Defining single channel MFS Image at %s, starting frequency %s, "
-                 "and bandwidth %s"
-                 % (imagecentre, reffrequency, channel_bandwidth))
+                  "and bandwidth %s"
+                  % (imagecentre, reffrequency, channel_bandwidth))
     elif inchan > 1 and vnchan > 1:
         assert numpy.abs(channel_bandwidth.value) > 0.0, "Channel width must be non-zero for mfs mode"
         log.debug("create_image_from_visibility: Defining multi-channel MFS Image at %s, starting frequency %s, "
-                 "and bandwidth %s"
-                 % (imagecentre, reffrequency, channel_bandwidth))
+                  "and bandwidth %s"
+                  % (imagecentre, reffrequency, channel_bandwidth))
     elif (inchan == 1) and (vnchan == 1):
         assert numpy.abs(channel_bandwidth.value) > 0.0, "Channel width must be non-zero for mfs mode"
         log.debug("create_image_from_visibility: Defining single channel Image at %s, starting frequency %s, "
-                 "and bandwidth %s"
-                 % (imagecentre, reffrequency, channel_bandwidth))
+                  "and bandwidth %s"
+                  % (imagecentre, reffrequency, channel_bandwidth))
     else:
         raise ValueError("create_image_from_visibility: unknown spectral mode ")
-    
+
     # Image sampling options
     npixel = get_parameter(kwargs, "npixel", 512)
     uvmax = numpy.max((numpy.abs(vis.data['uvw'][..., 0:1])))
@@ -317,15 +305,15 @@ def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwar
         criticalcellsize, criticalcellsize * 180.0 / numpy.pi))
     cellsize = get_parameter(kwargs, "cellsize", 0.5 * criticalcellsize)
     log.debug("create_image_from_visibility: Cellsize          = %g radians, %g degrees" % (cellsize,
-                                                                                           cellsize * 180.0 / numpy.pi))
+                                                                                            cellsize * 180.0 / numpy.pi))
     override_cellsize = get_parameter(kwargs, "override_cellsize", True)
-    if override_cellsize and cellsize > criticalcellsize:
+    if (override_cellsize and cellsize > criticalcellsize) or (cellsize == 0.0):
         log.debug("create_image_from_visibility: Resetting cellsize %g radians to criticalcellsize %g radians" % (
             cellsize, criticalcellsize))
         cellsize = criticalcellsize
     pol_frame = get_parameter(kwargs, "polarisation_frame", PolarisationFrame("stokesI"))
     inpol = pol_frame.npol
-    
+
     # Now we can define the WCS, which is a convenient place to hold the info above
     # Beware of python indexing order! wcs and the array have opposite ordering
     shape = [inchan, inpol, npixel, npixel]
@@ -339,14 +327,15 @@ def create_image_from_visibility(vis: Union[BlockVisibility, Visibility], **kwar
     w.wcs.ctype = ["RA---SIN", "DEC--SIN", 'STOKES', 'FREQ']
     w.wcs.crval = [phasecentre.ra.deg, phasecentre.dec.deg, 1.0, reffrequency.to(units.Hz).value]
     w.naxis = 4
-    
+
     w.wcs.radesys = get_parameter(kwargs, 'frame', 'ICRS')
     w.wcs.equinox = get_parameter(kwargs, 'equinox', 2000.0)
-    
+
     return create_image_from_array(numpy.zeros(shape), wcs=w, polarisation_frame=pol_frame)
 
 
-def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversampling_synthesised_beam=3.0,
+def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02,
+                      oversampling_synthesised_beam=3.0,
                       guard_band_image=6.0, facets=1, wprojection_planes=1, verbose=True):
     """ Advise on parameters for wide field imaging.
     
@@ -366,22 +355,22 @@ def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversa
     :param wprojection_planes: Number of planes in wprojection
     :return: dict of advice
     """
-    
+
     isblock = isinstance(vis, BlockVisibility)
-    
+
     max_wavelength = constants.c.to('m s^-1').value / numpy.min(vis.frequency)
     if verbose:
         log.info("advise_wide_field: Maximum wavelength %.3f (meters)" % (max_wavelength))
-    
+
     min_wavelength = constants.c.to('m s^-1').value / numpy.max(vis.frequency)
     if verbose:
         log.info("advise_wide_field: Minimum wavelength %.3f (meters)" % (min_wavelength))
 
     if isblock:
-        maximum_baseline = numpy.max(numpy.abs(vis.uvw))/min_wavelength # Wavelengths
-        maximum_w = numpy.max(numpy.abs(vis.w))/min_wavelength # Wavelengths
+        maximum_baseline = numpy.max(numpy.abs(vis.uvw)) / min_wavelength  # Wavelengths
+        maximum_w = numpy.max(numpy.abs(vis.w)) / min_wavelength  # Wavelengths
     else:
-        maximum_baseline = numpy.max(numpy.abs(vis.uvw)) # Wavelengths
+        maximum_baseline = numpy.max(numpy.abs(vis.uvw))  # Wavelengths
         maximum_w = numpy.max(numpy.abs(vis.w))  # Wavelengths
 
     if verbose:
@@ -399,20 +388,20 @@ def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversa
     primary_beam_fov = max_wavelength / diameter
     if verbose:
         log.info("advise_wide_field: Primary beam %s" % (rad_deg_arcsec(primary_beam_fov)))
-    
+
     image_fov = primary_beam_fov * guard_band_image
     if verbose:
         log.info("advise_wide_field: Image field of view %s" % (rad_deg_arcsec(image_fov)))
-    
+
     facet_fov = primary_beam_fov * guard_band_image / facets
     if facets > 1:
         if verbose:
             log.info("advise_wide_field: Facet field of view %s" % (rad_deg_arcsec(facet_fov)))
-    
+
     synthesized_beam = 1.0 / (maximum_baseline)
     if verbose:
         log.info("advise_wide_field: Synthesized beam %s" % (rad_deg_arcsec(synthesized_beam)))
-    
+
     cellsize = synthesized_beam / oversampling_synthesised_beam
     if verbose:
         log.info("advise_wide_field: Cellsize %s" % (rad_deg_arcsec(cellsize)))
@@ -444,7 +433,7 @@ def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversa
     npixels = int(round(image_fov / cellsize))
     if verbose:
         log.info("advice_wide_field: Npixels per side = %d" % (npixels))
-    
+
     npixels2 = pwr2(npixels)
     if verbose:
         log.info("advice_wide_field: Npixels (power of 2) per side = %d" % (npixels2))
@@ -460,48 +449,48 @@ def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversa
     # Following equation is from Cornwell, Humphreys, and Voronkov (2012) (equation 24)
     # We will assume that the constraint holds at one quarter the entire FOV i.e. that
     # the full field of view includes the entire primary beam
-    
+
     w_sampling_image = numpy.sqrt(2.0 * delA) / (numpy.pi * image_fov ** 2)
     if verbose:
         log.info("advice_wide_field: W sampling for full image = %.1f (wavelengths)" % (w_sampling_image))
-    
+
     if facets > 1:
         w_sampling_facet = numpy.sqrt(2.0 * delA) / (numpy.pi * facet_fov ** 2)
         if verbose:
             log.info("advice_wide_field: W sampling for facet = %.1f (wavelengths)" % (w_sampling_facet))
     else:
         w_sampling_facet = w_sampling_image
-    
+
     w_sampling_primary_beam = numpy.sqrt(2.0 * delA) / (numpy.pi * primary_beam_fov ** 2)
     if verbose:
         log.info("advice_wide_field: W sampling for primary beam = %.1f (wavelengths)" % (w_sampling_primary_beam))
-    
-    time_sampling_image = 86400.0 * w_sampling_image / (numpy.pi * maximum_baseline)
+
+    time_sampling_image = 86400.0 * (synthesized_beam / image_fov)
     if verbose:
         log.info("advice_wide_field: Time sampling for full image = %.1f (s)" % (time_sampling_image))
-    
+
     if facets > 1:
-        time_sampling_facet = 86400.0 * w_sampling_facet / (numpy.pi * maximum_baseline)
+        time_sampling_facet = 86400.0 * (synthesized_beam / facet_fov)
         if verbose:
             log.info("advice_wide_field: Time sampling for facet = %.1f (s)" % (time_sampling_facet))
-    
-    time_sampling_primary_beam = 86400.0 * w_sampling_primary_beam / (numpy.pi * maximum_baseline)
+
+    time_sampling_primary_beam = 86400.0 * (synthesized_beam / primary_beam_fov)
     if verbose:
         log.info("advice_wide_field: Time sampling for primary beam = %.1f (s)" % (time_sampling_primary_beam))
-    
-    freq_sampling_image = numpy.max(vis.frequency) * w_sampling_image / (numpy.pi * maximum_baseline)
+
+    freq_sampling_image = numpy.max(vis.frequency) * (synthesized_beam / image_fov)
     if verbose:
         log.info("advice_wide_field: Frequency sampling for full image = %.1f (Hz)" % (freq_sampling_image))
-    
+
     if facets > 1:
-        freq_sampling_facet = numpy.max(vis.frequency) * w_sampling_facet / (numpy.pi * maximum_baseline)
+        freq_sampling_facet = numpy.max(vis.frequency) * (synthesized_beam / facet_fov)
         if verbose:
             log.info("advice_wide_field: Frequency sampling for facet = %.1f (Hz)" % (freq_sampling_facet))
-    
-    freq_sampling_primary_beam = numpy.max(vis.frequency) * w_sampling_primary_beam / (numpy.pi * maximum_baseline)
+
+    freq_sampling_primary_beam = numpy.max(vis.frequency) * (synthesized_beam / primary_beam_fov)
     if verbose:
         log.info("advice_wide_field: Frequency sampling for primary beam = %.1f (Hz)" % (freq_sampling_primary_beam))
-    
+
     wstep = w_sampling_primary_beam
     vis_slices = max(1, int(2 * maximum_w / wstep))
     wprojection_planes = vis_slices
@@ -513,7 +502,7 @@ def advise_wide_field(vis: Union[BlockVisibility, Visibility], delA=0.02, oversa
     nwpixels = nwpixels - nwpixels % 2
     if verbose:
         log.info('advice_wide_field: W support = %d (pixels) (primary beam)' % nwpixels)
-    
+
     del pwr2
     del pwr23
     return locals()

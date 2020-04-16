@@ -21,14 +21,15 @@ from rascil.workflows.rsexecute.image.image_rsexecute import image_rsexecute_map
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
+log.setLevel(logging.WARNING)
 
 class TestImageGraph(unittest.TestCase):
     def setUp(self):
-        rsexecute.set_client(verbose=False, memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
-
-        from rascil.data_models.parameters import rascil_path
+        rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
+    
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         
         self.frequency = numpy.linspace(1e8, 1.5e8, 3)

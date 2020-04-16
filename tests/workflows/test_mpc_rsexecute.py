@@ -24,9 +24,9 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import copy_visibility
 from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
@@ -34,9 +34,9 @@ log.addHandler(logging.StreamHandler(sys.stderr))
 class TestMPC(unittest.TestCase):
     def setUp(self):
         
-        rsexecute.set_client(memory_limit=4 * 1024 * 1024 * 1024, n_workers=4, dashboard_address=None)
+        rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
         
-        from rascil.data_models.parameters import rascil_path
+        from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         self.plot = False
         self.persist = os.getenv("RASCIL_PERSIST", False)

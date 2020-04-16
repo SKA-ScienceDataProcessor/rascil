@@ -9,7 +9,7 @@ import logging
 
 from rascil.data_models.memory_data_models import Skycomponent
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def copy_skycomponent(sc):
@@ -18,7 +18,7 @@ def copy_skycomponent(sc):
     :param sc:
     :return:
     """
-    single = not isinstance(sc, collections.Iterable)
+    single = not isinstance(sc, collections.abc.Iterable)
     
     if single:
         return Skycomponent(

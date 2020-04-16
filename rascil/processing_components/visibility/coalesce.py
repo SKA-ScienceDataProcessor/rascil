@@ -11,7 +11,7 @@ format. For e.g. SKA1-LOW, coalescing typically reduces the number of visibiliti
 
 A typical use might be::
 
-    vt = predict_skycomponent_visibility(vt, comps)
+    vt = dft_skycomponent_visibility(vt, comps)
     cvt = convert_blockvisibility_to_visibility(vt, time_coal=1.0, max_time_coal=100, frequency_coal=0.0,
         max_frequency_coal=1)
     dirtyimage, sumwt = invert_2d(cvt, model)
@@ -32,7 +32,7 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.processing_components.util.array_functions import average_chunks, average_chunks2
 from rascil.processing_components.visibility.base import vis_summary, copy_visibility
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
 
 def coalesce_visibility(vis: BlockVisibility, time_coal=0.0, frequency_coal=0.0, max_time_coal=100,

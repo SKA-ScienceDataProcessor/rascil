@@ -8,7 +8,7 @@ import unittest
 import logging
 
 import numpy
-from rascil.data_models.parameters import rascil_path
+from rascil.data_models.parameters import rascil_path, rascil_data_path
 from rascil.data_models.polarisation import PolarisationFrame
 
 from rascil.processing_components.visibility.base import create_blockvisibility_from_uvfits, create_visibility_from_uvfits
@@ -19,9 +19,9 @@ from rascil.processing_components.visibility.coalesce import convert_visibility_
 from rascil.processing_components.image.operations import export_image_to_fits
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('logger')
 
-log.setLevel(logging.DEBUG)
+log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
 
