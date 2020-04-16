@@ -19,6 +19,7 @@ from rascil.processing_components.simulation import ingest_unittest_visibility, 
 from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
     insert_skycomponent
 from rascil.processing_components.visibility import copy_visibility, convert_blockvisibility_to_visibility
+from rascil.processing_components.griddata import create_awterm_convolutionfunction
 
 try:
     import wtowers
@@ -107,9 +108,12 @@ class TestImagingWT(unittest.TestCase):
         # Calculate the model convolved with a Gaussian.
         
         self.cmodel = smooth_image(self.model)
-        if self.persist: export_image_to_fits(self.model, '%s/test_imaging_wt_model.fits' % self.dir)
-        if self.persist: export_image_to_fits(self.cmodel, '%s/test_imaging_wt_cmodel.fits' % self.dir)
-    
+        if self.persist:
+            export_image_to_fits(self.model, '%s/test_imaging_wt_model.fits' % self.dir)
+            export_image_to_fits(self.cmodel, '%s/test_imaging_wt_cmodel.fits' % self.dir)
+
+        # Make Rascil kernel
+
     def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)
         assert len(comps) == len(self.components), "Different number of components found: original %d, recovered %d" % \
@@ -124,7 +128,7 @@ class TestImagingWT(unittest.TestCase):
     
     def _predict_base(self, fluxthreshold=1.0, name='predict_wt', **kwargs):
         
-        from rascil.processing_components.imaging.ng import predict_wt, invert_wt
+        from rascil.processing_components.imaging.wt import predict_wt, invert_wt
         original_vis = copy_visibility(self.blockvis)
         vis = predict_wt(self.blockvis, self.model, verbosity=self.verbosity, **kwargs)
         vis.data['vis'] = vis.data['vis'] - original_vis.data['vis']
@@ -148,12 +152,12 @@ class TestImagingWT(unittest.TestCase):
         assert maxabs < fluxthreshold, "Error %.3f greater than fluxthreshold %.3f " % (maxabs, fluxthreshold)
     
     def _invert_base(self, fluxthreshold=1.0, positionthreshold=1.0, check_components=True,
-                     name='predict_wt', **kwargs):
+                     name='predict_wt', gcfcf=None, **kwargs):
         
         # dirty = invert_wt(self.blockvis, self.model, dopsf=False, normalize=True, **kwargs)
-        from rascil.processing_components.imaging.ng import invert_wt
+        from rascil.processing_components.imaging.wt import invert_wt
         dirty = invert_wt(self.blockvis, self.model, normalize=True, verbosity=self.verbosity,
-                          **kwargs)
+                          gcfcf=gcfcf, **kwargs)
         
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_wt_%s_dirty.fits' %
                                               (self.dir, name))
@@ -175,70 +179,95 @@ class TestImagingWT(unittest.TestCase):
         self.actualSetUp()
         self._predict_base(name='predict_wt')
     
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_predict_wt_IQUV(self):
+    #     self.actualSetUp(image_pol=PolarisationFrame("stokesIQUV"))
+    #     self._predict_base(name='predict_wt_IQUV')
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_predict_wt_IQ(self):
+    #     self.actualSetUp(image_pol=PolarisationFrame("stokesIQ"))
+    #     self._predict_base(name='predict_wt_IQ')
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_predict_wt_IV(self):
+    #     self.actualSetUp(image_pol=PolarisationFrame("stokesIV"))
+    #     self._predict_base(name='predict_wt_IV')
+    #
     @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_predict_wt_IQUV(self):
-        self.actualSetUp(image_pol=PolarisationFrame("stokesIQUV"))
-        self._predict_base(name='predict_wt_IQUV')
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_predict_wt_IQ(self):
-        self.actualSetUp(image_pol=PolarisationFrame("stokesIQ"))
-        self._predict_base(name='predict_wt_IQ')
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_predict_wt_IV(self):
-        self.actualSetUp(image_pol=PolarisationFrame("stokesIV"))
-        self._predict_base(name='predict_wt_IV')
-    
+    def test_invert_2d(self):
+        self.actualSetUp(zerow=True)
+        self._invert_base(name='invert_2d', positionthreshold=2.0, check_components=True)
+
     @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
     def test_invert_wt(self):
         self.actualSetUp()
         self._invert_base(name='invert_wt', positionthreshold=2.0, check_components=True)
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_invert_wt_IQUV(self):
-        self.actualSetUp(image_pol=PolarisationFrame("stokesIQUV"))
-        self._invert_base(name='invert_wt_IQUV', positionthreshold=2.0, check_components=True)
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_invert_wt_IQ(self):
-        self.actualSetUp(image_pol=PolarisationFrame("stokesIQ"))
-        self._invert_base(name='invert_wt_IQ', positionthreshold=2.0, check_components=True)
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_invert_wt_IV(self):
-        self.actualSetUp(image_pol=PolarisationFrame("stokesIV"))
-        self._invert_base(name='invert_wt_IV', positionthreshold=2.0, check_components=True)
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_predict_wt_spec(self):
-        self.actualSetUp(dospectral=True, freqwin=5)
-        self._predict_base(name='predict_spec')
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_invert_wt_spec(self):
-        self.actualSetUp(dospectral=True, freqwin=5)
-        self._invert_base(name='invert_spec', positionthreshold=2.0, check_components=False)
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_predict_wt_spec_IQUV(self):
-        self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQUV"))
-        self._predict_base(name='predict_spec_pol_IQUV')
-    
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_invert_wt_spec_IQUV(self):
-        self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQUV"))
-        self._invert_base(name='invert_spec_pol_IQUV', positionthreshold=2.0, check_components=False)
 
     @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_predict_wt_spec_IQ(self):
-        self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQ"))
-        self._predict_base(name='predict_spec_pol_IQ')
+    def test_invert_wt_rascil(self):
+        self.actualSetUp()
+        nw=101
+        wstep = 6
+        gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=nw, wstep=wstep, oversampling=8,
+                                                  support=16, use_aaf=False)
 
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_invert_wt_spec_IQ(self):
-        self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQ"))
-        self._invert_base(name='invert_spec_pol_IQ', positionthreshold=2.0, check_components=False)
+        self._invert_base(name='invert_wt_rascil', positionthreshold=2.0, check_components=True, gcfcf=gcfcf)
+
+    def test_invert_wt_crooodile(self):
+        self.actualSetUp()
+        nw=101
+        wstep = 6
+        gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=nw, wstep=wstep, oversampling=8,
+                                                  support=16, use_aaf=False)
+
+        self._invert_base(name='invert_wt_crooodile', positionthreshold=2.0, check_components=True, crocodile=True,
+                          gcfcf=gcfcf)
+
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_invert_wt_IQUV(self):
+    #     self.actualSetUp(image_pol=PolarisationFrame("stokesIQUV"))
+    #     self._invert_base(name='invert_wt_IQUV', positionthreshold=2.0, check_components=True)
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_invert_wt_IQ(self):
+    #     self.actualSetUp(image_pol=PolarisationFrame("stokesIQ"))
+    #     self._invert_base(name='invert_wt_IQ', positionthreshold=2.0, check_components=True)
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_invert_wt_IV(self):
+    #     self.actualSetUp(image_pol=PolarisationFrame("stokesIV"))
+    #     self._invert_base(name='invert_wt_IV', positionthreshold=2.0, check_components=True)
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_predict_wt_spec(self):
+    #     self.actualSetUp(dospectral=True, freqwin=5)
+    #     self._predict_base(name='predict_spec')
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_invert_wt_spec(self):
+    #     self.actualSetUp(dospectral=True, freqwin=5)
+    #     self._invert_base(name='invert_spec', positionthreshold=2.0, check_components=False)
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_predict_wt_spec_IQUV(self):
+    #     self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQUV"))
+    #     self._predict_base(name='predict_spec_pol_IQUV')
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_invert_wt_spec_IQUV(self):
+    #     self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQUV"))
+    #     self._invert_base(name='invert_spec_pol_IQUV', positionthreshold=2.0, check_components=False)
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_predict_wt_spec_IQ(self):
+    #     self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQ"))
+    #     self._predict_base(name='predict_spec_pol_IQ')
+    #
+    # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    # def test_invert_wt_spec_IQ(self):
+    #     self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQ"))
+    #     self._invert_base(name='invert_spec_pol_IQ', positionthreshold=2.0, check_components=False)
 
 
 if __name__ == '__main__':
