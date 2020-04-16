@@ -35,7 +35,7 @@ RUN mkdir -p /rascil/dask-worker-space && \
     chmod 777 /rascil/dask-worker-space
 
 RUN pip3 install Cython setuptools && \
-    pip3 install python-casacore==3.1.1 --upgrade && \
+    pip3 install python-casacore==3.2.0 --upgrade && \
     pip3 install aotools \
     astropy \
     dask \
