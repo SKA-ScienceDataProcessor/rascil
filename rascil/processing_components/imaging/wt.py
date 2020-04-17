@@ -86,17 +86,20 @@ try:
         if im is not None and crocodile == True:
             npixdirty = im.nwidth
             pixsize = numpy.abs(numpy.radians(im.wcs.wcs.cdelt[0]))
-            theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
-        
+            # theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
+            theta = npixdirty * pixsize
+            # print(numpy.cos(numpy.pi / 2 - npixdirty * pixsize), theta)
+
         # Copy w-kernels into wtkern.kern_by_w
         for i in range(plane_count):
+            w = wplanes[i][0][0]
             wtkern.kern_by_w[i].w = wplanes[i][0][0]
             print(i, plane_count, wtkern.kern_by_w[i].w)
             if crocodile == True:
                 kern = w_kernel(theta, wtkern.kern_by_w[i].w, NpixFF=NpixFF, NpixKern=size_x, Qpx=oversampling)
-                wplanes_f = kern.flatten()
+                wplanes_f = kern
             else:
-                wplanes_f = numpy.asarray(wplanes[0][1]).flatten()
+                wplanes_f = numpy.asarray(wplanes[i][1])
             #       	for iy in range(size_y):
             #           		for ix in range(size_x):
             #               		for offy in range(oversampling):
@@ -104,10 +107,40 @@ try:
             #               				idx = ix + iy*size_x
             #               				wtkern.kern_by_w[i].data[2*idx]   = numpy.real(wplanes[i][1][offy][offx][ix][iy])
             #               				wtkern.kern_by_w[i].data[2*idx+1] = numpy.imag(wplanes[i][1][offy][offx][ix][iy])
+            do_differences = False
+            if do_differences:
+                npixdirty = im.nwidth
+                pixsize = numpy.abs(numpy.radians(im.wcs.wcs.cdelt[0]))
+                # theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
+                theta = npixdirty * pixsize
+                kern_croc = w_kernel(theta, wtkern.kern_by_w[i].w, NpixFF=NpixFF, NpixKern=size_x, Qpx=oversampling)
+                kern_rascil = numpy.asarray(wplanes[i][1])[:,::-1,...]
+                diff_kern = kern_croc - kern_rascil
+                import matplotlib.pyplot as plt
+                wplanes_f_2d = numpy.zeros([size_y * oversampling, size_x * oversampling], dtype='complex')
+                for offy in range(oversampling):
+                    for offx in range(oversampling):
+                        wplanes_f_2d[(offy * size_y):((offy + 1) * size_y),
+                        (offx * size_x):((offx + 1) * size_x)] = diff_kern[offy, offx, :, :]
+                plt.clf()
+                plt.imshow(numpy.real(wplanes_f_2d))
+                plt.colorbar()
+                plt.title('diff real {:.1f}'.format(w))
+                plt.savefig("test_results/kernel_diff_real_{:.1f}.png".format(w))
+                plt.show(block=False)
+                plt.clf()
+                plt.imshow(numpy.imag(wplanes_f_2d))
+                plt.colorbar()
+                plt.title('diff imag {:.1f}'.format(w))
+                plt.savefig("test_results/kernel_diff_imag_{:.1f}.png".format(w))
+                plt.show(block=False)
+
+            wplanes_f = wplanes_f.flatten()
+
             for idx in range(wplanes_f.shape[0]):
                 wtkern.kern_by_w[i].data[2 * idx] = numpy.real(wplanes_f[idx])
                 wtkern.kern_by_w[i].data[2 * idx + 1] = numpy.imag(wplanes_f[idx])
-        
+
         return wtkern
     
     
@@ -435,7 +468,7 @@ try:
         subgrid_size = get_parameter(kwargs, "subgrid_size")
         margin = get_parameter(kwargs, "margin")
         winc = get_parameter(kwargs, "winc")
-        crocodile = get_parameter(kwargs, "crocodile")
+        crocodile = get_parameter(kwargs, "crocodile", False)
         NpixFF = get_parameter(kwargs, "NpixFF")
         
         sbvis = copy_visibility(bvis)
@@ -519,8 +552,8 @@ try:
         
         fuvw = uvw.copy()
         # We need to flip the u and w axes.
-        # fuvw[:, 0] *= -1.0
-        # fuvw[:, 2] *= -1.0
+        fuvw[:, 0] *= -1.0
+        fuvw[:, 2] *= -1.0
         
         nchan, npol, ny, nx = im.shape
         im.data[...] = 0.0
