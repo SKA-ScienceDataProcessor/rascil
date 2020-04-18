@@ -181,12 +181,12 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
 
         ycen, xcen = ny // 2, nx // 2
         for y in range(oversampling):
-            ybeg = y + ycen + (support * oversampling) // 2 - oversampling // 2
-            yend = y + ycen - (support * oversampling) // 2 - oversampling // 2
+            ybeg = y + ycen + (support * oversampling) // 2
+            yend = y + ycen - (support * oversampling) // 2
             # vv = range(ybeg, yend, -oversampling)
             for x in range(oversampling):
-                xbeg = x + xcen + (support * oversampling) // 2 - oversampling // 2
-                xend = x + xcen - (support * oversampling) // 2 - oversampling // 2
+                xbeg = x + xcen + (support * oversampling) // 2
+                xend = x + xcen - (support * oversampling) // 2
 
                 # uu = range(xbeg, xend, -oversampling)
                 cf.data[..., z, y, x, :, :] = paddedplane.data[..., ybeg:yend:-oversampling, xbeg:xend:-oversampling]
@@ -220,9 +220,13 @@ def convert_kernel_to_list(gcfcf):
     size_x = nx
 
     wplanes = list()
+    wcentre = nw // 2
+    w = cf.grid_wcs.sub([5]).wcs_pix2world(wcentre, 0)
+    norm = 1.0 / numpy.max(numpy.abs(cf.data[0, 0, wcentre]))
+
     for wplane in range(nw):
         w = cf.grid_wcs.sub([5]).wcs_pix2world(wplane, 0)
-        wslice = cf.data[0, 0, wplane]
+        wslice = norm * cf.data[0, 0, wplane]
 #                        wslice[offy + oversampling * y, offx + oversampling * x] = cf.data[
 #                            0, 0, wplane, offy, offx, y, x]
         wplanes.append((w, wslice))

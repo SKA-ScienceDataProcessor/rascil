@@ -16,8 +16,8 @@ from rascil.data_models.memory_data_models import Visibility, BlockVisibility, I
 from rascil.data_models.parameters import get_parameter
 from rascil.data_models.polarisation import convert_pol_frame
 from rascil.processing_components.griddata import convert_kernel_to_list
-from rascil.processing_components.image.operations import copy_image, image_is_canonical
-from rascil.processing_components.imaging.base import shift_vis_to_image, normalize_sumwt
+from rascil.processing_components.image.operations import copy_image, image_is_canonical, export_image_to_fits
+from rascil.processing_components.imaging.base import shift_vis_to_image, normalize_sumwt, create_image_from_array
 from rascil.processing_components.visibility.base import copy_visibility
 
 log = logging.getLogger(__name__)
@@ -79,7 +79,6 @@ try:
         wtkern.w_max = wmax[0]
         wtkern.w_step = wstep
         wtkern.oversampling = oversampling
-        print("gcf2wkern, w=", wtkern.w_min, wtkern.w_max, wtkern.w_step, "croc kern is ", crocodile)
         
         if NpixFF is None:
             NpixFF = 1024
@@ -94,12 +93,12 @@ try:
         for i in range(plane_count):
             w = wplanes[i][0][0]
             wtkern.kern_by_w[i].w = wplanes[i][0][0]
-            print(i, plane_count, wtkern.kern_by_w[i].w)
             if crocodile == True:
                 kern = w_kernel(theta, wtkern.kern_by_w[i].w, NpixFF=NpixFF, NpixKern=size_x, Qpx=oversampling)
                 wplanes_f = kern
             else:
                 wplanes_f = numpy.asarray(wplanes[i][1])
+
             #       	for iy in range(size_y):
             #           		for ix in range(size_x):
             #               		for offy in range(oversampling):
@@ -107,32 +106,51 @@ try:
             #               				idx = ix + iy*size_x
             #               				wtkern.kern_by_w[i].data[2*idx]   = numpy.real(wplanes[i][1][offy][offx][ix][iy])
             #               				wtkern.kern_by_w[i].data[2*idx+1] = numpy.imag(wplanes[i][1][offy][offx][ix][iy])
-            do_differences = False
+            do_differences = True
             if do_differences:
                 npixdirty = im.nwidth
                 pixsize = numpy.abs(numpy.radians(im.wcs.wcs.cdelt[0]))
                 # theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
                 theta = npixdirty * pixsize
+                newshape = [oversampling * size_y, oversampling * size_x]
                 kern_croc = w_kernel(theta, wtkern.kern_by_w[i].w, NpixFF=NpixFF, NpixKern=size_x, Qpx=oversampling)
-                kern_rascil = numpy.asarray(wplanes[i][1])[:,::-1,...]
-                diff_kern = kern_croc - kern_rascil
+                kern_rascil = numpy.asarray(wplanes[i][1])
+                kern_diff = kern_croc - kern_rascil
+                print(i, plane_count, w, numpy.max(numpy.abs(kern_croc)), numpy.max(numpy.abs(kern_rascil)),
+                      numpy.max(numpy.abs(kern_diff)))
                 import matplotlib.pyplot as plt
-                wplanes_f_2d = numpy.zeros([size_y * oversampling, size_x * oversampling], dtype='complex')
-                for offy in range(oversampling):
-                    for offx in range(oversampling):
-                        wplanes_f_2d[(offy * size_y):((offy + 1) * size_y),
-                        (offx * size_x):((offx + 1) * size_x)] = diff_kern[offy, offx, :, :]
+                kern_croc_2d = unpack(kern_croc, oversampling, size_x, size_y)
+                kern_rascil_2d = unpack(kern_rascil, oversampling, size_x, size_y)
+                kern_diff_2d = unpack(kern_diff, oversampling, size_x, size_y)
+                if w == 0.0:
+                    print(numpy.unravel_index(numpy.abs(kern_croc_2d).argmax(), kern_croc_2d.shape))
+                    print(numpy.unravel_index(numpy.abs(kern_rascil_2d).argmax(), kern_rascil_2d.shape))
                 plt.clf()
-                plt.imshow(numpy.real(wplanes_f_2d))
-                plt.colorbar()
-                plt.title('diff real {:.1f}'.format(w))
-                plt.savefig("test_results/kernel_diff_real_{:.1f}.png".format(w))
-                plt.show(block=False)
-                plt.clf()
-                plt.imshow(numpy.imag(wplanes_f_2d))
-                plt.colorbar()
-                plt.title('diff imag {:.1f}'.format(w))
-                plt.savefig("test_results/kernel_diff_imag_{:.1f}.png".format(w))
+                plt.subplot(231)
+                plt.imshow(numpy.real(kern_croc_2d))
+                plt.colorbar(shrink=0.25)
+                plt.title('Crocodile Real {:.1f}'.format(w))
+                plt.subplot(232)
+                plt.imshow(numpy.real(kern_rascil_2d))
+                plt.colorbar(shrink=0.25)
+                plt.title('RASCIL Real {:.1f}'.format(w))
+                plt.subplot(233)
+                plt.imshow(numpy.real(kern_diff_2d))
+                plt.colorbar(shrink=0.25)
+                plt.title('Diff Real {:.1f}'.format(w))
+                plt.subplot(234)
+                plt.imshow(numpy.imag(kern_croc_2d))
+                plt.colorbar(shrink=0.25)
+                plt.title('Crocodile Imag {:.1f}'.format(w))
+                plt.subplot(235)
+                plt.imshow(numpy.imag(kern_rascil_2d))
+                plt.colorbar(shrink=0.25)
+                plt.title('RASCIL Imag {:.1f}'.format(w))
+                plt.subplot(236)
+                plt.imshow(numpy.imag(kern_diff_2d))
+                plt.colorbar(shrink=0.25)
+                plt.title('Diff Imag {:.1f}'.format(w))
+                plt.savefig("test_results/kernels_{:.1f}.png".format(w))
                 plt.show(block=False)
 
             wplanes_f = wplanes_f.flatten()
@@ -142,8 +160,27 @@ try:
                 wtkern.kern_by_w[i].data[2 * idx + 1] = numpy.imag(wplanes_f[idx])
 
         return wtkern
-    
-    
+
+
+    def retile(kern_diff, oversampling, size_x, size_y):
+        wplanes_f_2d = numpy.zeros([size_y * oversampling, size_x * oversampling], dtype='complex')
+        for offy in range(oversampling):
+            for offx in range(oversampling):
+                wplanes_f_2d[(offy * size_y):((offy + 1) * size_y),
+                (offx * size_x):((offx + 1) * size_x)] = kern_diff[offy, offx, :, :]
+        return wplanes_f_2d
+
+    def unpack(kern_diff, oversampling, size_x, size_y):
+        wplanes_f_2d = numpy.zeros([size_y * oversampling, size_x * oversampling], dtype='complex')
+        for y in range(size_y):
+            for x in range(size_x):
+                for offy in range(oversampling):
+                    for offx in range(oversampling):
+                        wplanes_f_2d[offy + oversampling * y, offx + oversampling * x] = \
+                            kern_diff[offy, offx, size_y - y - 1, size_x - x - 1]
+        return wplanes_f_2d
+
+
     # A part of crocodile.synthesis for wkernel calculation
     
     def coordinates2(N):
@@ -434,9 +471,11 @@ try:
                                                                               wtvis.bl[ibl].vis[1]
                             ibl += 1
         
+        assert numpy.max(numpy.abs(newbvis.data['vis'])) > 0.0
         newbvis.data['vis'] = convert_pol_frame(newbvis.data['vis'], model.polarisation_frame, bvis.polarisation_frame,
                                                 polaxis=4)
-        
+        assert numpy.max(numpy.abs(newbvis.data['vis'])) > 0.0
+
         # Now we can shift the visibility from the image frame to the original visibility frame
         return shift_vis_to_image(newbvis, model, tangent=True, inverse=True)
     
@@ -550,11 +589,6 @@ try:
         assert (uvlambda >= uvlambda_init)
         #################################
         
-        fuvw = uvw.copy()
-        # We need to flip the u and w axes.
-        fuvw[:, 0] *= -1.0
-        fuvw[:, 2] *= -1.0
-        
         nchan, npol, ny, nx = im.shape
         im.data[...] = 0.0
         sumwt = numpy.zeros([nchan, npol])
@@ -597,7 +631,7 @@ try:
                 #    nthreads=nthreads, verbosity=verbosity)
                 
                 sumwt[ichan, pol] += numpy.sum(wgt[:, vchan, pol])
-                im.data[ichan, pol] += dirty.T
+                im.data[ichan, pol] += dirty[::-1,:]
         
         if normalize:
             im = normalize_sumwt(im, sumwt)

@@ -11,6 +11,7 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
+from rascil.processing_components.griddata import create_awterm_convolutionfunction
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image
 from rascil.processing_components.imaging import dft_skycomponent_visibility
 from rascil.processing_components.simulation import create_named_configuration
@@ -19,7 +20,6 @@ from rascil.processing_components.simulation import ingest_unittest_visibility, 
 from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
     insert_skycomponent
 from rascil.processing_components.visibility import copy_visibility, convert_blockvisibility_to_visibility
-from rascil.processing_components.griddata import create_awterm_convolutionfunction
 
 try:
     import wtowers
@@ -111,9 +111,9 @@ class TestImagingWT(unittest.TestCase):
         if self.persist:
             export_image_to_fits(self.model, '%s/test_imaging_wt_model.fits' % self.dir)
             export_image_to_fits(self.cmodel, '%s/test_imaging_wt_cmodel.fits' % self.dir)
-
+        
         # Make Rascil kernel
-
+    
     def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)
         assert len(comps) == len(self.components), "Different number of components found: original %d, recovered %d" % \
@@ -175,38 +175,39 @@ class TestImagingWT(unittest.TestCase):
             self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
     
     #@unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    @unittest.skip("Not yet a good test")
     def test_predict_wt(self):
         self.actualSetUp()
-        self._predict_base(name='predict_wt')
+        nw = 21
+        wstep = 30
+        gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=nw, wstep=wstep, oversampling=8,
+                                                  support=16, use_aaf=False, maxsupport=1024)
+
+        self._predict_base(name='predict_wt', gcfcf=gcfcf, crocodile=False, NpixFF=1024)
     
     #@unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    @unittest.skip("Not yet a good test")
+    @unittest.skip("Only needed as an occasional check")
     def test_invert_wt(self):
-        self.actualSetUp()
-        self._invert_base(name='invert_wt', positionthreshold=2.0, check_components=True)
-
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
-    def test_invert_wt_rascil(self):
         self.actualSetUp()
         nw=21
         wstep = 30
         gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=nw, wstep=wstep, oversampling=8,
-                                                  support=16, use_aaf=False)
-
-        self._invert_base(name='invert_wt_rascil', positionthreshold=2.0, check_components=True, crocodile=False,
-                          gcfcf=gcfcf, NpixFF=512),
-
-    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+                                                  support=16, use_aaf=False, maxsupport=1024)
+        
+        self._invert_base(name='invert_wt', positionthreshold=2.0, check_components=True, crocodile=False,
+                          gcfcf=gcfcf, NpixFF=1024, fluxthreshold=1.0)
+    
+    #@unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    @unittest.skip("Only needed as an occasional check")
     def test_invert_wt_crocodile(self):
         self.actualSetUp()
         nw=21
         wstep = 30
         gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=nw, wstep=wstep, oversampling=8,
                                                   support=16, use_aaf=False)
+        
+        self._invert_base(name='invert_wt_crocodile', positionthreshold=2.0, check_components=True, crocodile=True,
+                          gcfcf=gcfcf, NpixFF=1024)
 
-        self._invert_base(name='invert_wt_crocoodile', positionthreshold=2.0, check_components=True, crocodile=True,
-                          gcfcf=gcfcf, NpixFF=512)
 
 if __name__ == '__main__':
     unittest.main()
