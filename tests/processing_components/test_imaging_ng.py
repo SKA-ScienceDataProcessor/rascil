@@ -107,8 +107,9 @@ class TestImagingNG(unittest.TestCase):
         # Calculate the model convolved with a Gaussian.
         
         self.cmodel = smooth_image(self.model)
-        if self.persist: export_image_to_fits(self.model, '%s/test_imaging_ng_model.fits' % self.dir)
-        if self.persist: export_image_to_fits(self.cmodel, '%s/test_imaging_ng_cmodel.fits' % self.dir)
+        if self.persist:
+            export_image_to_fits(self.model, '%s/test_imaging_ng_model.fits' % self.dir)
+            export_image_to_fits(self.cmodel, '%s/test_imaging_ng_cmodel.fits' % self.dir)
     
     def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)

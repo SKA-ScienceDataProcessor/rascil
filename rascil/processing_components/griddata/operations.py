@@ -122,8 +122,8 @@ def create_griddata_from_image(im, vis, nw=1, wstep=1e15):
     grid_wcs.wcs.crval[3] = im.wcs.wcs.crval[2]
     grid_wcs.wcs.crval[4] = im.wcs.wcs.crval[3]
 
-    grid_wcs.wcs.crpix[0] = im.shape[3] // 2 + 1
-    grid_wcs.wcs.crpix[1] = im.shape[2] // 2 + 1
+    grid_wcs.wcs.crpix[0] = im.shape[3] // 2 + 0.5
+    grid_wcs.wcs.crpix[1] = im.shape[2] // 2 + 0.5
     grid_wcs.wcs.crpix[2] = nw // 2 + 1
     grid_wcs.wcs.crpix[3] = im.wcs.wcs.crpix[2]
     grid_wcs.wcs.crpix[4] = im.wcs.wcs.crpix[3]

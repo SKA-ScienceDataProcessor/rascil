@@ -19,6 +19,7 @@ from rascil.processing_components.griddata import convert_kernel_to_list
 from rascil.processing_components.image.operations import copy_image, image_is_canonical, export_image_to_fits
 from rascil.processing_components.imaging.base import shift_vis_to_image, normalize_sumwt, create_image_from_array
 from rascil.processing_components.visibility.base import copy_visibility
+from rascil.processing_components.fourier_transforms import ifft, fft
 
 log = logging.getLogger(__name__)
 
@@ -42,16 +43,13 @@ try:
         wtowers.make_hermitian_func(uvgrid, grid_size)
         # Create a dirty image and show
         uvgrid = uvgrid.reshape((grid_size, grid_size))
-        img = numpy.fft.fft2(numpy.fft.fftshift(uvgrid))
-        img = numpy.fft.fftshift(img)
-        dirty = numpy.real(img)
-        return dirty
+        img = ifft(uvgrid) * float(grid_size)**2
+        return numpy.real(img)
     
     
     def dirty2vis(dirty, grid_size, theta, wtvis, wtkern=None, subgrid_size=None, margin=None, winc=None):
         # 1. Make uvgrid
-        uvgrid = numpy.fft.ifft2(numpy.fft.fftshift(dirty))
-        uvgrid = numpy.fft.fftshift(uvgrid)
+        uvgrid = fft(dirty)
         # 2. Make degridding
         if wtkern is None:
             # Simple degridding
@@ -69,7 +67,7 @@ try:
         return wtvis
     
     
-    def gcf2wkern(gcfcf, wtkern, crocodile=False, im=None, NpixFF=1024):
+    def gcf2wkern(gcfcf, wtkern, crocodile=False, im=None, NpixFF=1024, conjugate=False):
         # Get data and metadata from the input gcfcf
         plane_count, wplanes, wmin, wmax, wstep, size_y, size_x, oversampling = convert_kernel_to_list(gcfcf)
         # Allocate memory for wtkern structure
@@ -106,7 +104,7 @@ try:
             #               				idx = ix + iy*size_x
             #               				wtkern.kern_by_w[i].data[2*idx]   = numpy.real(wplanes[i][1][offy][offx][ix][iy])
             #               				wtkern.kern_by_w[i].data[2*idx+1] = numpy.imag(wplanes[i][1][offy][offx][ix][iy])
-            do_differences = True
+            do_differences = False
             if do_differences:
                 npixdirty = im.nwidth
                 pixsize = numpy.abs(numpy.radians(im.wcs.wcs.cdelt[0]))
@@ -155,9 +153,14 @@ try:
 
             wplanes_f = wplanes_f.flatten()
 
-            for idx in range(wplanes_f.shape[0]):
-                wtkern.kern_by_w[i].data[2 * idx] = numpy.real(wplanes_f[idx])
-                wtkern.kern_by_w[i].data[2 * idx + 1] = numpy.imag(wplanes_f[idx])
+            if conjugate:
+                for idx in range(wplanes_f.shape[0]):
+                    wtkern.kern_by_w[i].data[2 * idx] = numpy.real(wplanes_f[idx])
+                    wtkern.kern_by_w[i].data[2 * idx + 1] = - numpy.imag(wplanes_f[idx])
+            else:
+                for idx in range(wplanes_f.shape[0]):
+                    wtkern.kern_by_w[i].data[2 * idx] = numpy.real(wplanes_f[idx])
+                    wtkern.kern_by_w[i].data[2 * idx + 1] = numpy.imag(wplanes_f[idx])
 
         return wtkern
 
@@ -255,7 +258,7 @@ try:
                          constant_values=0.0)
     
     
-    def ifft(a):
+    def crocodile_ifft(a):
         """ Fourier transformation from grid to image space
 
         :param a: `uv` grid to transform
@@ -333,7 +336,7 @@ try:
         padff = pad_mid(ff, N * Qpx)
         
         # Obtain oversampled uv-grid
-        af = ifft(padff)
+        af = crocodile_ifft(padff)
         
         # Extract kernels
         res = [[extract_oversampled(af, x, y, Qpx, s) for x in range(Qpx)] for y in range(Qpx)]
@@ -366,6 +369,7 @@ try:
         
         Wtowers version. https://gitlab.com/ska-telescope/py-wtowers
     
+        :param gcfcf:
         :param bvis: BlockVisibility to be predicted
         :param model: model image
         :return: resulting BlockVisibility (in place works)
@@ -409,8 +413,9 @@ try:
                     wtvis.bl[ibl].freq[0] = 0.0
                     wtvis.bl[ibl].vis[0] = 0.0
                     wtvis.bl[ibl].vis[1] = 0.0
-                    for i in range(3):
-                        wtvis.bl[ibl].uvw[i] = bvis.data['uvw'][itime, i2, i1, i]
+                    wtvis.bl[ibl].uvw[0] = - bvis.data['uvw'][itime, i2, i1, 0]
+                    wtvis.bl[ibl].uvw[1] = bvis.data['uvw'][itime, i2, i1, 1]
+                    wtvis.bl[ibl].uvw[2] = bvis.data['uvw'][itime, i2, i1, 2]
                     ibl += 1
                     # Fill stats
         status = wtowers.fill_stats_func(wtvis)
@@ -419,7 +424,7 @@ try:
         wtkern = None
         if gcfcf is not None:
             wtkern = wtowers.W_KERNEL_DATA()
-            wtkern = gcf2wkern(gcfcf, wtkern, crocodile, model, NpixFF)
+            wtkern = gcf2wkern(gcfcf, wtkern, crocodile, model, NpixFF, conjugate=True)
             
             # Extracting data from BlockVisibility
         freq = bvis.frequency  # frequency, Hz
@@ -447,7 +452,8 @@ try:
         pixsize = numpy.abs(numpy.radians(model.wcs.wcs.cdelt[0]))
         
         # Define WTowers FoV in direction cosine units
-        theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
+        # theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
+        theta = npixdirty * pixsize
         grid_size = nx
         
         # Make de-gridding over a frequency range and pol fields
@@ -458,7 +464,7 @@ try:
                 # Fill the frequency
                 for ibl in range(wtvis.bl_count):
                     wtvis.bl[ibl].freq[0] = freq[vchan]
-                wtvis = dirty2vis(model.data[imchan, vpol, :, :].T.astype(numpy.float64), grid_size, theta, wtvis,
+                wtvis = dirty2vis(model.data[imchan, vpol, :, :].astype(numpy.float64), grid_size, theta, wtvis,
                                   wtkern=wtkern, subgrid_size=subgrid_size, margin=margin, winc=winc)
                 
                 # Fill the vis and frequency data in wtvis
@@ -494,6 +500,8 @@ try:
         :param bvis: BlockVisibility to be inverted
         :param im: image template (not changed)
         :param normalize: Normalize by the sum of weights (True)
+        :param gcfcf:
+        :param dopsf: Make a PSF
         :return: (resulting image, sum of the weights for each frequency and polarization)
     
         """
@@ -536,8 +544,9 @@ try:
                     wtvis.bl[ibl].freq[0] = 0.0
                     wtvis.bl[ibl].vis[0] = 0.0
                     wtvis.bl[ibl].vis[1] = 0.0
-                    for i in range(3):
-                        wtvis.bl[ibl].uvw[i] = bvis.data['uvw'][itime, i2, i1, i]
+                    wtvis.bl[ibl].uvw[0] = - bvis.data['uvw'][itime, i2, i1, 0]
+                    wtvis.bl[ibl].uvw[1] = bvis.data['uvw'][itime, i2, i1, 1]
+                    wtvis.bl[ibl].uvw[2] = bvis.data['uvw'][itime, i2, i1, 2]
                     ibl += 1
                     # Fill stats
         status = wtowers.fill_stats_func(wtvis)
@@ -576,7 +585,8 @@ try:
         pixsize = numpy.abs(numpy.radians(im.wcs.wcs.cdelt[0]))
         
         # Define WTowers FoV in direction cosine units
-        theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
+        # theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
+        theta = npixdirty * pixsize
         # Find the grid size in uvlambda
         uvlambda_init = numpy.maximum(numpy.abs(numpy.amin(bvis.data['uvw'])),
                                       numpy.abs(numpy.amax(bvis.data['uvw'])))  # m
@@ -631,7 +641,7 @@ try:
                 #    nthreads=nthreads, verbosity=verbosity)
                 
                 sumwt[ichan, pol] += numpy.sum(wgt[:, vchan, pol])
-                im.data[ichan, pol] += dirty[::-1,:]
+                im.data[ichan, pol] += dirty
         
         if normalize:
             im = normalize_sumwt(im, sumwt)

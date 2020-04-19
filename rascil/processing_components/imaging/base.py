@@ -168,7 +168,6 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     if dopsf:
         svis = fill_vis_for_psf(im, svis)
 
-
     svis = shift_vis_to_image(svis, im, tangent=True, inverse=False)
 
     if gcfcf is None:

@@ -22,13 +22,12 @@ from rascil.processing_components.image.operations import reproject_image
 log = logging.getLogger('logger')
 
 
-def create_box_convolutionfunction(im, oversampling=1, support=1):
+def create_box_convolutionfunction(im):
     """ Fill a box car function into a ConvolutionFunction
 
     Also returns the griddata correction function as an image
 
     :param im: Image template
-    :param oversampling: Oversampling of the convolution function in uv space
     :return: griddata correction Image, griddata kernel as ConvolutionFunction
     """
     assert isinstance(im, Image)
@@ -37,7 +36,10 @@ def create_box_convolutionfunction(im, oversampling=1, support=1):
     nchan, npol, _, _ = im.shape
 
     cf.data[...] = 0.0 + 0.0j
-    cf.data[..., 2, 2] = 1.0 + 0.0j
+    cf.data[..., 2, 2] = 0.25 + 0.0j
+    cf.data[..., 2, 3] = 0.25 + 0.0j
+    cf.data[..., 3, 2] = 0.25 + 0.0j
+    cf.data[..., 3, 3] = 0.25 + 0.0j
 
     # Now calculate the griddata correction function as an image with the same coordinates as the image
     # which is necessary so that the correction function can be applied directly to the image
@@ -74,7 +76,7 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
     kernel = numpy.zeros([oversampling, support])
     for grid in range(support):
         for subsample in range(oversampling):
-            nu = ((grid - support // 2) - (subsample - oversampling // 2) / oversampling)
+            nu = ((grid - 0.5 - support // 2) - (subsample - oversampling // 2) / oversampling)
             kernel[subsample, grid] = grdsf([nu / (support // 2)])[1]
 
     kernel /= numpy.sum(numpy.real(kernel[oversampling // 2, :]))
