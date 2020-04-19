@@ -141,15 +141,12 @@ class TestImagingWT(unittest.TestCase):
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_wt_%s_residual.fits' %
                                               (self.dir, name))
         
-        # assert numpy.max(numpy.abs(dirty[0].data)), "Residual image is empty"
-        
         maxabs = numpy.max(numpy.abs(dirty[0].data))
         assert maxabs < fluxthreshold, "Error %.3f greater than fluxthreshold %.3f " % (maxabs, fluxthreshold)
     
     def _invert_base(self, fluxthreshold=1.0, positionthreshold=1.0, check_components=True,
                      name='predict_wt', gcfcf=None, **kwargs):
         
-        # dirty = invert_wt(self.blockvis, self.model, dopsf=False, normalize=True, **kwargs)
         from rascil.processing_components.imaging.wt import invert_wt
         dirty = invert_wt(self.blockvis, self.model, normalize=True, verbosity=self.verbosity,
                           gcfcf=gcfcf, **kwargs)
@@ -165,13 +162,13 @@ class TestImagingWT(unittest.TestCase):
     @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
     def test_predict_wt(self):
         self.actualSetUp()
-        self._predict_base(name='predict_wt', gcfcf=self.gcfcf, crocodile=False, NpixFF=512)
+        self._predict_base(name='predict_wt', gcfcf=self.gcfcf, crocodile=False, NpixFF=512, fluxthreshold=1.3)
     
     @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
     def test_invert_wt(self):
         self.actualSetUp()
         self._invert_base(name='invert_wt', positionthreshold=0.1, check_components=True, crocodile=False,
-                          gcfcf=self.gcfcf, NpixFF=512, fluxthreshold=1.3)
+                          gcfcf=self.gcfcf, NpixFF=512, fluxthreshold=1.0)
     
     # @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
     @unittest.skip("Only needed as an occasional check")

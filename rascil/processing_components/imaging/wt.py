@@ -26,7 +26,6 @@ log = logging.getLogger(__name__)
 try:
     import wtowers.wtowers as wtowers
     
-    
     def vis2dirty(grid_size, theta, wtvis, wtkern=None, subgrid_size=None, margin=None, winc=None):
         uvgrid = numpy.zeros(grid_size * grid_size, dtype=numpy.complex128)
         if wtkern is None:
@@ -67,7 +66,7 @@ try:
         return wtvis
     
     
-    def gcf2wkern(gcfcf, wtkern, crocodile=False, im=None, NpixFF=1024, conjugate=False):
+    def gcf2wkern(gcfcf, wtkern, im=None, conjugate=False):
         # Get data and metadata from the input gcfcf
         plane_count, wplanes, wmin, wmax, wstep, size_y, size_x, oversampling = convert_kernel_to_list(gcfcf)
         # Allocate memory for wtkern structure
@@ -78,78 +77,11 @@ try:
         wtkern.w_step = wstep
         wtkern.oversampling = oversampling
         
-        if NpixFF is None:
-            NpixFF = 1024
-        if im is not None and crocodile == True:
-            npixdirty = im.nwidth
-            pixsize = numpy.abs(numpy.radians(im.wcs.wcs.cdelt[0]))
-            # theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
-            theta = npixdirty * pixsize
-            # print(numpy.cos(numpy.pi / 2 - npixdirty * pixsize), theta)
-
         # Copy w-kernels into wtkern.kern_by_w
         for i in range(plane_count):
             w = wplanes[i][0][0]
             wtkern.kern_by_w[i].w = wplanes[i][0][0]
-            if crocodile == True:
-                kern = w_kernel(theta, wtkern.kern_by_w[i].w, NpixFF=NpixFF, NpixKern=size_x, Qpx=oversampling)
-                wplanes_f = kern
-            else:
-                wplanes_f = numpy.asarray(wplanes[i][1])
-
-            #       	for iy in range(size_y):
-            #           		for ix in range(size_x):
-            #               		for offy in range(oversampling):
-            #                   			for offx in range(oversampling):
-            #               				idx = ix + iy*size_x
-            #               				wtkern.kern_by_w[i].data[2*idx]   = numpy.real(wplanes[i][1][offy][offx][ix][iy])
-            #               				wtkern.kern_by_w[i].data[2*idx+1] = numpy.imag(wplanes[i][1][offy][offx][ix][iy])
-            do_differences = False
-            if do_differences:
-                npixdirty = im.nwidth
-                pixsize = numpy.abs(numpy.radians(im.wcs.wcs.cdelt[0]))
-                # theta = numpy.cos(numpy.pi / 2 - npixdirty * pixsize)
-                theta = npixdirty * pixsize
-                newshape = [oversampling * size_y, oversampling * size_x]
-                kern_croc = w_kernel(theta, wtkern.kern_by_w[i].w, NpixFF=NpixFF, NpixKern=size_x, Qpx=oversampling)
-                kern_rascil = numpy.asarray(wplanes[i][1])
-                kern_diff = kern_croc - kern_rascil
-                print(i, plane_count, w, numpy.max(numpy.abs(kern_croc)), numpy.max(numpy.abs(kern_rascil)),
-                      numpy.max(numpy.abs(kern_diff)))
-                import matplotlib.pyplot as plt
-                kern_croc_2d = unpack(kern_croc, oversampling, size_x, size_y)
-                kern_rascil_2d = unpack(kern_rascil, oversampling, size_x, size_y)
-                kern_diff_2d = unpack(kern_diff, oversampling, size_x, size_y)
-                if w == 0.0:
-                    print(numpy.unravel_index(numpy.abs(kern_croc_2d).argmax(), kern_croc_2d.shape))
-                    print(numpy.unravel_index(numpy.abs(kern_rascil_2d).argmax(), kern_rascil_2d.shape))
-                plt.clf()
-                plt.subplot(231)
-                plt.imshow(numpy.real(kern_croc_2d))
-                plt.colorbar(shrink=0.25)
-                plt.title('Crocodile Real {:.1f}'.format(w))
-                plt.subplot(232)
-                plt.imshow(numpy.real(kern_rascil_2d))
-                plt.colorbar(shrink=0.25)
-                plt.title('RASCIL Real {:.1f}'.format(w))
-                plt.subplot(233)
-                plt.imshow(numpy.real(kern_diff_2d))
-                plt.colorbar(shrink=0.25)
-                plt.title('Diff Real {:.1f}'.format(w))
-                plt.subplot(234)
-                plt.imshow(numpy.imag(kern_croc_2d))
-                plt.colorbar(shrink=0.25)
-                plt.title('Crocodile Imag {:.1f}'.format(w))
-                plt.subplot(235)
-                plt.imshow(numpy.imag(kern_rascil_2d))
-                plt.colorbar(shrink=0.25)
-                plt.title('RASCIL Imag {:.1f}'.format(w))
-                plt.subplot(236)
-                plt.imshow(numpy.imag(kern_diff_2d))
-                plt.colorbar(shrink=0.25)
-                plt.title('Diff Imag {:.1f}'.format(w))
-                plt.savefig("test_results/kernels_{:.1f}.png".format(w))
-                plt.show(block=False)
+            wplanes_f = numpy.asarray(wplanes[i][1])
 
             wplanes_f = wplanes_f.flatten()
 
@@ -164,205 +96,6 @@ try:
 
         return wtkern
 
-
-    def retile(kern_diff, oversampling, size_x, size_y):
-        wplanes_f_2d = numpy.zeros([size_y * oversampling, size_x * oversampling], dtype='complex')
-        for offy in range(oversampling):
-            for offx in range(oversampling):
-                wplanes_f_2d[(offy * size_y):((offy + 1) * size_y),
-                (offx * size_x):((offx + 1) * size_x)] = kern_diff[offy, offx, :, :]
-        return wplanes_f_2d
-
-    def unpack(kern_diff, oversampling, size_x, size_y):
-        wplanes_f_2d = numpy.zeros([size_y * oversampling, size_x * oversampling], dtype='complex')
-        for y in range(size_y):
-            for x in range(size_x):
-                for offy in range(oversampling):
-                    for offx in range(oversampling):
-                        wplanes_f_2d[offy + oversampling * y, offx + oversampling * x] = \
-                            kern_diff[offy, offx, size_y - y - 1, size_x - x - 1]
-        return wplanes_f_2d
-
-
-    # A part of crocodile.synthesis for wkernel calculation
-    
-    def coordinates2(N):
-        """Two dimensional grids of coordinates spanning -1 to 1 in each
-        dimension, with
-
-        1. a step size of 2/N and
-        2. (0,0) at pixel (floor(n/2),floor(n/2))
-
-        :returns: pair (cx,cy) of 2D coordinate arrays
-        """
-        
-        N2 = N // 2
-        if N % 2 == 0:
-            return numpy.mgrid[-N2:N2, -N2:N2][::-1] / N
-        else:
-            return numpy.mgrid[-N2:N2 + 1, -N2:N2 + 1][::-1] / N
-    
-    
-    def extract_oversampled(a, xf, yf, Qpx, N):
-        """
-        Extract the (xf-th,yf-th) w-kernel from the oversampled parent
-
-        Offsets are suitable for correcting of fractional coordinates,
-        e.g. an offset of (xf,yf) results in the kernel for an (-xf,-yf)
-        sub-grid offset.
-
-        We do not want to make assumptions about the source grid's symetry
-        here, which means that the grid's side length must be at least
-        Qpx*(N+2) to contain enough information in all circumstances
-
-        :param a: grid from which to extract
-        :param ox: x offset
-        :param oy: y offset
-        :param Qpx: oversampling factor
-        :param N: size of section
-        """
-        
-        assert xf >= 0 and xf < Qpx
-        assert yf >= 0 and yf < Qpx
-        # Determine start offset.
-        Na = a.shape[0]
-        my = Na // 2 - Qpx * (N // 2) - yf
-        mx = Na // 2 - Qpx * (N // 2) - xf
-        assert mx >= 0 and my >= 0
-        # Extract every Qpx-th pixel
-        mid = a[my: my + Qpx * N: Qpx,
-              mx: mx + Qpx * N: Qpx]
-        # normalise
-        return Qpx * Qpx * mid
-    
-    
-    def pad_mid(ff, N):
-        """
-        Pad a far field image with zeroes to make it the given size.
-
-        Effectively as if we were multiplying with a box function of the
-        original field's size, which is equivalent to a convolution with a
-        sinc pattern in the uv-grid.
-    
-        :param ff: The input far field. Should be smaller than NxN.
-        :param N:  The desired far field size
-
-        """
-        
-        N0, N0w = ff.shape
-        if N == N0: return ff
-        assert N > N0 and N0 == N0w
-        return numpy.pad(ff,
-                         pad_width=2 * [(N // 2 - N0 // 2, (N + 1) // 2 - (N0 + 1) // 2)],
-                         mode='constant',
-                         constant_values=0.0)
-    
-    
-    def crocodile_ifft(a):
-        """ Fourier transformation from grid to image space
-
-        :param a: `uv` grid to transform
-        :returns: an image in `lm` coordinate space
-        """
-        return numpy.fft.fftshift(numpy.fft.ifft2(numpy.fft.ifftshift(a)))
-    
-    
-    def kernel_coordinates(N, theta, dl=0, dm=0, T=None):
-        """
-        Returns (l,m) coordinates for generation of kernels
-        in a far-field of the given size.
-
-        If coordinate transformations are passed, they must be inverse to
-        the transformations applied to the visibilities using
-        visibility_shift/uvw_transform.
-
-        :param N: Desired far-field resolution
-        :param theta: Field of view size (directional cosines)
-        :param dl: Pattern horizontal shift (see visibility_shift)
-        :param dm: Pattern vertical shift (see visibility_shift)
-        :param T: Pattern transformation matrix (see uvw_transform)
-        :returns: Pair of (m,l) coordinates
-        """
-        
-        l, m = coordinates2(N) * theta
-        if not T is None:
-            l, m = T[0, 0] * l + T[1, 0] * m, T[0, 1] * l + T[1, 1] * m
-        return l + dl, m + dm
-    
-    
-    def w_kernel_function(l, m, w, dl=0, dm=0, T=numpy.eye(2)):
-        """W beam, the fresnel diffraction pattern arising from non-coplanar baselines
-
-        For the w-kernel, shifting the kernel pattern happens to also
-        shift the kernel depending on w. To counter this effect, `dl` or
-        `dm` can be passed so that the kernel ends up approximately
-        centered again. This means that kernels will have to be used at an
-        offset to get the same result, use `visibility_recentre` to
-        achieve this.
-
-        :param l: Horizontal image coordinates
-        :param m: Vertical image coordinates
-        :param N: Size of the grid in pixels
-        :param w: Baseline distance to the projection plane
-        :param dl: Shift the kernel by `dl w` to re-center it after a pattern shift.
-        :param dm: Shift the kernel by `dm w` to re-center it after a pattern shift.
-        :returns: N x N array with the far field
-        """
-        
-        r2 = l ** 2 + m ** 2
-        assert numpy.all(r2 < 1.0), "Error in image coordinate system: l %s, m %s" % (l, m)
-        ph = 1 - numpy.sqrt(1.0 - r2) - dl * l - dm * m
-        cp = numpy.exp(2j * numpy.pi * w * ph)
-        return cp
-    
-    
-    def kernel_oversample(ff, N, Qpx, s):
-        """
-        Takes a farfield pattern and creates an oversampled convolution
-        function.
-
-        If the far field size is smaller than N*Qpx, we will pad it. This
-        essentially means we apply a sinc anti-aliasing kernel by default.
-
-        :param ff: Far field pattern
-        :param N:  Image size without oversampling
-        :param Qpx: Factor to oversample by -- there will be Qpx x Qpx convolution arl
-        :param s: Size of convolution function to extract
-        :returns: Numpy array of shape [ov, ou, v, u], e.g. with sub-pixel
-          offsets as the outer coordinates.
-        """
-        
-        # Pad the far field to the required pixel size
-        padff = pad_mid(ff, N * Qpx)
-        
-        # Obtain oversampled uv-grid
-        af = crocodile_ifft(padff)
-        
-        # Extract kernels
-        res = [[extract_oversampled(af, x, y, Qpx, s) for x in range(Qpx)] for y in range(Qpx)]
-        return numpy.array(res)
-    
-    
-    def w_kernel(theta, w, NpixFF, NpixKern, Qpx, **kwargs):
-        """
-        The middle s pixels of W convolution kernel. (W-KERNel-Aperture-Function)
-
-        :param theta: Field of view (directional cosines)
-        :param w: Baseline distance to the projection plane
-        :param NpixFF: Far field size. Must be at least NpixKern+1 if Qpx > 1, otherwise NpixKern.
-        :param NpixKern: Size of convolution function to extract
-        :param Qpx: Oversampling, pixels will be Qpx smaller in aperture
-          plane than required to minimially sample theta.
-
-        :returns: [Qpx,Qpx,s,s] shaped oversampled convolution kernels
-        """
-        assert NpixFF > NpixKern or (NpixFF == NpixKern and Qpx == 1)
-        
-        l, m = kernel_coordinates(NpixFF, theta, **kwargs)
-        kern = w_kernel_function(l, m, w)
-        return kernel_oversample(kern, NpixFF, Qpx, NpixKern)
-    
-    
     def predict_wt(bvis: BlockVisibility, model: Image, gcfcf=None, **kwargs) -> \
             BlockVisibility:
         """ Predict using convolutional degridding.
@@ -387,8 +120,6 @@ try:
         subgrid_size = get_parameter(kwargs, "subgrid_size")
         margin = get_parameter(kwargs, "margin")
         winc = get_parameter(kwargs, "winc")
-        crocodile = get_parameter(kwargs, "crocodile")
-        NpixFF = get_parameter(kwargs, "NpixFF")
         
         # Create an empty vis_data structure
         wtvis = wtowers.VIS_DATA()
@@ -424,7 +155,7 @@ try:
         wtkern = None
         if gcfcf is not None:
             wtkern = wtowers.W_KERNEL_DATA()
-            wtkern = gcf2wkern(gcfcf, wtkern, crocodile, model, NpixFF, conjugate=True)
+            wtkern = gcf2wkern(gcfcf, wtkern, model, conjugate=True)
             
             # Extracting data from BlockVisibility
         freq = bvis.frequency  # frequency, Hz
@@ -515,8 +246,6 @@ try:
         subgrid_size = get_parameter(kwargs, "subgrid_size")
         margin = get_parameter(kwargs, "margin")
         winc = get_parameter(kwargs, "winc")
-        crocodile = get_parameter(kwargs, "crocodile", False)
-        NpixFF = get_parameter(kwargs, "NpixFF")
         
         sbvis = copy_visibility(bvis)
         sbvis = shift_vis_to_image(sbvis, im, tangent=True, inverse=False)
@@ -555,7 +284,7 @@ try:
         wtkern = None
         if gcfcf is not None:
             wtkern = wtowers.W_KERNEL_DATA()
-            wtkern = gcf2wkern(gcfcf, wtkern, crocodile, im, NpixFF)
+            wtkern = gcf2wkern(gcfcf, wtkern, im)
         
         vis = bvis.vis
         
