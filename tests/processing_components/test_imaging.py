@@ -122,8 +122,7 @@ class TestImaging2D(unittest.TestCase):
         
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_%s_residual.fits' %
                                               (self.dir, name))
-        # assert numpy.max(numpy.abs(dirty[0].data)), "Residual image is empty"
-        
+
         maxabs = numpy.max(numpy.abs(dirty[0].data))
         assert maxabs < fluxthreshold, "Error %.3f greater than fluxthreshold %.3f " % (maxabs, fluxthreshold)
     
