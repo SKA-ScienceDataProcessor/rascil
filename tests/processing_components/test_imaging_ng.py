@@ -94,9 +94,7 @@ class TestImagingNG(unittest.TestCase):
                                                    block=block,
                                                    zerow=zerow)
         
-        self.vis = convert_blockvisibility_to_visibility(self.blockvis)
-        
-        self.model = create_unittest_model(self.vis, self.image_pol, npixel=self.npixel, nchan=freqwin)
+        self.model = create_unittest_model(self.blockvis, self.image_pol, npixel=self.npixel, nchan=freqwin)
         
         self.components = create_unittest_components(self.model, flux)
         
@@ -111,7 +109,7 @@ class TestImagingNG(unittest.TestCase):
             export_image_to_fits(self.model, '%s/test_imaging_ng_model.fits' % self.dir)
             export_image_to_fits(self.cmodel, '%s/test_imaging_ng_cmodel.fits' % self.dir)
     
-    def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1):
+    def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1, flux_difference=5.0):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)
         assert len(comps) == len(self.components), "Different number of components found: original %d, recovered %d" % \
                                                    (len(self.components), len(comps))
@@ -122,6 +120,8 @@ class TestImagingNG(unittest.TestCase):
             ocomp, separation = find_nearest_skycomponent(comp.direction, self.components)
             assert separation / cellsize < positionthreshold, "Component differs in position %.3f pixels" % \
                                                               separation / cellsize
+            assert numpy.abs(ocomp.flux[0, 0] - comp.flux[0, 0]) < flux_difference, \
+                "Component flux {:.3f} differs from original {:.3f}".format(comp.flux[0, 0], ocomp.flux[0, 0])
     
     def _predict_base(self, fluxthreshold=1.0, name='predict_ng', **kwargs):
         
@@ -172,9 +172,9 @@ class TestImagingNG(unittest.TestCase):
             self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
-    def test_predict_ng(self):
+    def test_predict_ng_I(self):
         self.actualSetUp()
-        self._predict_base(name='predict_ng')
+        self._predict_base(name='predict_ng_I')
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_predict_ng_IQUV(self):
@@ -192,44 +192,44 @@ class TestImagingNG(unittest.TestCase):
         self._predict_base(name='predict_ng_IV')
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
-    def test_invert_ng(self):
+    def test_invert_ng_I(self):
         self.actualSetUp()
-        self._invert_base(name='invert_ng', positionthreshold=2.0, check_components=True)
+        self._invert_base(name='invert_ng_I', positionthreshold=0.1, check_components=True)
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_ng_IQUV(self):
         self.actualSetUp(image_pol=PolarisationFrame("stokesIQUV"))
-        self._invert_base(name='invert_ng_IQUV', positionthreshold=2.0, check_components=True)
+        self._invert_base(name='invert_ng_IQUV', positionthreshold=0.1, check_components=True)
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_ng_IQ(self):
         self.actualSetUp(image_pol=PolarisationFrame("stokesIQ"))
-        self._invert_base(name='invert_ng_IQ', positionthreshold=2.0, check_components=True)
+        self._invert_base(name='invert_ng_IQ', positionthreshold=0.1, check_components=True)
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_ng_IV(self):
         self.actualSetUp(image_pol=PolarisationFrame("stokesIV"))
-        self._invert_base(name='invert_ng_IV', positionthreshold=2.0, check_components=True)
+        self._invert_base(name='invert_ng_IV', positionthreshold=0.1, check_components=True)
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
-    def test_predict_ng_spec(self):
+    def test_predict_ng_spec_I(self):
         self.actualSetUp(dospectral=True, freqwin=5)
-        self._predict_base(name='predict_spec')
+        self._predict_base(name='predict_spec_I')
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
-    def test_invert_ng_spec(self):
+    def test_invert_ng_spec_I(self):
         self.actualSetUp(dospectral=True, freqwin=5)
-        self._invert_base(name='invert_spec', positionthreshold=2.0, check_components=False)
+        self._invert_base(name='invert_spec_I', positionthreshold=0.1, check_components=False)
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_predict_ng_spec_IQUV(self):
         self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQUV"))
-        self._predict_base(name='predict_spec_pol_IQUV')
+        self._predict_base(name='predict_spec_IQUV')
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_ng_spec_IQUV(self):
         self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQUV"))
-        self._invert_base(name='invert_spec_pol_IQUV', positionthreshold=2.0, check_components=False)
+        self._invert_base(name='invert_spec_IQUV', positionthreshold=0.1, check_components=False)
 
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_predict_ng_spec_IQ(self):
@@ -239,7 +239,7 @@ class TestImagingNG(unittest.TestCase):
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_ng_spec_IQ(self):
         self.actualSetUp(dospectral=True, freqwin=5, image_pol=PolarisationFrame("stokesIQ"))
-        self._invert_base(name='invert_spec_pol_IQ', positionthreshold=2.0, check_components=False)
+        self._invert_base(name='invert_spec_pol_IQ', positionthreshold=0.1, check_components=False)
 
 
 if __name__ == '__main__':

@@ -19,7 +19,7 @@ from rascil.processing_components.simulation import ingest_unittest_visibility, 
     create_unittest_model, create_unittest_components
 from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
     insert_skycomponent
-from rascil.processing_components.visibility import copy_visibility, convert_blockvisibility_to_visibility
+from rascil.processing_components.visibility import copy_visibility
 
 try:
     import wtowers
@@ -95,9 +95,7 @@ class TestImagingWT(unittest.TestCase):
                                                    block=block,
                                                    zerow=zerow)
         
-        self.vis = convert_blockvisibility_to_visibility(self.blockvis)
-        
-        self.model = create_unittest_model(self.vis, self.image_pol, npixel=self.npixel, nchan=freqwin)
+        self.model = create_unittest_model(self.blockvis, self.image_pol, npixel=self.npixel, nchan=freqwin)
         
         self.components = create_unittest_components(self.model, flux)
         
@@ -118,7 +116,7 @@ class TestImagingWT(unittest.TestCase):
         self.gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=nw, wstep=wstep, oversampling=8,
                                                        support=support, use_aaf=False, maxsupport=512)
 
-    def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1):
+    def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1, flux_difference=5.0):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)
         assert len(comps) == len(self.components), "Different number of components found: original %d, recovered %d" % \
                                                    (len(self.components), len(comps))
@@ -129,7 +127,9 @@ class TestImagingWT(unittest.TestCase):
             ocomp, separation = find_nearest_skycomponent(comp.direction, self.components)
             assert separation / cellsize < positionthreshold, "Component differs in position %.3f pixels" % \
                                                               separation / cellsize
-    
+            assert numpy.abs(ocomp.flux[0, 0] - comp.flux[0, 0]) < flux_difference, \
+                "Component flux {:.3f} differs from original {:.3f}".format(comp.flux[0, 0], ocomp.flux[0, 0])
+
     def _predict_base(self, fluxthreshold=1.0, name='predict_wt', **kwargs):
         
         from rascil.processing_components.imaging.wt import predict_wt, invert_wt
