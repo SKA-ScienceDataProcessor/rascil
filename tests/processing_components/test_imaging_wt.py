@@ -110,11 +110,8 @@ class TestImagingWT(unittest.TestCase):
             export_image_to_fits(self.model, '%s/test_imaging_wt_model.fits' % self.dir)
             export_image_to_fits(self.cmodel, '%s/test_imaging_wt_cmodel.fits' % self.dir)
 
-        nw = 101
-        wstep = 6
-        support = 32
-        self.gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=nw, wstep=wstep, oversampling=8,
-                                                       support=support, use_aaf=False, maxsupport=512)
+        self.gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=101, wstep=6, oversampling=8,
+                                                  support=32, use_aaf=False, maxsupport=512)
 
     def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1, flux_difference=5.0):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)

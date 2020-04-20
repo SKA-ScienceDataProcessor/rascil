@@ -17,7 +17,7 @@ from rascil.processing_components.griddata import convert_convolutionfunction_to
     create_convolutionfunction_from_image, apply_bounding_box_convolutionfunction, \
     calculate_bounding_box_convolutionfunction
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction, \
-    create_awterm_convolutionfunction, create_box_convolutionfunction
+    create_awterm_convolutionfunction
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.processing_components.imaging.primary_beams import create_pb_generic
 from rascil.processing_components.simulation import create_test_image
@@ -44,22 +44,6 @@ class TestGridDataKernels(unittest.TestCase):
         cf_image.data = numpy.real(cf_image.data)
         if self.persist:
             export_image_to_fits(cf_image, "%s/test_convolutionfunction_cf.fits" % self.dir)
-
-    def test_fill_box_to_convolutionfunction(self):
-        gcf, cf = create_box_convolutionfunction(self.image)
-        assert numpy.max(numpy.abs(cf.data)) > 0.0
-        if self.persist:
-            export_image_to_fits(gcf, "%s/test_convolutionfunction_box_gcf.fits" % self.dir)
-
-        cf_image = convert_convolutionfunction_to_image(cf)
-        cf_image.data = numpy.real(cf_image.data)
-        if self.persist:
-            export_image_to_fits(cf_image, "%s/test_convolutionfunction_box_cf.fits" % self.dir)
-
-        peak_location = numpy.unravel_index(numpy.argmax(numpy.abs(cf.data)), cf.shape)
-        assert numpy.abs(cf.data[peak_location] - 1.0) < 1e-15, "Peak is incorrect %s" % str(
-            cf.data[peak_location] - 1.0)
-        assert peak_location == (0, 0, 0, 0, 0, 2, 2), peak_location
 
     def test_fill_pswf_to_convolutionfunction(self):
         oversampling = 8
