@@ -199,12 +199,19 @@ def gain_substitution_scalar(gain, x, xwt):
     # Optimzied
     n_top = numpy.einsum('ik...,ijk...->jk...', gain, xxwt)
     n_bot = numpy.einsum('ik...,ijk...->jk...', gcg, xwt).real
-    mask = n_bot > 0.0
-    notmask = n_bot <= 0.0
-    newgain1[:, :][mask] = n_top[mask] / n_bot[mask]
-    newgain1[:, :][notmask] = 0.0
+
+    # Convert mask to putmask
+    # mask = n_bot > 0.0
+    # notmask = n_bot <= 0.0
+    # newgain1[:, :][mask] = n_top[mask] / n_bot[mask]
+    # newgain1[:, :][notmask] = 0.0
+    numpy.putmask(newgain1, n_bot>0.0, n_top / n_bot)
+    numpy.putmask(newgain1, n_bot<=0.0, 0.0)
+
     gwt1[:, :] = n_bot
-    gwt1[:, :][notmask] = 0.0
+    # gwt1[:, :][notmask] = 0.0
+    numpy.putmask(gwt1, n_bot <=0.0, 0.0)
+
     newgain1 = newgain1.reshape([nants, nchan, nrec, nrec])
     gwt1 = gwt1.reshape([nants, nchan, nrec, nrec])
     return newgain1, gwt1
