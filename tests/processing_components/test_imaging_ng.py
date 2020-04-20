@@ -170,7 +170,12 @@ class TestImagingNG(unittest.TestCase):
         
         if check_components:
             self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
-    
+
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_predict_ng_now_I(self):
+        self.actualSetUp(zerow=True)
+        self._predict_base(name='predict_ng_now_I', do_wstacking=False)
+
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_predict_ng_I(self):
         self.actualSetUp()
@@ -195,7 +200,12 @@ class TestImagingNG(unittest.TestCase):
     def test_invert_ng_I(self):
         self.actualSetUp()
         self._invert_base(name='invert_ng_I', positionthreshold=0.1, check_components=True)
-    
+
+    @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
+    def test_invert_ng_now_I(self):
+        self.actualSetUp(zerow=True)
+        self._invert_base(name='invert_ng_now_I', positionthreshold=0.1, check_components=True, do_wstacking=False)
+
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
     def test_invert_ng_IQUV(self):
         self.actualSetUp(image_pol=PolarisationFrame("stokesIQUV"))

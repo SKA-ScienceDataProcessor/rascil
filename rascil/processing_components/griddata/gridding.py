@@ -175,11 +175,10 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
     
     griddata.data[...] = 0.0
     
-    vis_to_im = numpy.round(
-        griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
+    nchan, npol, _, _, _ = griddata.data.shape
+    vis_to_im = numpy.round(griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
     
     nrows, nants, _, nvchan, nvpol = vis.vis.shape
-    nichan, nipol, _, _, _ = griddata.data.shape
     
     fvist = vis.flagged_vis.reshape([nrows * nants * nants, nvchan, nvpol]).T
     fwtt = vis.flagged_imaging_weight.reshape([nrows * nants * nants, nvchan, nvpol]).T
@@ -187,12 +186,12 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
     
     # Do this in place to avoid creating a new copy. Doing the conjugation outside the loop
     # reduces run time immensely
-    cf.data = numpy.conjugate(cf.data)
+    ccf = numpy.conjugate(cf.data)
     _, _, _, _, _, gv, gu = cf.shape
     du = gu // 2
     dv = gv // 2
     
-    sumwt = numpy.zeros([nichan, nipol])
+    sumwt = numpy.zeros([nchan, npol])
     
     for vchan in range(nvchan):
         imchan = vis_to_im[vchan]
@@ -200,14 +199,12 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
             convolution_mapping_blockvisibility(vis, griddata, vis.frequency[vchan], cf)
         for pol in range(nvpol):
             for row in range(nrows * nants * nants):
-                subcf = cf.data[imchan, pol, pwc_grid[row], pv_offset[row], pu_offset[row], :, :]
+                subcf = ccf[imchan, pol, pwc_grid[row], pv_offset[row], pu_offset[row], :, :]
                 griddata.data[imchan, pol, pwg_grid[row],
                 (pv_grid[row] - dv):(pv_grid[row] + dv),
-                (pu_grid[row] - du):(pu_grid[row] + du)] \
-                    += subcf * fviswtt[pol, vchan, row]
+                (pu_grid[row] - du):(pu_grid[row] + du)] += subcf * fviswtt[pol, vchan, row]
                 sumwt[imchan, pol] += fwtt[pol, vchan, row]
     
-    cf.data = numpy.conjugate(cf.data)
     return griddata, sumwt
 
 
@@ -230,8 +227,7 @@ def grid_visibility_to_griddata(vis, griddata, cf):
         convolution_mapping_visibility(vis, griddata, vis.frequency, cf)
     _, _, _, _, _, gv, gu = cf.shape
     coords = zip(vis.vis * vis.flagged_imaging_weight, vis.flagged_imaging_weight,
-                 pfreq_grid, pu_grid,
-                 pu_offset, pv_grid, pv_offset, pwg_grid, pwc_grid)
+                 pfreq_grid, pu_grid, pu_offset, pv_grid, pv_offset, pwg_grid, pwc_grid)
     griddata.data[...] = 0.0
     
     # Do this in place to avoid creating a new copy. Doing the conjugation outside the loop
@@ -424,15 +420,16 @@ def degrid_blockvisibility_from_griddata(vis, griddata, cf, **kwargs):
     :param kwargs:
     :return: Visibility
     """
+    assert isinstance(vis, BlockVisibility), vis
     assert vis.polarisation_frame == griddata.polarisation_frame
     
     newvis = copy_visibility(vis, zero=True)
     
-    nchan, npol, nz, oversampling, _, support, _ = cf.shape
-    vis_to_im = numpy.round(
-        griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
+    nchan, npol, _, _, _ = griddata.data.shape
+    vis_to_im = numpy.round(griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
     
     nrows, nants, _, nvchan, nvpol = vis.vis.shape
+    
     fvist = numpy.zeros([nvpol, nvchan, nrows * nants * nants], dtype='complex')
     
     _, _, _, _, _, gv, gu = cf.shape
@@ -452,7 +449,6 @@ def degrid_blockvisibility_from_griddata(vis, griddata, cf, **kwargs):
                 fvist[pol, vchan, row] = numpy.einsum('ij,ij', subgrid, subcf)
     
     newvis.data['vis'][...] = fvist.T.reshape([nrows, nants, nants, nvchan, nvpol])
-    
     return newvis
 
 

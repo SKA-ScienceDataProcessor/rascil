@@ -12,7 +12,8 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.griddata.kernels import create_awterm_convolutionfunction
+from rascil.processing_components.griddata.kernels import create_awterm_convolutionfunction, \
+    create_pswf_convolutionfunction
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
 from rascil.processing_components.imaging.dft import dft_skycomponent_visibility
@@ -39,7 +40,8 @@ class TestImaging2D(unittest.TestCase):
         self.persist = os.getenv("RASCIL_PERSIST", True)
     
     def actualSetUp(self, freqwin=1, block=False, dospectral=True,
-                    image_pol=PolarisationFrame('stokesI'), zerow=False, make_pb=None):
+                    image_pol=PolarisationFrame('stokesI'), zerow=False, make_pb=None,
+                    single=False):
         
         self.npixel = 512
         self.low = create_named_configuration('LOWBD2', rmax=750.0)
@@ -89,7 +91,7 @@ class TestImaging2D(unittest.TestCase):
         
         self.model = create_unittest_model(self.vis, self.image_pol, npixel=self.npixel, nchan=freqwin)
         
-        self.components = create_unittest_components(self.model, flux)
+        self.components = create_unittest_components(self.model, flux, single=single)
         
         self.model = insert_skycomponent(self.model, self.components)
         
@@ -148,19 +150,19 @@ class TestImaging2D(unittest.TestCase):
     
     def test_predict_pswf_I(self):
         self.actualSetUp(zerow=True)
-        self._predict_base(name='predict_pswf_I', fluxthreshold=5.0)
+        self._predict_base(name='predict_pswf_I', fluxthreshold=0.5)
     
     def test_predict_pswf_IQUV(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQUV"))
-        self._predict_base(name='predict_pswf_IQUV', fluxthreshold=5.0)
+        self._predict_base(name='predict_pswf_IQUV', fluxthreshold=0.5)
     
     def test_predict_pswf_IQ(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQ"))
-        self._predict_base(name='predict_pswf_IQ', fluxthreshold=5.0)
+        self._predict_base(name='predict_pswf_IQ', fluxthreshold=0.5)
     
     def test_predict_pswf_IV(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIV"))
-        self._predict_base(name='predict_pswf_IV', fluxthreshold=5.0)
+        self._predict_base(name='predict_pswf_IV', fluxthreshold=0.5)
     
     def test_invert_pswf_I(self):
         self.actualSetUp(zerow=True)
@@ -184,12 +186,15 @@ class TestImaging2D(unittest.TestCase):
         self._invert_base(name='invert_pswf_IV', positionthreshold=0.1, check_components=True)
     
     def test_predict_pswf_block_I(self):
-        self.actualSetUp(zerow=True, block=True)
-        self._predict_base(name='predict_pswf_block_I', fluxthreshold=5.0)
+        self.actualSetUp(zerow=True, block=True, single=False)
+        gcfcf = create_pswf_convolutionfunction(self.model, oversampling=32)
+        self._predict_base(name='predict_pswf_block_I', fluxthreshold=5.0, gcfcf=gcfcf)
     
     def test_invert_pswf_block_I(self):
         self.actualSetUp(zerow=True, block=True)
-        self._invert_base(name='invert_pswf_block_I', positionthreshold=0.1, check_components=True)
+        gcfcf = create_pswf_convolutionfunction(self.model, oversampling=32)
+        self._invert_base(name='invert_pswf_block_I', positionthreshold=0.1, check_components=True,
+                          gcfcf=gcfcf)
     
     def test_predict_awterm_I(self):
         make_pb = functools.partial(create_pb_generic, diameter=35.0, blockage=0.0, use_local=False)
@@ -255,7 +260,7 @@ class TestImaging2D(unittest.TestCase):
         self.actualSetUp(zerow=False)
         gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=101, wstep=6, oversampling=8,
                                                   support=32, use_aaf=False, maxsupport=512)
-        self._predict_base(fluxthreshold=3.4, name='predict_wterm_I', gcfcf=gcfcf)
+        self._predict_base(fluxthreshold=4.0, name='predict_wterm_I', gcfcf=gcfcf)
     
     def test_invert_wterm_I(self):
         self.actualSetUp(zerow=False)

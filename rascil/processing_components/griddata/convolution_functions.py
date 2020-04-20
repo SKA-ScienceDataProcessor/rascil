@@ -63,7 +63,8 @@ def create_convolutionfunction_from_array(data: numpy.array, grid_wcs: WCS, proj
     return fconvfunc
 
 
-def create_convolutionfunction_from_image(im: numpy.array, nz=1, zstep=1e15, ztype='WW', oversampling=8, support=16):
+def create_convolutionfunction_from_image(im: numpy.array, nz=1, zstep=1e15, ztype='WW', oversampling=8, support=16,
+                                          grid_reference=1.0):
     """ Create a convolution function from an image
 
     The griddata has axes [chan, pol, z, dy, dx, y, x] where z, y, x are spatial axes in either sky or Fourier plane. The
@@ -73,6 +74,7 @@ def create_convolutionfunction_from_image(im: numpy.array, nz=1, zstep=1e15, zty
 
     Convolution function holds the original sky plane projection in the projection_wcs.
 
+    :param grid_reference:
     :param im: Template Image
     :param nz: Number of z axes, usually z is W
     :param zstep: Step in z, usually z is W
@@ -116,8 +118,8 @@ def create_convolutionfunction_from_image(im: numpy.array, nz=1, zstep=1e15, zty
     cf_wcs.wcs.crval[5] = im.wcs.wcs.crval[2]
     cf_wcs.wcs.crval[6] = im.wcs.wcs.crval[3]
     
-    cf_wcs.wcs.crpix[0] = float(support // 2) + 1.0
-    cf_wcs.wcs.crpix[1] = float(support // 2) + 1.0
+    cf_wcs.wcs.crpix[0] = float(support // 2) + grid_reference
+    cf_wcs.wcs.crpix[1] = float(support // 2) + grid_reference
     cf_wcs.wcs.crpix[2] = float(oversampling // 2) + 1.0
     cf_wcs.wcs.crpix[3] = float(oversampling // 2) + 1.0
     cf_wcs.wcs.crpix[4] = float(nz // 2 + 1)
