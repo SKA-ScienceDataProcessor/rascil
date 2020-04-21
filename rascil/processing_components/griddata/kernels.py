@@ -40,6 +40,7 @@ def create_pswf_convolutionfunction(im, oversampling=128, support=6):
     kernel = numpy.zeros([oversampling, support])
     for grid in range(support):
         for subsample in range(oversampling):
+            # nu = ((grid - 0.5 - support // 2) - (subsample - oversampling // 2) / oversampling)
             nu = ((grid - support // 2) - (subsample - oversampling // 2) / oversampling)
             kernel[subsample, grid] = grdsf([nu / (support // 2)])[1]
 
@@ -69,8 +70,8 @@ def create_pswf_convolutionfunction(im, oversampling=128, support=6):
     return gcf_image, cf
 
 
-def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversampling=8, support=6, use_aaf=False,
-                                      maxsupport=512, grid_reference=1.0):
+def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversampling=8, support=6, use_aaf=True,
+                                      maxsupport=512, wtowers=False):
     """ Fill AW projection kernel into a GridData.
 
     :param im: Image template
@@ -78,8 +79,7 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
     :param nw: Number of w planes
     :param wstep: Step in w (wavelengths)
     :param oversampling: Oversampling of the convolution function in uv space
-    :param maxsupport:
-    :param grid_reference: Reference point for grid either 1.0 (usually) or 0.5 (for WT)
+    :param wtowers: Is the convolution function to be used in wtowers?
     :return: griddata correction Image, griddata kernel as GridData
     """
     d2r = numpy.pi / 180.0
@@ -90,7 +90,7 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
     
     assert isinstance(im, Image)
     # Calculate the template convolution kernel.
-    cf = create_convolutionfunction_from_image(im, oversampling=oversampling, support=support, grid_reference=grid_reference)
+    cf = create_convolutionfunction_from_image(im, oversampling=oversampling, support=support)
     
     cf_shape = list(cf.data.shape)
     cf_shape[2] = nw
@@ -147,14 +147,17 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
         paddedplane = pad_image(thisplane, padded_shape)
         paddedplane = fft_image(paddedplane)
         
-        ycen, xcen = ny // 2, nx // 2
+        if wtowers:
+            ycen, xcen = ny // 2, nx // 2
+        else:
+            ycen, xcen = ny // 2 - oversampling // 2, nx // 2 - oversampling // 2
         for y in range(oversampling):
-            ybeg = y + ycen + (support * oversampling) // 2 - oversampling // 2
-            yend = y + ycen - (support * oversampling) // 2 - oversampling // 2
+            ybeg = y + ycen + (support * oversampling) // 2
+            yend = y + ycen - (support * oversampling) // 2
             # vv = range(ybeg, yend, -oversampling)
             for x in range(oversampling):
-                xbeg = x + xcen + (support * oversampling) // 2 - oversampling // 2
-                xend = x + xcen - (support * oversampling) // 2 - oversampling // 2
+                xbeg = x + xcen + (support * oversampling) // 2
+                xend = x + xcen - (support * oversampling) // 2
                 
                 # uu = range(xbeg, xend, -oversampling)
                 cf.data[..., z, y, x, :, :] = paddedplane.data[..., ybeg:yend:-oversampling, xbeg:xend:-oversampling]

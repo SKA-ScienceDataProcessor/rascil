@@ -18,7 +18,7 @@ from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
 from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
-    insert_skycomponent
+    insert_skycomponent, apply_beam_to_skycomponent
 from rascil.processing_components.visibility import copy_visibility
 
 try:
@@ -47,12 +47,12 @@ class TestImagingWT(unittest.TestCase):
         self.verbosity = 0
     
     def actualSetUp(self, freqwin=1, block=True, dospectral=True,
-                    image_pol=PolarisationFrame('stokesI'), zerow=False):
+                    image_pol=PolarisationFrame('stokesI'), zerow=False, make_pb=None):
         
         self.npixel = 512
         self.low = create_named_configuration('LOWBD2', rmax=750.0)
         self.freqwin = freqwin
-        self.blockvis = list()
+        self.vis = list()
         self.ntimes = 5
         self.times = numpy.linspace(-3.0, +3.0, self.ntimes) * numpy.pi / 12.0
         
@@ -64,19 +64,19 @@ class TestImagingWT(unittest.TestCase):
             self.channelwidth = numpy.array([1e6])
         
         if image_pol == PolarisationFrame('stokesIQUV'):
-            self.blockvis_pol = PolarisationFrame('linear')
+            self.vis_pol = PolarisationFrame('linear')
             self.image_pol = image_pol
             f = numpy.array([100.0, 20.0, -10.0, 1.0])
         elif image_pol == PolarisationFrame('stokesIQ'):
-            self.blockvis_pol = PolarisationFrame('linearnp')
+            self.vis_pol = PolarisationFrame('linearnp')
             self.image_pol = image_pol
             f = numpy.array([100.0, 20.0])
         elif image_pol == PolarisationFrame('stokesIV'):
-            self.blockvis_pol = PolarisationFrame('circularnp')
+            self.vis_pol = PolarisationFrame('circularnp')
             self.image_pol = image_pol
             f = numpy.array([100.0, 20.0])
         else:
-            self.blockvis_pol = PolarisationFrame('stokesI')
+            self.vis_pol = PolarisationFrame('stokesI')
             self.image_pol = PolarisationFrame('stokesI')
             f = numpy.array([100.0])
         
@@ -86,22 +86,28 @@ class TestImagingWT(unittest.TestCase):
             flux = numpy.array([f])
         
         self.phasecentre = SkyCoord(ra=+180.0 * u.deg, dec=-45.0 * u.deg, frame='icrs', equinox='J2000')
-        self.blockvis = ingest_unittest_visibility(self.low,
-                                                   self.frequency,
-                                                   self.channelwidth,
-                                                   self.times,
-                                                   self.blockvis_pol,
-                                                   self.phasecentre,
-                                                   block=block,
-                                                   zerow=zerow)
+        self.vis = ingest_unittest_visibility(self.low,
+                                              self.frequency,
+                                              self.channelwidth,
+                                              self.times,
+                                              self.vis_pol,
+                                              self.phasecentre,
+                                              block=block,
+                                              zerow=zerow)
         
-        self.model = create_unittest_model(self.blockvis, self.image_pol, npixel=self.npixel, nchan=freqwin)
+        self.model = create_unittest_model(self.vis, self.image_pol, npixel=self.npixel, nchan=freqwin)
         
         self.components = create_unittest_components(self.model, flux)
         
         self.model = insert_skycomponent(self.model, self.components)
         
-        self.blockvis = dft_skycomponent_visibility(self.blockvis, self.components)
+        # We need to apply primary beam to the components to get the correct predicted
+        # visibility to compare with the value predicted by degridding
+        if make_pb is not None:
+            pb = make_pb(self.model)
+            self.components = apply_beam_to_skycomponent(self.components, pb)
+        
+        self.vis = dft_skycomponent_visibility(self.vis, self.components)
         
         # Calculate the model convolved with a Gaussian.
         
@@ -109,10 +115,10 @@ class TestImagingWT(unittest.TestCase):
         if self.persist:
             export_image_to_fits(self.model, '%s/test_imaging_wt_model.fits' % self.dir)
             export_image_to_fits(self.cmodel, '%s/test_imaging_wt_cmodel.fits' % self.dir)
-
+        
         self.gcfcf = create_awterm_convolutionfunction(self.model, make_pb=None, nw=101, wstep=6, oversampling=8,
-                                                  support=32, use_aaf=False, maxsupport=512)
-
+                                                       support=32, use_aaf=False, maxsupport=512, wtowers=True)
+    
     def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1, flux_difference=5.0):
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)
         assert len(comps) == len(self.components), "Different number of components found: original %d, recovered %d" % \
@@ -126,14 +132,14 @@ class TestImagingWT(unittest.TestCase):
                                                               separation / cellsize
             assert numpy.abs(ocomp.flux[0, 0] - comp.flux[0, 0]) < flux_difference, \
                 "Component flux {:.3f} differs from original {:.3f}".format(comp.flux[0, 0], ocomp.flux[0, 0])
-
+    
     def _predict_base(self, fluxthreshold=1.0, name='predict_wt', **kwargs):
         
         from rascil.processing_components.imaging.wt import predict_wt, invert_wt
-        original_vis = copy_visibility(self.blockvis)
-        vis = predict_wt(self.blockvis, self.model, verbosity=self.verbosity, **kwargs)
+        original_vis = copy_visibility(self.vis)
+        vis = predict_wt(self.vis, self.model, verbosity=self.verbosity, grid_reference=0.5, **kwargs)
         vis.data['vis'] = vis.data['vis'] - original_vis.data['vis']
-        dirty = invert_wt(vis, self.model, dopsf=False, normalize=True, **kwargs)
+        dirty = invert_wt(vis, self.model, dopsf=False, normalize=True, grid_reference=0.5, **kwargs)
         
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_wt_%s_residual.fits' %
                                               (self.dir, name))
@@ -142,10 +148,10 @@ class TestImagingWT(unittest.TestCase):
         assert maxabs < fluxthreshold, "Error %.3f greater than fluxthreshold %.3f " % (maxabs, fluxthreshold)
     
     def _invert_base(self, fluxthreshold=1.0, positionthreshold=1.0, check_components=True,
-                     name='predict_wt', gcfcf=None, **kwargs):
+                     name='invert_wt', gcfcf=None, flux_difference=5.0, **kwargs):
         
         from rascil.processing_components.imaging.wt import invert_wt
-        dirty = invert_wt(self.blockvis, self.model, normalize=True, verbosity=self.verbosity,
+        dirty = invert_wt(self.vis, self.model, normalize=True, verbosity=self.verbosity,
                           gcfcf=gcfcf, **kwargs)
         
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_wt_%s_dirty.fits' %
@@ -154,8 +160,8 @@ class TestImagingWT(unittest.TestCase):
         assert numpy.max(numpy.abs(dirty[0].data)), "Image is empty"
         
         if check_components:
-            self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
-        
+            self._checkcomponents(dirty[0], fluxthreshold, positionthreshold, flux_difference=flux_difference)
+    
     @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
     def test_predict_wt(self):
         self.actualSetUp()
@@ -166,6 +172,7 @@ class TestImagingWT(unittest.TestCase):
         self.actualSetUp()
         self._invert_base(name='invert_wt', positionthreshold=0.1, check_components=True,
                           gcfcf=self.gcfcf, NpixFF=512, fluxthreshold=1.0)
-    
+
+
 if __name__ == '__main__':
     unittest.main()
