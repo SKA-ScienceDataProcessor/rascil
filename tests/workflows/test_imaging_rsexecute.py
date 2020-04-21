@@ -1,4 +1,4 @@
-""" Unit tests for pipelines expressed via rsexecute
+""" Unit tests for imaging functions expressed via rsexecute
 """
 
 import logging
@@ -42,7 +42,7 @@ except ImportError:
     run_ng_tests = False
 
 
-class TestImaging(unittest.TestCase):
+class TestImagingGraph(unittest.TestCase):
     def setUp(self):
         
         rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
