@@ -198,6 +198,6 @@ Testing
   - Regression tests of the complete algorithm over a complete set of inputs.
   - Code reviews (either single person or group read-throughs).
 
-- Test suite via Jenkins: The algorithm reference library will therefore come with a complete set of unit tests and
-  regression tests. These should be run automatically, by, for example, a framework such as Jenkins, on any change to
+- Test suite via CI/CD: The algorithm reference library will therefore come with a complete set of unit tests and
+  regression tests. These should be run automatically, by, for example, a framework such as CI/CD, on any change to
   ensure their errors are caught quickly and not compounded.

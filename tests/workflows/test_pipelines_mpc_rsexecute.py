@@ -185,7 +185,6 @@ class TestPipelineMPC(unittest.TestCase):
         self.actualSetup(nsources=1, nvoronoi=1)
         pass
 
-    @unittest.skip("Unreliable under linux for unknown reasons")
     def test_mpccal_ICAL_manysources(self):
 
         self.actualSetup(nvoronoi=1)
@@ -233,7 +232,7 @@ class TestPipelineMPC(unittest.TestCase):
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
         assert recovered_mpccal_components[0].name == 'Segment 4', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.598727511029446) < 1e-7, \
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.591755889633356) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)
@@ -245,7 +244,6 @@ class TestPipelineMPC(unittest.TestCase):
 
         rsexecute.close()
 
-    @unittest.skip("Unreliable under linux for unknown reasons")
     def test_mpccal_ICAL_onesource(self):
 
         self.actualSetup(nsources=1, nvoronoi=1)
@@ -294,7 +292,7 @@ class TestPipelineMPC(unittest.TestCase):
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
         assert recovered_mpccal_components[0].name == 'Segment 0', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 1.138095494391862) < 1e-6, \
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 1.1378355555193118) < 1e-6, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)
@@ -307,7 +305,6 @@ class TestPipelineMPC(unittest.TestCase):
 
         rsexecute.close()
 
-    @unittest.skip("Unreliable under linux for unknown reasons")
     def test_mpccal_MPCCAL_manysources(self):
 
         self.actualSetup()
@@ -353,7 +350,7 @@ class TestPipelineMPC(unittest.TestCase):
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
         assert recovered_mpccal_components[0].name == 'Segment 5', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.799342328930813) < 1e-7, \
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.805600573275398) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)
@@ -364,7 +361,6 @@ class TestPipelineMPC(unittest.TestCase):
 
         rsexecute.close()
 
-    @unittest.skip("Unreliable under linux for unknown reasons")
     def test_mpccal_MPCCAL_manysources_no_edge(self):
 
         self.actualSetup()
@@ -411,7 +407,7 @@ class TestPipelineMPC(unittest.TestCase):
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
         assert recovered_mpccal_components[0].name == 'Segment 5', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.799342328930813) < 1e-7, \
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.805600573275398) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)
@@ -424,7 +420,6 @@ class TestPipelineMPC(unittest.TestCase):
 
         rsexecute.close()
 
-    @unittest.skip("Unreliable under linux for unknown reasons")
     def test_mpccal_MPCCAL_manysources_subimages(self):
 
         self.actualSetup()
@@ -471,7 +466,7 @@ class TestPipelineMPC(unittest.TestCase):
         recovered_mpccal_components = sorted(recovered_mpccal_components, key=max_flux, reverse=True)
 
         assert recovered_mpccal_components[0].name == 'Segment 5', recovered_mpccal_components[0].name
-        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.799342328930813) < 1e-7, \
+        assert numpy.abs(recovered_mpccal_components[0].flux[0, 0] - 7.805600573275398) < 1e-7, \
             recovered_mpccal_components[0].flux[0, 0]
 
         newscreen = create_empty_image_like(self.screen)

@@ -117,7 +117,7 @@ class TestPipelines(unittest.TestCase):
             create_unittest_model(self.vis_list[i], self.image_pol, npixel=self.npixel, cellsize=0.0005)
             for i in range(nfreqwin)]
     
-    @unittest.skip("Too expensive to run in Jenkins")
+    @unittest.skip("Too expensive to run in CI/CD")
     def test_continuum_imaging_pipeline(self):
         self.actualSetUp(add_errors=True, zerow=True)
         clean, residual, restored = \
@@ -142,10 +142,10 @@ class TestPipelines(unittest.TestCase):
                                  '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96056316339504) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.4027437530187405) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.13570118019175) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.04336043883760113) < 1.0e-7, str(qa)
 
-    @unittest.skip("Too expensive to run in Jenkins")
+    @unittest.skip("Too expensive to run in CI/CD")
     def test_continuum_imaging_pipeline_pol(self):
         self.actualSetUp(add_errors=True, zerow=True, dopol=True)
         clean, residual, restored = \
@@ -170,10 +170,10 @@ class TestPipelines(unittest.TestCase):
                                  '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96056316339504) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.40274375301874366) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.13570118019176) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.043360438838084735) < 1.0e-7, str(qa)
 
-    @unittest.skip("Too expensive to run in Jenkins")
+    @unittest.skip("Too expensive to run in CI/CD")
     def test_ical_pipeline(self):
         self.actualSetUp(add_errors=True)
         controls = create_calibration_controls()
@@ -203,10 +203,10 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96261980728406) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.39938488382834186) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.13506856543906) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.04235375375048486) < 1.0e-7, str(qa)
 
-    @unittest.skip("Too expensive to run in Jenkins")
+    @unittest.skip("Too expensive to run in CI/CD")
     def test_ical_pipeline_pol(self):
         self.actualSetUp(add_errors=True, dopol=True)
         controls = create_calibration_controls()
@@ -236,10 +236,10 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 88.14505612880944) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 2.0367842796227698) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 88.27042649981486) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 2.0728959408765184) < 1.0e-7, str(qa)
 
-    @unittest.skip("Too expensive to run in Jenkins")
+    @unittest.skip("Too expensive to run in CI/CD")
     def test_ical_pipeline_global(self):
         self.actualSetUp(add_errors=True)
         controls = create_calibration_controls()
@@ -271,8 +271,8 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96050610983261) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.4022144753225296) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.13496852962606) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.041742837408106276) < 1.0e-7, str(qa)
 
 
 if __name__ == '__main__':

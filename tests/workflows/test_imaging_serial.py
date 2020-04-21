@@ -188,11 +188,11 @@ class TestImaging(unittest.TestCase):
     
     def test_predict_2d(self):
         self.actualSetUp(zerow=True)
-        self._predict_base(context='2d')
+        self._predict_base(context='2d', fluxthreshold=2.9)
     
     def test_predict_2d_block(self):
         self.actualSetUp(zerow=True, block=True)
-        self._predict_base(context='2d', extr='_block')
+        self._predict_base(context='2d', extr='_block', fluxthreshold=2.9)
 
     @unittest.skip("Facets need overlap")
     def test_predict_facets(self):
@@ -217,49 +217,50 @@ class TestImaging(unittest.TestCase):
     
     def test_predict_timeslice(self):
         self.actualSetUp()
-        self._predict_base(context='timeslice', fluxthreshold=3.0, vis_slices=self.ntimes)
+        self._predict_base(context='timeslice', fluxthreshold=5.4, vis_slices=self.ntimes)
     
     def test_predict_wsnapshots(self):
         self.actualSetUp(makegcfcf=True)
-        self._predict_base(context='wsnapshots', fluxthreshold=3.0,
+        self._predict_base(context='wsnapshots', fluxthreshold=5.5,
                            vis_slices=self.ntimes // 2, gcfcf=self.gcfcf_joint)
     
     def test_predict_wprojection(self):
         self.actualSetUp(makegcfcf=True)
-        self._predict_base(context='2d', extra='_wprojection', fluxthreshold=1.0,
+        self._predict_base(context='2d', extra='_wprojection', fluxthreshold=3.2,
                            gcfcf=self.gcfcf)
     
     def test_predict_wprojection_clip(self):
         self.actualSetUp(makegcfcf=True)
-        self._predict_base(context='2d', extra='_wprojection_clipped', fluxthreshold=1.0,
+        self._predict_base(context='2d', extra='_wprojection_clipped', fluxthreshold=3.3,
                            gcfcf=self.gcfcf_clipped)
     
     def test_predict_wstack(self):
-        self.actualSetUp()
-        self._predict_base(context='wstack', fluxthreshold=1.0, vis_slices=101)
-    
-    def test_predict_wstack_serial(self):
-        self.actualSetUp()
-        self._predict_base(context='wstack', fluxthreshold=1.0, vis_slices=101, use_serial_predict=True)
+        self.actualSetUp(block=False)
+        self._predict_base(context='wstack', fluxthreshold=3.2, vis_slices=101)
     
     def test_predict_wstack_wprojection(self):
-        self.actualSetUp(makegcfcf=True)
-        self._predict_base(context='wstack', extra='_wprojection', fluxthreshold=1.0, vis_slices=11,
+        self.actualSetUp(makegcfcf=True, block=False)
+        self._predict_base(context='wstack', extra='_wprojection', fluxthreshold=3.6, vis_slices=11,
                            gcfcf=self.gcfcf_joint)
     
+    @unittest.skip("Too much for CI/CD")
     def test_predict_wstack_spectral(self):
-        self.actualSetUp(dospectral=True)
+        self.actualSetUp(dospectral=True, block=False)
         self._predict_base(context='wstack', extra='_spectral', fluxthreshold=4.0, vis_slices=101)
     
-    @unittest.skip("Too large")
+    @unittest.skip("Too much for CI/CD")
     def test_predict_wstack_spectral_pol(self):
-        self.actualSetUp(dospectral=True, dopol=True)
+        self.actualSetUp(dospectral=True, dopol=True, block=False)
         self._predict_base(context='wstack', extra='_spectral', fluxthreshold=4.0, vis_slices=101)
     
     def test_invert_2d(self):
         self.actualSetUp(zerow=True)
         self._invert_base(context='2d', positionthreshold=2.0, check_components=False)
     
+    def test_invert_2d_psf(self):
+        self.actualSetUp(zerow=True)
+        self._invert_base(context='2d', positionthreshold=2.0, check_components=False, dopsf=True)
+
     def test_invert_2d_uniform(self):
         self.actualSetUp(zerow=True, makegcfcf=True)
         self.vis_list = weight_list_serial_workflow(self.vis_list, self.model_list, gcfcf=self.gcfcf,
@@ -296,7 +297,7 @@ class TestImaging(unittest.TestCase):
     
     @unittest.skip("Facets need overlap")
     def test_invert_facets_wstack(self):
-        self.actualSetUp()
+        self.actualSetUp(block=False)
         self._invert_base(context='facets_wstack', positionthreshold=1.0, check_components=False, facets=4,
                           vis_slices=101)
     
@@ -320,22 +321,22 @@ class TestImaging(unittest.TestCase):
                           gcfcf=self.gcfcf_clipped)
     
     def test_invert_wprojection_wstack(self):
-        self.actualSetUp(makegcfcf=True)
+        self.actualSetUp(makegcfcf=True, block=False)
         self._invert_base(context='wstack', extra='_wprojection', positionthreshold=1.0, vis_slices=11,
                           gcfcf=self.gcfcf_joint)
     
     def test_invert_wstack(self):
-        self.actualSetUp()
+        self.actualSetUp(block=False)
         self._invert_base(context='wstack', positionthreshold=1.0, vis_slices=101)
     
     def test_invert_wstack_spectral(self):
-        self.actualSetUp(dospectral=True)
+        self.actualSetUp(dospectral=True, block=False)
         self._invert_base(context='wstack', extra='_spectral', positionthreshold=2.0,
                           vis_slices=101)
     
     @unittest.skip("Too much for CI/CD")
     def test_invert_wstack_spectral_pol(self):
-        self.actualSetUp(dospectral=True, dopol=True)
+        self.actualSetUp(dospectral=True, dopol=True, block=False)
         self._invert_base(context='wstack', extra='_spectral_pol', positionthreshold=2.0,
                           vis_slices=101)
     
@@ -362,8 +363,8 @@ class TestImaging(unittest.TestCase):
         centre = self.freqwin // 2
         residual_image_list = residual_list_serial_workflow(self.vis_list, self.model_list, context='2d')
         qa = qa_image(residual_image_list[centre][0])
-        assert numpy.abs(qa.data['max'] - 0.35139716991480785) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.7681701460717593) < 1.0, str(qa)
+        assert numpy.abs(qa.data['max'] - 0.13648159862648127) < 1.0, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.30685594309917297) < 1.0, str(qa)
 
     def test_restored_list(self):
         self.actualSetUp(zerow=True)
@@ -377,8 +378,8 @@ class TestImaging(unittest.TestCase):
                                               (self.dir))
         
         qa = qa_image(restored_image_list[centre])
-        assert numpy.abs(qa.data['max'] - 99.43438263927834) < 1e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.6328915148563365) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.13648159862649) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.11275573809329001) < 1e-7, str(qa)
     
     def test_restored_list_noresidual(self):
         self.actualSetUp(zerow=True)
@@ -413,8 +414,8 @@ class TestImaging(unittest.TestCase):
                                               (self.dir))
         
         qa = qa_image(restored_4facets_image_list[centre])
-        assert numpy.abs(qa.data['max'] - 99.43438263927833) < 1e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.6328915148563354) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.13648159862647) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.11275573809329088) < 1e-7, str(qa)
         
         restored_4facets_image_list[centre].data -= restored_1facets_image_list[centre].data
         if self.persist: export_image_to_fits(restored_4facets_image_list[centre],
