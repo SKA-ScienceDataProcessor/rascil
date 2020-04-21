@@ -175,7 +175,7 @@ class TestImaging(unittest.TestCase):
         
         centre = self.freqwin // 2
         dirty = invert_list_serial_workflow(self.vis_list, self.model_list, context=context,
-                                            dopsf=False, normalize=True, facets=facets, vis_slices=vis_slices,
+                                            normalize=True, facets=facets, vis_slices=vis_slices,
                                             gcfcf=gcfcf, **kwargs)[centre]
         
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_invert_%s%s_serial_dirty.fits' %
@@ -378,8 +378,8 @@ class TestImaging(unittest.TestCase):
                                               (self.dir))
         
         qa = qa_image(restored_image_list[centre])
-        assert numpy.abs(qa.data['max'] - 100.13648159862649) < 1e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.11275573809329001) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.97741200712154) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.017555828323720078) < 1e-7, str(qa)
     
     def test_restored_list_noresidual(self):
         self.actualSetUp(zerow=True)
@@ -414,8 +414,8 @@ class TestImaging(unittest.TestCase):
                                               (self.dir))
         
         qa = qa_image(restored_4facets_image_list[centre])
-        assert numpy.abs(qa.data['max'] - 100.13648159862647) < 1e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.11275573809329088) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.97741200712154) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.017555828323720078) < 1e-7, str(qa)
         
         restored_4facets_image_list[centre].data -= restored_1facets_image_list[centre].data
         if self.persist: export_image_to_fits(restored_4facets_image_list[centre],
