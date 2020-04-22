@@ -126,15 +126,14 @@ docker image::
 Singularity
 -----------
 
-Singularity can be used to load and run the docker images::
+`Singularity <https://sylabs.io/docs/>`_ can be used to load and run the docker images::
 
     singularity pull RASCIL.img docker://timcornwell/rascil-full-no-root
     singularity run RASCIL.img
     python3 /rascil/examples/scripts/imaging.py
 
 Note that we use the -no-root versions of the docker images to avoid singularity
-complaining about a non-existent user RASCIL will be available in the
-directory /rascil. As in docker, don't run from the /rascil/directory.
+complaining about a non-existent user RASCIL. As in docker, don't run from the /rascil/directory.
 
 Inside a SLURM file singularity can be used by prefacing dask and python commands
 with singularity. For example::
