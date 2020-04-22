@@ -14,9 +14,9 @@
 #! Which project should be charged:
 ##SBATCH -A SKA-SDP
 #! How many whole nodes should be allocated?
-#SBATCH --nodes=8
+#SBATCH --nodes=2
 #! How many (MPI) tasks will there be in total? (<= nodes*16)
-#SBATCH --ntasks=16
+#SBATCH --ntasks=8
 #! Memory limit
 ##SBATCH --mem 50000
 #! How much wallclock time will be required?
@@ -34,12 +34,13 @@
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
+#SBATCH -exclusive
+
 #! Modify the settings below to specify the application's environment, location
 #! and launch method:
 
 #! Optionally modify the environment seen by the application
 #! (note that SLURM reproduces the environment at submission irrespective of ~/.bashrc):
-module purge                               # Removes all modules still loaded
 
 #! Set up python
 export PYTHONPATH=$PYTHONPATH:$RASCIL
@@ -63,18 +64,18 @@ for host in `cat hostfile.$JOBID`; do
     echo "Working on $host ...."
     if [ "$hostIndex" = "0" ]; then
         echo "run dask-scheduler"
-        ssh $host dask-scheduler --port=8786 &
+        ssh $host singularity exec /home/cornwell/workspace/RASCIL-full.img dask-scheduler --port=8786 &
         sleep 5
     fi
     echo "run dask-worker"
-    ssh $host dask-worker --host ${host} --nprocs 2 --nthreads 1  \
+    ssh $host singularity exec /home/cornwell/workspace/RASCIL-full.img dask-worker --host ${host} --nprocs 4 --nthreads 1  \
     --memory-limit 100GB $scheduler:8786 &
         sleep 1
     hostIndex="1"
 done
 echo "Scheduler and workers now running"
 
-CMD="python ./cluster_test_ritoy.py ${scheduler}:8786 | tee ritoy.log"
+CMD="singularity exec /home/cornwell/workspace/RASCIL-full.img python3 ./cluster_test_ritoy.py ${scheduler}:8786 | tee ritoy.log"
 echo "About to execute $CMD"
 
 eval $CMD
