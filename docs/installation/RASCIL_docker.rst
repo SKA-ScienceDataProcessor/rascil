@@ -30,10 +30,10 @@ container, and then give the full address of the script inside the container. Th
 we will show the prompts from inside the container::
 
      % docker run -p 8888:8888 -v $HOME:$HOME -it timcornwell/rascil-full
-     rascil@d0c5fc9fc19d:/rascil$ cd /Users/timcornwell
-     rascil@d0c5fc9fc19d:/Users/timcornwell$ python3 /rascil/examples/scripts/imaging.py
+     rascil@d0c5fc9fc19d:/rascil$ cd /<your home directory>
+     rascil@d0c5fc9fc19d:/<your home directory>$ python3 /rascil/examples/scripts/imaging.py
      ...
-     rascil@d0c5fc9fc19d:/Users/timcornwell$ ls -l imaging*.fits
+     rascil@d0c5fc9fc19d:/<your home directory>$ ls -l imaging*.fits
      -rw-r--r-- 1 rascil rascil 2102400 Feb 11 14:04 imaging_dirty.fits
      -rw-r--r-- 1 rascil rascil 2102400 Feb 11 14:04 imaging_psf.fits
      -rw-r--r-- 1 rascil rascil 2102400 Feb 11 14:04 imaging_restored.fits
@@ -47,7 +47,7 @@ Running notebooks
 We also want to be able to run jupyter notebooks inside the container::
 
     docker run -it -p 8888:8888 --volume $HOME:$HOME timcornwell/rascil-full
-    cd /Users/timcornwell
+    cd /<your home directory>
     jupyter notebook --no-browser --ip 0.0.0.0  /rascil/examples/notebooks/
 
 The juptyer server will start and output possible URLs to use::
@@ -98,7 +98,7 @@ following into another window::
 
 Then at the docker prompt, do e.g.::
 
-    cd /Users/timcornwell
+    cd /<your home directory>
     python3 /rascil/cluster_tests/ritoy/cluster_test_ritoy.py localhost:8786
 
 A jupyter lab notebook is also started by this docker-compose. The URL will be output during the
@@ -122,6 +122,27 @@ docker image::
 
     rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /var/lib/casacore/data
 
+
+Singularity
+-----------
+
+`Singularity <https://sylabs.io/docs/>`_ can be used to load and run the docker images::
+
+    singularity pull RASCIL.img docker://timcornwell/rascil-full-no-root
+    singularity run RASCIL.img
+    python3 /rascil/examples/scripts/imaging.py
+
+Note that we use the -no-root versions of the docker images to avoid singularity
+complaining about a non-existent user RASCIL. As in docker, don't run from the /rascil/directory.
+
+Inside a SLURM file singularity can be used by prefacing dask and python commands
+with singularity. For example::
+
+    ssh $host singularity exec /home/<your-name>/workspace/RASCIL-full.img dask-scheduler --port=8786 &
+    ssh $host singularity exec /home/<your-name>/workspace/RASCIL-full.img dask-worker --host ${host} --nprocs 4 --nthreads 1  \
+    --memory-limit 100GB $scheduler:8786 &
+    CMD="singularity exec /home/<your-name>/workspace/RASCIL-full.img python3 ./cluster_test_ritoy.py ${scheduler}:8786 | tee ritoy.log"
+    eval $CMD
 
 Customisability
 ---------------

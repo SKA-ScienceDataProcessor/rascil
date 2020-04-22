@@ -1,4 +1,4 @@
-FROM timcornwell/rascil-no-data
+FROM timcornwell/rascil-no-data-no-root
 
 LABEL author="Tim Cornwell <realtimcornwell@gmail.com>" \
       description="RASCIL reference image" \
@@ -17,14 +17,8 @@ RUN git lfs install && \
 
 WORKDIR /rascil
 
-# git-lfs is already loaded so we just need to install it. We do need to
-# install rascil again so the data directory is put in the right place
-# in site-packages
-RUN git lfs pull && \
-    python3 setup.py build && python3 setup.py install
+# git-lfs is already loaded so we just need to install it
+RUN git lfs pull
 
-# Use entrypoint script to create a user on the fly and avoid running as root.
-RUN chmod +x /rascil/entrypoint.sh
-ENTRYPOINT ["/rascil/entrypoint.sh"]
 CMD ["/bin/bash"]
 

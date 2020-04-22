@@ -87,6 +87,7 @@ Installation on specific machines
    :maxdepth: 2
 
    installation/RASCIL_CSD3_install
+   installation/RASCIL_galahad_install
    installation/RASCIL_P3_install
 
 Trouble-shooting
