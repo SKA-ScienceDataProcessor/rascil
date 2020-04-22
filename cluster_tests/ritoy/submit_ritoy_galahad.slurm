@@ -1,6 +1,6 @@
 #!/bin/bash
 #!
-#! Dask job script for GALAHAD
+#! Dask job script for GALAHAD - Using singularity
 #! Tim Cornwell
 #!
 
@@ -31,23 +31,17 @@
 #! Do not change:
 #SBATCH -p CLUSTER
 #! Uncomment this to prevent the job from being requeued (e.g. if
+
 #! interrupted by node failure or system downtime):
 ##SBATCH --no-requeue
 
-#SBATCH -exclusive
+#SBATCH --exclusive
 
 #! Modify the settings below to specify the application's environment, location
 #! and launch method:
 
 #! Optionally modify the environment seen by the application
 #! (note that SLURM reproduces the environment at submission irrespective of ~/.bashrc):
-
-#! Set up python
-export PYTHONPATH=$PYTHONPATH:$RASCIL
-echo "PYTHONPATH is ${PYTHONPATH}"
-
-echo -e "Running python: `which python`"
-echo -e "Running dask-scheduler: `which dask-scheduler`"
 
 cd $SLURM_SUBMIT_DIR
 echo -e "Changed directory to `pwd`.\n"

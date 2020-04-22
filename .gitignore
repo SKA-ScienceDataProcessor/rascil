@@ -51,3 +51,5 @@ rascil.egg-info/
 examples/random/
 
 tests/workflows/voltage_pattern_gaintable.png
+
+*.img
