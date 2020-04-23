@@ -52,7 +52,8 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
     if vis.npol == 1:
         log.debug('apply_gaintable: scalar gains')
     
-    row_numbers = numpy.array(list(range(len(vis.time))), dtype='int')
+    # row_numbers = numpy.array(list(range(len(vis.time))), dtype='int')
+    row_numbers = numpy.arange(len(vis.time))
     for row in range(gt.ntimes):
         vis_rows = numpy.abs(vis.time - gt.time[row]) < gt.interval[row] / 2.0
         vis_rows = row_numbers[vis_rows]
@@ -71,24 +72,50 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
             appliedwt = copy.copy(vis.weight[vis_rows])
             if vis.npol == 1:
                 if inverse:
-                    lgain = numpy.ones_like(gain)
-                    lgain[numpy.abs(gain) > 0.0] = 1.0 / gain[numpy.abs(gain) > 0.0]
+                    # lgain = numpy.ones_like(gain)
+                    # lgain[numpy.abs(gain) > 0.0] = 1.0 / gain[numpy.abs(gain) > 0.0]
+                    lgain= numpy.ones_like(gain)
+                    numpy.putmask(lgain,numpy.abs(gain) > 0.0, 1.0 / gain)
                 else:
                     lgain = gain
-                tlgain = lgain.T
-                tclgain = numpy.conjugate(tlgain)
-                
-                smueller = numpy.ones([nchan, nant, nant], dtype='complex')
-                for chan in range(nchan):
-                    smueller[chan, :, :] = numpy.ma.outer(tlgain[0, 0, chan, :],
-                                                          tclgain[0, 0, chan, :]).reshape([nant, nant])
+
+                # tlgain = lgain.T
+                # tclgain = numpy.conjugate(tlgain)
+                # smueller = numpy.ones([nchan, nant, nant], dtype='complex')
+                # for chan in range(nchan):
+                #     smueller[chan, :, :] = numpy.ma.outer(tlgain[0, 0, chan, :],
+                #                                           tclgain[0, 0, chan, :]).reshape([nant, nant])
+                # numpy.testing.assert_allclose(smueller,smueller1,rtol=1e-5)
+
+                # Original Code with Loop
+                # for sub_vis_row in range(original.shape[0]):
+                #     for chan in range(nchan):
+                #         applied[sub_vis_row, :, :, chan, 0] = \
+                #             original[sub_vis_row, :, :, chan, 0] * smueller[chan, :, :]
+                #         antantwt = numpy.outer(gainwt[:, chan, 0, 0], gainwt[:, chan, 0, 0])
+                #         appliedwt[sub_vis_row, :, :, chan, 0] = antantwt
+                #         applied[sub_vis_row, :, :, chan, 0][antantwt == 0.0] = 0.0
+
+                # Optimized (SIM-423)
+                # smueller1 = numpy.ones([nchan, nant, nant], dtype='complex')
+                smueller1 = numpy.einsum('ijlm,kjlm->jik', lgain, numpy.conjugate(lgain))
+
                 for sub_vis_row in range(original.shape[0]):
                     for chan in range(nchan):
                         applied[sub_vis_row, :, :, chan, 0] = \
-                            original[sub_vis_row, :, :, chan, 0] * smueller[chan, :, :]
-                        antantwt = numpy.outer(gainwt[:, chan, 0, 0], gainwt[:, chan, 0, 0])
+                            original[sub_vis_row, :, :, chan, 0] * smueller1[chan, :, :]
+                        antantwt = numpy.einsum('i,j->ij',gainwt[:, chan, 0, 0], gainwt[:, chan, 0, 0])
                         appliedwt[sub_vis_row, :, :, chan, 0] = antantwt
                         applied[sub_vis_row, :, :, chan, 0][antantwt == 0.0] = 0.0
+
+                # smueller1 = numpy.einsum('ijlm,kjlm->ikj', lgain, numpy.conjugate(lgain))
+                # for sub_vis_row in range(original.shape[0]):
+                #     applied[sub_vis_row, :, :, :, 0] = \
+                #         original[sub_vis_row, :, :, :, 0] * smueller1[:, :, :]
+                #     antantwt = numpy.einsum('ik,jk->ijk',gainwt[:, :, 0, 0], gainwt[:, :, 0, 0])
+                #     appliedwt[sub_vis_row, :, :, :, 0] = antantwt
+                #     numpy.putmask(applied[sub_vis_row, :, :, :, 0], antantwt[:,:,:] == 0.0, 0.0)
+
             elif vis.npol == 2:
                 has_inverse_ant = numpy.zeros([nant, nchan], dtype='bool')
                 if inverse:
