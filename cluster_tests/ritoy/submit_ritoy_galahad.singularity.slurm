@@ -1,6 +1,6 @@
 #!/bin/bash
 #!
-#! Dask job script for GALAHAD
+#! Dask job script for GALAHAD - Using singularity
 #! Tim Cornwell
 #!
 
@@ -58,18 +58,18 @@ for host in `cat hostfile.$JOBID`; do
     echo "Working on $host ...."
     if [ "$hostIndex" = "0" ]; then
         echo "run dask-scheduler"
-        ssh $host dask-scheduler --port=8786 &
+        ssh $host singularity exec /home/cornwell/workspace/RASCIL-full.img dask-scheduler --port=8786 &
         sleep 5
     fi
     echo "run dask-worker"
-    ssh $host dask-worker --host ${host} --nprocs 4 --nthreads 1  \
+    ssh $host singularity exec /home/cornwell/workspace/RASCIL-full.img dask-worker --host ${host} --nprocs 4 --nthreads 1  \
     --memory-limit 100GB $scheduler:8786 &
         sleep 1
     hostIndex="1"
 done
 echo "Scheduler and workers now running"
 
-CMD="python3 ./cluster_test_ritoy.py ${scheduler}:8786 | tee ritoy.log"
+CMD="singularity exec /home/cornwell/workspace/RASCIL-full.img python3 ./cluster_test_ritoy.py ${scheduler}:8786 | tee ritoy.log"
 echo "About to execute $CMD"
 
 eval $CMD
