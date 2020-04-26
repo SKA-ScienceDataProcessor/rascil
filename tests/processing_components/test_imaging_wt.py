@@ -172,6 +172,19 @@ class TestImagingWT(unittest.TestCase):
         self.actualSetUp()
         self._invert_base(name='invert_wt', positionthreshold=0.1, check_components=True,
                           gcfcf=self.gcfcf, NpixFF=512, fluxthreshold=1.0)
+    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    def test_invert_wt_wtowers(self):
+        self.actualSetUp()
+        self._invert_base(name='invert_wt_wtowers', positionthreshold=0.1, check_components=True,
+                          gcfcf=self.gcfcf, NpixFF=512, fluxthreshold=1.0,
+                          subgrid_size=100, margin=36, winc=6)
+
+    @unittest.skipUnless(run_wt_tests, "requires the py-wtowers module")
+    def test_predict_wt_wtowers(self):
+        self.actualSetUp()
+        self._predict_base(name='predict_wt_wtowers', gcfcf=self.gcfcf, NpixFF=512, fluxthreshold=1.3, 
+                          subgrid_size=100, margin=36, winc=6)
+
 
 
 if __name__ == '__main__':
