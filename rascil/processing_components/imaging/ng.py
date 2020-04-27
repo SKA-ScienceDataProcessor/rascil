@@ -14,15 +14,16 @@ from typing import Union
 
 import numpy
 
-from rascil.data_models.memory_data_models import Visibility, BlockVisibility, \
+from rascil.data_models.memory_data_models import BlockVisibility, \
     Image
 from rascil.data_models.parameters import get_parameter
 from rascil.data_models.polarisation import convert_pol_frame
 from rascil.processing_components.image.operations import copy_image, \
     image_is_canonical
 from rascil.processing_components.imaging.base import shift_vis_to_image, \
-    normalize_sumwt
+    normalize_sumwt, fill_vis_for_psf
 from rascil.processing_components.visibility.base import copy_visibility
+
 
 log = logging.getLogger('logger')
 
@@ -60,8 +61,7 @@ try:
         nrows, nants, _, vnchan, vnpol = bvis.vis.shape
         
         uvw = newbvis.data['uvw'].reshape([nrows * nants * nants, 3])
-        vist = numpy.zeros([vnpol, vnchan, nants * nants * nrows],
-                           dtype='complex')
+        vist = numpy.zeros([vnpol, vnchan, nants * nants * nrows], dtype='complex')
         
         # Get the image properties
         m_nchan, m_npol, ny, nx = model.data.shape
@@ -112,10 +112,10 @@ try:
         vis = convert_pol_frame(vist.T, model.polarisation_frame, bvis.polarisation_frame, polaxis=2)
 
         newbvis.data['vis'] = vis.reshape([nrows, nants, nants, vnchan, vnpol])
-        
+    
         # Now we can shift the visibility from the image frame to the original visibility frame
         return shift_vis_to_image(newbvis, model, tangent=True, inverse=True)
-    
+
     
     def invert_ng(bvis: BlockVisibility, model: Image, dopsf: bool = False,
                   normalize: bool = True,
@@ -152,14 +152,15 @@ try:
         freq = sbvis.frequency  # frequency, Hz
         
         nrows, nants, _, vnchan, vnpol = sbvis.vis.shape
-        uvw = sbvis.uvw.reshape([nrows * nants * nants, 3])
-        ms = sbvis.vis.reshape([nrows * nants * nants, vnchan, vnpol])
-        wgt = sbvis.flagged_imaging_weight.reshape([nrows * nants * nants, vnchan, vnpol])
-        
         if dopsf:
-            flags = sbvis.flags.reshape([nrows * nants * nants, vnchan, vnpol])
-            ms[...] = (1 - flags).astype('complex')
-        
+            sbvis = fill_vis_for_psf(sbvis)
+
+        ms = sbvis.vis.reshape([nrows * nants * nants, vnchan, vnpol])
+        ms = convert_pol_frame(ms, bvis.polarisation_frame, im.polarisation_frame, polaxis=2)
+
+        uvw = sbvis.uvw.reshape([nrows * nants * nants, 3])
+        wgt = sbvis.flagged_imaging_weight.reshape([nrows * nants * nants, vnchan, vnpol])
+
         if epsilon > 5.0e-6:
             ms = ms.astype("c8")
             wgt = wgt.astype("f4")
@@ -177,7 +178,6 @@ try:
         im.data[...] = 0.0
         sumwt = numpy.zeros([nchan, npol])
         
-        ms = convert_pol_frame(ms, bvis.polarisation_frame, im.polarisation_frame, polaxis=2)
         # There's a latent problem here with the weights.
         # wgt = numpy.real(convert_pol_frame(wgt, bvis.polarisation_frame, im.polarisation_frame, polaxis=2))
         

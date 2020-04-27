@@ -1,0 +1,31 @@
+.. _ska_polarisation_simulation:
+
+SKA modelled beam polsation simulations
+=======================================
+
+This measures the change in a MID dirty image introduced by unmodelled primary beam polarisation:
+
+    - The sky can be a point source at the half power point or a realistic sky constructed from S3-SEX catalog. Only
+    Stokes I is non-zero in the input image.
+    - The observation is by MID over a range of hour angles
+    - The visibility is calculated by Direct Fourier transform after having applied the antenna voltage beam  for each dish.
+    - Processing can be divided into chunks of time (default 1800s)
+    - The noise level is measured by calculating the change in a small field dirty image induced by the pointing errors.
+    - Dask is used to distribute the processing over a number of workers.
+    - Various plots can be produced, The primary output is a csv file containing information about the statistics of the residual images.
+
+Running this script requires interpolated primary beams that are currently only available on P3.
+
+The full set of test scripts are available at: https://github.com/ska-telescope/sim-mid-polarisation, and the
+simulation results are summarised on a confluence page.
+.
+
+Command line arguments
+++++++++++++++++++++++
+
+.. argparse::
+   :filename: ../examples/ska_simulations/polarisation.py
+   :func: cli_parser
+   :prog: polarisation.py
+
+The python script is:

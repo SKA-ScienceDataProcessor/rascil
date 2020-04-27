@@ -1178,7 +1178,11 @@ class BlockVisibility:
         if data is None and vis is not None:
             ntimes, nants, _, nchan, npol = vis.shape
             assert vis.shape == weight.shape
+            if isinstance(frequency, list):
+                frequency = numpy.ndarray(frequency)
             assert len(frequency) == nchan
+            if isinstance(channel_bandwidth, list):
+                channel_bandwidth = numpy.ndarray(channel_bandwidth)
             assert len(channel_bandwidth) == nchan
             desc = [('index', 'i8'),
                     ('uvw', 'f8', (nants, nants, 3)),

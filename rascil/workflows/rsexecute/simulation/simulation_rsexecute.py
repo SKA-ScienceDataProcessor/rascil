@@ -197,7 +197,8 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
                                                           no_error_gt_list, error_gt_list,
                                                           context='2d',
                                                           residual=True,
-                                                          sum_vis=True):
+                                                          sum_vis=True,
+                                                          **kwargs):
     """Calculate residual image corresponding to a set of gaintables
 
     The visibility difference for a set of components for error and no error gaintables
@@ -242,33 +243,24 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
         for ibv, bvis in enumerate(error_bvis_list)]
     
     # Inner nest is bvis per skymodels, outer is over vis's. Calculate residual visibility
-    def subtract_vis_convert(error_bvis, no_error_bvis):
+    def subtract_vis(error_bvis, no_error_bvis):
         error_bvis.data['vis'] = error_bvis.data['vis'] - no_error_bvis.data['vis']
-        error_vis = convert_blockvisibility_to_visibility(error_bvis)
-        return error_vis
-    
-    def convert(error_bvis):
-        error_vis = convert_blockvisibility_to_visibility(error_bvis)
-        return error_vis
+        return error_bvis
     
     if residual:
-        error_vis_list = [
-            [rsexecute.execute(subtract_vis_convert)(error_bvis_list[ibvis][icomp],
+        error_bvis_list = [
+            [rsexecute.execute(subtract_vis)(error_bvis_list[ibvis][icomp],
                                                      no_error_bvis_list[ibvis][icomp])
              for icomp, _ in enumerate(sub_components)]
             for ibvis, _ in enumerate(error_bvis_list)]
-    else:
-        error_vis_list = [
-            [rsexecute.execute(convert)(error_bvis_list[ibvis][icomp])
-             for icomp, _ in enumerate(sub_components)]
-            for ibvis, _ in enumerate(error_bvis_list)]
-        
+
     if sum_vis:
         sum_error_vis_list = \
-            [sum_predict_results_rsexecute([error_vis_list[ivis][icomp]
+            [sum_predict_results_rsexecute([error_bvis_list[ivis][icomp]
                                                              for icomp, _ in enumerate(sub_components)])
-                                                             for ivis, _ in enumerate(error_vis_list)]
-        return invert_list_rsexecute_workflow(sum_error_vis_list, sub_model_list, context=context)
+                                                             for ivis, _ in enumerate(error_bvis_list)]
+        return invert_list_rsexecute_workflow(sum_error_vis_list, sub_model_list, context=context,
+                                              **kwargs)
 
     else:
         
@@ -281,7 +273,7 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
             return sum_image, images[0][1]
         
         dirty_list = list()
-        for vis in error_vis_list:
+        for vis in error_bvis_list:
             result = invert_list_rsexecute_workflow(vis, sub_model_list, context=context)
             dirty_list.append(rsexecute.execute(sum_images)(result))
         
@@ -668,15 +660,16 @@ def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, t
     
     # Set up details of simulated observation
     if band == 'B1':
-        frequency = [0.765e9]
+        frequency = numpy.array([0.765e9])
     elif band == 'B2':
-        frequency = [1.36e9]
+        frequency = numpy.array([1.36e9])
     elif band == 'Ku':
-        frequency = [12.179e9]
+        frequency = numpy.array([12.179e9])
     else:
         raise ValueError("Unknown band %s" % band)
     
-    channel_bandwidth = [1e7]
+    channel_bandwidth = numpy.array([1e7])
+    
     mid_location = EarthLocation(lon="21.443803", lat="-30.712925", height=0.0)
     
     # Do each time_chunk in parallel

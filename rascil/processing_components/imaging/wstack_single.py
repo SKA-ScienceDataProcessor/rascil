@@ -104,7 +104,7 @@ def invert_wstack_single(vis: Visibility, im: Image, dopsf, normalize=True, remo
     assert isinstance(vis, Visibility), "wstack requires Visibility format not BlockVisibility"
     
     if dopsf:
-        vis = fill_vis_for_psf(im, vis)
+        vis = fill_vis_for_psf(vis)
     
     # We might want to do wprojection so we remove the average w
     w_average = numpy.average(vis.w)

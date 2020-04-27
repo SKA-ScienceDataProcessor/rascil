@@ -166,8 +166,7 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     svis = copy_visibility(vis)
 
     if dopsf:
-        svis = fill_vis_for_psf(im, svis)
-
+        svis = fill_vis_for_psf(svis)
 
     svis = shift_vis_to_image(svis, im, tangent=True, inverse=False)
 
@@ -194,42 +193,28 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     return result, sumwt
 
 
-def fill_vis_for_psf(im, svis):
+def fill_vis_for_psf(svis):
     """ Fill the visibility for calculation of PSF
     
     :param im:
     :param svis:
     :return: visibility with unit vis
     """
-    if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
-        svis.data['vis'][..., 1:4] = 0.0 + 0.0j
+    if svis.polarisation_frame == PolarisationFrame("linear"):
+        svis.data['vis'][..., 0:1] = 1.0 + 0.0j
+        svis.data['vis'][..., 2:3] = 0.0 + 0.0j
+    elif svis.polarisation_frame == PolarisationFrame("circular"):
+        svis.data['vis'][..., 1:2] = 0.0 + 0.0j
         svis.data['vis'][..., 0] = 1.0 + 0.0j
-        svis.data['vis'][...] = \
-            convert_pol_frame(svis.data['vis'],
-                              PolarisationFrame("stokesIQUV"),
-                              svis.polarisation_frame, polaxis=-1)
-    elif im.polarisation_frame == PolarisationFrame("stokesIQ"):
-        svis.data['vis'][..., 1] = 0.0 + 0.0j
-        svis.data['vis'][..., 0] = 1.0 + 0.0j
-        svis.data['vis'][...] = \
-            convert_pol_frame(svis.data['vis'],
-                              PolarisationFrame("stokesIQ"),
-                              svis.polarisation_frame, polaxis=-1)
-    elif im.polarisation_frame == PolarisationFrame("stokesIV"):
-        svis.data['vis'][..., 1] = 0.0 + 0.0j
-        svis.data['vis'][..., 0] = 1.0 + 0.0j
-        svis.data['vis'][...] = \
-            convert_pol_frame(svis.data['vis'],
-                              PolarisationFrame("stokesIV"),
-                              svis.polarisation_frame, polaxis=-1)
-    elif im.polarisation_frame == PolarisationFrame("stokesI"):
-        svis.data['vis'][..., :] = 1.0 + 0.0j
-        svis.data['vis'][...] = \
-            convert_pol_frame(svis.data['vis'],
-                              PolarisationFrame("stokesI"),
-                              svis.polarisation_frame, polaxis=-1)
+        svis.data['vis'][..., 3] = 1.0 + 0.0j
+    elif svis.polarisation_frame == PolarisationFrame("linearnp"):
+        svis.data['vis'][...] = 1.0 + 0.0j
+    elif svis.polarisation_frame == PolarisationFrame("circularnp"):
+        svis.data['vis'][...] = 1.0 + 0.0j
+    elif svis.polarisation_frame == PolarisationFrame("stokesI"):
+        svis.data['vis'][...] = 1.0 + 0.0j
     else:
-        raise ValueError("Cannot calculate PSF for {}".format(im.polarisation_frame))
+        raise ValueError("Cannot calculate PSF for {}".format(svis.polarisation_frame))
     
     return svis
 
