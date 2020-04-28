@@ -9,6 +9,7 @@ __all__ = ['vis2dirty', 'gcf2wkern', 'predict_wt', 'invert_wt']
 
 import logging
 from typing import Union
+import ctypes
 
 import numpy
 
@@ -88,16 +89,25 @@ try:
             wtkern.kern_by_w[i].w = wplanes[i][0][0]
             wplanes_f = numpy.asarray(wplanes[i][1])
 
-            wplanes_f = wplanes_f.flatten()
-
+            #wplanes_f = wplanes_f.flatten()
+            wplanes_f = wplanes_f.ravel()
             if conjugate:
-                for idx in range(wplanes_f.shape[0]):
-                    wtkern.kern_by_w[i].data[2 * idx] = numpy.real(wplanes_f[idx])
-                    wtkern.kern_by_w[i].data[2 * idx + 1] = - numpy.imag(wplanes_f[idx])
-            else:
-                for idx in range(wplanes_f.shape[0]):
-                    wtkern.kern_by_w[i].data[2 * idx] = numpy.real(wplanes_f[idx])
-                    wtkern.kern_by_w[i].data[2 * idx + 1] = numpy.imag(wplanes_f[idx])
+                 wplanes_f = numpy.conjugate(wplanes_f)
+            wplanes_f = wplanes_f.view(numpy.float64)
+            wtkern.kern_by_w[i].data = (ctypes.c_double * len(wplanes_f))(*wplanes_f)
+
+#            if conjugate:
+#                for idx in range(wplanes_f.shape[0]):
+##                 wtkern.kern_by_w[i].data[::2] =  numpy.real(wplanes_f)
+##                 wtkern.kern_by_w[i].data[1::2] = -1.0*numpy.imag(wplanes_f)
+#                    wtkern.kern_by_w[i].data[2 * idx] = numpy.real(wplanes_f[idx])
+#                    wtkern.kern_by_w[i].data[2 * idx + 1] = - numpy.imag(wplanes_f[idx])
+#            else:
+#                for idx in range(wplanes_f.shape[0]):
+##                 wtkern.kern_by_w[i].data[::2] =  numpy.real(wplanes_f)
+##                 wtkern.kern_by_w[i].data[1::2] = numpy.imag(wplanes_f)
+#                    wtkern.kern_by_w[i].data[2 * idx] = numpy.real(wplanes_f[idx])
+#                    wtkern.kern_by_w[i].data[2 * idx + 1] = numpy.imag(wplanes_f[idx])
 
         return wtkern
 
@@ -159,6 +169,7 @@ try:
         
         # Fill wkern structure if gcfcf is provided
         if gcfcf is not None:
+            print("predict_wt: Using gcfcf kernel")
             wtkern = wtowers.W_KERNEL_DATA()
             wtkern = gcf2wkern(gcfcf, wtkern, conjugate=True)
         else:
@@ -275,6 +286,7 @@ try:
         
         # Fill wkern structure if gcfcf is provided
         if gcfcf is not None:
+            print("invert_wt: Using gcfcf kernel")
             wtkern = wtowers.W_KERNEL_DATA()
             wtkern = gcf2wkern(gcfcf, wtkern)
         else:
