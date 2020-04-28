@@ -201,10 +201,10 @@ def fill_vis_for_psf(svis):
     :return: visibility with unit vis
     """
     if svis.polarisation_frame == PolarisationFrame("linear"):
-        svis.data['vis'][..., 0:1] = 1.0 + 0.0j
-        svis.data['vis'][..., 2:3] = 0.0 + 0.0j
+        svis.data['vis'][..., 0:2] = 1.0 + 0.0j
+        svis.data['vis'][..., 2:] = 0.0 + 0.0j
     elif svis.polarisation_frame == PolarisationFrame("circular"):
-        svis.data['vis'][..., 1:2] = 0.0 + 0.0j
+        svis.data['vis'][..., 1:3] = 0.0 + 0.0j
         svis.data['vis'][..., 0] = 1.0 + 0.0j
         svis.data['vis'][..., 3] = 1.0 + 0.0j
     elif svis.polarisation_frame == PolarisationFrame("linearnp"):
