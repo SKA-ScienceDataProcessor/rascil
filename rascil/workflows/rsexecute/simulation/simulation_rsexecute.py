@@ -591,7 +591,8 @@ def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
                                                      sub_components,
                                                      use_radec=False,
                                                      show=True,
-                                                     basename=''):
+                                                     basename='',
+                                                     normalise=True):
     """ Create gaintable for polarisation effects
     
     Compare with nominal and actual voltage patterns
@@ -602,16 +603,28 @@ def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
     :param use_radec: Use RADEC coordinate (False)
     :param show: Plot the results
     :param basename: Base name for the plots
+    :param normalise: Normalise peak of each receptor
     :return: (list of error-free gaintables, list of error gaintables) or graph
      """
      
     def find_vp_actual(band):
         telescope = "MID_FEKO_{}".format(band)
-        return create_vp(telescope=telescope)
+        vp = create_vp(telescope=telescope)
+        if normalise:
+            g = numpy.zeros([4])
+            g[0] = numpy.max(numpy.abs(vp.data[:, 0, ...]))
+            g[3] = numpy.max(numpy.abs(vp.data[:, 3, ...]))
+            g[1] = g[2] = numpy.sqrt(g[0] * g[3])
+            for chan in range(4):
+                vp.data[:,chan,...] /= g[chan]
+        return vp
 
     def find_vp_nominal(band):
         vp = find_vp_actual(band)
         vpsym = 0.5 * (vp.data[:, 0, ...] + vp.data[:, 3, ...])
+        if normalise:
+            vpsym.data /= numpy.max(numpy.abs(vpsym.data))
+            
         vp.data[:, 1:2, ...] = 0.0 + 0.0j
         vp.data[:, 0, ...] = vpsym
         vp.data[:, 3, ...] = vpsym
