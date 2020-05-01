@@ -5,8 +5,9 @@ Imaging pipeline
 # # Pipeline processing using Dask
 
 from rascil.data_models.parameters import rascil_path, rascil_data_path
-results_dir = rascil_path('test_results')
-dask_dir = rascil_path('test_results/dask-work-space')
+
+results_dir ='./'
+dask_dir='./'
 
 from rascil.data_models import PolarisationFrame, import_blockvisibility_from_hdf5
 
@@ -33,8 +34,7 @@ if __name__ == '__main__':
     log = logging.getLogger()
     logging.info("Starting Imaging pipeline")
     
-    rsexecute.set_client(use_dask=True, threads_per_worker=1, memory_limit=32 * 1024 * 1024 * 1024, n_workers=8,
-                          local_dir=dask_dir)
+    rsexecute.set_client(use_dask=True)
     print(rsexecute.client)
     rsexecute.run(init_logging)
     
