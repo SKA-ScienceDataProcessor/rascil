@@ -188,7 +188,7 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
     if normalize:
         result = normalize_sumwt(result, sumwt)
 
-    result = convert_polimage_to_stokes(result)
+    result = convert_polimage_to_stokes(result, **kwargs)
 
     return result, sumwt
 
