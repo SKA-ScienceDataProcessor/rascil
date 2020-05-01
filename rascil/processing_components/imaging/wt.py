@@ -5,7 +5,7 @@ https://gitlab.com/ska-telescope/py-wtowers
 
 """
 
-__all__ = ['vis2dirty', 'gcf2wkern', 'predict_wt', 'invert_wt']
+__all__ = ['vis2dirty', 'gcf2wkern', 'gcf2wkern2', 'predict_wt', 'invert_wt']
 
 import logging
 from typing import Union
@@ -111,7 +111,39 @@ try:
 
         return wtkern
 
-    def predict_wt(bvis: BlockVisibility, model: Image, gcfcf=None, **kwargs) -> \
+    def gcf2wkern2(gcfcf, conjugate=False):
+        """ Convert the RASCIL gcfcf into WTowers format
+        
+        :param gcfcf:
+        :param wtkern:
+        :param conjugate:
+        :return:
+        """
+        plane_count, wplanes, wmin, wmax, wstep, size_y, size_x, oversampling = convert_kernel_to_list(gcfcf)
+        # Allocate memory for wtkern structure
+        wtkern = wtowers.W_KERNEL_DATA()
+        status = wtowers.wkernel_allocate_func(wtkern, plane_count, size_x, size_y, oversampling)
+        # Copy the rest of the metadata to wtkern
+        wtkern.w_min = wmin[0]
+        wtkern.w_max = wmax[0]
+        wtkern.w_step = wstep
+        wtkern.oversampling = oversampling
+        
+        for i in range(plane_count):
+            w = wplanes[i][0][0]
+            wtkern.kern_by_w[i].w = wplanes[i][0][0]
+            wplanes_f = numpy.asarray(wplanes[i][1])
+
+            #wplanes_f = wplanes_f.flatten()
+            wplanes_f = wplanes_f.ravel()
+            if conjugate:
+                 wplanes_f = numpy.conjugate(wplanes_f)
+            wplanes_f = wplanes_f.view(numpy.float64)
+            wtkern.kern_by_w[i].data = (ctypes.c_double * len(wplanes_f))(*wplanes_f)
+
+        return wtkern
+
+    def predict_wt(bvis: BlockVisibility, model: Image, gcfcf=None, wtkern=None, **kwargs) -> \
             BlockVisibility:
         """ Predict using convolutional degridding.
         
@@ -168,12 +200,13 @@ try:
         status = wtowers.fill_stats_func(wtvis)
         
         # Fill wkern structure if gcfcf is provided
-        if gcfcf is not None:
-            print("predict_wt: Using gcfcf kernel")
-            wtkern = wtowers.W_KERNEL_DATA()
-            wtkern = gcf2wkern(gcfcf, wtkern, conjugate=True)
-        else:
-            wtkern = None
+        if wtkern is None:
+            if gcfcf is not None:
+                print("predict_wt: Using gcfcf kernel")
+                wtkern = wtowers.W_KERNEL_DATA()
+                wtkern = gcf2wkern(gcfcf, wtkern, conjugate=True)
+#            else:
+#                wtkern = None
 
         # Extracting data from BlockVisibility
         freq = bvis.frequency  # frequency, Hz
@@ -221,7 +254,7 @@ try:
     
     
     def invert_wt(bvis: BlockVisibility, model: Image, dopsf: bool = False, normalize: bool = True, gcfcf=None,
-                  **kwargs) -> (Image, numpy.ndarray):
+                   wtkern=None, **kwargs) -> (Image, numpy.ndarray):
         """ Invert using py-wtowers module
         
         https://gitlab.com/ska-telescope/py-wtowers
@@ -285,12 +318,13 @@ try:
         status = wtowers.fill_stats_func(wtvis)
         
         # Fill wkern structure if gcfcf is provided
-        if gcfcf is not None:
-            print("invert_wt: Using gcfcf kernel")
-            wtkern = wtowers.W_KERNEL_DATA()
-            wtkern = gcf2wkern(gcfcf, wtkern)
-        else:
-            wtkern = None
+        if wtkern is None:
+            if gcfcf is not None:
+                print("invert_wt: Using gcfcf kernel")
+                wtkern = wtowers.W_KERNEL_DATA()
+                wtkern = gcf2wkern(gcfcf, wtkern)
+#            else:
+#                wtkern = None
         
         freq = sbvis.frequency  # frequency, Hz
         
