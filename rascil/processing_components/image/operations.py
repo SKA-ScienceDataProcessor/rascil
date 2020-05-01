@@ -514,14 +514,15 @@ def convert_stokes_to_polimage(im: Image, polarisation_frame: PolarisationFrame)
         raise ValueError("Cannot convert stokes to %s" % (polarisation_frame.type))
 
 
-def convert_polimage_to_stokes(im: Image):
+def convert_polimage_to_stokes(im: Image, complex_image=False, **kwargs):
     """Convert a polarisation image to stokes IQUV (complex)
 
     For example:
         imIQUV = convert_polimage_to_stokes(impol)
 
     :param im: Complex Image in linear or circular
-    :returns: Complex image
+    :param complex_image: Return complex image?
+    :returns: Complex or Real image
 
     See also
         :py:func:`rascil.processing_components.image.operations.convert_stokes_to_polimage`
@@ -532,20 +533,26 @@ def convert_polimage_to_stokes(im: Image):
     assert isinstance(im, Image)
     assert im.data.dtype == 'complex'
     
+    def to_required(cimarr):
+        if complex_image:
+            return cimarr
+        else:
+            return numpy.real(cimarr)
+        
     if im.polarisation_frame == PolarisationFrame('linear'):
         cimarr = convert_linear_to_stokes(im.data)
-        return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
+        return create_image_from_array(to_required(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
     elif im.polarisation_frame == PolarisationFrame('linearnp'):
         cimarr = convert_linear_to_stokes(im.data)
-        return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQ'))
+        return create_image_from_array(to_required(cimarr), im.wcs, PolarisationFrame('stokesIQ'))
     elif im.polarisation_frame == PolarisationFrame('circular'):
         cimarr = convert_circular_to_stokes(im.data)
-        return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
+        return create_image_from_array(to_required(cimarr), im.wcs, PolarisationFrame('stokesIQUV'))
     elif im.polarisation_frame == PolarisationFrame('circularnp'):
         cimarr = convert_circular_to_stokes(im.data)
-        return create_image_from_array(numpy.real(cimarr), im.wcs, PolarisationFrame('stokesIV'))
+        return create_image_from_array(to_required(cimarr), im.wcs, PolarisationFrame('stokesIV'))
     elif im.polarisation_frame == PolarisationFrame('stokesI'):
-        return create_image_from_array(numpy.real(im.data), im.wcs, PolarisationFrame('stokesI'))
+        return create_image_from_array(to_required(im.data), im.wcs, PolarisationFrame('stokesI'))
     else:
         raise ValueError("Cannot convert %s to stokes" % (im.polarisation_frame.type))
 

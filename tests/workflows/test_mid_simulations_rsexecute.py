@@ -310,8 +310,8 @@ class TestPointingSimulation(unittest.TestCase):
                                              vis_polarisation_frame=PolarisationFrame("linear"))
         qa = qa_image(error_dirty)
 
-        numpy.testing.assert_almost_equal(qa.data['max'], 0.0008523028870029411, 5)
-        numpy.testing.assert_almost_equal(qa.data['min'], -0.003816208516624811, 5)
+        numpy.testing.assert_almost_equal(qa.data['max'], 0.0004301773484661237, 5)
+        numpy.testing.assert_almost_equal(qa.data['min'], -0.0005956468856474398, 5)
         numpy.testing.assert_almost_equal(qa.data['rms'], 2.478984146453474e-05, 5)
 
         if self.persist:

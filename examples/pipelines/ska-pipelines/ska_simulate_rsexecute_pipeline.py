@@ -3,8 +3,8 @@ Simulation of observation for subsequent processing
 """
 from rascil.data_models import rascil_path
 
-results_dir = rascil_path('test_results')
-dask_dir = rascil_path('test_results/dask-work-space')
+results_dir ='./'
+dask_dir='./'
 
 import numpy
 import logging
@@ -36,8 +36,7 @@ if __name__ == '__main__':
     log = logging.getLogger()
     print("Starting ska-pipelines simulation pipeline")
     
-    rsexecute.set_client(use_dask=True, threads_per_worker=1, memory_limit=32 * 1024 * 1024 * 1024, n_workers=8,
-                          local_dir=dask_dir)
+    rsexecute.set_client(use_dask=True)
     print(rsexecute.client)
     rsexecute.run(init_logging)
     

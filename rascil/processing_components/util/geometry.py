@@ -20,6 +20,10 @@ from astropy.coordinates import SkyCoord, EarthLocation, Angle
 log = logging.getLogger('logger')
 
 
+def angle_to_quanta(angle):
+    return {"value": angle.rad, "unit": "rad"}
+
+
 def calculate_hourangles(location, utc_time, direction):
     """ Return hour angles for location, utc_time, and direction
 
@@ -37,7 +41,7 @@ def calculate_hourangles(location, utc_time, direction):
     dm = measures()
     casa_location = dm.position('itrf', str(location.x), str(location.y), str(location.z))
     dm.doframe(casa_location)
-    casa_direction = dm.direction('j2000', str(direction.ra), str(direction.dec))
+    casa_direction = dm.direction('j2000', angle_to_quanta(direction.ra), angle_to_quanta(direction.dec))
     has = list()
     unit = "rad"
     for utc in utc_time:
@@ -100,7 +104,7 @@ def calculate_azel(location, utc_time, direction):
     dm = measures()
     casa_location = dm.position('itrf', str(location.x), str(location.y), str(location.z))
     dm.doframe(casa_location)
-    casa_direction = dm.direction('j2000', str(direction.ra), str(direction.dec))
+    casa_direction = dm.direction('j2000', angle_to_quanta(direction.ra), angle_to_quanta(direction.dec))
     azs = list()
     els = list()
     unit0 = 'rad'
