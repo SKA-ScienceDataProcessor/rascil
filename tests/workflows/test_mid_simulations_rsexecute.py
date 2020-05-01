@@ -311,7 +311,7 @@ class TestPointingSimulation(unittest.TestCase):
         qa = qa_image(error_dirty)
 
         numpy.testing.assert_almost_equal(qa.data['max'], 0.0004301773484661237, 5)
-        numpy.testing.assert_almost_equal(qa.data['min'], -0.0019056371737557302, 5)
+        numpy.testing.assert_almost_equal(qa.data['min'], -0.0005956468856474398, 5)
         numpy.testing.assert_almost_equal(qa.data['rms'], 2.478984146453474e-05, 5)
 
         if self.persist:
