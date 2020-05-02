@@ -79,13 +79,13 @@ An alternative to the use of pip in the above sequence is to use Anaconda https:
    conda activate rascil
    conda config --env --prepend channels astropy
 
-
 Installation on specific machines
 +++++++++++++++++++++++++++++++++
 
 .. toctree::
    :maxdepth: 2
 
+   installation/RASCIL_macos_install
    installation/RASCIL_CSD3_install
    installation/RASCIL_galahad_install
    installation/RASCIL_P3_install
