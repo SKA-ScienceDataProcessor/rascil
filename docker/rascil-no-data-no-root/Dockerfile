@@ -9,7 +9,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update -y && apt-get install -y \
     ca-certificates \
-    gosu git wget curl rsync \
+    gosu git wget curl rsync nano \
     libxml2-dev liblapack-dev libcfitsio-dev libgtkmm-3.0-dev \
     cmake g++ build-essential gfortran libpng-dev casacore-dev python-numpy \
     python-setuptools libboost-python-dev wcslib-dev \
@@ -32,7 +32,9 @@ WORKDIR /rascil
 # We choose to put the dask scratch files inside the container.
 # It might be better to map it in with --volume
 RUN mkdir -p /rascil/dask-worker-space && \
-    chmod 777 /rascil/dask-worker-space
+    chmod 777 /rascil/dask-worker-space && \
+    mkdir -p /rascil/test_results && \
+    chmod 777 /rascil/test_results
 
 RUN pip3 install Cython setuptools && \
     pip3 install python-casacore==3.2.0 --upgrade && \
