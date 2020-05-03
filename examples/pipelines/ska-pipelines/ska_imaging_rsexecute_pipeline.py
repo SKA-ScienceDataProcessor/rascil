@@ -4,15 +4,15 @@ Imaging pipeline
 
 # # Pipeline processing using Dask
 
-from rascil.data_models.parameters import rascil_path, rascil_data_path
+from rascil.data_models.parameters import rascil_path
 
 results_dir ='./'
 dask_dir='./'
 
-from rascil.data_models import PolarisationFrame, import_blockvisibility_from_hdf5
+from rascil.data_models import PolarisationFrame
 
 from rascil.processing_components import export_image_to_fits, create_image_from_visibility, \
-    convert_blockvisibility_to_visibility
+    create_blockvisibility_from_ms
 
 from rascil.workflows import invert_list_rsexecute_workflow
 
@@ -38,21 +38,19 @@ if __name__ == '__main__':
     print(rsexecute.client)
     rsexecute.run(init_logging)
     
-    nfreqwin = 41
+    nfreqwin = 8
     ntimes = 5
     rmax = 750.0
     centre = nfreqwin // 2
     
     # Load data from previous simulation
-    block_vislist = [rsexecute.execute(import_blockvisibility_from_hdf5)
-                     (rascil_path('%s/ska-pipeline_simulation_vislist_%d.hdf' % (results_dir, v)))
+    vis_list = [rsexecute.execute(create_blockvisibility_from_ms)
+                     (rascil_path('%s/ska-pipeline_simulation_vislist_%d.ms' % (results_dir, v)))[0]
                      for v in range(nfreqwin)]
 
-    vis_list = [rsexecute.execute(convert_blockvisibility_to_visibility, nout=1)(bv) for bv in block_vislist]
-    print('Reading visibilities')
     vis_list = rsexecute.persist(vis_list)
     
-    cellsize = 0.001
+    cellsize = 0.0005
     npixel = 1024
     pol_frame = PolarisationFrame("stokesI")
     
@@ -62,8 +60,10 @@ if __name__ == '__main__':
     
     model_list = rsexecute.persist(model_list)
     
-    dirty_list = invert_list_rsexecute_workflow(vis_list, template_model_imagelist=model_list, context='wstack',
-                                                 vis_slices=51)
+    imaging_context = 'ng'
+    vis_slices = 1
+    dirty_list = invert_list_rsexecute_workflow(vis_list, template_model_imagelist=model_list, context=imaging_context,
+                                                vis_slices=vis_slices)
     
     log.info('About to run invert_list_rsexecute_workflow')
     result = rsexecute.compute(dirty_list, sync=True)
@@ -72,3 +72,5 @@ if __name__ == '__main__':
     rsexecute.close()
     
     export_image_to_fits(dirty, '%s/ska-imaging_rsexecute_dirty.fits' % (results_dir))
+    
+    exit(0)

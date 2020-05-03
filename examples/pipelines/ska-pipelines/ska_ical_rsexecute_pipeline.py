@@ -10,10 +10,9 @@ results_dir = './'
 dask_dir = './'
 
 from rascil.data_models import PolarisationFrame
-from rascil.data_models import import_blockvisibility_from_hdf5
 
-from rascil.processing_components import export_image_to_fits, qa_image, convert_blockvisibility_to_visibility, \
-    create_image_from_visibility
+from rascil.processing_components import export_image_to_fits, qa_image,  \
+    create_image_from_visibility, create_blockvisibility_from_ms
 from rascil.processing_components.calibration.chain_calibration import create_calibration_controls
 
 from rascil.workflows import ical_list_rsexecute_workflow
@@ -38,21 +37,20 @@ if __name__ == '__main__':
     print(rsexecute.client)
     rsexecute.run(init_logging)
     
-    nfreqwin = 41
+    nfreqwin = 8
     ntimes = 5
     rmax = 750.0
     centre = nfreqwin // 2
     
     # Load data from previous simulation
-    block_vislist = [rsexecute.execute(import_blockvisibility_from_hdf5)
-                     (rascil_path('%s/ska-pipeline_simulation_vislist_%d.hdf' % (results_dir, v)))
+    vis_list = [rsexecute.execute(create_blockvisibility_from_ms)
+                     (rascil_path('%s/ska-pipeline_simulation_vislist_%d.ms' % (results_dir, v)))[0]
                      for v in range(nfreqwin)]
     
-    vis_list = [rsexecute.execute(convert_blockvisibility_to_visibility, nout=1)(bv) for bv in block_vislist]
     print('Reading visibilities')
-    vis_list = rsexecute.compute(vis_list, sync=True)
+    vis_list = rsexecute.persist(vis_list)
     
-    cellsize = 0.001
+    cellsize = 0.0005
     npixel = 1024
     pol_frame = PolarisationFrame("stokesI")
     
@@ -61,11 +59,10 @@ if __name__ == '__main__':
                   for v in vis_list]
     
     print('Creating model images')
-    model_list = rsexecute.compute(model_list, sync=True)
+    model_list = rsexecute.persist(model_list)
     
-    print('Creating graph')
-    future_vis_list = rsexecute.scatter(vis_list)
-    future_model_list = rsexecute.scatter(model_list)
+    imaging_context='ng'
+    vis_slices = 1
     
     controls = create_calibration_controls()
     
@@ -79,18 +76,19 @@ if __name__ == '__main__':
     controls['B']['first_selfcal'] = 4
     controls['B']['timeslice'] = 1e5
     
-    ical_list = ical_list_rsexecute_workflow(future_vis_list,
-                                             model_imagelist=future_model_list,
-                                             context='wstack', vis_slices=51,
+    ical_list = ical_list_rsexecute_workflow(vis_list,
+                                             model_imagelist=model_list,
+                                             context=imaging_context,
+                                             vis_slice=vis_slices,
                                              scales=[0, 3, 10], algorithm='mmclean',
-                                             nmoment=3, niter=1000,
+                                             nmoment=2, niter=1000,
                                              fractional_threshold=0.1,
                                              threshold=0.1, nmajor=5, gain=0.25,
                                              deconvolve_facets=1,
                                              deconvolve_overlap=0,
-                                             deconvolve_taper='tukey',
+                                             restore_facets=8,
                                              timeslice='auto',
-                                             psf_support=64,
+                                             psf_support=128,
                                              global_solution=False,
                                              calibration_context='T',
                                              do_selfcal=True)
