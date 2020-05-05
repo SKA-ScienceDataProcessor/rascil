@@ -118,9 +118,11 @@ def import_image_from_fits(fitsfile: str) -> Image:
             new_data[:, 2] = fim.data[:, 3]
             fim.data = new_data
         
+        except IndexError:
+            fim.polarisation_frame = PolarisationFrame('stokesI')
         except ValueError:
             fim.polarisation_frame = PolarisationFrame('stokesI')
-    
+
     log.debug("import_image_from_fits: created %s image of shape %s, size %.3f (GB)" %
               (fim.data.dtype, str(fim.shape), image_sizeof(fim)))
     log.debug("import_image_from_fits: Max, min in %s = %.6f, %.6f" % (fitsfile, fim.data.max(), fim.data.min()))
