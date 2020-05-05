@@ -76,6 +76,11 @@ class TestPolarisation(unittest.TestCase):
         stokes = numpy.array([0.0, 0.0, 0.0, 1.0])
         linear = convert_stokes_to_linear(stokes, 0)
         assert_array_almost_equal(linear, numpy.array([0.0 + 0j, +1.0j, -1.0j, 0.0 + 0j]))
+        
+        stokes = numpy.array([1.0, -0.8, 0.2, 0.01])
+        linear = convert_stokes_to_linear(stokes, 0)
+        assert_array_almost_equal(linear, numpy.array([0.2+0.j, 0.2+0.01j, 0.2-0.01j, 1.8+0.j]))
+
 
     def test_stokes_circular_conversion(self):
         stokes = numpy.array([1.0, 0.0, 0.0, 0.0])
@@ -97,6 +102,11 @@ class TestPolarisation(unittest.TestCase):
         stokes = numpy.array([0.0, 0.0, 0.0, 1.0])
         circular = convert_stokes_to_circular(stokes, 0)
         assert_array_almost_equal(circular, numpy.array([1.0 + 0j, +0.0j, 0.0j, -1.0 + 0j]))
+        
+        stokes = numpy.array([1.0, -0.8, 0.2, 0.01])
+        linear = convert_stokes_to_circular(stokes, 0)
+        assert_array_almost_equal(linear, numpy.array([1.01+0.j, 0.2 + 0.8j, -0.2 + 0.8j, 0.99+0.j]))
+
 
     def test_stokes_linear_stokes_conversion(self):
         stokes = numpy.array([1, 0.5, 0.2, -0.1])
@@ -120,7 +130,7 @@ class TestPolarisation(unittest.TestCase):
 
     def test_image_conversion(self):
         stokes = numpy.array(random.uniform(-1.0, 1.0, [3, 4, 128, 128]))
-        cir = convert_stokes_to_circular(stokes)
+        cir = convert_stokes_to_circular(stokes, 1)
         st = convert_circular_to_stokes(cir)
         assert_array_almost_equal(st.real, stokes, 15)
 
@@ -128,8 +138,8 @@ class TestPolarisation(unittest.TestCase):
         stokes = numpy.array(random.uniform(-1.0, 1.0, [3, 4, 128, 128]))
         ipf = PolarisationFrame('stokesIQUV')
         opf = PolarisationFrame('circular')
-        cir = convert_pol_frame(stokes, ipf, opf)
-        st = convert_pol_frame(cir, opf, ipf)
+        cir = convert_pol_frame(stokes, ipf, opf, polaxis=1)
+        st = convert_pol_frame(cir, opf, ipf, polaxis=1)
         assert_array_almost_equal(st.real, stokes, 15)
 
     def test_image_auto_conversion_circularnp(self):
