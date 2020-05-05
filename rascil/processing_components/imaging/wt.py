@@ -202,11 +202,16 @@ try:
         # Fill wkern structure if gcfcf is provided
         if wtkern is None:
             if gcfcf is not None:
-                print("predict_wt: Using gcfcf kernel")
+                #print("predict_wt: Using gcfcf kernel")
+                #wtkern = gcf2wkern2(gcfcf, conjugate=True)
                 wtkern = wtowers.W_KERNEL_DATA()
                 wtkern = gcf2wkern(gcfcf, wtkern, conjugate=True)
-#            else:
+#            else:	
 #                wtkern = None
+#        else:
+#            if gcfcf is not None:
+#                wtkern_int = gcf2wkern2(gcfcf, conjugate=True)
+#                print("wtkern==wtkern_int?", wtkern == wtkern_int)
 
         # Extracting data from BlockVisibility
         freq = bvis.frequency  # frequency, Hz
@@ -320,7 +325,7 @@ try:
         # Fill wkern structure if gcfcf is provided
         if wtkern is None:
             if gcfcf is not None:
-                print("invert_wt: Using gcfcf kernel")
+                #print("invert_wt: Using gcfcf kernel")
                 wtkern = wtowers.W_KERNEL_DATA()
                 wtkern = gcf2wkern(gcfcf, wtkern)
 #            else:
