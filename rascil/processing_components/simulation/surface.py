@@ -146,7 +146,7 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
             
             for icomp, comp in enumerate(sc):
                 antgain = numpy.zeros([nant, npol], dtype='complex')
-                antwt = numpy.zeros([nant, pol])
+                antwt = numpy.zeros([nant, npol])
                 # Calculate the location of the component in AZELGEO, then add the pointing offset
                 # for each antenna
                 ra_comp = comp.direction.ra.rad

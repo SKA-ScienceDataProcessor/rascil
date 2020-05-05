@@ -246,6 +246,7 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
     
     # Inner nest is bvis per skymodels, outer is over vis's. Calculate residual visibility
     def subtract_vis(error_bvis, no_error_bvis):
+        assert error_bvis.polarisation_frame == no_error_bvis.polarisation_frame
         error_bvis.data['vis'] = error_bvis.data['vis'] - no_error_bvis.data['vis']
         return error_bvis
     
@@ -332,8 +333,8 @@ def calculate_residual_from_gaintable_degrid_rsexecute_workflow(sub_bvis_list, s
     if subtract:
         # Inner nest is bvis per skymodels, outer is over vis's. Calculate residual visibility
         def subtract_vis(degrid_bvis, comp_bvis):
-            print(numpy.max(numpy.abs(degrid_bvis.vis)), numpy.max(numpy.abs(comp_bvis.vis)))
-            degrid_bvis.data['vis'] = degrid_bvis.data['vis'] - comp_bvis.data['vis']
+            assert degrid_bvis.polarisation_frame == comp_bvis.polarisation_frame
+            degrid_bvis.data['vis'] = degrid_bvis.vis - comp_bvis.vis
             return degrid_bvis
     
         degrid_bvis_list = [rsexecute.execute(subtract_vis)(degrid_bvis_list[ibv], comp_bvis_list[ibv])

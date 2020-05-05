@@ -16,10 +16,8 @@ from rascil.processing_components.griddata.convolution_functions import create_c
 from rascil.processing_components.image.operations import create_image_from_array, copy_image, create_empty_image_like, \
     fft_image, pad_image, create_w_term_like
 from rascil.processing_components.imaging.primary_beams import convert_azelvp_to_radec
-from rascil.processing_components.image.operations import reproject_image
 
 log = logging.getLogger('logger')
-
 
 def create_box_convolutionfunction(im, oversampling=1, support=1):
     """ Fill a box car function into a ConvolutionFunction
@@ -103,7 +101,7 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
 
 
 def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversampling=8, support=6, use_aaf=True,
-                                      maxsupport=512, pa=None):
+                                      maxsupport=512, pa=None, normalise=True):
     """ Fill AW projection kernel into a GridData.
 
     :param im: Image template
@@ -168,8 +166,7 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
         if pa is not None:
             rpb = convert_azelvp_to_radec(pb, subim, pa)
         else:
-            rpb, footprint = reproject_image(pb, subim.wcs, shape=subim.shape)
-            rpb.data[footprint.data < 1e-6] = 0.0
+            rpb = convert_azelvp_to_radec(pb, subim, 0.0)
             
         norm *= rpb.data
 
@@ -199,7 +196,8 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
                 #     for pol in range(npol):
                 #         cf.data[chan, pol, z, y, x, :, :] = paddedplane.data[chan, pol, :, :][vv, :][:, uu]
 
-    cf.data /= numpy.sum(numpy.real(cf.data[0, 0, nw // 2, oversampling // 2, oversampling // 2, :, :]))
+    if normalise:
+        cf.data /= numpy.sum(numpy.real(cf.data[0, 0, nw // 2, oversampling // 2, oversampling // 2, :, :]))
     cf.data = numpy.conjugate(cf.data)
 
     if use_aaf:

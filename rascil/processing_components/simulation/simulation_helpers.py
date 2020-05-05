@@ -184,27 +184,29 @@ def plot_gaintable(gt_list, title='', value='amp', plot_file='gaintable.png', **
     :return:
     """
     plt.clf()
-    for gt in gt_list:
+    for igt, gt in enumerate(gt_list):
         nrec = gt[0].nrec
         names = gt[0].receptor_frame.names
         if nrec > 1:
             recs = [0, 1]
         else:
             recs = [1]
+            
+        colors = ['r', 'b']
         for irec, rec in enumerate(recs):
             amp = numpy.abs(gt[0].gain[:, 0, 0, rec, rec])
             if value == 'phase':
                 y = numpy.angle(gt[0].gain[:, 0, 0, rec, rec])
-                if irec == 0:
-                    plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.', label=names[rec])
+                if igt == 0:
+                    plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.', color=colors[rec], label=names[rec])
                 else:
-                    plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.')
+                    plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.', color=colors[rec])
             else:
                 y = amp
-                if irec == 0:
-                    plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.', label=names[rec])
+                if igt == 0:
+                    plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.', color=colors[rec], label=names[rec])
                 else:
-                    plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.')
+                    plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.', color=colors[rec])
     plt.title(title)
     plt.xlabel('Time (s)')
     plt.legend()
