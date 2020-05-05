@@ -14,8 +14,8 @@ from rascil.data_models.memory_data_models import Image
 from rascil.processing_components.fourier_transforms.fft_coordinates import coordinates, grdsf
 from rascil.processing_components.griddata.convolution_functions import create_convolutionfunction_from_image
 from rascil.processing_components.image.operations import create_image_from_array, copy_image, create_empty_image_like, \
-    fft_image, pad_image, \
-    create_w_term_like
+    fft_image, pad_image, create_w_term_like
+from rascil.processing_components.imaging.primary_beams import convert_azelvp_to_radec
 from rascil.processing_components.image.operations import reproject_image
 
 log = logging.getLogger('logger')
@@ -103,7 +103,7 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
 
 
 def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversampling=8, support=6, use_aaf=True,
-                                      maxsupport=512):
+                                      maxsupport=512, pa=None):
     """ Fill AW projection kernel into a GridData.
 
     :param im: Image template
@@ -124,6 +124,7 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
     cf = create_convolutionfunction_from_image(im, oversampling=oversampling, support=support)
 
     cf_shape = list(cf.data.shape)
+    assert nw > 0, "Number of w planes must be greater than zero"
     cf_shape[2] = nw
     cf.data = numpy.zeros(cf_shape).astype('complex')
 
@@ -163,8 +164,13 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
 
     if make_pb is not None:
         pb = make_pb(subim)
-        rpb, footprint = reproject_image(pb, subim.wcs, shape=subim.shape)
-        rpb.data[footprint.data < 1e-6] = 0.0
+
+        if pa is not None:
+            rpb = convert_azelvp_to_radec(pb, subim, pa)
+        else:
+            rpb, footprint = reproject_image(pb, subim.wcs, shape=subim.shape)
+            rpb.data[footprint.data < 1e-6] = 0.0
+            
         norm *= rpb.data
 
     # We might need to work with a larger image

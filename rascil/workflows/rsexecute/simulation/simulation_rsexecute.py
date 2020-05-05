@@ -3,6 +3,7 @@
 
 __all__ = ['simulate_list_rsexecute_workflow', 'corrupt_list_rsexecute_workflow',
            'calculate_residual_from_gaintables_rsexecute_workflow',
+           'calculate_residual_from_gaintable_degrid_rsexecute_workflow',
            'calculate_selfcal_residual_from_gaintables_rsexecute_workflow',
            'create_polarisation_gaintable_rsexecute_workflow',
            'create_pointing_errors_gaintable_rsexecute_workflow',
@@ -40,16 +41,17 @@ from rascil.processing_components.simulation.simulation_helpers import \
     find_times_above_elevation_limit
 from rascil.processing_components.simulation.simulation_helpers import plot_pointingtable, \
     plot_gaintable
+from rascil.processing_components.skycomponent import insert_skycomponent
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
+from rascil.processing_components.visibility import calculate_blockvisibility_hourangles
 from rascil.processing_components.visibility import convert_blockvisibility_to_visibility, \
     convert_visibility_to_blockvisibility
-from rascil.processing_components.visibility import calculate_blockvisibility_hourangles
 from rascil.processing_components.visibility import copy_visibility
 from rascil.processing_components.visibility import create_blockvisibility, \
     create_visibility
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 from rascil.workflows.rsexecute.imaging.imaging_rsexecute import \
-    invert_list_rsexecute_workflow, sum_predict_results_rsexecute
+    invert_list_rsexecute_workflow, sum_predict_results_rsexecute, predict_list_rsexecute_workflow
 from rascil.workflows.rsexecute.skymodel.skymodel_rsexecute import \
     predict_skymodel_list_compsonly_rsexecute_workflow
 
@@ -250,18 +252,18 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
     if residual:
         error_bvis_list = [
             [rsexecute.execute(subtract_vis)(error_bvis_list[ibvis][icomp],
-                                                     no_error_bvis_list[ibvis][icomp])
+                                             no_error_bvis_list[ibvis][icomp])
              for icomp, _ in enumerate(sub_components)]
             for ibvis, _ in enumerate(error_bvis_list)]
-
+    
     if sum_vis:
         sum_error_vis_list = \
             [sum_predict_results_rsexecute([error_bvis_list[ivis][icomp]
-                                                             for icomp, _ in enumerate(sub_components)])
-                                                             for ivis, _ in enumerate(error_bvis_list)]
+                                            for icomp, _ in enumerate(sub_components)])
+             for ivis, _ in enumerate(error_bvis_list)]
         return invert_list_rsexecute_workflow(sum_error_vis_list, sub_model_list, context=context,
                                               **kwargs)
-
+    
     else:
         
         # Now for each visibility/component, we make the component dirty images. We just add these
@@ -278,6 +280,66 @@ def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_com
             dirty_list.append(rsexecute.execute(sum_images)(result))
         
         return dirty_list
+
+
+def calculate_residual_from_gaintable_degrid_rsexecute_workflow(sub_bvis_list, sub_components,
+                                                                sub_model_list,
+                                                                comp_gt_list,
+                                                                context='2d',
+                                                                subtract=True,
+                                                                **kwargs):
+    """Calculate residual image corresponding to a set of gaintables
+
+    The visibility difference for a set of components for error and no error gaintables
+    are calculated and the residual images constructed
+
+    :param sum_vis:
+    :param sub_bvis_list: List of vis (or graph)
+    :param sub_components: List of components (or graph)
+    :param sub_model_list: List of models (or graph)
+    :param no_error_gt_list: List of gaintables for no error (or graph)
+    :param context: Imaging context e.g. '2d' or 'ng'
+    :param residual: Calculate residual visibility (True)
+    :return:
+    """
+    comp_sm_list = [[
+        rsexecute.execute(SkyModel, nout=1)(components=[sub_components[i]],
+                                            gaintable=comp_gt_list[ibv][i])
+        for i, _ in enumerate(sub_components)] for ibv, bv in enumerate(sub_bvis_list)]
+    
+    # Predict each visibility for each skymodel. We keep all the visibilities separate
+    # and add up dirty images at the end of processing. We calibrate which applies the voltage pattern
+    comp_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
+                          bvis in sub_bvis_list]
+    comp_bvis_list = [
+        predict_skymodel_list_compsonly_rsexecute_workflow(comp_bvis_list[ibv],
+                                                           comp_sm_list[ibv],
+                                                           context=context, docal=True)
+        for ibv, bvis in enumerate(comp_bvis_list)]
+
+    comp_bvis_list = \
+        [sum_predict_results_rsexecute([comp_bvis_list[ivis][icomp]
+                                        for icomp, _ in enumerate(sub_components)])
+         for ivis, _ in enumerate(comp_bvis_list)]
+
+    degrid_model_list = [rsexecute.execute(create_empty_image_like)(m) for m in sub_model_list]
+    degrid_model_list = [rsexecute.execute(insert_skycomponent)(m, sc=sub_components) for m in degrid_model_list]
+    degrid_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
+                       bvis in sub_bvis_list]
+    degrid_bvis_list = predict_list_rsexecute_workflow(degrid_bvis_list, degrid_model_list, context=context,
+                                                      **kwargs)
+
+    if subtract:
+        # Inner nest is bvis per skymodels, outer is over vis's. Calculate residual visibility
+        def subtract_vis(degrid_bvis, comp_bvis):
+            print(numpy.max(numpy.abs(degrid_bvis.vis)), numpy.max(numpy.abs(comp_bvis.vis)))
+            degrid_bvis.data['vis'] = degrid_bvis.data['vis'] - comp_bvis.data['vis']
+            return degrid_bvis
+    
+        degrid_bvis_list = [rsexecute.execute(subtract_vis)(degrid_bvis_list[ibv], comp_bvis_list[ibv])
+                            for ibv, _ in enumerate(degrid_bvis_list)]
+
+    return invert_list_rsexecute_workflow(degrid_bvis_list, sub_model_list, context=context, **kwargs)
 
 
 def calculate_selfcal_residual_from_gaintables_rsexecute_workflow(sub_bvis_list,
@@ -562,29 +624,32 @@ def create_surface_errors_gaintable_rsexecute_workflow(band, sub_bvis_list,
         el_nominal_deg = 45.0
         return get_band_vp(band, el_nominal_deg)
     
-    error_pt_list = [rsexecute.execute(create_pointingtable_from_blockvisibility)(bvis)
+    actual_pt_list = [rsexecute.execute(create_pointingtable_from_blockvisibility)(bvis)
                      for bvis in sub_bvis_list]
-    no_error_pt_list = [rsexecute.execute(create_pointingtable_from_blockvisibility)(bvis)
+    nominal_pt_list = [rsexecute.execute(create_pointingtable_from_blockvisibility)(bvis)
                         for bvis in sub_bvis_list]
     
     vp_nominal_list = [rsexecute.execute(find_vp_nominal)(band) for bv in sub_bvis_list]
     vp_actual_list = [rsexecute.execute(find_vp)(band, bv) for bv in sub_bvis_list]
     
     # Create the gain tables, one per Visibility and per component
-    no_error_gt_list = [rsexecute.execute(simulate_gaintable_from_pointingtable)
-                        (bvis, sub_components, no_error_pt_list[ibv],
+    nominal_gt_list = [rsexecute.execute(simulate_gaintable_from_pointingtable)
+                        (bvis, sub_components, nominal_pt_list[ibv],
                          vp_nominal_list[ibv], use_radec=use_radec)
                         for ibv, bvis in enumerate(sub_bvis_list)]
-    error_gt_list = [rsexecute.execute(simulate_gaintable_from_pointingtable)
-                     (bvis, sub_components, error_pt_list[ibv], vp_actual_list[ibv],
+    actual_gt_list = [rsexecute.execute(simulate_gaintable_from_pointingtable)
+                     (bvis, sub_components, actual_pt_list[ibv], vp_actual_list[ibv],
                       use_radec=use_radec)
                      for ibv, bvis in enumerate(sub_bvis_list)]
     if show:
-        plot_file = 'gaintable.png'
-        tmp_gt_list = rsexecute.compute(error_gt_list, sync=True)
-        plot_gaintable(tmp_gt_list, plot_file=plot_file, title=basename)
-    
-    return no_error_gt_list, error_gt_list
+        plot_file = 'gaintable_actual.png'
+        tmp_gt_list = rsexecute.compute(actual_gt_list, sync=True)
+        plot_gaintable(tmp_gt_list, plot_file=plot_file, title=basename + " actual")
+        plot_file = 'gaintable_nominal.png'
+        tmp_gt_list = rsexecute.compute(nominal_gt_list, sync=True)
+        plot_gaintable(tmp_gt_list, plot_file=plot_file, title=basename + " nominal")
+
+    return nominal_gt_list, actual_gt_list
 
 
 def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
@@ -606,7 +671,7 @@ def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
     :param normalise: Normalise peak of each receptor
     :return: (list of error-free gaintables, list of error gaintables) or graph
      """
-     
+    
     def find_vp_actual(band):
         telescope = "MID_FEKO_{}".format(band)
         vp = create_vp(telescope=telescope)
@@ -616,38 +681,39 @@ def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
             g[3] = numpy.max(numpy.abs(vp.data[:, 3, ...]))
             g[1] = g[2] = numpy.sqrt(g[0] * g[3])
             for chan in range(4):
-                vp.data[:,chan,...] /= g[chan]
+                vp.data[:, chan, ...] /= g[chan]
         return vp
-
+    
     def find_vp_nominal(band):
         vp = find_vp_actual(band)
         vpsym = 0.5 * (vp.data[:, 0, ...] + vp.data[:, 3, ...])
         if normalise:
             vpsym.data /= numpy.max(numpy.abs(vpsym.data))
-            
+        
         vp.data[:, 1:2, ...] = 0.0 + 0.0j
         vp.data[:, 0, ...] = vpsym
         vp.data[:, 3, ...] = vpsym
         return vp
-
+    
     vp_nominal_list = [rsexecute.execute(find_vp_nominal)(band) for bv in sub_bvis_list]
     vp_actual_list = [rsexecute.execute(find_vp_actual)(band) for bv in sub_bvis_list]
     
     # Create the gain tables, one per Visibility and per component
-    no_error_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
+    nominal_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
                         (bvis, sub_components, vp_nominal_list[ibv], use_radec=use_radec)
                         for ibv, bvis in enumerate(sub_bvis_list)]
-    error_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
+    actual_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
                      (bvis, sub_components, vp_actual_list[ibv], use_radec=use_radec)
                      for ibv, bvis in enumerate(sub_bvis_list)]
     if show:
-        plot_file = 'voltage_pattern_gaintable.png'
-        error_gt_list = rsexecute.compute(error_gt_list, sync=True)
-        plot_gaintable(error_gt_list, plot_file=plot_file, title=basename + " errors")
-        no_error_gt_list = rsexecute.compute(no_error_gt_list, sync=True)
-        plot_gaintable(no_error_gt_list, plot_file=plot_file, title=basename + " nominal")
-
-    return no_error_gt_list, error_gt_list
+        actual_gt_list = rsexecute.compute(actual_gt_list, sync=True)
+        plot_file = 'voltage_pattern_gaintable_actual.png'
+        plot_gaintable(actual_gt_list, plot_file=plot_file, title=basename + " actual")
+        nominal_gt_list = rsexecute.compute(nominal_gt_list, sync=True)
+        plot_file = 'voltage_pattern_gaintable_nominal.png'
+        plot_gaintable(nominal_gt_list, plot_file=plot_file, title=basename + " nominal")
+    
+    return nominal_gt_list, actual_gt_list
 
 
 def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, time_range,

@@ -143,7 +143,7 @@ def reproject_image(im: Image, newwcs: WCS, shape=None) -> (Image, Image):
     
     assert isinstance(im, Image), im
     
-    if image_is_canonical(im):
+    if len(im.shape)==4:
         nchan, npol, ny, nx = im.shape
         if im.data.dtype == 'complex':
             rep_real = numpy.zeros(shape, dtype='float')

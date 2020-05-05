@@ -176,6 +176,10 @@ class TestGridDataGridding(unittest.TestCase):
             export_image_to_fits(pb, "%s/test_gridding_aterm_pb.fits" % self.dir)
         gcf, cf = create_awterm_convolutionfunction(self.model, make_pb=make_pb, nw=1, oversampling=16, support=16,
                                                     use_aaf=False)
+        cf_image = convert_convolutionfunction_to_image(cf)
+        cf_image.data = numpy.real(cf_image.data)
+        if self.persist:
+            export_image_to_fits(cf_image, "%s/test_gridding_aterm_cf.fits" % self.dir)
         griddata = create_griddata_from_image(self.model, self.vis)
         griddata, sumwt = grid_visibility_to_griddata(self.vis, griddata=griddata, cf=cf)
         cim = fft_griddata_to_image(griddata, gcf)

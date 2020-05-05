@@ -3,7 +3,7 @@ Functions to create primary beam and voltage pattern models
 """
 
 __all__ = ['set_pb_header', 'create_pb', 'create_pb_generic', 'create_vp', 'create_vp_generic',
-           'create_vp_generic_numeric', 'create_low_test_beam', 'create_low_test_vp']
+           'create_vp_generic_numeric', 'create_low_test_beam', 'create_low_test_vp', 'convert_azelvp_to_radec']
 
 import collections
 import logging
@@ -12,8 +12,8 @@ import numpy
 from astropy import constants as const
 
 from rascil.data_models.memory_data_models import Image
-from rascil.data_models.parameters import rascil_path, rascil_data_path
-from rascil.processing_components.image.operations import import_image_from_fits, reproject_image
+from rascil.data_models.parameters import rascil_data_path
+from rascil.processing_components.image.operations import import_image_from_fits, reproject_image, scale_and_rotate_image
 from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like, fft_image, pad_image
 
 log = logging.getLogger('logger')
@@ -426,3 +426,22 @@ def create_low_test_vp(model: Image, use_local=True) -> Image:
     
     set_pb_header(reprojected_beam, use_local=use_local)
     return reprojected_beam
+
+def convert_azelvp_to_radec(vp, im, pa):
+    """ Convert AZELGEO image to image coords at specific parallactic angle
+    
+    :param pb: Primary beam or voltagee pattern
+    :param im: Template image
+    :param pa: Parallactic angle (radians)
+    :return:
+    """
+    vp = scale_and_rotate_image(vp, pa)
+    vp.wcs.wcs.crval[0] = im.wcs.wcs.crval[0]
+    vp.wcs.wcs.crval[1] = im.wcs.wcs.crval[1]
+    vp.wcs.wcs.ctype[0] = im.wcs.wcs.ctype[0]
+    vp.wcs.wcs.ctype[1] = im.wcs.wcs.ctype[1]
+
+    rvp, footprint = reproject_image(vp, im.wcs, shape=im.shape)
+    rvp.data[footprint.data < 1e-6] = 0.0
+
+    return rvp

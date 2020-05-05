@@ -501,8 +501,7 @@ def degrid_visibility_from_griddata(vis, griddata, cf, **kwargs):
 
     for ivis in range(nvis):
         chan, uu, uuf, vv, vvf, zzg, zzc = pfreq_grid[ivis], pu_grid[ivis], pu_offset[
-            ivis], pv_grid[ivis], \
-                                           pv_offset[ivis], pwg_grid[ivis], pwc_grid[ivis]
+            ivis], pv_grid[ivis], pv_offset[ivis], pwg_grid[ivis], pwc_grid[ivis]
         # Use einsum to replace the following:
         # newvis.vis[i,:] = numpy.sum(griddata.data[chan, :, zzg, (vv - dv):(vv + dv), (uu - du):(uu + du)] *
         #                              cf.data[chan, :, zzc, vvf, uuf, :, :], axis=(1, 2))

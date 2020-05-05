@@ -4,7 +4,7 @@
 
 __all__ = ['plot_visibility', 'find_times_above_elevation_limit', 'plot_uvcoverage',
            'plot_azel', 'plot_gaintable', 'plot_pointingtable', 'find_pb_width_null',
-           'create_simulation_components']
+           'create_simulation_components', 'plot_pa']
 
 import logging
 
@@ -24,7 +24,7 @@ from rascil.processing_components.skycomponent.operations import apply_beam_to_s
     filter_skycomponents_by_flux
 from rascil.processing_components.util.coordinate_support import hadec_to_azel
 from rascil.processing_components.visibility.visibility_geometry import calculate_blockvisibility_hourangles, \
-    calculate_blockvisibility_azel
+    calculate_blockvisibility_azel, calculate_blockvisibility_parallactic_angles
 
 log = logging.getLogger('logger')
 
@@ -148,6 +148,32 @@ def plot_azel(bvis_list, plot_file=None, **kwargs):
     plt.show(block=False)
 
 
+def plot_pa(bvis_list, plot_file=None, **kwargs):
+    """ Standard plot of parallactic angle coverage
+
+    :param bvis_list:
+    :param plot_file:
+    :param kwargs:
+    :return:
+    """
+    plt.clf()
+
+    for ibvis, bvis in enumerate(bvis_list):
+        ha = calculate_blockvisibility_hourangles(bvis).value
+        pa = calculate_blockvisibility_parallactic_angles(bvis)
+        if ibvis == 0:
+            plt.plot(ha, pa.deg, '.', color='r', label='PA (deg)')
+        else:
+            plt.plot(ha, pa.deg, '.', color='r')
+    plt.xlabel('HA (hours)')
+    plt.ylabel('Parallactic Angle')
+    plt.legend()
+    plt.title('Parallactic angle vs hour angle')
+    if plot_file is not None:
+        plt.savefig(plot_file)
+    plt.show(block=False)
+
+
 def plot_gaintable(gt_list, title='', value='amp', plot_file='gaintable.png', **kwargs):
     """ Standard plot of gain table
     
@@ -165,14 +191,20 @@ def plot_gaintable(gt_list, title='', value='amp', plot_file='gaintable.png', **
             recs = [0, 1]
         else:
             recs = [1]
-        for rec in recs:
+        for irec, rec in enumerate(recs):
             amp = numpy.abs(gt[0].gain[:, 0, 0, rec, rec])
             if value == 'phase':
                 y = numpy.angle(gt[0].gain[:, 0, 0, rec, rec])
-                plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.', label=names[rec])
+                if irec == 0:
+                    plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.', label=names[rec])
+                else:
+                    plt.plot(gt[0].time[amp > 0.0], y[amp > 0.0], '.')
             else:
                 y = amp
-                plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.', label=names[rec])
+                if irec == 0:
+                    plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.', label=names[rec])
+                else:
+                    plt.plot(gt[0].time[amp > 0.0], 1.0 / y[amp > 0.0], '.')
     plt.title(title)
     plt.xlabel('Time (s)')
     plt.legend()
