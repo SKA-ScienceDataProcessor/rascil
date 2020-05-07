@@ -261,9 +261,19 @@ class TestImaging2D(unittest.TestCase):
     def test_invert_psf(self):
         self.actualSetUp(zerow=False)
         psf = invert_2d(self.vis, self.model, dopsf=True)
-
+        error = numpy.max(psf[0].data) - 1.0
+        assert abs(error) < 1.0e-12, error
         if self.persist: export_image_to_fits(psf[0], '%s/test_imaging_2d_psf.fits' % (self.dir))
         
+        assert numpy.max(numpy.abs(psf[0].data)), "Image is empty"
+
+    def test_invert_psf_pol(self):
+        self.actualSetUp(zerow=False, image_pol=PolarisationFrame("stokesIQUV"))
+        psf = invert_2d(self.vis, self.model, dopsf=True)
+        error = numpy.max(psf[0].data[:,0,...]) - 1.0
+        assert abs(error) < 1.0e-12, error
+        if self.persist: export_image_to_fits(psf[0], '%s/test_imaging_2d_pol_psf.fits' % (self.dir))
+    
         assert numpy.max(numpy.abs(psf[0].data)), "Image is empty"
 
 

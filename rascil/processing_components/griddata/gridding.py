@@ -214,7 +214,7 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
                 (pv_grid[row] - dv):(pv_grid[row] + dv), \
                 (pu_grid[row] - du):(pu_grid[row] + du)] \
                     += subcf * fvist[pol, vchan, row] * fwtt[pol, vchan, row]
-                sumwt[imchan, pol] += fwtt[pol, vchan, row]
+                sumwt[imchan, pol] += fwtt[pol, vchan, row] * numpy.sum(subcf.real)
 
     cf.data = numpy.conjugate(cf.data)
     return griddata, sumwt
@@ -252,7 +252,7 @@ def grid_visibility_to_griddata(vis, griddata, cf):
     for v, vwt, chan, uu, uuf, vv, vvf, zzg, zzc in coords:
         griddata.data[chan, :, zzg, (vv - dv):(vv + dv), (uu - du):(uu + du)] += \
             cf.data[chan, :, zzc, vvf, uuf, :, :] * v[:, numpy.newaxis, numpy.newaxis]
-        sumwt[chan, :] += vwt
+        sumwt[chan, :] += vwt * numpy.sum(cf.data[chan, :, zzc, vvf, uuf, :, :].real, axis=(1,2))
 
     cf.data = numpy.conjugate(cf.data)
     return griddata, sumwt
@@ -467,7 +467,7 @@ def degrid_blockvisibility_from_griddata(vis, griddata, cf, **kwargs):
                         pv_offset[row],
                         pu_offset[row],
                         :, :]
-                fvist[pol, vchan, row] = numpy.einsum('ij,ij', subgrid, subcf)
+                fvist[pol, vchan, row] = numpy.einsum('ij,ij', subgrid, subcf) / numpy.sum(subcf.real)
 
     newvis.data['vis'][...] = fvist.T.reshape([nrows, nants, nants, nvchan, nvpol])
 
@@ -490,7 +490,7 @@ def degrid_visibility_from_griddata(vis, griddata, cf, **kwargs):
         convolution_mapping_visibility(vis, griddata, vis.frequency, cf)
     _, _, _, _, _, gv, gu = cf.shape
 
-    newvis = copy_visibility(vis, zero=True)
+    newvis = copy_visibility(vis)
 
     # coords = zip(pfreq_grid, pu_grid, pu_offset, pv_grid, pv_offset, pw_grid)
 
@@ -506,10 +506,11 @@ def degrid_visibility_from_griddata(vis, griddata, cf, **kwargs):
         # newvis.vis[i,:] = numpy.sum(griddata.data[chan, :, zzg, (vv - dv):(vv + dv), (uu - du):(uu + du)] *
         #                              cf.data[chan, :, zzc, vvf, uuf, :, :], axis=(1, 2))
 
-        newvis.vis[ivis, :] += numpy.einsum('ijk,ijk->i',
+        norm = numpy.sum(cf.data[chan, :, zzc, vvf, uuf, :, :].real, axis=(1, 2))
+        newvis.vis[ivis, :] = numpy.einsum('ijk,ijk->i',
                                             griddata.data[chan, :, zzg,
                                             (vv - dv):(vv + dv), (uu - du):(uu + du)],
-                                            cf.data[chan, :, zzc, vvf, uuf, :, :])
+                                            cf.data[chan, :, zzc, vvf, uuf, :, :]) / norm
 
     return newvis
 
