@@ -435,7 +435,7 @@ def convert_azelvp_to_radec(vp, im, pa):
     :param pa: Parallactic angle (radians)
     :return:
     """
-    vp = scale_and_rotate_image(vp, pa)
+    vp = scale_and_rotate_image(vp, angle=pa)
     vp.wcs.wcs.crval[0] = im.wcs.wcs.crval[0]
     vp.wcs.wcs.crval[1] = im.wcs.wcs.crval[1]
     vp.wcs.wcs.ctype[0] = im.wcs.wcs.ctype[0]

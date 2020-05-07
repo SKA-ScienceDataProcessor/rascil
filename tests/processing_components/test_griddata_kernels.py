@@ -17,9 +17,10 @@ from rascil.processing_components.griddata import convert_convolutionfunction_to
     create_convolutionfunction_from_image, apply_bounding_box_convolutionfunction, \
     calculate_bounding_box_convolutionfunction
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction, \
-    create_awterm_convolutionfunction, create_box_convolutionfunction
+    create_awterm_convolutionfunction, create_box_convolutionfunction, \
+    create_aterm_convolutionfunction
 from rascil.processing_components.image.operations import export_image_to_fits
-from rascil.processing_components.imaging.primary_beams import create_pb_generic
+from rascil.processing_components.imaging.primary_beams import create_pb_generic, create_vp_generic
 from rascil.processing_components.simulation import create_test_image
 from rascil.processing_components.griddata.kernels import convert_image_to_kernel
 

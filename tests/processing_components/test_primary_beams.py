@@ -108,16 +108,20 @@ class TestPrimaryBeams(unittest.TestCase):
     def test_create_voltage_patterns_MID_rotate(self):
         self.createVis(freq=1.4e9)
         model = create_image_from_visibility(self.vis, npixel=self.npixel, cellsize=self.cellsize,
+                                             polarisation_frame=PolarisationFrame("stokesIQUV"),
                                              override_cellsize=False)
         for telescope in ['MID_FEKO_B1', 'MID_FEKO_B2', 'MID_FEKO_Ku']:
             beam = create_vp(telescope=telescope)
-            beam = scale_and_rotate_image(beam, scale=[2.0, 1.0])
-            beam_radec = convert_azelvp_to_radec(beam, model, 0.1)
+            beam = scale_and_rotate_image(beam, scale=[1.2, 0.8])
+            self.persist = True
+            if self.persist: export_image_to_fits(beam,
+                                                  "%s/test_voltage_pattern_real_prerotate_%s.fits" % (self.dir, telescope))
+            beam_radec = convert_azelvp_to_radec(beam, model, numpy.pi/4.0)
             
             beam_data = beam_radec.data
             beam_radec.data = numpy.real(beam_data)
             if self.persist: export_image_to_fits(beam_radec,
-                                                  "%s/test_voltage_pattern_real_MID_rotate_%s.fits" % (self.dir, telescope))
+                                                  "%s/test_voltage_pattern_real_rotate_%s.fits" % (self.dir, telescope))
 
 
 if __name__ == '__main__':
