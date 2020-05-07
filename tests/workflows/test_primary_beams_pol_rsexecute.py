@@ -31,7 +31,7 @@ log = logging.getLogger('logger')
 log.setLevel(logging.DEBUG)
 
 
-class TestPrimaryBeamsPolGraph(unittest.TestCase):
+class VoltagePatternsPolGraph(unittest.TestCase):
     def setUp(self):
         rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
     
@@ -59,7 +59,7 @@ class TestPrimaryBeamsPolGraph(unittest.TestCase):
         assert len(self.config.mount) == nants
 
     @unittest.skip("Too large for CI/CD")
-    def test_apply_voltage_pattern_image_s3(self):
+    def test_apply_voltage_pattern_image_pointsource(self):
         self.createVis(rmax=1e3)
         telescope = 'MID_FEKO_B2'
         vpol = PolarisationFrame("linear")

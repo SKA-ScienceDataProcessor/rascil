@@ -2,16 +2,13 @@
 """
 
 __all__ = ['simulate_list_rsexecute_workflow', 'corrupt_list_rsexecute_workflow',
-           'calculate_residual_from_gaintables_rsexecute_workflow',
-           'calculate_residual_from_gaintable_uvplane_rsexecute_workflow',
-           'calculate_residual_from_gaintable_imageplane_rsexecute_workflow',
+           'calculate_residual_dft_rsexecute_workflow',
+           'calculate_residual_fft_rsexecute_workflow',
            'calculate_selfcal_residual_from_gaintables_rsexecute_workflow',
-           'create_polarisation_gaintable_rsexecute_workflow',
            'create_pointing_errors_gaintable_rsexecute_workflow',
            'create_standard_mid_simulation_rsexecute_workflow',
            'create_standard_low_simulation_rsexecute_workflow',
            'create_surface_errors_gaintable_rsexecute_workflow',
-           'create_polarisation_gaintable_rsexecute_workflow',
            'create_atmospheric_errors_gaintable_rsexecute_workflow']
 
 import logging
@@ -20,7 +17,8 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord, EarthLocation
 
-from rascil.data_models.memory_data_models import Visibility, SkyModel, Configuration
+from rascil.data_models import rascil_data_path
+from rascil.data_models.memory_data_models import Visibility, SkyModel, Configuration, BlockVisibility
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.calibration import apply_gaintable, \
     create_gaintable_from_blockvisibility, solve_gaintable
@@ -196,97 +194,8 @@ def corrupt_list_rsexecute_workflow(vis_list, gt_list=None, seed=None, **kwargs)
                 for ivis, v in enumerate(vis_list)]
 
 
-def calculate_residual_from_gaintables_rsexecute_workflow(sub_bvis_list, sub_components,
-                                                          sub_model_list,
-                                                          no_error_gt_list, error_gt_list,
-                                                          context='2d',
-                                                          residual=True,
-                                                          sum_vis=True,
-                                                          **kwargs):
-    """Calculate residual image corresponding to a set of gaintables
-
-    The visibility difference for a set of components for error and no error gaintables
-    are calculated and the residual images constructed
-
-    :param sum_vis:
-    :param sub_bvis_list: List of vis (or graph)
-    :param sub_components: List of components (or graph)
-    :param sub_model_list: List of models (or graph)
-    :param no_error_gt_list: List of gaintables for no error (or graph)
-    :param error_gt_list: List of gaintables for error (or graph)
-    :param context: Imaging context e.g. '2d' or 'ng'
-    :param residual: Calculate residual visibility (True)
-    :return:
-    """
-    error_sm_list = [[
-        rsexecute.execute(SkyModel, nout=1)(components=[sub_components[i]],
-                                            gaintable=error_gt_list[ibv][i])
-        for i, _ in enumerate(sub_components)] for ibv, bv in enumerate(sub_bvis_list)]
-    
-    no_error_sm_list = [[
-        rsexecute.execute(SkyModel, nout=1)(components=[sub_components[i]],
-                                            gaintable=no_error_gt_list[ibv][i])
-        for i, _ in enumerate(sub_components)] for ibv, bv in enumerate(sub_bvis_list)]
-    
-    # Predict each visibility for each skymodel. We keep all the visibilities separate
-    # and add up dirty images at the end of processing. We calibrate which applies the voltage pattern
-    no_error_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
-                          bvis in sub_bvis_list]
-    no_error_bvis_list = [
-        predict_skymodel_list_compsonly_rsexecute_workflow(no_error_bvis_list[ibv],
-                                                           no_error_sm_list[ibv],
-                                                           context=context, docal=True)
-        for ibv, bvis in enumerate(no_error_bvis_list)]
-    
-    error_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
-                       bvis in sub_bvis_list]
-    error_bvis_list = [
-        predict_skymodel_list_compsonly_rsexecute_workflow(error_bvis_list[ibv],
-                                                           error_sm_list[ibv],
-                                                           context=context, docal=True)
-        for ibv, bvis in enumerate(error_bvis_list)]
-    
-    # Inner nest is bvis per skymodels, outer is over vis's. Calculate residual visibility
-    def subtract_vis(error_bvis, no_error_bvis):
-        assert error_bvis.polarisation_frame == no_error_bvis.polarisation_frame
-        error_bvis.data['vis'] = error_bvis.data['vis'] - no_error_bvis.data['vis']
-        return error_bvis
-    
-    if residual:
-        error_bvis_list = [
-            [rsexecute.execute(subtract_vis)(error_bvis_list[ibvis][icomp],
-                                             no_error_bvis_list[ibvis][icomp])
-             for icomp, _ in enumerate(sub_components)]
-            for ibvis, _ in enumerate(error_bvis_list)]
-    
-    if sum_vis:
-        sum_error_vis_list = \
-            [sum_predict_results_rsexecute([error_bvis_list[ivis][icomp]
-                                            for icomp, _ in enumerate(sub_components)])
-             for ivis, _ in enumerate(error_bvis_list)]
-        return invert_list_rsexecute_workflow(sum_error_vis_list, sub_model_list, context=context,
-                                              **kwargs)
-    
-    else:
-        
-        # Now for each visibility/component, we make the component dirty images. We just add these
-        # component dirty images since the weights should be the same
-        def sum_images(images):
-            sum_image = create_empty_image_like(images[0][0])
-            for im in images:
-                sum_image.data += im[0].data
-            return sum_image, images[0][1]
-        
-        dirty_list = list()
-        for vis in error_bvis_list:
-            result = invert_list_rsexecute_workflow(vis, sub_model_list, context=context)
-            dirty_list.append(rsexecute.execute(sum_images)(result))
-        
-        return dirty_list
-
-
-def calculate_residual_from_gaintable_uvplane_rsexecute_workflow(sub_bvis_list, sub_components, sub_model_list,
-                                                                 comp_gt_list, context='2d', residual=True, **kwargs):
+def calculate_residual_fft_rsexecute_workflow(sub_bvis_list, sub_components, sub_model_list, vp_list, context='2d',
+                                          **kwargs):
     """Calculate residual image corresponding to a set of gaintables
 
     The visibility difference for a set of components for error and no error gaintables
@@ -301,90 +210,58 @@ def calculate_residual_from_gaintable_uvplane_rsexecute_workflow(sub_bvis_list, 
     :param residual: Calculate residual visibility (True)
     :return:
     """
-    comp_sm_list = [[
+    fft_model_list = [rsexecute.execute(create_empty_image_like)(m) for m in sub_model_list]
+    fft_model_list = [rsexecute.execute(insert_skycomponent)(m, sc=sub_components)
+                      for m in fft_model_list]
+    fft_model_list = [rsexecute.execute(apply_voltage_pattern_to_image)(m, vp_list[im])
+                      for im, m in enumerate(fft_model_list)]
+    fft_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
+                     bvis in sub_bvis_list]
+    fft_bvis_list = predict_list_rsexecute_workflow(fft_bvis_list, fft_model_list, context=context,
+                                                    **kwargs)
+    
+    return sum_invert_results_rsexecute(invert_list_rsexecute_workflow(fft_bvis_list, sub_model_list,
+                                                                       context=context, **kwargs))
+
+
+def calculate_residual_dft_rsexecute_workflow(sub_bvis_list, sub_components, sub_model_list, gt_list, context='2d',
+                                          **kwargs):
+    """Calculate residual image corresponding to a set of gaintables
+
+    The visibility difference for a set of components for error and no error gaintables
+    are calculated and the residual images constructed
+
+    :param sum_vis:
+    :param sub_bvis_list: List of vis (or graph)
+    :param sub_components: List of components (or graph)
+    :param sub_model_list: List of models (or graph)
+    :param no_error_gt_list: List of gaintables for no error (or graph)
+    :param context: Imaging context e.g. '2d' or 'ng'
+    :param residual: Calculate residual visibility (True)
+    :return:
+    """
+    dft_sm_list = [[
         rsexecute.execute(SkyModel, nout=1)(components=[sub_components[i]],
-                                            gaintable=comp_gt_list[ibv][i])
+                                            gaintable=gt_list[ibv][i])
         for i, _ in enumerate(sub_components)] for ibv, bv in enumerate(sub_bvis_list)]
     
     # Predict each visibility for each skymodel. We keep all the visibilities separate
     # and add up dirty images at the end of processing. We calibrate which applies the voltage pattern
-    comp_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
+    dft_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
                       bvis in sub_bvis_list]
-    comp_bvis_list = [
-        predict_skymodel_list_compsonly_rsexecute_workflow(comp_bvis_list[ibv],
-                                                           comp_sm_list[ibv],
+    dft_bvis_list = [
+        predict_skymodel_list_compsonly_rsexecute_workflow(dft_bvis_list[ibv],
+                                                           dft_sm_list[ibv],
                                                            context=context, docal=True)
-        for ibv, bvis in enumerate(comp_bvis_list)]
+        for ibv, bvis in enumerate(dft_bvis_list)]
     
-    comp_bvis_list = \
-        [sum_predict_results_rsexecute([comp_bvis_list[ivis][icomp]
+    dft_bvis_list = \
+        [sum_predict_results_rsexecute([dft_bvis_list[ivis][icomp]
                                         for icomp, _ in enumerate(sub_components)])
-         for ivis, _ in enumerate(comp_bvis_list)]
+         for ivis, _ in enumerate(dft_bvis_list)]
     
-    uvplane_model_list = [rsexecute.execute(create_empty_image_like)(m) for m in sub_model_list]
-    uvplane_model_list = [rsexecute.execute(insert_skycomponent)(m, sc=sub_components) for m in uvplane_model_list]
-    uvplane_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
-                         bvis in sub_bvis_list]
-    uvplane_bvis_list = predict_list_rsexecute_workflow(uvplane_bvis_list, uvplane_model_list, context=context,
-                                                        **kwargs)
-    
-    return (sum_invert_results_rsexecute(invert_list_rsexecute_workflow(comp_bvis_list, sub_model_list,
-                                                                        context=context, **kwargs)),
-            sum_invert_results_rsexecute(invert_list_rsexecute_workflow(uvplane_bvis_list, sub_model_list,
-                                                                       context=context, **kwargs)))
-
-
-def calculate_residual_from_gaintable_imageplane_rsexecute_workflow(sub_bvis_list, sub_components, sub_model_list,
-                                                                    vp_list, comp_gt_list, context='2d', residual=True,
-                                                                    **kwargs):
-    """Calculate residual image corresponding to a set of gaintables
-
-    The visibility difference for a set of components for error and no error gaintables
-    are calculated and the residual images constructed
-
-    :param sum_vis:
-    :param sub_bvis_list: List of vis (or graph)
-    :param sub_components: List of components (or graph)
-    :param sub_model_list: List of models (or graph)
-    :param no_error_gt_list: List of gaintables for no error (or graph)
-    :param context: Imaging context e.g. '2d' or 'ng'
-    :param residual: Calculate residual visibility (True)
-    :return:
-    """
-    comp_sm_list = [[
-        rsexecute.execute(SkyModel, nout=1)(components=[sub_components[i]],
-                                            gaintable=comp_gt_list[ibv][i])
-        for i, _ in enumerate(sub_components)] for ibv, bv in enumerate(sub_bvis_list)]
-    
-    # Predict each visibility for each skymodel. We keep all the visibilities separate
-    # and add up dirty images at the end of processing. We calibrate which applies the voltage pattern
-    comp_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
-                      bvis in sub_bvis_list]
-    comp_bvis_list = [
-        predict_skymodel_list_compsonly_rsexecute_workflow(comp_bvis_list[ibv],
-                                                           comp_sm_list[ibv],
-                                                           context=context, docal=True)
-        for ibv, bvis in enumerate(comp_bvis_list)]
-    
-    comp_bvis_list = \
-        [sum_predict_results_rsexecute([comp_bvis_list[ivis][icomp]
-                                        for icomp, _ in enumerate(sub_components)])
-         for ivis, _ in enumerate(comp_bvis_list)]
-    
-    imageplane_model_list = [rsexecute.execute(create_empty_image_like)(m) for m in sub_model_list]
-    imageplane_model_list = [rsexecute.execute(insert_skycomponent)(m, sc=sub_components) for m in
-                             imageplane_model_list]
-    imageplane_model_list = [rsexecute.execute(apply_voltage_pattern_to_image)(m, vp_list[im])
-                             for im, m in enumerate(imageplane_model_list)]
-    imageplane_bvis_list = [rsexecute.execute(copy_visibility, nout=1)(bvis, zero=True) for
-                            bvis in sub_bvis_list]
-    imageplane_bvis_list = predict_list_rsexecute_workflow(imageplane_bvis_list, imageplane_model_list, context=context,
-                                                           **kwargs)
-    
-    return (sum_invert_results_rsexecute(invert_list_rsexecute_workflow(comp_bvis_list, sub_model_list,
-                                                                        context=context, **kwargs)),
-            sum_invert_results_rsexecute(invert_list_rsexecute_workflow(imageplane_bvis_list, sub_model_list,
-                                                                       context=context, **kwargs)))
+    return sum_invert_results_rsexecute(invert_list_rsexecute_workflow(dft_bvis_list, sub_model_list,
+                                                                       context=context, **kwargs))
 
 
 def calculate_selfcal_residual_from_gaintables_rsexecute_workflow(sub_bvis_list,
@@ -697,75 +574,8 @@ def create_surface_errors_gaintable_rsexecute_workflow(band, sub_bvis_list,
     return nominal_gt_list, actual_gt_list
 
 
-def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
-                                                     sub_components,
-                                                     use_radec=False,
-                                                     show=True,
-                                                     basename='',
-                                                     normalise=True):
-    """ Create gaintable for polarisation effects
-    
-    Compare with nominal and actual voltage patterns
-    
-    :param band: B1, B2 or Ku
-    :param sub_bvis_list: List of vis (or graph)
-    :param sub_components: List of components (or graph)
-    :param use_radec: Use RADEC coordinate (False)
-    :param show: Plot the results
-    :param basename: Base name for the plots
-    :param normalise: Normalise peak of each receptor
-    :return: (list of error-free gaintables, list of error gaintables) or graph
-     """
-    
-    def find_vp_actual(band):
-        telescope = "MID_FEKO_{}".format(band)
-        vp = create_vp(telescope=telescope)
-        if normalise:
-            g = numpy.zeros([4])
-            g[0] = numpy.max(numpy.abs(vp.data[:, 0, ...]))
-            g[3] = numpy.max(numpy.abs(vp.data[:, 3, ...]))
-            g[1] = g[2] = numpy.sqrt(g[0] * g[3])
-            for chan in range(4):
-                vp.data[:, chan, ...] /= g[chan]
-        return vp
-    
-    def find_vp_nominal(band):
-        vp = find_vp_actual(band)
-        vpsym = 0.5 * (vp.data[:, 0, ...] + vp.data[:, 3, ...])
-        if normalise:
-            vpsym.data /= numpy.max(numpy.abs(vpsym.data))
-        
-        vp.data[:, 1:2, ...] = 0.0 + 0.0j
-        vp.data[:, 0, ...] = vpsym
-        vp.data[:, 3, ...] = vpsym
-        return vp
-    
-    vp_nominal_list = [rsexecute.execute(find_vp_nominal)(band) for bv in sub_bvis_list]
-    vp_actual_list = [rsexecute.execute(find_vp_actual)(band) for bv in sub_bvis_list]
-    
-    # Create the gain tables, one per Visibility and per component
-    nominal_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
-                       (bvis, sub_components, vp_nominal_list[ibv], use_radec=use_radec)
-                       for ibv, bvis in enumerate(sub_bvis_list)]
-    actual_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
-                      (bvis, sub_components, vp_actual_list[ibv], use_radec=use_radec)
-                      for ibv, bvis in enumerate(sub_bvis_list)]
-    if show:
-        actual_gt_list = rsexecute.compute(actual_gt_list, sync=True)
-        plot_file = 'voltage_pattern_gaintable_actual.png'
-        plot_gaintable(actual_gt_list, plot_file=plot_file, title=basename + " actual")
-        nominal_gt_list = rsexecute.compute(nominal_gt_list, sync=True)
-        plot_file = 'voltage_pattern_gaintable_nominal.png'
-        plot_gaintable(nominal_gt_list, plot_file=plot_file, title=basename + " nominal")
-    
-    return nominal_gt_list, actual_gt_list
-
-
-def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, time_range,
-                                                      time_chunk, integration_time,
-                                                      shared_directory,
-                                                      polarisation_frame=None,
-                                                      zerow=False):
+def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, time_range, time_chunk, integration_time,
+                                                      polarisation_frame=None, zerow=False):
     """ Create the standard MID simulation
     
     :param band: B1, B2, or Ku
@@ -774,7 +584,6 @@ def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, t
     :param time_range: Hour angle (in hours)
     :param time_chunk: Chunking of time in seconds
     :param integration_time:
-    :param shared_directory:
     :param polarisation_frame: Desired polarisation frame
     :param zerow: Set w to zero (False)
     :return:
@@ -817,7 +626,7 @@ def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, t
     
     # print('%d integrations of duration %.1f s processed in %d chunks' % (ntimes, integration_time, nchunks))
     
-    mid = create_configuration_from_MIDfile('%s/ska1mid_local.cfg' % shared_directory,
+    mid = create_configuration_from_MIDfile(rascil_data_path('configurations/ska1mid_local.cfg'),
                                             rmax=rmax,
                                             location=mid_location)
     
@@ -879,7 +688,7 @@ def create_standard_low_simulation_rsexecute_workflow(band, rmax, phasecentre, t
     
     assert ntimes > 0, "No data above elevation limit"
     
-    low = create_configuration_from_MIDfile('%s/ska1low_local.cfg' % shared_directory,
+    low = create_configuration_from_MIDfile(rascil_data_path("configurations/ska1low_local.cfg"),
                                             rmax=rmax,
                                             location=low_location)
     

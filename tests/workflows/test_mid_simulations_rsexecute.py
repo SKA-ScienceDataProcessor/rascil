@@ -91,7 +91,6 @@ class TestPointingSimulation(unittest.TestCase):
         
         bvis_graph = create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, time_range, time_chunk,
                                                                        integration_time,
-                                                                       shared_directory,
                                                                        polarisation_frame=vis_polarisation_frame)
         future_bvis_list = rsexecute.persist(bvis_graph)
         
