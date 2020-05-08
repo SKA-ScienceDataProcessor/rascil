@@ -64,7 +64,7 @@ class TestVoltagePatternsPolGraph(unittest.TestCase):
         frequency = [1.36e9]
         rmax = 1e4
         time_range = [-4.0, 4.0]
-        time_range = [-0.01, 0.01]
+        #time_range = [-0.01, 0.01]
         time_chunk = 1800.0
         integration_time = 1800.0
         imaging_context = "2d"
@@ -178,13 +178,10 @@ class TestVoltagePatternsPolGraph(unittest.TestCase):
         return result
     
     def check_values(self, result, method, tolerance=1e-3):
-        from pprint import PrettyPrinter
-        pp = PrettyPrinter()
-        pp.pprint(result)
-        for ipol, pol in enumerate(["I", "Q", "U", "V"]):
-            error = result["onsource_{}_{}".format(method, pol)] - result["onsource_model_{}".format(pol)]
-            print(pol, error)
-        for ipol, pol in enumerate(["I", "Q", "U", "V"]):
+        # from pprint import PrettyPrinter
+        # pp = PrettyPrinter()
+        # pp.pprint(result)
+       for ipol, pol in enumerate(["I", "Q", "U", "V"]):
             error = result["onsource_{}_{}".format(method, pol)] - result["onsource_model_{}".format(pol)]
             assert abs(error) < tolerance, "Stokes {}, error too large: {}".format(pol, error)
     

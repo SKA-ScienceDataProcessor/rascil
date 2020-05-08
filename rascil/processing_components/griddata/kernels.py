@@ -83,8 +83,8 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
     for y in range(oversampling):
         for x in range(oversampling):
             cf.data[:, :, 0, y, x, :, :] = numpy.outer(kernel[y, :], kernel[x, :])[numpy.newaxis, numpy.newaxis, ...]
-    norm = numpy.sum(numpy.real(cf.data[0, 0, 0, 0, 0, :, :]))
-    cf.data /= norm
+            norm = numpy.sum(numpy.real(cf.data[:, :, 0, y, x, :, :]), axis=(-2,-1))[..., numpy.newaxis, numpy.newaxis]
+            cf.data[:, :, 0, y, x] /= norm
 
     # Now calculate the griddata correction function as an image with the same coordinates as the image
     # which is necessary so that the correction function can be applied directly to the image
@@ -198,7 +198,15 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
                 #         cf.data[chan, pol, z, y, x, :, :] = paddedplane.data[chan, pol, :, :][vv, :][:, uu]
     
     if normalise:
-        cf.data /= numpy.sum(numpy.real(cf.data[0, 0, nw // 2, oversampling // 2, oversampling // 2, :, :]))
+        norm = numpy.zeros([nchan, npol, oversampling, oversampling])
+        for y in range(oversampling):
+            for x in range(oversampling):
+                # uu = range(xbeg, xend, -oversampling)
+                norm[..., y, x] = numpy.sum(numpy.real(cf.data[:, :, 0, y, x, :, :]), axis=(-2, -1))
+        for z, _ in enumerate(w_list):
+            for y in range(oversampling):
+                for x in range(oversampling):
+                    cf.data[:, :, z, y, x] /= norm[..., y, x][..., numpy.newaxis, numpy.newaxis]
     cf.data = numpy.conjugate(cf.data)
     
     if use_aaf:

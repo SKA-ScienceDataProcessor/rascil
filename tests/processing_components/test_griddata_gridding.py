@@ -130,7 +130,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_pswf.fits' % self.dir)
-        self.check_peaks(im, 96.99180596927562, tol=1e-7)
+        self.check_peaks(im, 97.10594988491545, tol=1e-7)
 
     def test_griddata_invert_pswf_stokesIQ(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQ"))
@@ -142,7 +142,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_pswf.fits' % self.dir)
-        self.check_peaks(im, 96.99180596927562, tol=1e-7)
+        self.check_peaks(im, 97.10594988491545, tol=1e-7)
 
     def test_griddata_invert_pswf_block(self):
         self.actualSetUp(zerow=True, block=True)
@@ -154,7 +154,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_pswf_block.fits' % self.dir)
-        self.check_peaks(im, 96.98910655571805, tol=1e-7)
+        self.check_peaks(im, 97.10594988491545, tol=1e-7)
 
     def test_griddata_invert_pswf_w(self):
         self.actualSetUp(zerow=False)
@@ -166,7 +166,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_pswf_w.fits' % self.dir)
-        self.check_peaks(im, 97.01838776845875, tol=1e-7)
+        self.check_peaks(im, 97.13240718331633, tol=1e-7)
     
     def test_griddata_invert_aterm(self):
         self.actualSetUp(zerow=True)
@@ -187,7 +187,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_aterm.fits' % self.dir)
-        self.check_peaks(im, 97.10568506868603, tol=1e-7)
+        self.check_peaks(im, 97.10594988491547, tol=1e-7)
     
     def test_griddata_invert_aterm_noover(self):
         self.actualSetUp(zerow=True)
@@ -238,7 +238,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_wterm.fits' % self.dir)
-        self.check_peaks(im, 97.13215242859647)
+        self.check_peaks(im, 97.13525760459086)
     
     def test_griddata_invert_awterm(self):
         self.actualSetUp(zerow=False)
@@ -260,7 +260,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_awterm.fits' % self.dir)
-        self.check_peaks(im, 97.13240677427714)
+        self.check_peaks(im, 97.13255970700962)
     
     def test_griddata_predict_pswf(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQUV"))
@@ -271,7 +271,7 @@ class TestGridDataGridding(unittest.TestCase):
         newvis = degrid_visibility_from_griddata(self.vis, griddata=griddata, cf=cf)
         newvis.data['vis'][...] -= self.vis.data['vis'][...]
         qa = qa_visibility(newvis)
-        assert qa.data['rms'] < 0.9, str(qa)
+        assert qa.data['rms'] < 1.06, str(qa)
     
     def test_griddata_predict_box(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQUV"))
@@ -339,7 +339,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_uniform.fits' % self.dir)
-        self.check_peaks(im, 99.3323029780083)
+        self.check_peaks(im, 99.40822097133994)
 
     def test_griddata_visibility_weight_IQ(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQUV"))
@@ -354,7 +354,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_IQ_uniform.fits' % self.dir)
-        self.check_peaks(im, 99.3323029780083)
+        self.check_peaks(im, 99.40822097133994)
 
     def test_griddata_blockvisibility_weight(self):
         self.actualSetUp(zerow=True, block=True, image_pol=PolarisationFrame("stokesIQUV"))
@@ -370,7 +370,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_uniform_block.fits' % self.dir)
-        self.check_peaks(im, 100.05604959444553)
+        self.check_peaks(im, 100.13540418821904)
 
     def test_griddata_blockvisibility_weight_I(self):
         self.actualSetUp(zerow=True, block=True, image_pol=PolarisationFrame("stokesI"))
@@ -386,7 +386,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_IQ_uniform_block.fits' % self.dir)
-        self.check_peaks(im, 100.05604959444553)
+        self.check_peaks(im, 100.13540418821904)
 
     def test_griddata_blockvisibility_weight_IQ(self):
         self.actualSetUp(zerow=True, block=True, image_pol=PolarisationFrame("stokesIQ"))
@@ -402,7 +402,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_IQ_uniform_block.fits' % self.dir)
-        self.check_peaks(im, 100.05604959444553)
+        self.check_peaks(im, 100.13540418821904)
 
     def plot_vis(self, newvis, title=''):
         if self.doplot:

@@ -214,7 +214,7 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
                 (pv_grid[row] - dv):(pv_grid[row] + dv), \
                 (pu_grid[row] - du):(pu_grid[row] + du)] \
                     += subcf * fvist[pol, vchan, row] * fwtt[pol, vchan, row]
-                sumwt[imchan, pol] += fwtt[pol, vchan, row] * numpy.sum(subcf.real)
+                sumwt[imchan, pol] += fwtt[pol, vchan, row]
 
     cf.data = numpy.conjugate(cf.data)
     return griddata, sumwt
@@ -252,7 +252,7 @@ def grid_visibility_to_griddata(vis, griddata, cf):
     for v, vwt, chan, uu, uuf, vv, vvf, zzg, zzc in coords:
         griddata.data[chan, :, zzg, (vv - dv):(vv + dv), (uu - du):(uu + du)] += \
             cf.data[chan, :, zzc, vvf, uuf, :, :] * v[:, numpy.newaxis, numpy.newaxis]
-        sumwt[chan, :] += vwt * numpy.sum(cf.data[chan, :, zzc, vvf, uuf, :, :].real, axis=(1,2))
+        sumwt[chan, :] += vwt
 
     cf.data = numpy.conjugate(cf.data)
     return griddata, sumwt
@@ -506,11 +506,10 @@ def degrid_visibility_from_griddata(vis, griddata, cf, **kwargs):
         # newvis.vis[i,:] = numpy.sum(griddata.data[chan, :, zzg, (vv - dv):(vv + dv), (uu - du):(uu + du)] *
         #                              cf.data[chan, :, zzc, vvf, uuf, :, :], axis=(1, 2))
 
-        norm = numpy.sum(cf.data[chan, :, zzc, vvf, uuf, :, :].real, axis=(1, 2))
         newvis.vis[ivis, :] = numpy.einsum('ijk,ijk->i',
                                             griddata.data[chan, :, zzg,
                                             (vv - dv):(vv + dv), (uu - du):(uu + du)],
-                                            cf.data[chan, :, zzc, vvf, uuf, :, :]) / norm
+                                            cf.data[chan, :, zzc, vvf, uuf, :, :])
 
     return newvis
 
