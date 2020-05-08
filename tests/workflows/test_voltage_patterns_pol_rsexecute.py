@@ -63,8 +63,8 @@ class TestVoltagePatternsPolGraph(unittest.TestCase):
         band = 'B2'
         frequency = [1.36e9]
         rmax = 1e4
-        time_range = [-4.0, 4.0]
-        #time_range = [-0.01, 0.01]
+        #time_range = [-4.0, 4.0]
+        time_range = [-0.01, 0.01]
         time_chunk = 1800.0
         integration_time = 1800.0
         imaging_context = "2d"
