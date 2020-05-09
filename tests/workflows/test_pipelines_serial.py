@@ -142,8 +142,8 @@ class TestPipelines(unittest.TestCase):
                                  '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96056316339504) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.4027437530187405) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.882832586292) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4018872898913932) < 1.0e-7, str(qa)
 
     @unittest.skip("Too expensive to run in Jenkins")
     def test_continuum_imaging_pipeline_pol(self):
@@ -170,8 +170,8 @@ class TestPipelines(unittest.TestCase):
                                  '%s/test_pipelines_continuum_imaging_pipeline_serial_restored.fits' % self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96056316339504) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.40274375301874366) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.88283258629198) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4018872898913914) < 1.0e-7, str(qa)
 
     @unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline(self):
@@ -203,8 +203,8 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96261980728406) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.39938488382834186) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.88471279070934) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.39848606324789765) < 1.0e-7, str(qa)
 
     @unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline_pol(self):
@@ -236,8 +236,8 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 88.14505612880944) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 2.0367842796227698) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 88.0772357735065) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 2.035420265483968) < 1.0e-7, str(qa)
 
     @unittest.skip("Too expensive to run in Jenkins")
     def test_ical_pipeline_global(self):
@@ -271,8 +271,8 @@ class TestPipelines(unittest.TestCase):
                                      self.dir)
 
         qa = qa_image(restored[centre])
-        assert numpy.abs(qa.data['max'] - 99.96050610983261) < 1.0e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 0.4022144753225296) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 99.88268162471103) < 1.0e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4016554844145119) < 1.0e-7, str(qa)
 
 
 if __name__ == '__main__':
