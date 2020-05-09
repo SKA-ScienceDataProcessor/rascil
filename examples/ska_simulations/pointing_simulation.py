@@ -488,10 +488,8 @@ if __name__ == '__main__':
 
         # Now make all the residual images
         vis_comp_chunk_dirty_list = \
-            calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list,
-                                                                  original_components,
-                                                                  future_model_list,
-                                                                  no_error_gtl, error_gtl)
+            calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list, original_components,
+                                                                  future_model_list, no_error_gtl, error_gtl)
 
         # Add the resulting images
         error_dirty_list = sum_invert_results_rsexecute(vis_comp_chunk_dirty_list)

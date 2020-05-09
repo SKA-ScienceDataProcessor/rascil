@@ -410,10 +410,8 @@ if __name__ == '__main__':
 
         # Now make all the residual images
         vis_comp_chunk_dirty_list = \
-            calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list,
-                                                                  original_components,
-                                                                  future_model_list,
-                                                                  no_error_gtl, error_gtl,
+            calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list, original_components,
+                                                                  future_model_list, no_error_gtl, error_gtl,
                                                                   context=args.imaging_context)
 
         # Add the resulting images

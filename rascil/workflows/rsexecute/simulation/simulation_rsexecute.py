@@ -1,14 +1,17 @@
 """ Pipelines expressed as dask components
 """
 
-__all__ = ['simulate_list_rsexecute_workflow', 'corrupt_list_rsexecute_workflow',
+__all__ = ['simulate_list_rsexecute_workflow',
+           'corrupt_list_rsexecute_workflow',
            'calculate_residual_dft_rsexecute_workflow',
            'calculate_residual_fft_rsexecute_workflow',
+           'calculate_residual_from_gaintables_rsexecute_workflow',
            'calculate_selfcal_residual_from_gaintables_rsexecute_workflow',
            'create_pointing_errors_gaintable_rsexecute_workflow',
            'create_standard_mid_simulation_rsexecute_workflow',
            'create_standard_low_simulation_rsexecute_workflow',
            'create_surface_errors_gaintable_rsexecute_workflow',
+           'create_polarisation_gaintable_rsexecute_workflow',
            'create_atmospheric_errors_gaintable_rsexecute_workflow']
 
 import logging
@@ -25,7 +28,7 @@ from rascil.processing_components.calibration import apply_gaintable, \
 from rascil.processing_components.calibration.pointing import \
     create_pointingtable_from_blockvisibility
 from rascil.processing_components.image import import_image_from_fits, apply_voltage_pattern_to_image
-from rascil.processing_components.image.operations import create_empty_image_like
+from rascil.processing_components.image.operations import create_empty_image_like, copy_image
 from rascil.processing_components.imaging import create_vp
 from rascil.processing_components.simulation import create_configuration_from_MIDfile
 from rascil.processing_components.simulation import create_named_configuration
@@ -192,6 +195,33 @@ def corrupt_list_rsexecute_workflow(vis_list, gt_list=None, seed=None, **kwargs)
         return [rsexecute.execute(corrupt_vis, nout=1)(vis_list[ivis], gt_list[ivis],
                                                        **kwargs)
                 for ivis, v in enumerate(vis_list)]
+
+
+def calculate_residual_from_gaintables_rsexecute_workflow(bvis_list, components, model_list, no_error_gtl, error_gtl,
+                                                          **kwargs):
+    """ Calculate residual between two gaintables
+    
+    :param bvis_list: 
+    :param components:
+    :param model_list: 
+    :param no_error_gtl: 
+    :param error_gtl: 
+    :param kwargs: 
+    :return: 
+    """
+    error_dirty_list = \
+        calculate_residual_dft_rsexecute_workflow(bvis_list, components, model_list, error_gtl)
+    no_error_dirty_list = \
+        calculate_residual_dft_rsexecute_workflow(bvis_list, components, model_list, no_error_gtl)
+    
+    def subtract(im1, im2):
+        im = copy_image(im1[0])
+        im.data -= im2[0].data
+        return im, im1[1]
+    
+    residual_list = rsexecute.execute(subtract, nout=1)(error_dirty_list, no_error_dirty_list)
+    
+    return residual_list
 
 
 def calculate_residual_fft_rsexecute_workflow(sub_bvis_list, sub_components, sub_model_list, vp_list, context='2d',
@@ -572,6 +602,69 @@ def create_surface_errors_gaintable_rsexecute_workflow(band, sub_bvis_list,
         plot_gaintable(tmp_gt_list, plot_file=plot_file, title=basename + " nominal")
     
     return nominal_gt_list, actual_gt_list
+
+
+def create_polarisation_gaintable_rsexecute_workflow(band, sub_bvis_list,
+                                                     sub_components,
+                                                     use_radec=False,
+                                                     show=True,
+                                                     basename='',
+                                                     normalise=True):
+    """ Create gaintable for polarisation effects
+
+    Compare with nominal and actual voltage patterns
+
+    :param band: B1, B2 or Ku
+    :param sub_bvis_list: List of vis (or graph)
+    :param sub_components: List of components (or graph)
+    :param use_radec: Use RADEC coordinate (False)
+    :param show: Plot the results
+    :param basename: Base name for the plots
+    :param normalise: Normalise peak of each receptor
+    :return: (list of error-free gaintables, list of error gaintables) or graph
+     """
+    
+    def find_vp_actual(band):
+        telescope = "MID_FEKO_{}".format(band)
+        vp = create_vp(telescope=telescope)
+        if normalise:
+            g = numpy.zeros([4])
+            g[0] = numpy.max(numpy.abs(vp.data[:, 0, ...]))
+            g[3] = numpy.max(numpy.abs(vp.data[:, 3, ...]))
+            g[1] = g[2] = numpy.sqrt(g[0] * g[3])
+            for chan in range(4):
+                vp.data[:, chan, ...] /= g[chan]
+        return vp
+    
+    def find_vp_nominal(band):
+        vp = find_vp_actual(band)
+        vpsym = 0.5 * (vp.data[:, 0, ...] + vp.data[:, 3, ...])
+        if normalise:
+            vpsym.data /= numpy.max(numpy.abs(vpsym.data))
+        
+        vp.data[:, 1:2, ...] = 0.0 + 0.0j
+        vp.data[:, 0, ...] = vpsym
+        vp.data[:, 3, ...] = vpsym
+        return vp
+    
+    vp_nominal_list = [rsexecute.execute(find_vp_nominal)(band) for bv in sub_bvis_list]
+    vp_actual_list = [rsexecute.execute(find_vp_actual)(band) for bv in sub_bvis_list]
+    
+    # Create the gain tables, one per Visibility and per component
+    no_error_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
+                        (bvis, sub_components, vp_nominal_list[ibv], use_radec=use_radec)
+                        for ibv, bvis in enumerate(sub_bvis_list)]
+    error_gt_list = [rsexecute.execute(simulate_gaintable_from_voltage_pattern)
+                     (bvis, sub_components, vp_actual_list[ibv], use_radec=use_radec)
+                     for ibv, bvis in enumerate(sub_bvis_list)]
+    if show:
+        plot_file = 'voltage_pattern_gaintable.png'
+        error_gt_list = rsexecute.compute(error_gt_list, sync=True)
+        plot_gaintable(error_gt_list, plot_file=plot_file, title=basename + " errors")
+        no_error_gt_list = rsexecute.compute(no_error_gt_list, sync=True)
+        plot_gaintable(no_error_gt_list, plot_file=plot_file, title=basename + " nominal")
+    
+    return no_error_gt_list, error_gt_list
 
 
 def create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, time_range, time_chunk, integration_time,
