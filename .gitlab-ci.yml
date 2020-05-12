@@ -26,11 +26,11 @@ unittests:
   before_script:
     - apt-get update
     - apt-get -y install rsync ca-certificates pybind11-dev
+    - pip3 install -r requirements.txt
     - git clone https://gitlab.mpcdf.mpg.de/ift/nifty_gridder.git
     - cd nifty_gridder
     - pip3 install --user .
     - cd ..
-    - pip install -r requirements.txt
     - mkdir -p test_results
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/
   script:
