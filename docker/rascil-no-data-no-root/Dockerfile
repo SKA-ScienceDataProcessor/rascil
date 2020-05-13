@@ -36,9 +36,12 @@ RUN mkdir -p /rascil/dask-worker-space && \
     mkdir -p /rascil/test_results && \
     chmod 777 /rascil/test_results
 
-RUN pip3 install Cython setuptools && \
-    pip3 install python-casacore==3.2.0 --upgrade && \
-    pip3 install aotools \
+RUN pip3 install setuptools && \
+    pip3 install python-casacore==3.2.0 --upgrade
+
+RUN pip3 install scikit-image==0.16.2
+
+RUN pip3 install aotools \
     astropy \
     dask \
     distributed \
@@ -49,13 +52,13 @@ RUN pip3 install Cython setuptools && \
     jupyter-server-proxy \
     jupyterlab \
     matplotlib \
+    numpy \
     photutils\
     reproject \
     scikit-image \
     scipy \
     seqfile \
     tabulate && \
-    pip3 install "numpy>=1.16.0" && \
     python3 setup.py build && python3 setup.py install && \
     rm -rf /root/.cache
 
