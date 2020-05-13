@@ -29,7 +29,7 @@ unittests:
     - pip3 install -r requirements.txt
     - git clone https://gitlab.mpcdf.mpg.de/ift/nifty_gridder.git
     - cd nifty_gridder
-    - pip3 install --user .
+    - pip3 install .
     - cd ..
     - mkdir -p test_results
     - rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic /build/
