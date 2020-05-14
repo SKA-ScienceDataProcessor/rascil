@@ -125,8 +125,8 @@ def predict_2d(vis: Union[BlockVisibility, Visibility], model: Image, gcfcf=None
 
     if gcfcf is None:
         gcf, cf = create_pswf_convolutionfunction(model,
-                                                  support=get_parameter(kwargs, "support", 6),
-                                                  oversampling=get_parameter(kwargs, "oversampling", 128))
+                                                  support=get_parameter(kwargs, "support", 8),
+                                                  oversampling=get_parameter(kwargs, "oversampling", 127))
     else:
         gcf, cf = gcfcf
 
@@ -172,8 +172,8 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
 
     if gcfcf is None:
         gcf, cf = create_pswf_convolutionfunction(im,
-                                                  support=get_parameter(kwargs, "support", 6),
-                                                  oversampling=get_parameter(kwargs, "oversampling", 128))
+                                                  support=get_parameter(kwargs, "support", 8),
+                                                  oversampling=get_parameter(kwargs, "oversampling", 127))
     else:
         gcf, cf = gcfcf
 

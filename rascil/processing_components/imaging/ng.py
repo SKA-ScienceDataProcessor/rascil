@@ -188,9 +188,13 @@ try:
         # at the beginning
         
         mfs = nchan == 1
-        mst = ms.T
-        wgtt = wgt.T
-        for pol in range(npol):
+        if dopsf:
+            
+            mst = ms.T
+            mst[...] = 0.0
+            mst[0, ...] = 1.0
+            wgtt = wgt.T
+
             if mfs:
                 dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
                                     bvis.frequency.astype(numpy.float64),
@@ -199,8 +203,8 @@ try:
                                     npixdirty, npixdirty, pixsize, pixsize, epsilon,
                                     do_wstacking=do_wstacking,
                                     nthreads=nthreads, verbosity=verbosity)
-                sumwt[0, pol] += numpy.sum(wgtt[pol, 0, :].T, axis=0)
-                im.data[0, pol] += dirty.T
+                sumwt[0, :] += numpy.sum(wgtt[0, 0, :].T, axis=0)
+                im.data[0, :] += dirty.T
             else:
                 for vchan in range(vnchan):
                     ichan = vis_to_im[vchan]
@@ -212,8 +216,36 @@ try:
                                         npixdirty, npixdirty, pixsize, pixsize, epsilon,
                                         do_wstacking=do_wstacking,
                                         nthreads=nthreads, verbosity=verbosity)
-                    sumwt[ichan, pol] += numpy.sum(wgtt[pol, ichan, :].T, axis=0)
-                    im.data[ichan, pol] += dirty.T
+                    sumwt[ichan, :] += numpy.sum(wgtt[0, ichan, :].T, axis=0)
+                    im.data[ichan, :] += dirty.T
+        else:
+            mst = ms.T
+            wgtt = wgt.T
+            for pol in range(npol):
+                if mfs:
+                    dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
+                                        bvis.frequency.astype(numpy.float64),
+                                        numpy.ascontiguousarray(mst[pol, :, :].T),
+                                        numpy.ascontiguousarray(wgtt[pol, :, :].T),
+                                        npixdirty, npixdirty, pixsize, pixsize, epsilon,
+                                        do_wstacking=do_wstacking,
+                                        nthreads=nthreads, verbosity=verbosity)
+                    sumwt[0, pol] += numpy.sum(wgtt[pol, 0, :].T, axis=0)
+                    im.data[0, pol] += dirty.T
+                else:
+                    for vchan in range(vnchan):
+                        ichan = vis_to_im[vchan]
+                        frequency = numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64)
+                        dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
+                                            frequency.astype(numpy.float64),
+                                            numpy.ascontiguousarray(mst[pol, vchan, :][..., numpy.newaxis]),
+                                            numpy.ascontiguousarray(wgtt[pol, vchan, :][..., numpy.newaxis]),
+                                            npixdirty, npixdirty, pixsize, pixsize, epsilon,
+                                            do_wstacking=do_wstacking,
+                                            nthreads=nthreads, verbosity=verbosity)
+                        sumwt[ichan, pol] += numpy.sum(wgtt[pol, ichan, :].T, axis=0)
+                        im.data[ichan, pol] += dirty.T
+
         
         if normalize:
             im = normalize_sumwt(im, sumwt)

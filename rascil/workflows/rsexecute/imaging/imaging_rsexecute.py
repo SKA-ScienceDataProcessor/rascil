@@ -584,10 +584,8 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
          vis_list = weight_list_rsexecute_workflow(vis_list, model_list, weighting='uniform')
 
    """
-    centre = len(model_imagelist) // 2
-    
     if gcfcf is None:
-        gcfcf = [rsexecute.execute(create_pswf_convolutionfunction)(model_imagelist[centre])]
+        gcfcf = [rsexecute.execute(create_pswf_convolutionfunction)(m, oversampling=1) for m in model_imagelist]
     
     def grid_wt(vis, model, g):
         if vis is not None:

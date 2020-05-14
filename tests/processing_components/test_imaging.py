@@ -18,7 +18,7 @@ from rascil.processing_components.image.operations import export_image_to_fits, 
 from rascil.processing_components.imaging.base import predict_2d, invert_2d
 from rascil.processing_components.imaging.dft import dft_skycomponent_visibility
 from rascil.processing_components.imaging.primary_beams import create_pb_generic
-from rascil.processing_components.simulation import create_named_configuration
+from rascil.processing_components.simulation import create_named_configuration, plot_visibility
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
     create_unittest_model, create_unittest_components
 from rascil.processing_components.skycomponent.operations import find_skycomponents, find_nearest_skycomponent, \
@@ -30,7 +30,6 @@ log = logging.getLogger('logger')
 log.setLevel(logging.WARNING)
 log.addHandler(logging.StreamHandler(sys.stdout))
 log.addHandler(logging.StreamHandler(sys.stderr))
-
 
 class TestImaging2D(unittest.TestCase):
     def setUp(self):
@@ -136,9 +135,12 @@ class TestImaging2D(unittest.TestCase):
         
         if self.persist: export_image_to_fits(dirty[0], '%s/test_imaging_%s_dirty.fits' %
                                               (self.dir, name))
-        
-        assert numpy.max(numpy.abs(dirty[0].data)), "Image is empty"
-        
+
+        for pol in range(dirty[0].npol):
+            assert numpy.max(numpy.abs(dirty[0].data[:, pol])), "Dirty image pol {} is empty".format(pol)
+        for chan in range(dirty[0].nchan):
+            assert numpy.max(numpy.abs(dirty[0].data[chan])), "Dirty image channel {} is empty".format(chan)
+
         if check_components:
             self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
     

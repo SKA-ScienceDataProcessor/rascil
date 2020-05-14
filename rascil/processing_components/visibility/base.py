@@ -517,7 +517,7 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None):
         else:
             raise ValueError(
                 "Unknown visibility polarisation %s" % (vis.polarisation_frame.type))
-        # Current RASCIL supports I
+
         tbl.set_stokes(polarization)
         tbl.set_frequency(vis.frequency, vis.channel_bandwidth)
         n_ant = len(vis.configuration.xyz)
@@ -759,8 +759,8 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                        Time(end_time, format='mjd').iso))
             
             spwtab = table('%s/SPECTRAL_WINDOW' % msname, ack=False)
-            cfrequency = spwtab.getcol('CHAN_FREQ')[spwid][channum]
-            cchannel_bandwidth = spwtab.getcol('CHAN_WIDTH')[spwid][channum]
+            cfrequency = numpy.array(spwtab.getcol('CHAN_FREQ')[spwid][channum])
+            cchannel_bandwidth = numpy.array(spwtab.getcol('CHAN_WIDTH')[spwid][channum])
             nchan = cfrequency.shape[0]
             if average_channels:
                 cfrequency = numpy.array([numpy.average(cfrequency)])

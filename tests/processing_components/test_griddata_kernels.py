@@ -63,8 +63,8 @@ class TestGridDataKernels(unittest.TestCase):
         assert peak_location == (0, 0, 0, 0, 0, 2, 2), peak_location
 
     def test_fill_pswf_to_convolutionfunction(self):
-        oversampling = 8
-        support = 6
+        oversampling = 127
+        support = 8
         gcf, cf = create_pswf_convolutionfunction(self.image, oversampling=oversampling, support=support)
         assert numpy.max(numpy.abs(cf.data)) > 0.0
         if self.persist:
@@ -85,7 +85,7 @@ class TestGridDataKernels(unittest.TestCase):
 
     def test_fill_pswf_to_convolutionfunction_nooversampling(self):
         oversampling = 1
-        support = 6
+        support = 8
         gcf, cf = create_pswf_convolutionfunction(self.image, oversampling=oversampling, support=support)
 
         assert numpy.max(numpy.abs(cf.data)) > 0.0

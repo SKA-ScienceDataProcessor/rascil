@@ -66,14 +66,19 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
     :return: griddata correction Image, griddata kernel as ConvolutionFunction
     """
     assert isinstance(im, Image), im
+    if oversampling % 2 == 0:
+        log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
+        oversampling += 1
+
+    width = support - 2
     # Calculate the convolution kernel. We oversample in u,v space by the factor oversampling
     cf = create_convolutionfunction_from_image(im, oversampling=oversampling, support=support)
 
     kernel = numpy.zeros([oversampling, support])
-    for grid in range(support):
+    for grid in range(1, support-1):
         for subsample in range(oversampling):
             nu = ((grid - support // 2) - (subsample - oversampling // 2) / oversampling)
-            kernel[subsample, grid] = grdsf([nu / (support // 2)])[1]
+            kernel[subsample, grid] = grdsf([nu / (width // 2)])[1]
 
     kernel /= numpy.sum(numpy.real(kernel[oversampling // 2, :]))
 
@@ -112,6 +117,10 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
     :param oversampling: Oversampling of the convolution function in uv space
     :return: griddata correction Image, griddata kernel as GridData
     """
+    if oversampling % 2 == 0:
+        log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
+        oversampling +=1
+        
     d2r = numpy.pi / 180.0
     
     # We only need the griddata correction function for the PSWF so we make

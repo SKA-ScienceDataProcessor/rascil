@@ -228,9 +228,6 @@ def calculate_residual_fft_rsexecute_workflow(sub_bvis_list, sub_components, sub
                                           **kwargs):
     """Calculate residual image corresponding to a set of gaintables
 
-    The visibility difference for a set of components for error and no error gaintables
-    are calculated and the residual images constructed
-
     :param sum_vis:
     :param sub_bvis_list: List of vis (or graph)
     :param sub_components: List of components (or graph)

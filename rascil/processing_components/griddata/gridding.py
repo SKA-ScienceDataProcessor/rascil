@@ -126,12 +126,10 @@ def spatial_mapping(cf, griddata, u, v, w):
     # Find the nearest grid points
     pu_grid, pv_grid = \
         numpy.round(griddata.grid_wcs.sub([1, 2]).wcs_world2pix(u, v, 0)).astype('int')
-    assert numpy.min(pu_grid) >= 0, "U axis underflows: %f" % numpy.min(pu_grid)
-    assert numpy.max(pu_grid) < griddata.shape[3], "U axis overflows: %f" % numpy.max(
-        pu_grid)
-    assert numpy.min(pv_grid) >= 0, "V axis underflows: %f" % numpy.min(pv_grid)
-    assert numpy.max(pv_grid) < griddata.shape[4], "V axis overflows: %f" % numpy.max(
-        pv_grid)
+    assert numpy.min(pu_grid) >= 0, "image sampling wrong: U axis underflows: %f" % numpy.min(pu_grid)
+    assert numpy.max(pu_grid) < griddata.shape[3], "U axis overflows: %f" % numpy.max(pu_grid)
+    assert numpy.min(pv_grid) >= 0, "image sampling wrong: V axis underflows: %f" % numpy.min(pv_grid)
+    assert numpy.max(pv_grid) < griddata.shape[4], "V axis overflows: %f" % numpy.max(pv_grid)
     # We now have the location of grid points, convert back to uv space and find the remainder (in wavelengths). We
     # then use this to calculate the subsampling indices (DUU, DVV)
     wu_grid, wv_grid = griddata.grid_wcs.sub([1, 2]).wcs_pix2world(pu_grid, pv_grid, 0)

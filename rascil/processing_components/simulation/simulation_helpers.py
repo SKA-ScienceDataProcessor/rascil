@@ -2,7 +2,7 @@
 
 """
 
-__all__ = ['plot_visibility', 'find_times_above_elevation_limit', 'plot_uvcoverage',
+__all__ = ['plot_visibility', 'plot_visibility_pol', 'find_times_above_elevation_limit', 'plot_uvcoverage',
            'plot_azel', 'plot_gaintable', 'plot_pointingtable', 'find_pb_width_null',
            'create_simulation_components', 'plot_pa']
 
@@ -62,7 +62,7 @@ def find_times_above_elevation_limit(start_times, end_times, location, phasecent
     return valid_start_times
 
 
-def plot_visibility(vis_list, title='Visibility', y='amp', x='uvdist', plot_file=None, **kwargs):
+def plot_visibility(vis_list, title='Visibility', y='amp', x='uvdist', plot_file=None, plot_zero=False, *kwargs):
     """ Standard plot of visibility
 
     :param vis_list:
@@ -85,6 +85,42 @@ def plot_visibility(vis_list, title='Visibility', y='amp', x='uvdist', plot_file
     if plot_file is not None:
         plt.savefig(plot_file)
     plt.show(block=False)
+
+def plot_visibility_pol(vis_list, title='Visibility_pol', y='amp', x='uvdist', plot_file=None, **kwargs):
+    """ Standard plot of visibility
+
+    :param vis_list:
+    :param plot_file:
+    :param kwargs:
+    :return:
+    """
+    plt.clf()
+    for ivis, vis in enumerate(vis_list):
+        pols = vis.polarisation_frame.names
+        colors = ["red", "blue", "green", "purple"]
+        for pol in range(vis.vis.shape[-1]):
+            if y == 'amp':
+                yvalue = numpy.abs(vis.flagged_vis[..., 0, pol]).flat
+            else:
+                yvalue = numpy.angle(vis.flagged_vis[..., 0, pol]).flat
+            if x=="time":
+                xvalue = numpy.repeat(vis.time, len(yvalue))
+            else:
+                xvalue = vis.uvdist.flat
+            if ivis == 0:
+                plt.plot(xvalue[yvalue > 0.0], yvalue[yvalue > 0.0], '.', color=colors[pol],
+                         label=pols[pol])
+            else:
+                plt.plot(xvalue[yvalue > 0.0], yvalue[yvalue > 0.0], '.', color=colors[pol])
+
+    plt.xlabel(x)
+    plt.ylabel(y)
+    plt.title(title)
+    plt.legend()
+    if plot_file is not None:
+        plt.savefig(plot_file)
+    plt.show(block=False)
+
 
 
 def plot_uvcoverage(vis_list, ax=None, plot_file=None, title='UV coverage', **kwargs):
@@ -288,7 +324,7 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
     :param phasecentre: Centre of components
     :param frequency: Frequency
     :param pbtype: Type of primary beam
-    :param offset_dir:
+    :param offset_dir: Offset in ra, dec degrees
     :param flux_limit: Lower limit flux
     :param pbradius: Radius of components in radians
     :param pb_npixel: Number of pixels in the primary beam model
