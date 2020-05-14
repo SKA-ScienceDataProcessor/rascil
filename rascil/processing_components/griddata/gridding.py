@@ -176,7 +176,7 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
     griddata.data[...] = 0.0
     
     nchan, npol, _, _, _ = griddata.data.shape
-    vis_to_im = numpy.round(griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
+    vis_to_im = numpy.round(griddata.grid_wcs.sub([5]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
     
     nrows, nants, _, nvchan, nvpol = vis.vis.shape
     
