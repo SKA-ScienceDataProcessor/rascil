@@ -180,6 +180,7 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
 
     nrows, nants, _, nvchan, nvpol = vis.vis.shape
     
+    nchan, npol, _, _, _ = griddata.shape
     fvist = vis.flagged_vis.reshape([nrows * nants * nants, nvchan, nvpol]).T
     fwtt = vis.flagged_imaging_weight.reshape([nrows * nants * nants, nvchan, nvpol]).T
     fviswtt = fvist * fwtt
