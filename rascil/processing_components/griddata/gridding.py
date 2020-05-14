@@ -174,10 +174,10 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf):
     assert vis.polarisation_frame == griddata.polarisation_frame
     
     griddata.data[...] = 0.0
-    
-    nchan, npol, _, _, _ = griddata.data.shape
-    vis_to_im = numpy.round(griddata.grid_wcs.sub([5]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
-    
+
+    vis_to_im = numpy.round(
+        griddata.grid_wcs.sub([5]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
+
     nrows, nants, _, nvchan, nvpol = vis.vis.shape
     
     fvist = vis.flagged_vis.reshape([nrows * nants * nants, nvchan, nvpol]).T
@@ -261,8 +261,8 @@ def grid_blockvisibility_weight_to_griddata(vis, griddata: GridData, cf):
     
     _, _, _, _, _, gv, gu = cf.shape
     vis_to_im = numpy.round(
-        griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
-    
+        griddata.grid_wcs.sub([5]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
+
     griddata.data[...] = 0.0
     real_gd = numpy.real(griddata.data)
     
@@ -354,8 +354,8 @@ def griddata_visibility_reweight(vis, griddata, cf):
     real_gd = numpy.real(griddata.data)
     
     vis_to_im = numpy.round(
-        griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
-    
+        griddata.grid_wcs.sub([5]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
+
     nrows, nvpol = vis.vis.shape
     fwtt = vis.flagged_imaging_weight.T
     nvchan = len(numpy.unique(vis.frequency))
@@ -390,8 +390,8 @@ def griddata_blockvisibility_reweight(vis, griddata, cf):
     sumwt = numpy.zeros([nchan, npol])
     _, _, _, _, _, gv, gu = cf.shape
     vis_to_im = numpy.round(
-        griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
-    
+        griddata.grid_wcs.sub([5]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
+
     real_gd = numpy.real(griddata.data)
     wgtt = vis.flagged_imaging_weight.reshape([nrows * nants * nants, nvchan, nvpol]).T
     
@@ -424,10 +424,11 @@ def degrid_blockvisibility_from_griddata(vis, griddata, cf, **kwargs):
     assert vis.polarisation_frame == griddata.polarisation_frame
     
     newvis = copy_visibility(vis, zero=True)
-    
-    nchan, npol, _, _, _ = griddata.data.shape
-    vis_to_im = numpy.round(griddata.grid_wcs.sub([3]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
-    
+
+    nchan, npol, nz, oversampling, _, support, _ = cf.shape
+    vis_to_im = numpy.round(
+        griddata.grid_wcs.sub([5]).wcs_world2pix(vis.frequency, 0)[0]).astype('int')
+
     nrows, nants, _, nvchan, nvpol = vis.vis.shape
     
     fvist = numpy.zeros([nvpol, nvchan, nrows * nants * nants], dtype='complex')
