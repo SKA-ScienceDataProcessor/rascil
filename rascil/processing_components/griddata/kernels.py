@@ -67,8 +67,8 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
     """
     assert isinstance(im, Image), im
     if oversampling % 2 == 0:
-        log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
         oversampling += 1
+        log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
 
     width = support - 2
     # Calculate the convolution kernel. We oversample in u,v space by the factor oversampling
@@ -118,8 +118,8 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
     :return: griddata correction Image, griddata kernel as GridData
     """
     if oversampling % 2 == 0:
-        log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
         oversampling +=1
+        log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
         
     d2r = numpy.pi / 180.0
     

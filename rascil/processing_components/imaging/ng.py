@@ -198,8 +198,8 @@ try:
             if mfs:
                 dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
                                     bvis.frequency.astype(numpy.float64),
-                                    numpy.ascontiguousarray(mst[pol, :, :].T),
-                                    numpy.ascontiguousarray(wgtt[pol, :, :].T),
+                                    numpy.ascontiguousarray(mst[0, :, :].T),
+                                    numpy.ascontiguousarray(wgtt[0, :, :].T),
                                     npixdirty, npixdirty, pixsize, pixsize, epsilon,
                                     do_wstacking=do_wstacking,
                                     nthreads=nthreads, verbosity=verbosity)
@@ -211,8 +211,8 @@ try:
                     frequency = numpy.array(freq[vchan:vchan + 1]).astype(numpy.float64)
                     dirty = ng.ms2dirty(fuvw.astype(numpy.float64),
                                         frequency.astype(numpy.float64),
-                                        numpy.ascontiguousarray(mst[pol, vchan, :][..., numpy.newaxis]),
-                                        numpy.ascontiguousarray(wgtt[pol, vchan, :][..., numpy.newaxis]),
+                                        numpy.ascontiguousarray(mst[0, vchan, :][..., numpy.newaxis]),
+                                        numpy.ascontiguousarray(wgtt[0, vchan, :][..., numpy.newaxis]),
                                         npixdirty, npixdirty, pixsize, pixsize, epsilon,
                                         do_wstacking=do_wstacking,
                                         nthreads=nthreads, verbosity=verbosity)
