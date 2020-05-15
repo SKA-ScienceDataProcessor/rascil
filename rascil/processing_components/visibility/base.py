@@ -17,7 +17,8 @@ from typing import Union
 
 import numpy
 from astropy import units as u, constants as constants
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
+from astropy.units import Quantity
 from astropy.io import fits
 from astropy.time import Time
 
@@ -820,8 +821,13 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             
             antenna1 = list(map(lambda i: ant_map[i], antenna1))
             antenna2 = list(map(lambda i: ant_map[i], antenna2))
+
             
-            configuration = Configuration(name='', data=None, location=None,
+            location = EarthLocation(x=Quantity(xyz[0][0], 'm'),
+                                     y=Quantity(xyz[0][1], 'm'),
+                                     z=Quantity(xyz[0][2], 'm'))
+
+            configuration = Configuration(name='', data=None, location=location,
                                           names=names, xyz=xyz, mount=mount, frame="geocentric",
                                           receptor_frame=ReceptorFrame("linear"),
                                           diameter=diameter)
