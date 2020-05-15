@@ -18,7 +18,7 @@ from rascil.processing_components.imaging import create_image_from_visibility
 from rascil.processing_components.imaging.primary_beams import create_vp
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.workflows import create_standard_mid_simulation_rsexecute_workflow, \
-    predict_dft_rsexecute_workflow, predict_fft_rsexecute_workflow
+    predict_dft_rsexecute_workflow, predict_fft_components_rsexecute_workflow
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger('logger')
@@ -169,11 +169,11 @@ class TestVoltagePatternsPolGraph(unittest.TestCase):
                 vp_list = rsexecute.persist(vp_list)
                 
                 bvis_plot_list = \
-                    predict_fft_rsexecute_workflow(bvis_graph, original_components,
-                                                   future_model_list, vp_list=vp_list,
-                                                   context=imaging_context,
-                                                   vis_slices=vis_slices,
-                                                   do_wstacking=False)
+                    predict_fft_components_rsexecute_workflow(bvis_graph, original_components,
+                                                              future_model_list, vp_list=vp_list,
+                                                              context=imaging_context,
+                                                              vis_slices=vis_slices,
+                                                              do_wstacking=False)
                 bvis_plot_list = rsexecute.persist(bvis_plot_list)
             
             bvis_plot_list = rsexecute.compute(bvis_plot_list, sync=True)
