@@ -9,6 +9,7 @@ __all__ = ['calculate_blockvisibility_transit_time',
 
 from astropy.time import Time
 from astropy.coordinates import SkyCoord, EarthLocation
+from astropy.units import Quantity
 
 from rascil.data_models import BlockVisibility
 
@@ -17,12 +18,17 @@ from rascil.processing_components.util.geometry import calculate_azel, calculate
 
 def get_direction_time_location(bvis):
     location = bvis.configuration.location
+    if location is None:
+        location = EarthLocation(x=Quantity(bvis.configuration.antxyz[0]),
+                                 y=Quantity(bvis.configuration.antxyz[1]),
+                                 z=Quantity(bvis.configuration.antxyz[2]))
+
     utc_time = Time(bvis.time / 86400.0, format='mjd', scale='utc')
     direction = bvis.phasecentre
-    assert isinstance(bvis, BlockVisibility)
-    assert isinstance(location, EarthLocation)
-    assert isinstance(utc_time, Time)
-    assert isinstance(direction, SkyCoord)
+    assert isinstance(bvis, BlockVisibility), bvis
+    assert isinstance(location, EarthLocation), location
+    assert isinstance(utc_time, Time), utc_time
+    assert isinstance(direction, SkyCoord), direction
     return location, utc_time, direction
 
 
