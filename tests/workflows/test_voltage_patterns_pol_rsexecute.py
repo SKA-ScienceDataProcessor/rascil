@@ -20,7 +20,7 @@ from rascil.processing_components.imaging.primary_beams import create_vp
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.workflows import calculate_residual_dft_rsexecute_workflow, \
     calculate_residual_fft_rsexecute_workflow, create_standard_mid_simulation_rsexecute_workflow, \
-    predict_dft_rsexecute_workflow, predict_fft_rsexecute_workflow
+    predict_dft_rsexecute_workflow, predict_fft_components_rsexecute_workflow
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
 
 log = logging.getLogger('logger')

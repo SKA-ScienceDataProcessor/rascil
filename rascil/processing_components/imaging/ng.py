@@ -152,8 +152,8 @@ try:
         freq = sbvis.frequency  # frequency, Hz
         
         nrows, nants, _, vnchan, vnpol = sbvis.vis.shape
-        if dopsf:
-            sbvis = fill_vis_for_psf(sbvis)
+        # if dopsf:
+        #     sbvis = fill_vis_for_psf(sbvis)
 
         ms = sbvis.vis.reshape([nrows * nants * nants, vnchan, vnpol])
         ms = convert_pol_frame(ms, bvis.polarisation_frame, im.polarisation_frame, polaxis=2)

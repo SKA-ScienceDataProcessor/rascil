@@ -304,14 +304,27 @@ class TestImaging(unittest.TestCase):
         self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list, gcfcf=self.gcfcf,
                                                         weighting='uniform')
         self._invert_base(context='2d', extra='_uniform', positionthreshold=2.0, check_components=False)
-    
+
     def test_invert_2d_uniform_block(self):
         self.actualSetUp(zerow=True, makegcfcf=True, block=True)
         self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list, gcfcf=self.gcfcf,
                                                         weighting='uniform')
         self.bvis_list = rsexecute.compute(self.bvis_list, sync=True)
         assert isinstance(self.bvis_list[0], BlockVisibility)
-    
+
+    def test_invert_2d_robust(self):
+        self.actualSetUp(zerow=True)
+        self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list,
+                                                        weighting="robust", robustness=0.0)
+        self._invert_base(context='2d', extra='_uniform', positionthreshold=2.0, check_components=False)
+
+    def test_invert_2d_robust_block(self):
+        self.actualSetUp(zerow=True, makegcfcf=True, block=True)
+        self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list,
+                                                        weighting="robust", robustness=0.0)
+        self.bvis_list = rsexecute.compute(self.bvis_list, sync=True)
+        assert isinstance(self.bvis_list[0], BlockVisibility)
+
     def test_invert_2d_uniform_nogcfcf(self):
         self.actualSetUp(zerow=True)
         self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list)

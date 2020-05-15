@@ -22,7 +22,7 @@ from rascil.processing_components.image.operations import image_is_canonical
 from rascil.processing_components.util.array_functions import tukey_filter
 
 
-def weight_visibility(vis, model, gcfcf=None, weighting='uniform', **kwargs):
+def weight_visibility(vis, model, gcfcf=None, weighting='uniform', robustness=0.0, **kwargs):
     """ Weight the visibility data
 
     This is done collectively so the weights are summed over all vis_lists and then
@@ -30,9 +30,10 @@ def weight_visibility(vis, model, gcfcf=None, weighting='uniform', **kwargs):
 
     :param vis_list:
     :param model_imagelist: Model required to determine weighting parameters
-    :param weighting: Type of weighting
+    :param weighting: Type of weighting (uniform or robust or natural)
+    :param robustness: Robustness parameter
     :param kwargs: Parameters for functions in graphs
-    :return: List of vis_graphs
+    :return: Reweighted vis
    """
 
     assert isinstance(vis, Visibility), vis
@@ -43,11 +44,11 @@ def weight_visibility(vis, model, gcfcf=None, weighting='uniform', **kwargs):
 
     griddata = create_griddata_from_image(model, vis)
     griddata, sumwt = grid_visibility_weight_to_griddata(vis, griddata, gcfcf[1])
-    vis = griddata_visibility_reweight(vis, griddata, gcfcf[1])
+    vis = griddata_visibility_reweight(vis, griddata, gcfcf[1], weighting=weighting, robustness=robustness)
     return vis
 
 
-def weight_blockvisibility(vis, model, gcfcf=None, weighting='uniform', **kwargs):
+def weight_blockvisibility(vis, model, gcfcf=None, weighting="uniform", robustness=0.0, **kwargs):
     """ Weight the visibility data
 
     This is done collectively so the weights are summed over all vis_lists and then
@@ -68,7 +69,7 @@ def weight_blockvisibility(vis, model, gcfcf=None, weighting='uniform', **kwargs
 
     griddata = create_griddata_from_image(model, vis)
     griddata, sumwt = grid_blockvisibility_weight_to_griddata(vis, griddata, gcfcf[1])
-    vis = griddata_blockvisibility_reweight(vis, griddata, gcfcf[1])
+    vis = griddata_blockvisibility_reweight(vis, griddata, gcfcf[1], weighting=weighting, robustness=robustness)
     return vis
 
 

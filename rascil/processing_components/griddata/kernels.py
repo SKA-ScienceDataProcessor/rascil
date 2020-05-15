@@ -53,7 +53,7 @@ def create_box_convolutionfunction(im, oversampling=1, support=1):
     return gcf_image, cf
 
 
-def create_pswf_convolutionfunction(im, oversampling=8, support=6):
+def create_pswf_convolutionfunction(im, oversampling=127, support=8):
     """ Fill an Anti-Aliasing filter into a ConvolutionFunction
 
     Fill the Prolate Spheroidal Wave Function into a GriData with the specified oversampling. Only the inner
@@ -88,8 +88,11 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
     for y in range(oversampling):
         for x in range(oversampling):
             cf.data[:, :, 0, y, x, :, :] = numpy.outer(kernel[y, :], kernel[x, :])[numpy.newaxis, numpy.newaxis, ...]
+
+    for y in range(oversampling):
+        for x in range(oversampling):
             norm = numpy.sum(numpy.real(cf.data[:, :, 0, y, x, :, :]), axis=(-2,-1))[..., numpy.newaxis, numpy.newaxis]
-            cf.data[:, :, 0, y, x] /= norm
+            cf.data[:, :, 0, y, x, :, :] /= norm
 
     # Now calculate the griddata correction function as an image with the same coordinates as the image
     # which is necessary so that the correction function can be applied directly to the image
@@ -106,7 +109,7 @@ def create_pswf_convolutionfunction(im, oversampling=8, support=6):
     return gcf_image, cf
 
 
-def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversampling=8, support=6, use_aaf=True,
+def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversampling=9, support=8, use_aaf=True,
                                       maxsupport=512, pa=None, normalise=True):
     """ Fill AW projection kernel into a GridData.
 
@@ -239,6 +242,10 @@ def create_vpterm_convolutionfunction(im, make_vp=None, oversampling=8, support=
     :param oversampling: Oversampling of the convolution function in uv space
     :return: griddata correction Image, griddata kernel as GridData
     """
+    if oversampling % 2 == 0:
+        log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
+        oversampling += 1
+
     d2r = numpy.pi / 180.0
     
     # We only need the griddata correction function for the PSWF so we make
