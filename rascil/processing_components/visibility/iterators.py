@@ -57,7 +57,8 @@ def vis_timeslice_iter(vis: Union[Visibility, BlockVisibility], vis_slices=None)
     
     for box in boxes:
         rows = numpy.abs(vis.time - box) <= 0.5 * timeslice
-        yield rows
+        if numpy.sum(rows) > 0:
+            yield rows
 
 
 def vis_timeslices(vis: Union[Visibility, BlockVisibility], timeslice='auto') -> int:
