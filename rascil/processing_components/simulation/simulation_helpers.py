@@ -78,7 +78,9 @@ def plot_visibility(vis_list, title='Visibility', y='amp', x='uvdist', plot_file
             yvalue = numpy.angle(vis.flagged_vis[..., 0, 0]).flat
         xvalue = vis.uvdist.flat
         plt.plot(xvalue[yvalue > 0.0], yvalue[yvalue > 0.0], '.', color='b', markersize=0.2)
-        plt.plot(xvalue[yvalue == 0.0], yvalue[yvalue == 0.0], '.', color='r', markersize=0.2)
+        if plot_zero:
+            plt.plot(xvalue[yvalue == 0.0], yvalue[yvalue == 0.0], '.', color='r', markersize=0.2)
+
     plt.xlabel(x)
     plt.ylabel(y)
     plt.title(title)
