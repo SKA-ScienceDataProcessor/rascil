@@ -70,6 +70,17 @@ The installation steps are:
 if you only don't intend to update or edit rascil in place. If you do intend to make changes, you will need the
 definition of PYTHONPATH.
 
+CASA measures data
+++++++++++++++++++
+
+We use casacore for some coordinate conversions. As a result the CASA measures data files are needed. Depending on
+your setup, these may already be in the right place. If not, you can download a copy and tell casacore where it is::
+
+    echo 'measures.directory: ~/casacore_data' > ~/.casarc
+    rsync -avz rsync://casa-rsync.nrao.edu/casa-data/geodetic ~/casacore_data
+
+If you get errors about the UTC table being out of date, repeat the rsync.
+
 Installation via conda
 ++++++++++++++++++++++
 
