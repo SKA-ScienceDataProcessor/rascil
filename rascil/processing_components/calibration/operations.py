@@ -54,6 +54,7 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
     
     # row_numbers = numpy.array(list(range(len(vis.time))), dtype='int')
     row_numbers = numpy.arange(len(vis.time))
+    done = numpy.zeros(len(row_numbers), dtype='int')
     for row in range(gt.ntimes):
         vis_rows = numpy.abs(vis.time - gt.time[row]) < gt.interval[row] / 2.0
         vis_rows = row_numbers[vis_rows]
@@ -138,6 +139,8 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
                                         cfs = numpy.diag(original[sub_vis_row, a2, a1, chan, ...])
                                         applied[sub_vis_row, a2, a1, chan, ...] = \
                                             numpy.diag(igain[a1, chan, :, :] @ cfs @ cigain[a2, chan, :, :]).reshape([2])
+                                        applied[sub_vis_row, a1, a2, chan, ...] = \
+                                            numpy.conjugate(applied[sub_vis_row, a2, a1, chan, ...])
                 else:
                     for sub_vis_row in range(original.shape[0]):
                         for a1 in range(vis.nants - 1):
@@ -146,6 +149,8 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
                                     cfs = numpy.diag(original[sub_vis_row, a2, a1, chan, ...])
                                     applied[sub_vis_row, a2, a1, chan, ...] = \
                                         numpy.diag(gain[a1, chan, :, :] @ cfs @ cgain[a2, chan, :, :]).reshape([2])
+                                    applied[sub_vis_row, a1, a2, chan, ...] = \
+                                        numpy.conjugate(applied[sub_vis_row, a2, a1, chan, ...])
 
             elif vis.npol == 4:
                 has_inverse_ant = numpy.zeros([nant, nchan], dtype='bool')
@@ -169,6 +174,8 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
                                         cfs = original[sub_vis_row, a2, a1, chan, ...].reshape([2,2])
                                         applied[sub_vis_row, a2, a1, chan, ...] = \
                                             (igain[a1, chan, :, :] @ cfs @ cigain[a2, chan, :, :]).reshape([4])
+                                        applied[sub_vis_row, a1, a2, chan, ...] = \
+                                            numpy.conjugate(applied[sub_vis_row, a2, a1, chan, ...])
                 else:
                     for sub_vis_row in range(original.shape[0]):
                         for a1 in range(vis.nants - 1):
@@ -177,8 +184,19 @@ def apply_gaintable(vis: BlockVisibility, gt: GainTable, inverse=False, **kwargs
                                     cfs = original[sub_vis_row, a2, a1, chan, ...].reshape([2, 2])
                                     applied[sub_vis_row, a2, a1, chan, ...] = \
                                         (gain[a1, chan, :, :] @ cfs @ cgain[a2, chan, :, :]).reshape([4])
+                                    applied[sub_vis_row, a1, a2, chan, ...] = \
+                                        numpy.conjugate(applied[sub_vis_row, a2, a1, chan, ...])
             
+            else:
+                times = Time(vis.time / 86400.0, format='mjd', scale='utc')
+                print("No row in gaintable for visibility time range  {} to {}".format(times[0].isot, times[-1].isot))
+                log.warning("No row in gaintable for visibility row, time range  {} to {}".format(times[0].isot, times[-1].isot))
+
             vis.data['vis'][vis_rows] = applied
+            for r in vis_rows:
+                done[r] = 1
+    
+    assert done.all() == 1, "Some rows were not calibrated"
     
     return vis
 

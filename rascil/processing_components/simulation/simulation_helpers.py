@@ -463,7 +463,7 @@ def create_simulation_components(context, phasecentre, frequency, pbtype, offset
                     if abs(comp.flux[0, 0]) > max_flux:
                         max_flux = abs(comp.flux[0, 0])
                     filtered_components.append(original_components[icomp])
-            log.info("create_simulation_components: %d components > %.3f Jy after application of primary beam" %
+            log.info("create_simulation_components: %d components > %.3f Jy after filtering with primary beam" %
                      (len(filtered_components), flux_limit))
             log.info("create_simulation_components: Strongest components is %g (Jy)" % max_flux)
             log.info("create_simulation_components: Total flux in components is %g (Jy)" % total_flux)

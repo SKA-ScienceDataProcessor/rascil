@@ -63,64 +63,65 @@ def simulate_gaintable_from_voltage_pattern(vis, sc, vp, vis_slices=None, scale=
         # voltage pattern
         for iha, rows in enumerate(vis_timeslice_iter(vis, vis_slices=vis_slices)):
             v = create_visibility_from_rows(vis, rows)
-            utc_time = Time([numpy.average(v.time)/86400.0], format='mjd', scale='utc')
-            azimuth_centre, elevation_centre = calculate_azel(v.configuration.location, utc_time,
-                                                              vis.phasecentre)
-            azimuth_centre = azimuth_centre[0].to('deg').value
-            elevation_centre = elevation_centre[0].to('deg').value
-            
-            # Calculate the az el for this time
-            wcs_azel = vp.wcs.sub(2).deepcopy()
-            
-            for icomp, comp in enumerate(sc):
+            if v is not None:
+                utc_time = Time([numpy.average(v.time)/86400.0], format='mjd', scale='utc')
+                azimuth_centre, elevation_centre = calculate_azel(v.configuration.location, utc_time,
+                                                                  vis.phasecentre)
+                azimuth_centre = azimuth_centre[0].to('deg').value
+                elevation_centre = elevation_centre[0].to('deg').value
                 
-                if elevation_centre >= elevation_limit:
+                # Calculate the az el for this time
+                wcs_azel = vp.wcs.sub(2).deepcopy()
+                
+                for icomp, comp in enumerate(sc):
                     
-                    antgain = numpy.zeros([nant, npol], dtype='complex')
-                    antwt = numpy.zeros([nant, npol])
-                    
-                    # Calculate the azel of this component
-                    azimuth_comp, elevation_comp = calculate_azel(v.configuration.location, utc_time,
-                                                                  comp.direction)
-                    cosel = numpy.cos(elevation_comp[0]).value
-                    azimuth_comp = azimuth_comp[0].to('deg').value
-                    elevation_comp = elevation_comp[0].to('deg').value
-                    if azimuth_comp - azimuth_centre > 180.0:
-                        azimuth_centre += 360.0
-                    elif azimuth_comp - azimuth_centre < -180.0:
-                        azimuth_centre -= 360.0
-
-                    try:
-                        worldloc = [[(azimuth_comp-azimuth_centre)*cosel, elevation_comp-elevation_centre]]
-                        # radius = numpy.sqrt(((azimuth_comp-azimuth_centre)*cosel)**2 +
-                        #                     (elevation_comp-elevation_centre)**2)
-                        pixloc = wcs_azel.wcs_world2pix(worldloc, 1)[0]
-                        assert pixloc[0] > 2
-                        assert pixloc[0] < nx - 3
-                        assert pixloc[1] > 2
-                        assert pixloc[1] < ny - 3
-                        for pol in range(npol):
-                            gain = real_spline[pol].ev(pixloc[1], pixloc[0]) \
-                                   + 1j * imag_spline[pol].ev(pixloc[1], pixloc[0])
-                            antgain[:, pol] = gain
-                        for ant in range(nant):
-                            ag = antgain[ant, :].reshape([2, 2])
-                            ag = numpy.linalg.inv(ag)
-                            antgain[ant, :] = ag.reshape([4])
-                            number_good += 1
-                    except (ValueError, AssertionError):
-                        number_bad += 1
-                        antgain[...] = 0.0
-                        antwt[...] = 0.0
-                    
-                    gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
-                    gaintables[icomp].weight[iha, :, :, :] = antwt[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
-                    gaintables[icomp].phasecentre = comp.direction
-                else:
-                    gaintables[icomp].gain[...] = 1.0 + 0.0j
-                    gaintables[icomp].weight[iha, :, :, :] = 0.0
-                    gaintables[icomp].phasecentre = comp.direction
-                    number_bad += nant
+                    if elevation_centre >= elevation_limit:
+                        
+                        antgain = numpy.zeros([nant, npol], dtype='complex')
+                        antwt = numpy.zeros([nant, npol])
+                        
+                        # Calculate the azel of this component
+                        azimuth_comp, elevation_comp = calculate_azel(v.configuration.location, utc_time,
+                                                                      comp.direction)
+                        cosel = numpy.cos(elevation_comp[0]).value
+                        azimuth_comp = azimuth_comp[0].to('deg').value
+                        elevation_comp = elevation_comp[0].to('deg').value
+                        if azimuth_comp - azimuth_centre > 180.0:
+                            azimuth_centre += 360.0
+                        elif azimuth_comp - azimuth_centre < -180.0:
+                            azimuth_centre -= 360.0
+    
+                        try:
+                            worldloc = [[(azimuth_comp-azimuth_centre)*cosel, elevation_comp-elevation_centre]]
+                            # radius = numpy.sqrt(((azimuth_comp-azimuth_centre)*cosel)**2 +
+                            #                     (elevation_comp-elevation_centre)**2)
+                            pixloc = wcs_azel.wcs_world2pix(worldloc, 1)[0]
+                            assert pixloc[0] > 2
+                            assert pixloc[0] < nx - 3
+                            assert pixloc[1] > 2
+                            assert pixloc[1] < ny - 3
+                            for pol in range(npol):
+                                gain = real_spline[pol].ev(pixloc[1], pixloc[0]) \
+                                       + 1j * imag_spline[pol].ev(pixloc[1], pixloc[0])
+                                antgain[:, pol] = gain
+                            for ant in range(nant):
+                                ag = antgain[ant, :].reshape([2, 2])
+                                ag = numpy.linalg.inv(ag)
+                                antgain[ant, :] = ag.reshape([4])
+                                number_good += 1
+                        except (ValueError, AssertionError):
+                            number_bad += 1
+                            antgain[...] = 0.0
+                            antwt[...] = 0.0
+                        
+                        gaintables[icomp].gain[iha, :, :, :] = antgain[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
+                        gaintables[icomp].weight[iha, :, :, :] = antwt[:, numpy.newaxis, :].reshape([nant, nchan, 2, 2])
+                        gaintables[icomp].phasecentre = comp.direction
+                    else:
+                        gaintables[icomp].gain[...] = 1.0 + 0.0j
+                        gaintables[icomp].weight[iha, :, :, :] = 0.0
+                        gaintables[icomp].phasecentre = comp.direction
+                        number_bad += nant
     
     else:
         assert isinstance(vis, BlockVisibility)

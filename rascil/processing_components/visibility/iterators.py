@@ -46,18 +46,24 @@ def vis_timeslice_iter(vis: Union[Visibility, BlockVisibility], vis_slices=None)
     timemin = numpy.min(vis.time)
     timemax = numpy.max(vis.time)
     
-    if vis_slices is None:
-        vis_slices = vis_timeslices(vis, 'auto')
-    
-    boxes = numpy.linspace(timemin, timemax, vis_slices)
-    if vis_slices > 1:
-        timeslice = boxes[1] - boxes[0]
+    if isinstance(vis, BlockVisibility) and vis_slices == "auto":
+        for ib in range(vis.nvis):
+            boxes = numpy.zeros([vis.nvis], dtype='bool')
+            boxes[ib] = True
+            yield boxes
     else:
-        timeslice = timemax - timemin
-    
-    for box in boxes:
-        rows = numpy.abs(vis.time - box) <= 0.5 * timeslice
-        if numpy.sum(rows) > 0:
+        
+        if vis_slices is None:
+            vis_slices = vis_timeslices(vis, 'auto')
+        
+        boxes = numpy.linspace(timemin, timemax, vis_slices)
+        if vis_slices > 1:
+            timeslice = boxes[1] - boxes[0]
+        else:
+            timeslice = timemax - timemin
+        
+        for box in boxes:
+            rows = numpy.abs(vis.time - box) <= 0.5 * timeslice
             yield rows
 
 
@@ -73,6 +79,10 @@ def vis_timeslices(vis: Union[Visibility, BlockVisibility], timeslice='auto') ->
     timemin = numpy.min(vis.time)
     timemax = numpy.max(vis.time)
     
+    if isinstance(vis, BlockVisibility):
+        if timeslice == 'auto':
+            return len(vis.time)
+
     if timeslice == 'auto':
         return len(numpy.unique(vis.time))
     else:
