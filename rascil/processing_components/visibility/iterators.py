@@ -46,7 +46,7 @@ def vis_timeslice_iter(vis: Union[Visibility, BlockVisibility], vis_slices=None)
     timemin = numpy.min(vis.time)
     timemax = numpy.max(vis.time)
     
-    if isinstance(vis, BlockVisibility) and vis_slices == "auto":
+    if isinstance(vis, BlockVisibility) and (vis_slices == "auto" or vis_slices is None):
         for ib in range(vis.nvis):
             boxes = numpy.zeros([vis.nvis], dtype='bool')
             boxes[ib] = True
@@ -55,6 +55,7 @@ def vis_timeslice_iter(vis: Union[Visibility, BlockVisibility], vis_slices=None)
         
         if vis_slices is None:
             vis_slices = vis_timeslices(vis, 'auto')
+            print("Found {} visslices".format(vis_slices))
         
         boxes = numpy.linspace(timemin, timemax, vis_slices)
         if vis_slices > 1:
@@ -78,6 +79,8 @@ def vis_timeslices(vis: Union[Visibility, BlockVisibility], timeslice='auto') ->
 
     timemin = numpy.min(vis.time)
     timemax = numpy.max(vis.time)
+    
+    assert timeslice == "auto", timeslice
     
     if isinstance(vis, BlockVisibility):
         if timeslice == 'auto':

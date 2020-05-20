@@ -751,7 +751,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             integration_time = ms.getcol('INTERVAL')
             
             time = (otime - integration_time / 2.0)
-            
+
             start_time = numpy.min(time) / 86400.0
             end_time = numpy.max(time) / 86400.0
             
@@ -842,13 +842,15 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             time_last = time[0]
             time_index = 0
             for row, _ in enumerate(time):
-                if time[row] > time_last + integration_time[row]:
+                if time[row] > time_last + 0.5 * integration_time[row]:
                     assert time[row] > time_last, "MS is not time-sorted - cannot convert"
                     time_index += 1
                     time_last = time[row]
                 time_index_row[row] = time_index
             
             ntimes = time_index + 1
+            
+            assert ntimes == len(numpy.unique(ms.getcol("TIME"))), "Error in finding data times"
             
             bv_times = numpy.zeros([ntimes])
             bv_vis = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('complex')
