@@ -222,22 +222,27 @@ class TestVoltagePatternsPolGraph(unittest.TestCase):
             error = result["peak_diff_{}".format(pol)]
             assert abs(error) < tolerance, "Stokes {}, error in peak too large: {}".format(pol, error)
     
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_stokesI(self):
         result = self._test(test_vp=False, name="stokesI")
         self.check_values(result, tolerance=1e-3)
     
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_test_vp_stokesI(self):
         result = self._test(test_vp=True, name="stokesI_test_vp")
         self.check_values(result, tolerance=1e-12)
     
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_stokesIQUV(self):
         result = self._test(test_vp=False, name="stokesIQUV", flux=[1.0, 0.5, -0.2, 0.1])
         self.check_values(result, tolerance=5e-4)
     
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_test_vp_stokesIQUV(self):
         result = self._test(test_vp=True, name="stokesIQUV_test_vp", flux=[1.0, 0.5, -0.2, 0.1])
         self.check_values(result, tolerance=1e-12)
     
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_stokesIQUV_long(self):
         result = self._test(test_vp=False, name="stokesIQUV", flux=[1.0, 0.5, -0.2, 0.1], time_range=[-4.0, +4.0])
         self.check_values(result, tolerance=5e-4)

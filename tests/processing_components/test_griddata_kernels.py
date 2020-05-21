@@ -78,7 +78,7 @@ class TestGridDataKernels(unittest.TestCase):
         peak_location = numpy.unravel_index(numpy.argmax(numpy.abs(cf.data)), cf.shape)
         assert numpy.abs(cf.data[peak_location] - 0.18712109669890534+0j) < 1e-7, cf.data[peak_location]
 
-        assert peak_location == (0, 0, 0, 4, 4, 3, 3), peak_location
+        assert peak_location == (0, 0, 0, 63, 63, 4, 4), peak_location
         u_peak, v_peak = cf.grid_wcs.sub([1, 2]).wcs_pix2world(peak_location[-2], peak_location[-1], 0)
         assert numpy.abs(u_peak) < 1e-7, u_peak
         assert numpy.abs(v_peak) < 1e-7, u_peak
@@ -99,7 +99,7 @@ class TestGridDataKernels(unittest.TestCase):
 
         peak_location = numpy.unravel_index(numpy.argmax(numpy.abs(cf.data)), cf.shape)
         assert numpy.abs(cf.data[peak_location] - 0.18712109669890536 + 0j) < 1e-7, cf.data[peak_location]
-        assert peak_location == (0, 0, 0, 0, 0, 3, 3), peak_location
+        assert peak_location == (0, 0, 0, 0, 0, 4, 4), peak_location
         u_peak, v_peak = cf.grid_wcs.sub([1, 2]).wcs_pix2world(peak_location[-2], peak_location[-1], 0)
         assert numpy.abs(u_peak) < 1e-7, u_peak
         assert numpy.abs(v_peak) < 1e-7, u_peak

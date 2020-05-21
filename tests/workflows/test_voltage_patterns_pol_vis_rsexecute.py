@@ -194,12 +194,14 @@ class TestVoltagePatternsPolGraph(unittest.TestCase):
     def test_apply_voltage_pattern_image_stokesI(self):
         result = self._test(test_vp=False, name="stokesI")
 
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_stokesI_long(self):
         result = self._test(test_vp=False, name="stokesI", time_range=[-4.0, +4.0])
 
     def test_apply_voltage_pattern_image_test_vp_stokesI(self):
         result = self._test(test_vp=True, name="stokesI_test_vp")
 
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_test_vp_stokesI_long(self):
         result = self._test(test_vp=True, name="stokesI_test_vp", time_range=[-4.0, +4.0])
 
@@ -209,9 +211,11 @@ class TestVoltagePatternsPolGraph(unittest.TestCase):
     def test_apply_voltage_pattern_image_test_vp_stokesIQUV(self):
         result = self._test(test_vp=True, name="stokesIQUV_test_vp", flux=[1.0, 0.5, -0.2, 0.1])
 
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_test_vp_stokesIQUV_long(self):
         result = self._test(test_vp=True, name="stokesIQUV_test_vp", flux=[1.0, 0.5, -0.2, 0.1], time_range=[-4.0, +4.0])
 
+    @unittest.skip("Too long for CI/CD")
     def test_apply_voltage_pattern_image_stokesIQUV_long(self):
         result = self._test(test_vp=False, name="stokesIQUV", flux=[1.0, 0.5, -0.2, 0.1], time_range=[-4.0, +4.0])
 

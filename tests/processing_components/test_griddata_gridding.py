@@ -238,7 +238,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_wterm.fits' % self.dir)
-        self.check_peaks(im, 97.13525760459086)
+        self.check_peaks(im, 97.13333924372108)
     
     def test_griddata_invert_awterm(self):
         self.actualSetUp(zerow=False)
@@ -260,7 +260,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_awterm.fits' % self.dir)
-        self.check_peaks(im, 97.13255970700962)
+        self.check_peaks(im, 97.13257546573094)
     
     def test_griddata_predict_pswf(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQUV"))

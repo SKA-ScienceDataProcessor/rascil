@@ -431,7 +431,7 @@ class TestImaging(unittest.TestCase):
         residual_image_list = rsexecute.compute(residual_image_list, sync=True)
         qa = qa_image(residual_image_list[centre][0])
         assert numpy.abs(qa.data['max'] - 0.32584463456508744) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 2.949249993305139) < 1.0, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4559162232699305) < 1.0, str(qa)
     
     def test_restored_list(self):
         self.actualSetUp(zerow=True)
@@ -447,8 +447,8 @@ class TestImaging(unittest.TestCase):
                                               (self.dir, rsexecute.type()))
         
         qa = qa_image(restored_image_list[centre])
-        assert numpy.abs(qa.data['max'] - 99.95536244789305) < 1e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 1.3328046468623627) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.00291168642293) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.1698056648051111) < 1e-7, str(qa)
     
     def test_restored_list_noresidual(self):
         self.actualSetUp(zerow=True)
@@ -486,8 +486,8 @@ class TestImaging(unittest.TestCase):
                                               (self.dir, rsexecute.type()))
         
         qa = qa_image(restored_4facets_image_list[centre])
-        assert numpy.abs(qa.data['max'] - 99.95536244789305) < 1e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 1.3328046468623578) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.00291168642292) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.16980566480511197) < 1e-7, str(qa)
         
         restored_4facets_image_list[centre].data -= restored_1facets_image_list[centre].data
         if self.persist: export_image_to_fits(restored_4facets_image_list[centre],
@@ -508,7 +508,7 @@ class TestImaging(unittest.TestCase):
             assert len(r) == 2
             qa = qa_image(r[0])
             assert numpy.abs(qa.data['max'] - 0.15513038832438183) < 1.0, str(qa)
-            assert numpy.abs(qa.data['min'] + 3.001514322317107) < 1.0, str(qa)
+            assert numpy.abs(qa.data['min'] + 0.4607090445091728) < 1.0, str(qa)
             assert numpy.abs(r[1] - 831900.) < 1e-7, r
 
 
