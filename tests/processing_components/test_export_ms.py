@@ -93,7 +93,8 @@ class measurementset_tests(unittest.TestCase):
         visData = numpy.random.rand(len(blList), len(freq))
         visData = visData.astype(numpy.complex64)
         
-        return {'freq': freq, 'channel_width':channel_width, 'site': site_config, 'antennas': antennas, 'bl': blList, 'vis': visData}
+        return {'freq': freq, 'channel_width':channel_width, 'site': site_config, 'antennas': antennas, 'bl': blList,
+                'vis': visData}
 
     def __initData_WGS84(self):
         """Private function to generate a random set of data for writing a Measurements

@@ -813,10 +813,14 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                     ant_map.append(-1)
             
             mount = numpy.array(anttab.getcol('MOUNT'))[names != '']
+            # log.info("mount is: %s" % (mount))
             diameter = numpy.array(anttab.getcol('DISH_DIAMETER'))[names != '']
             xyz = numpy.array(anttab.getcol('POSITION'))[names != '']
+            offset = numpy.array(anttab.getcol('OFFSET'))[names != '']
+            stations = numpy.array(anttab.getcol('STATION'))[names != '']
             names = numpy.array(anttab.getcol('NAME'))[names != '']
             nants = len(names)
+
             
             antenna1 = list(map(lambda i: ant_map[i], antenna1))
             antenna2 = list(map(lambda i: ant_map[i], antenna2))
@@ -824,7 +828,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             configuration = Configuration(name='', data=None, location=None,
                                           names=names, xyz=xyz, mount=mount, frame="geocentric",
                                           receptor_frame=ReceptorFrame("linear"),
-                                          diameter=diameter)
+                                          diameter=diameter, offset=offset, stations=stations)
             # Get phasecentres
             fieldtab = table('%s/FIELD' % msname, ack=False)
             pc = fieldtab.getcol('PHASE_DIR')[field, 0, :]
@@ -1009,6 +1013,7 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
         
         antenna_xyz = hdul[adhu].data['STABXYZ']
         antenna_mount = hdul[adhu].data['MNTSTA']
+        antenna_offset = hdul[adhu].data['STAXOF']
         try:
             antenna_diameter = hdul[adhu].data['DIAMETER']
         except (ValueError, KeyError):
@@ -1018,10 +1023,14 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
             antenna_name = antenna_name[:antnum]
             antenna_xyz = antenna_xyz[:antnum]
             antenna_mount = antenna_mount[:antnum]
+            antenna_offset = antenna_offset[:antnum]
             if antenna_diameter is not None:
                 antenna_diameter = antenna_diameter[:antnum]
         
         nants = len(antenna_xyz)
+
+        # Put offset into same shape as for MS
+        antenna_offset = numpy.c_[antenna_offset, numpy.zeros(nants), numpy.zeros(nants)]
         
         # Get polarisation info
         npol = hdul[0].header['NAXIS3']
@@ -1052,7 +1061,8 @@ def create_blockvisibility_from_uvfits(fitsname, channum=None, ack=False, antnum
                                       names=antenna_name, xyz=antenna_xyz,
                                       mount=antenna_mount, frame=None,
                                       receptor_frame=polarisation_frame,
-                                      diameter=antenna_diameter)
+                                      diameter=antenna_diameter,
+                                      offset=antenna_offset, stations=antenna_name)
         
         # Get RA and DEC
         phase_center_ra_degrees = numpy.float(hdul[0].header['CRVAL6'])

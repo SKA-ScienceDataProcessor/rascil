@@ -14,6 +14,7 @@ from rascil.data_models import BlockVisibility
 from rascil.processing_components.util.geometry import calculate_azel, calculate_transit_time, \
     calculate_hourangles
 
+
 def get_direction_time_location(bvis):
     location = bvis.configuration.location
     utc_time = Time(bvis.time / 86400.0, format='mjd', scale='utc')
