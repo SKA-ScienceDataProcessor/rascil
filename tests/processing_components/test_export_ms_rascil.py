@@ -9,7 +9,8 @@ import logging
 import numpy
 
 from rascil.data_models.parameters import rascil_path, rascil_data_path
-from rascil.processing_components.visibility.coalesce import convert_visibility_to_blockvisibility, convert_blockvisibility_to_visibility
+from rascil.processing_components.visibility.coalesce import convert_visibility_to_blockvisibility, \
+    convert_blockvisibility_to_visibility
 
 log = logging.getLogger('logger')
 
@@ -42,7 +43,7 @@ class export_ms_RASCIL_test(unittest.TestCase):
         msoutfile = rascil_path("test_results/test_export_ms_ASKAP_output.ms")
 
         v = create_blockvisibility_from_ms(msfile)
-        export_blockvisibility_to_ms(msoutfile, v)                # vis_by_channel.append(integrate_visibility_by_channel(v[0]))
+        export_blockvisibility_to_ms(msoutfile, v)        # vis_by_channel.append(integrate_visibility_by_channel(v[0]))
 
     def test_export_ms(self):
         if run_ms_tests == False:

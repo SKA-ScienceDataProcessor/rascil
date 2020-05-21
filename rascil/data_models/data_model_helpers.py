@@ -173,6 +173,8 @@ def convert_configuration_to_hdf(config: Configuration, f):
     cf['configuration/diameter'] = config.diameter
     cf['configuration/names'] = [numpy.string_(name) for name in config.names]
     cf['configuration/mount'] = [numpy.string_(mount) for mount in config.mount]
+    cf['configuration/offset'] = config.offset
+    cf['configuration/stations'] = [numpy.string_(station) for station in config.stations]
     return f
 
 
@@ -195,8 +197,10 @@ def convert_configuration_from_hdf(f):
     diameter = cf['configuration/diameter']
     names = [str(n) for n in cf['configuration/names']]
     mount = [str(m) for m in cf['configuration/mount']]
+    stations = [str(p) for p in cf['configuration/stations']]
+    offset = cf['configuration/offset']
     return Configuration(name=name, location=location, receptor_frame=receptor_frame, xyz=xyz, frame=frame,
-                         diameter=diameter, names=names, mount=mount)
+                         diameter=diameter, names=names, mount=mount, offset=offset, stations=stations)
 
 
 def convert_visibility_to_hdf(vis, f):
