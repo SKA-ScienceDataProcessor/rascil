@@ -53,7 +53,8 @@ try:
             self.basename = filename
 
             # File-specific information
-            super(WriteMs, self).__init__(filename, ref_time=ref_time, source_name=source_name, frame = frame, verbose=verbose)
+            super(WriteMs, self).__init__(filename, ref_time=ref_time, source_name=source_name, frame=frame,
+                                          verbose=verbose)
 
         def set_geometry(self, site_config, antennas, bits=8):
             """
@@ -106,7 +107,9 @@ try:
                 {'center': [0.,0.,0.], 'ants': ants, 'mapper': mapper, 'inputAnts': antennas})
                 # {'center': [arrayX, arrayY, arrayZ], 'ants': ants, 'mapper': mapper, 'inputAnts': antennas})
 
-        def add_data_set(self, obstime, inttime, baselines, visibilities, pol='XX', source=None, phasecentre=None, uvw=None):
+
+        def add_data_set(self, obstime, inttime, baselines, visibilities, pol='XX', source=None, phasecentre=None,
+                         uvw=None):
             """
             Create a UVData object to store a collection of visibilities.
             """
@@ -117,7 +120,8 @@ try:
                 numericPol = pol
 
             self.data.append(
-                MS_UVData(obstime, inttime, baselines, visibilities, pol=numericPol, source=source, phasecentre=phasecentre,uvw=uvw))
+                MS_UVData(obstime, inttime, baselines, visibilities, pol=numericPol, source=source,
+                          phasecentre=phasecentre,uvw=uvw))
 
         def write(self):
             """
@@ -212,7 +216,8 @@ try:
             tb.putcol('STATION', [self.siteName, ] * self.nant, 0, self.nant)
 
             for i, ant in enumerate(self.array[0]['ants']):
-                tb.putcell('OFFSET', i, [0.0, 0.0, 0.0])
+                tb.putcell('OFFSET', i, self.site_config.data['offset'][i])
+                # tb.putcell('OFFSET', i, [0.0, 0.0, 0.0])
                 tb.putcell('POSITION', i, [ant.x + self.array[0]['center'][0],
                                            ant.y + self.array[0]['center'][1],
                                            ant.z + self.array[0]['center'][2]])
@@ -221,7 +226,8 @@ try:
                 # tb.putcell('FLAG_ROW', i, False)
                 tb.putcell('MOUNT', i, self.site_config.data['mount'][i])
                 tb.putcell('NAME', i, ant.getName())
-                tb.putcell('STATION', i, self.siteName)
+                tb.putcell('STATION', i, self.site_config.data['stations'][i])
+                # tb.putcell('STATION', i, self.siteName)
 
             tb.flush()
             tb.close()

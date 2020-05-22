@@ -49,7 +49,7 @@ class Configuration:
     def __init__(self, name='', data=None, location=None,
                  names="%s", xyz=None, mount="alt-az", frame="",
                  receptor_frame=ReceptorFrame("linear"),
-                 diameter=None):
+                 diameter=None, offset=None, stations="%s"):
         
         """Configuration object describing data for processing
 
@@ -62,12 +62,16 @@ class Configuration:
         :param frame: Reference frame of locations
         :param receptor_frame: Receptor frame
         :param diameter: Diameters of dishes/stations (m)
+        :param offset: Axis offset (m)
+        :param stations: Identifiers of the dishes/stations
         """
         if data is None and xyz is not None:
             desc = [('names', 'U12'),
                     ('xyz', 'f8', (3,)),
                     ('diameter', 'f8'),
-                    ('mount', 'U5')]
+                    ('mount', 'U12'),
+                    ('offset', 'f8', (3,)),
+                    ('stations', 'U12')]
             nants = xyz.shape[0]
             if isinstance(names, str):
                 names = [names % ant for ant in range(nants)]
@@ -78,6 +82,11 @@ class Configuration:
             data['xyz'] = xyz
             data['mount'] = mount
             data['diameter'] = diameter
+            if offset is not None:
+                data['offset'] = offset
+            if isinstance(stations, str):
+                stations = [stations % ant for ant in range(nants)]
+            data['stations'] = stations
         
         self.name = name
         self.data = data
@@ -96,6 +105,8 @@ class Configuration:
         s += "\tDiameter: %s\n" % self.diameter
         s += "\tMount: %s\n" % self.mount
         s += "\tXYZ: %s\n" % self.xyz
+        s += "\tAxis offset: %s\n" % self.offset
+        s += "\tStations: %s\n" % self.stations
         
         return s
     
@@ -129,6 +140,16 @@ class Configuration:
         """
         return self.data['mount']
 
+    @property
+    def offset(self):
+        """ Axis offset [:, 3] (m)
+        """
+        return self.data['offset']
+
+    @property
+    def stations(self):
+        """ Station/dish identifier (may be the same as names)"""
+        return self.data['stations']
 
 class GainTable:
     """ Gain table with data_models: time, antenna, gain[:, chan, rec, rec], weight columns

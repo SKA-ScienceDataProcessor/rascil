@@ -22,6 +22,7 @@ dependencies:
   - distributed
   - paramiko
   - python-graphviz
+  - tabulate
   - bokeh
   - jupyter
   - sphinx

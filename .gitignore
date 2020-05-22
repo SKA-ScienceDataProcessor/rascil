@@ -18,7 +18,6 @@ dask-worker-space
 *.hdf5
 *.pyc
 /build
-/test_results
 *.so
 *.egg
 /rascil/data_models/.idea
