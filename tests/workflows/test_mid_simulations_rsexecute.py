@@ -24,10 +24,8 @@ from rascil.processing_components.image.operations import qa_image, export_image
 from rascil.processing_components.imaging.base import create_image_from_visibility, advise_wide_field
 from rascil.processing_components.imaging.primary_beams import create_vp
 from rascil.processing_components.simulation.simulation_helpers import find_pb_width_null, create_simulation_components
-from rascil.processing_components.visibility.coalesce import convert_blockvisibility_to_visibility
 from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
-from rascil.workflows.rsexecute.imaging.imaging_rsexecute import sum_invert_results_rsexecute, \
-    weight_list_rsexecute_workflow
+from rascil.workflows.rsexecute.imaging.imaging_rsexecute import weight_list_rsexecute_workflow
 from rascil.workflows.rsexecute.simulation.simulation_rsexecute import \
     calculate_residual_from_gaintables_rsexecute_workflow, create_surface_errors_gaintable_rsexecute_workflow, \
     create_pointing_errors_gaintable_rsexecute_workflow, create_standard_mid_simulation_rsexecute_workflow, \
@@ -47,7 +45,7 @@ class TestPointingSimulation(unittest.TestCase):
     def setUp(self) -> None:
         rsexecute.set_client(use_dask=True, processes=True, threads_per_worker=1)
         self.persist = os.getenv("RASCIL_PERSIST", False)
-
+    
     def simulation(self, args, time_series='wind', band='B2',
                    image_polarisation_frame=PolarisationFrame("stokesI"),
                    vis_polarisation_frame=PolarisationFrame("stokesI")):
@@ -65,7 +63,6 @@ class TestPointingSimulation(unittest.TestCase):
         rmax = args.rmax
         flux_limit = args.flux_limit
         npixel = args.npixel
-        shared_directory = args.shared_directory
         vp_directory = args.vp_directory
         
         # Simulation specific parameters
@@ -91,7 +88,6 @@ class TestPointingSimulation(unittest.TestCase):
         
         bvis_graph = create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, time_range, time_chunk,
                                                                        integration_time,
-                                                                       shared_directory,
                                                                        polarisation_frame=vis_polarisation_frame)
         future_bvis_list = rsexecute.persist(bvis_graph)
         
@@ -188,16 +184,13 @@ class TestPointingSimulation(unittest.TestCase):
                                                                              phasecentre=offset_direction,
                                                                              polarisation_frame=image_polarisation_frame)
                              for i, _ in enumerate(original_components)]
-        vis_comp_chunk_dirty_list = \
+        residual = \
             calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list, original_components,
                                                                   future_model_list,
                                                                   no_error_gtl, error_gtl)
         
-        # Add the resulting images
-        error_dirty_list = sum_invert_results_rsexecute(vis_comp_chunk_dirty_list)
-        
         # Actually compute the graph assembled above
-        error_dirty, sumwt = rsexecute.compute(error_dirty_list, sync=True)
+        error_dirty, sumwt = rsexecute.compute(residual, sync=True)
         
         return error_dirty, sumwt
     
@@ -242,7 +235,7 @@ class TestPointingSimulation(unittest.TestCase):
         parser.add_argument('--serial', type=str, default='False', help='Use serial processing?')
         
         # Simulation parameters
-        parser.add_argument('--time_chunk', type=float, default=8*3600.0, help="Time for a chunk (s)")
+        parser.add_argument('--time_chunk', type=float, default=8 * 3600.0, help="Time for a chunk (s)")
         parser.add_argument('--time_series', type=str, default='wind', help="Type of time series")
         parser.add_argument('--global_pe', type=float, nargs=2, default=[0.0, 0.0], help='Global pointing error')
         parser.add_argument('--static_pe', type=float, nargs=2, default=[0.0, 0.0],
@@ -262,41 +255,41 @@ class TestPointingSimulation(unittest.TestCase):
         
         args = self.get_args()
         args.fluxlimit = 0.1
-
+        
         error_dirty, sumwt = self.simulation(args, 'wind')
         
         qa = qa_image(error_dirty)
-
-        numpy.testing.assert_almost_equal(qa.data['max'], 0.0001549626149499648, 5)
-        numpy.testing.assert_almost_equal(qa.data['min'], -9.025636018869514e-05, 5)
-        numpy.testing.assert_almost_equal(qa.data['rms'], 4.530933602609382e-06, 5)
+        
+        numpy.testing.assert_almost_equal(qa.data['max'], 0.0001549626149499648, 5, err_msg=str(qa))
+        numpy.testing.assert_almost_equal(qa.data['min'], -9.025636018869514e-05, 5, err_msg=str(qa))
+        numpy.testing.assert_almost_equal(qa.data['rms'], 4.530933602609382e-06, 5, err_msg=str(qa))
     
     def test_random(self):
         
         args = self.get_args()
         args.fluxlimit = 0.1
-
+        
         error_dirty, sumwt = self.simulation(args, '')
         
         qa = qa_image(error_dirty)
-
-        numpy.testing.assert_almost_equal(qa.data['max'], 2.1094978960646913e-05, 5)
-        numpy.testing.assert_almost_equal(qa.data['min'], -1.3196934940913428e-05, 5)
-        numpy.testing.assert_almost_equal(qa.data['rms'], 1.4297877176652153e-06, 5)
+        
+        numpy.testing.assert_almost_equal(qa.data['max'], 2.1094978960646913e-05, 5, err_msg=str(qa))
+        numpy.testing.assert_almost_equal(qa.data['min'], -1.3196934940913428e-05, 5, err_msg=str(qa))
+        numpy.testing.assert_almost_equal(qa.data['rms'], 1.4297877176652153e-06, 5, err_msg=str(qa))
     
     def test_gravity(self):
         
         args = self.get_args()
         args.fluxlimit = 0.1
-
+        
         if os.path.isdir(rascil_path('models/interpolated')):
             error_dirty, sumwt = self.simulation(args, 'gravity')
             
             qa = qa_image(error_dirty)
-
-            numpy.testing.assert_almost_equal(qa.data['max'], 2.2055849698035616e-06, 5)
-            numpy.testing.assert_almost_equal(qa.data['min'], -6.838117387793031e-07, 5)
-            numpy.testing.assert_almost_equal(qa.data['rms'], 3.7224203394509413e-07, 5)
+            
+            numpy.testing.assert_almost_equal(qa.data['max'], 2.2055849698035616e-06, 5, err_msg=str(qa))
+            numpy.testing.assert_almost_equal(qa.data['min'], -6.838117387793031e-07, 5, err_msg=str(qa))
+            numpy.testing.assert_almost_equal(qa.data['rms'], 3.7224203394509413e-07, 5, err_msg=str(qa))
     
     def test_polarisation(self):
         
@@ -310,9 +303,9 @@ class TestPointingSimulation(unittest.TestCase):
                                              vis_polarisation_frame=PolarisationFrame("linear"))
         qa = qa_image(error_dirty)
 
-        numpy.testing.assert_almost_equal(qa.data['max'], 0.0004301773484661237, 5)
-        numpy.testing.assert_almost_equal(qa.data['min'], -0.0005956468856474398, 5)
-        numpy.testing.assert_almost_equal(qa.data['rms'], 2.478984146453474e-05, 5)
-
+        numpy.testing.assert_almost_equal(qa.data['max'], 0.00038683191011895386, 5, err_msg=str(qa))
+        numpy.testing.assert_almost_equal(qa.data['min'], -0.0006221949183420241, 5, err_msg=str(qa))
+        numpy.testing.assert_almost_equal(qa.data['rms'], 2.478984146453474e-05, 5, err_msg=str(qa))
+        
         if self.persist:
             export_image_to_fits(error_dirty, "{}/test_mid_simulation_polarisation.fits".format(results_dir))

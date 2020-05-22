@@ -17,7 +17,8 @@ from typing import Union
 
 import numpy
 from astropy import units as u, constants as constants
-from astropy.coordinates import SkyCoord
+from astropy.coordinates import SkyCoord, EarthLocation
+from astropy.units import Quantity
 from astropy.io import fits
 from astropy.time import Time
 
@@ -517,7 +518,7 @@ def export_blockvisibility_to_ms(msname, vis_list, source_name=None):
         else:
             raise ValueError(
                 "Unknown visibility polarisation %s" % (vis.polarisation_frame.type))
-        # Current RASCIL supports I
+
         tbl.set_stokes(polarization)
         tbl.set_frequency(vis.frequency, vis.channel_bandwidth)
         n_ant = len(vis.configuration.xyz)
@@ -750,7 +751,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             integration_time = ms.getcol('INTERVAL')
             
             time = (otime - integration_time / 2.0)
-            
+
             start_time = numpy.min(time) / 86400.0
             end_time = numpy.max(time) / 86400.0
             
@@ -759,8 +760,8 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
                        Time(end_time, format='mjd').iso))
             
             spwtab = table('%s/SPECTRAL_WINDOW' % msname, ack=False)
-            cfrequency = spwtab.getcol('CHAN_FREQ')[spwid][channum]
-            cchannel_bandwidth = spwtab.getcol('CHAN_WIDTH')[spwid][channum]
+            cfrequency = numpy.array(spwtab.getcol('CHAN_FREQ')[spwid][channum])
+            cchannel_bandwidth = numpy.array(spwtab.getcol('CHAN_WIDTH')[spwid][channum])
             nchan = cfrequency.shape[0]
             if average_channels:
                 cfrequency = numpy.array([numpy.average(cfrequency)])
@@ -805,12 +806,16 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             
             ant_map = list()
             actual = 0
+            # This assumes that the names are actually filled in!
             for i, name in enumerate(names):
                 if name != "":
                     ant_map.append(actual)
                     actual += 1
                 else:
                     ant_map.append(-1)
+            #assert actual > 0, "Dish/station names are all blank - cannot load"
+            if actual == 0:
+                ant_map = list(range(len(names)))
             
             mount = numpy.array(anttab.getcol('MOUNT'))[names != '']
             # log.info("mount is: %s" % (mount))
@@ -824,8 +829,13 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             
             antenna1 = list(map(lambda i: ant_map[i], antenna1))
             antenna2 = list(map(lambda i: ant_map[i], antenna2))
+
             
-            configuration = Configuration(name='', data=None, location=None,
+            location = EarthLocation(x=Quantity(xyz[0][0], 'm'),
+                                     y=Quantity(xyz[0][1], 'm'),
+                                     z=Quantity(xyz[0][2], 'm'))
+
+            configuration = Configuration(name='', data=None, location=location,
                                           names=names, xyz=xyz, mount=mount, frame="geocentric",
                                           receptor_frame=ReceptorFrame("linear"),
                                           diameter=diameter, offset=offset, stations=stations)
@@ -840,13 +850,15 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             time_last = time[0]
             time_index = 0
             for row, _ in enumerate(time):
-                if time[row] > time_last + integration_time[row]:
+                if time[row] > time_last + 0.5 * integration_time[row]:
                     assert time[row] > time_last, "MS is not time-sorted - cannot convert"
                     time_index += 1
                     time_last = time[row]
                 time_index_row[row] = time_index
             
             ntimes = time_index + 1
+            
+            assert ntimes == len(numpy.unique(ms.getcol("TIME"))), "Error in finding data times"
             
             bv_times = numpy.zeros([ntimes])
             bv_vis = numpy.zeros([ntimes, nants, nants, nchan, npol]).astype('complex')

@@ -12,7 +12,8 @@ from astropy.time import Time
 from rascil.processing_components.visibility import create_blockvisibility
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.visibility_geometry import calculate_blockvisibility_azel, \
-    calculate_blockvisibility_hourangles, calculate_blockvisibility_transit_time
+    calculate_blockvisibility_hourangles, calculate_blockvisibility_transit_time, \
+    calculate_blockvisibility_parallactic_angles
 
 
 class TestGeometry(unittest.TestCase):
@@ -29,14 +30,17 @@ class TestGeometry(unittest.TestCase):
     
     def test_azel(self):
         azel = calculate_blockvisibility_azel(self.bvis)
-        print(azel)
         numpy.testing.assert_array_almost_equal(azel[0][0].deg, 152.418453)
         numpy.testing.assert_array_almost_equal(azel[1][0].deg, 24.650068)
-    
+
     def test_hourangle(self):
         ha = calculate_blockvisibility_hourangles(self.bvis)
         numpy.testing.assert_array_almost_equal(ha[0].deg, -88.487126)
-    
+
+    def test_parallatic_angle(self):
+        pa = calculate_blockvisibility_parallactic_angles(self.bvis)
+        numpy.testing.assert_array_almost_equal(pa[0].deg, -100.622847)
+
     def test_transit_time(self):
         transit_time = calculate_blockvisibility_transit_time(self.bvis)
         numpy.testing.assert_array_almost_equal(transit_time.mjd, 58849.900683)

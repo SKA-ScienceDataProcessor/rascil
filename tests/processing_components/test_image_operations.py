@@ -205,10 +205,11 @@ class TestImage(unittest.TestCase):
     def test_scale_and_rotate(self):
     
         vp = create_vp(telescope='MID_FEKO_B2')
-        vp = scale_and_rotate_image(vp, 30.0 * numpy.pi / 180.0, [1.0, 2.0])
+        vp = scale_and_rotate_image(vp, 90.0 * numpy.pi / 180.0)
+        self.persist = True
         if self.persist:
             vp.data = vp.data.real
-            fitsfile = '{}/test_vp_affine_real.fits'.format(self.dir)
+            fitsfile = '{}/test_vp_rotate_real.fits'.format(self.dir)
             export_image_to_fits(vp, fitsfile=fitsfile)
 
     def test_apply_voltage_pattern(self):

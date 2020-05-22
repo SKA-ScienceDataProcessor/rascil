@@ -12,9 +12,9 @@ from astropy import units as u
 from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
-from rascil.processing_components.image.operations import export_image_to_fits
+from rascil.processing_components.image.operations import export_image_to_fits, scale_and_rotate_image
 from rascil.processing_components.imaging.base import create_image_from_visibility
-from rascil.processing_components.imaging.primary_beams import create_pb, create_vp
+from rascil.processing_components.imaging.primary_beams import create_pb, create_vp, convert_azelvp_to_radec
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.visibility.base import create_visibility
 
@@ -104,6 +104,24 @@ class TestPrimaryBeams(unittest.TestCase):
             beam.wcs.wcs.crval[1] = 90.0
             if self.persist: export_image_to_fits(beam,
                                                   "%s/test_voltage_pattern_real_zenith_%s.fits" % (self.dir, telescope))
+
+    def test_create_voltage_patterns_MID_rotate(self):
+        self.createVis(freq=1.4e9)
+        model = create_image_from_visibility(self.vis, npixel=self.npixel, cellsize=self.cellsize,
+                                             polarisation_frame=PolarisationFrame("stokesIQUV"),
+                                             override_cellsize=False)
+        for telescope in ['MID_FEKO_B1', 'MID_FEKO_B2', 'MID_FEKO_Ku']:
+            beam = create_vp(telescope=telescope)
+            beam = scale_and_rotate_image(beam, scale=[1.2, 0.8])
+            self.persist = True
+            if self.persist: export_image_to_fits(beam,
+                                                  "%s/test_voltage_pattern_real_prerotate_%s.fits" % (self.dir, telescope))
+            beam_radec = convert_azelvp_to_radec(beam, model, numpy.pi/4.0)
+            
+            beam_data = beam_radec.data
+            beam_radec.data = numpy.real(beam_data)
+            if self.persist: export_image_to_fits(beam_radec,
+                                                  "%s/test_voltage_pattern_real_rotate_%s.fits" % (self.dir, telescope))
 
 
 if __name__ == '__main__':

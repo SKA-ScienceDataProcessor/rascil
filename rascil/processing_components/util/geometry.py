@@ -8,7 +8,8 @@ as astropy.
 
 """
 
-__all__ = ['calculate_transit_time', 'calculate_hourangles', 'calculate_azel']
+__all__ = ['calculate_transit_time', 'calculate_hourangles', 'calculate_parallactic_angles',
+           'calculate_azel']
 
 import logging
 
@@ -24,6 +25,44 @@ def angle_to_quanta(angle):
     return {"value": angle.rad, "unit": "rad"}
 
 
+def calculate_parallactic_angles(location, utc_time, direction):
+    """ Return hour angles for location, utc_time, and direction
+
+    :param utc_time: Time(Iterable)
+    :param location: EarthLocation
+    :param direction: SkyCoord source
+    :return: Angle
+    """
+    
+    assert isinstance(location, EarthLocation)
+    assert isinstance(utc_time, Time)
+    assert isinstance(direction, SkyCoord)
+    
+    from casacore.measures import measures
+    dm = measures()
+    from casacore import quanta
+
+    casa_location = dm.position('itrf', str(location.x), str(location.y), str(location.z))
+    dm.doframe(casa_location)
+    casa_direction = dm.direction('j2000', angle_to_quanta(direction.ra), angle_to_quanta(direction.dec))
+    pas = list()
+    unit = "rad"
+    zenith = dm.direction('AZEL','0deg','90deg')
+
+    for utc in utc_time:
+        casa_utc_time = dm.epoch('utc', str(utc.mjd) + 'd')
+        dm.doframe(casa_utc_time)
+        casa_posangle = dm.posangle(casa_direction, zenith).canonical()
+        pas.append(casa_posangle._get_value()[0])
+        assert unit == casa_posangle.get_unit(), casa_posangle.get_unit()
+
+    return Angle(pas, unit=unit)
+    
+    # from astroplan import Observer
+    # site = Observer(location=location)
+    # return site.target_hour_angle(utc_time, direction).wrap_at('180d')
+
+
 def calculate_hourangles(location, utc_time, direction):
     """ Return hour angles for location, utc_time, and direction
 
@@ -36,7 +75,7 @@ def calculate_hourangles(location, utc_time, direction):
     assert isinstance(location, EarthLocation)
     assert isinstance(utc_time, Time)
     assert isinstance(direction, SkyCoord)
-
+    
     from casacore.measures import measures
     dm = measures()
     casa_location = dm.position('itrf', str(location.x), str(location.y), str(location.z))
@@ -51,7 +90,7 @@ def calculate_hourangles(location, utc_time, direction):
         has.append(casa_hadec['m0']['value'])
         assert unit == casa_hadec['m0']['unit']
     return Angle(has, unit=unit)
-
+    
     # from astroplan import Observer
     # site = Observer(location=location)
     # return site.target_hour_angle(utc_time, direction).wrap_at('180d')

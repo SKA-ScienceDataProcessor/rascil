@@ -1,8 +1,8 @@
 """ Unit tests for pipelines expressed via rsexecute
 """
 
-import logging
 import os
+import logging
 import sys
 import unittest
 
@@ -10,7 +10,7 @@ import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
 
-from rascil.data_models.memory_data_models import BlockVisibility
+from rascil.data_models import BlockVisibility
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.griddata import apply_bounding_box_convolutionfunction
 from rascil.processing_components.griddata.kernels import create_awterm_convolutionfunction
@@ -214,11 +214,11 @@ class TestImaging(unittest.TestCase):
     
     def test_predict_2d(self):
         self.actualSetUp(zerow=True)
-        self._predict_base(context='2d', fluxthreshold=2.9)
+        self._predict_base(context='2d', fluxthreshold=3.0)
     
     def test_predict_2d_block(self):
         self.actualSetUp(zerow=True, block=True)
-        self._predict_base(context='2d', extr='_block', fluxthreshold=2.9)
+        self._predict_base(context='2d', extr='_block', fluxthreshold=3.0)
     
     @unittest.skip("Facets need overlap")
     def test_predict_facets(self):
@@ -233,7 +233,8 @@ class TestImaging(unittest.TestCase):
     @unittest.skip("Timeslice predict needs better interpolation and facets need overlap")
     def test_predict_facets_timeslice(self):
         self.actualSetUp()
-        self._predict_base(context='facets_timeslice', fluxthreshold=19.0, facets=8, vis_slices=self.ntimes,
+        self._predict_base(context='facets_timeslice', fluxthreshold=19.0, facets=8,
+                           vis_slices=self.ntimes,
                            overlap=16, taper="tukey")
     
     @unittest.skipUnless(run_ng_tests, "requires the nifty_gridder module")
@@ -254,7 +255,7 @@ class TestImaging(unittest.TestCase):
     
     def test_predict_timeslice(self):
         self.actualSetUp()
-        self._predict_base(context='timeslice', fluxthreshold=5.4, vis_slices=self.ntimes)
+        self._predict_base(context='timeslice', fluxthreshold=5.5, vis_slices=self.ntimes)
     
     def test_predict_wsnapshots(self):
         self.actualSetUp(makegcfcf=True)
@@ -273,7 +274,7 @@ class TestImaging(unittest.TestCase):
     
     def test_predict_wstack(self):
         self.actualSetUp(block=False)
-        self._predict_base(context='wstack', fluxthreshold=3.2, vis_slices=101)
+        self._predict_base(context='wstack', fluxthreshold=3.3, vis_slices=101)
     
     def test_predict_wstack_wprojection(self):
         self.actualSetUp(makegcfcf=True, block=False)
@@ -303,14 +304,27 @@ class TestImaging(unittest.TestCase):
         self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list, gcfcf=self.gcfcf,
                                                         weighting='uniform')
         self._invert_base(context='2d', extra='_uniform', positionthreshold=2.0, check_components=False)
-    
+
     def test_invert_2d_uniform_block(self):
         self.actualSetUp(zerow=True, makegcfcf=True, block=True)
         self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list, gcfcf=self.gcfcf,
                                                         weighting='uniform')
         self.bvis_list = rsexecute.compute(self.bvis_list, sync=True)
         assert isinstance(self.bvis_list[0], BlockVisibility)
-    
+
+    def test_invert_2d_robust(self):
+        self.actualSetUp(zerow=True)
+        self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list,
+                                                        weighting="robust", robustness=0.0)
+        self._invert_base(context='2d', extra='_uniform', positionthreshold=2.0, check_components=False)
+
+    def test_invert_2d_robust_block(self):
+        self.actualSetUp(zerow=True, makegcfcf=True, block=True)
+        self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list,
+                                                        weighting="robust", robustness=0.0)
+        self.bvis_list = rsexecute.compute(self.bvis_list, sync=True)
+        assert isinstance(self.bvis_list[0], BlockVisibility)
+
     def test_invert_2d_uniform_nogcfcf(self):
         self.actualSetUp(zerow=True)
         self.bvis_list = weight_list_rsexecute_workflow(self.bvis_list, self.model_list)
@@ -416,8 +430,8 @@ class TestImaging(unittest.TestCase):
         residual_image_list = residual_list_rsexecute_workflow(self.bvis_list, self.model_list, context='2d')
         residual_image_list = rsexecute.compute(residual_image_list, sync=True)
         qa = qa_image(residual_image_list[centre][0])
-        assert numpy.abs(qa.data['max'] - 0.32690979035644685) < 1.0, str(qa)
-        assert numpy.abs(qa.data['min'] + 2.8682168540075286) < 1.0, str(qa)
+        assert numpy.abs(qa.data['max'] - 0.32584463456508744) < 1.0, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.4559162232699305) < 1.0, str(qa)
     
     def test_restored_list(self):
         self.actualSetUp(zerow=True)
@@ -428,12 +442,13 @@ class TestImaging(unittest.TestCase):
         restored_image_list = restore_list_rsexecute_workflow(self.model_list, psf_image_list, residual_image_list,
                                                               psfwidth=1.0)
         restored_image_list = rsexecute.compute(restored_image_list, sync=True)
+        self.persist=True
         if self.persist: export_image_to_fits(restored_image_list[centre], '%s/test_imaging_invert_%s_restored.fits' %
                                               (self.dir, rsexecute.type()))
         
         qa = qa_image(restored_image_list[centre])
-        assert numpy.abs(qa.data['max'] - 100.03190440661871) < 1e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 1.297476670498753) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.00291168642293) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.1698056648051111) < 1e-7, str(qa)
     
     def test_restored_list_noresidual(self):
         self.actualSetUp(zerow=True)
@@ -471,8 +486,8 @@ class TestImaging(unittest.TestCase):
                                               (self.dir, rsexecute.type()))
         
         qa = qa_image(restored_4facets_image_list[centre])
-        assert numpy.abs(qa.data['max'] - 100.03190440661871) < 1e-7, str(qa)
-        assert numpy.abs(qa.data['min'] + 1.2974766704987482) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['max'] - 100.00291168642292) < 1e-7, str(qa)
+        assert numpy.abs(qa.data['min'] + 0.16980566480511197) < 1e-7, str(qa)
         
         restored_4facets_image_list[centre].data -= restored_1facets_image_list[centre].data
         if self.persist: export_image_to_fits(restored_4facets_image_list[centre],
@@ -493,7 +508,7 @@ class TestImaging(unittest.TestCase):
             assert len(r) == 2
             qa = qa_image(r[0])
             assert numpy.abs(qa.data['max'] - 0.15513038832438183) < 1.0, str(qa)
-            assert numpy.abs(qa.data['min'] + 3.001514322317107) < 1.0, str(qa)
+            assert numpy.abs(qa.data['min'] + 0.4607090445091728) < 1.0, str(qa)
             assert numpy.abs(r[1] - 831900.) < 1e-7, r
 
 

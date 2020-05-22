@@ -125,8 +125,8 @@ def predict_2d(vis: Union[BlockVisibility, Visibility], model: Image, gcfcf=None
 
     if gcfcf is None:
         gcf, cf = create_pswf_convolutionfunction(model,
-                                                  support=get_parameter(kwargs, "support", 6),
-                                                  oversampling=get_parameter(kwargs, "oversampling", 128))
+                                                  support=get_parameter(kwargs, "support", 8),
+                                                  oversampling=get_parameter(kwargs, "oversampling", 127))
     else:
         gcf, cf = gcfcf
 
@@ -172,8 +172,8 @@ def invert_2d(vis: Visibility, im: Image, dopsf: bool = False, normalize: bool =
 
     if gcfcf is None:
         gcf, cf = create_pswf_convolutionfunction(im,
-                                                  support=get_parameter(kwargs, "support", 6),
-                                                  oversampling=get_parameter(kwargs, "oversampling", 128))
+                                                  support=get_parameter(kwargs, "support", 8),
+                                                  oversampling=get_parameter(kwargs, "oversampling", 127))
     else:
         gcf, cf = gcfcf
 
@@ -201,11 +201,12 @@ def fill_vis_for_psf(svis):
     :return: visibility with unit vis
     """
     if svis.polarisation_frame == PolarisationFrame("linear"):
-        svis.data['vis'][..., 0:2] = 1.0 + 0.0j
-        svis.data['vis'][..., 2:] = 0.0 + 0.0j
-    elif svis.polarisation_frame == PolarisationFrame("circular"):
-        svis.data['vis'][..., 1:3] = 0.0 + 0.0j
         svis.data['vis'][..., 0] = 1.0 + 0.0j
+        svis.data['vis'][..., 1:3] = 0.0 + 0.0j
+        svis.data['vis'][..., 3] = 1.0 + 0.0j
+    elif svis.polarisation_frame == PolarisationFrame("circular"):
+        svis.data['vis'][..., 0] = 1.0 + 0.0j
+        svis.data['vis'][..., 1:3] = 0.0 + 0.0j
         svis.data['vis'][..., 3] = 1.0 + 0.0j
     elif svis.polarisation_frame == PolarisationFrame("linearnp"):
         svis.data['vis'][...] = 1.0 + 0.0j

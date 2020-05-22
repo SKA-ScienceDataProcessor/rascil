@@ -85,7 +85,11 @@ def export_image_to_fits(im: Image, fitsfile: str = 'imaging.fits'):
 
     """
     assert isinstance(im, Image), im
-    return fits.writeto(filename=fitsfile, data=im.data, header=im.wcs.to_header(), overwrite=True)
+    if im.data.dtype == "complex":
+        return fits.writeto(filename=fitsfile, data=numpy.real(im.data), header=im.wcs.to_header(), overwrite=True)
+    else:
+        return fits.writeto(filename=fitsfile, data=im.data, header=im.wcs.to_header(), overwrite=True)
+
 
 
 def import_image_from_fits(fitsfile: str) -> Image:
@@ -143,7 +147,7 @@ def reproject_image(im: Image, newwcs: WCS, shape=None) -> (Image, Image):
     
     assert isinstance(im, Image), im
     
-    if image_is_canonical(im):
+    if len(im.shape)==4:
         nchan, npol, ny, nx = im.shape
         if im.data.dtype == 'complex':
             rep_real = numpy.zeros(shape, dtype='float')
@@ -1059,6 +1063,25 @@ def scale_and_rotate_image(im, angle=0.0, scale=None, order=5):
             else:
                 raise ValueError("Cannot process data type {}".format(im.data.dtype))
     
+    return newim
+
+
+def rotate_image(im, angle=0.0, order=5):
+    """ Rotate an image in x, y axes
+
+    :param im: Image
+    :param angle: Angle in radians
+    :param order: Order of interpolation (0-5)
+    :return:
+    """
+
+    from scipy.ndimage.interpolation import rotate
+    newim = copy_image(im)
+    if newim.data.dtype == "complex":
+        newim.data = rotate(im.data.real, angle=numpy.rad2deg(angle), axes=(-2, -1), order=order) + \
+            1j * rotate(im.data.imag, angle=numpy.rad2deg(angle), axes=(-2, -1), order=order)
+    else:
+        newim.data = rotate(im.data, angle=numpy.rad2deg(angle), axes=(-2,-1), order=order)
     return newim
 
 

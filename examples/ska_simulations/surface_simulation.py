@@ -205,11 +205,8 @@ if __name__ == '__main__':
     phasecentre = SkyCoord(ra=ra * u.deg, dec=declination * u.deg, frame='icrs',
                            equinox='J2000')
 
-    bvis_graph = create_standard_mid_simulation_rsexecute_workflow(band, rmax,
-                                                                   phasecentre,
-                                                                   time_range, time_chunk,
-                                                                   integration_time,
-                                                                   shared_directory)
+    bvis_graph = create_standard_mid_simulation_rsexecute_workflow(band, rmax, phasecentre, time_range, time_chunk,
+                                                                   integration_time)
     future_bvis_list = rsexecute.persist(bvis_graph)
     bvis_list0 = rsexecute.compute(bvis_graph[0], sync=True)
     nchunks = len(bvis_graph)
@@ -413,10 +410,8 @@ if __name__ == '__main__':
 
         # Now make all the residual images
         vis_comp_chunk_dirty_list = \
-            calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list,
-                                                                  original_components,
-                                                                  future_model_list,
-                                                                  no_error_gtl, error_gtl,
+            calculate_residual_from_gaintables_rsexecute_workflow(future_bvis_list, original_components,
+                                                                  future_model_list, no_error_gtl, error_gtl,
                                                                   context=args.imaging_context)
 
         # Add the resulting images

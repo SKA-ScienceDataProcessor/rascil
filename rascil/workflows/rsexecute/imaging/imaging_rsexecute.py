@@ -567,7 +567,8 @@ def deconvolve_list_channel_rsexecute_workflow(dirty_list, psf_list, model_image
     return rsexecute.optimize(result)
 
 
-def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weighting='uniform', **kwargs):
+def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weighting='uniform', robustness=0.0,
+                                   **kwargs):
     """ Weight the visibility data
     
     This is done collectively so the weights are summed over all vis_lists and then
@@ -584,10 +585,8 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
          vis_list = weight_list_rsexecute_workflow(vis_list, model_list, weighting='uniform')
 
    """
-    centre = len(model_imagelist) // 2
-    
     if gcfcf is None:
-        gcfcf = [rsexecute.execute(create_pswf_convolutionfunction)(model_imagelist[centre])]
+        gcfcf = [rsexecute.execute(create_pswf_convolutionfunction)(m, oversampling=1) for m in model_imagelist]
     
     def grid_wt(vis, model, g):
         if vis is not None:
@@ -619,16 +618,17 @@ def weight_list_rsexecute_workflow(vis_list, model_imagelist, gcfcf=None, weight
                 agd = create_griddata_from_image(model, vis)
                 agd.data = gd[0].data
                 if isinstance(vis, BlockVisibility):
-                    vis = griddata_blockvisibility_reweight(vis, agd, g[0][1])
+                    vis = griddata_blockvisibility_reweight(vis, agd, g[0][1], weighting=weighting, robustness=robustness)
                 else:
-                    vis = griddata_visibility_reweight(vis, agd, g[0][1])
+                    vis = griddata_visibility_reweight(vis, agd, g[0][1], weighting=weighting, robustness=robustness)
                 return vis
             else:
                 return None
         else:
             return vis
     
-    result = [rsexecute.execute(re_weight, nout=1)(v, model_imagelist[i], merged_weight_grid, gcfcf)
+    result = [rsexecute.execute(re_weight, nout=1)
+              (v, model_imagelist[i], merged_weight_grid, gcfcf)
               for i, v in enumerate(vis_list)]
     
     return rsexecute.optimize(result)
@@ -646,7 +646,7 @@ def taper_list_rsexecute_workflow(vis_list, size_required):
 
 
 def zero_list_rsexecute_workflow(vis_list):
-    """ Initialise vis to zero: creates new data holders
+    """ Creates a new vis_list and initialises all to zero
 
     :param vis_list: List of vis (or graph)
     :return: List of vis (or graph)
@@ -654,8 +654,7 @@ def zero_list_rsexecute_workflow(vis_list):
     
     def zero(vis):
         if vis is not None:
-            zerovis = copy_visibility(vis)
-            zerovis.data['vis'][...] = 0.0
+            zerovis = copy_visibility(vis, zero=True)
             return zerovis
         else:
             return None

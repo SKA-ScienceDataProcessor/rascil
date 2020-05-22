@@ -385,10 +385,10 @@ try:
             tb = table("%s/OBSERVATION" % self.basename, desc, nrow=1, ack=False)
 
             # from astropy.time import Time
-            utc = Time(self.data[0].obstime, format='mjd',scale='utc')
-            tStart = utc.mjd
-            utc = Time(self.data[-1].obstime, format='mjd', scale='utc')
-            tStop = utc.mjd
+            utcStart = Time(self.data[0].obstime, format='mjd',scale='utc')
+            tStart = utcStart.mjd
+            utcStop = Time(self.data[-1].obstime, format='mjd', scale='utc')
+            tStop = utcStop.mjd
 
             tb.putcell('TIME_RANGE', 0, [tStart * 86400, tStop * 86400])
             tb.putcell('LOG', 0, 'Not provided')
@@ -747,7 +747,7 @@ try:
 
                     from astropy.time import Time
                     utc = Time(dataSet.obstime, format='mjd', scale='utc')
-                    utc0 = utc.jd
+                    utc0 = utc.mjd
 
                     if dataSet.source is None:
                         ### Zenith pointings
