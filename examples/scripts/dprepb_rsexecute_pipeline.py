@@ -98,7 +98,6 @@ if __name__ == '__main__':
         v1 = create_visibility_from_ms(input_vis[0], start_chan=c, end_chan=c)[0]
         v2 = create_visibility_from_ms(input_vis[1], start_chan=c, end_chan=c)[0]
         vf = append_visibility(v1, v2)
-        vf = convert_visibility_to_stokes(vf)
         vf.configuration.diameter[...] = 35.0
         rows = vis_select_uvrange(vf, 0.0, uvmax=uvmax)
         return create_visibility_from_rows(vf, rows)

@@ -806,18 +806,30 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             
             ant_map = list()
             actual = 0
+            # This assumes that the names are actually filled in!
             for i, name in enumerate(names):
                 if name != "":
                     ant_map.append(actual)
                     actual += 1
                 else:
                     ant_map.append(-1)
+            #assert actual > 0, "Dish/station names are all blank - cannot load"
+            if actual == 0:
+                ant_map = list(range(len(names)))
             
-            mount = numpy.array(anttab.getcol('MOUNT'))[names != '']
-            diameter = numpy.array(anttab.getcol('DISH_DIAMETER'))[names != '']
-            xyz = numpy.array(anttab.getcol('POSITION'))[names != '']
-            names = numpy.array(anttab.getcol('NAME'))[names != '']
-            nants = len(names)
+            names = numpy.array(anttab.getcol('NAME'))
+            if len(names[names!='']) == 0:
+                names = numpy.repeat(["unknown"], len(names))
+                mount = numpy.array(anttab.getcol('MOUNT'))
+                diameter = numpy.array(anttab.getcol('DISH_DIAMETER'))
+                xyz = numpy.array(anttab.getcol('POSITION'))
+                nants = len(names)
+            else:
+                mount = numpy.array(anttab.getcol('MOUNT'))[names != '']
+                diameter = numpy.array(anttab.getcol('DISH_DIAMETER'))[names != '']
+                xyz = numpy.array(anttab.getcol('POSITION'))[names != '']
+                names = numpy.array(anttab.getcol('NAME'))[names != '']
+                nants = len(names)
             
             antenna1 = list(map(lambda i: ant_map[i], antenna1))
             antenna2 = list(map(lambda i: ant_map[i], antenna2))
