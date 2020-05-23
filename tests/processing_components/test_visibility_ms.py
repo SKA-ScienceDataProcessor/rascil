@@ -8,7 +8,7 @@ import logging
 
 import numpy
 
-from rascil.data_models.parameters import rascil_path, rascil_data_path
+from rascil.data_models import rascil_path, rascil_data_path, BlockVisibility
 from rascil.processing_components.visibility.base import create_blockvisibility_from_ms, create_visibility_from_ms
 from rascil.processing_components.visibility.operations import integrate_visibility_by_channel
 
@@ -170,6 +170,22 @@ class TestCreateMS(unittest.TestCase):
             assert v.polarisation_frame.type == "linear"
             assert numpy.max(numpy.abs(v.vis)) > 0.0
             assert numpy.max(numpy.abs(v.flagged_vis)) > 0.0
+            
+    def test_read_all(self):
+        ms_list = ["vis/3C277.1C.16channels.ms", "vis/ASKAP_example.ms", "vis/sim-1.ms", "vis/sim-2.ms",
+                   "vis/xcasa.ms"]
+        
+        for ms in ms_list:
+            vis_list = create_blockvisibility_from_ms(rascil_data_path(ms))
+            assert isinstance(vis_list[0], BlockVisibility)
+
+    def test_read_not_ms(self):
+    
+        with self.assertRaises(RuntimeError):
+            ms = "vis/ASKAP_example.fits"
+            vis_list = create_blockvisibility_from_ms(rascil_data_path(ms))
+            assert isinstance(vis_list[0], BlockVisibility)
+
 
 if __name__ == '__main__':
     unittest.main()

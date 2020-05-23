@@ -816,6 +816,7 @@ def create_blockvisibility_from_ms(msname, channum=None, start_chan=None, end_ch
             #assert actual > 0, "Dish/station names are all blank - cannot load"
             if actual == 0:
                 ant_map = list(range(len(names)))
+                names = numpy.repeat("No name", len(names))
             
             mount = numpy.array(anttab.getcol('MOUNT'))[names != '']
             # log.info("mount is: %s" % (mount))
