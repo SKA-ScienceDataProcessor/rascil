@@ -7,7 +7,7 @@ import logging
 import pprint
 import socket
 import time
-
+import os
 import numpy
 from astropy import units as u
 from astropy.coordinates import SkyCoord
@@ -27,8 +27,8 @@ from rascil.workflows import invert_list_rsexecute_workflow, weight_list_rsexecu
     ical_list_rsexecute_workflow, simulate_list_rsexecute_workflow, \
     corrupt_list_rsexecute_workflow, predict_skymodel_list_rsexecute_workflow
 
-from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute
-
+from rascil.workflows.rsexecute.execution_support.rsexecute import rsexecute, \
+    get_dask_client
 pp = pprint.PrettyPrinter()
 
 
@@ -115,10 +115,17 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
     :return: results dictionary
     """
     if use_dask:
-        rsexecute.set_client(threads_per_worker=threads_per_worker,
-                                 processes=threads_per_worker == 1,
-                                 memory_limit=memory * 1024 * 1024 * 1024,
-                                 n_workers=nworkers)
+        scheduler = os.getenv('RASCIL_DASK_SCHEDULER', None)
+        if scheduler is not None:
+            client = get_dask_client(n_workers=nworkers,
+                                        memory_limit=memory * 1024 * 1024 * 1024,
+                                        threads_per_worker=threads_per_worker)
+            rsexecute.set_client(client=client)
+        else:
+            rsexecute.set_client(threads_per_worker=threads_per_worker,
+                                    processes=threads_per_worker == 1,
+                                    memory_limit=memory * 1024 * 1024 * 1024,
+                                    n_workers=nworkers)
         print("Defined %d workers" % (nworkers))
     else:
         rsexecute.set_client(use_dask=use_dask)
@@ -203,12 +210,12 @@ def trial_case(results, seed=180555, context='wstack', nworkers=8, threads_per_w
     plt.hist(vis_list[0].w, bins=100)
     plt.title('Histogram of w samples: rms=%.1f (wavelengths)' % numpy.std(vis_list[0].w))
     plt.xlabel('W (wavelengths)')
-    plt.show()
+    #plt.show()
     plt.clf()
     plt.hist(vis_list[0].uvdist, bins=100)
     plt.title('Histogram of uvdistance samples')
     plt.xlabel('UV Distance (wavelengths)')
-    plt.show()
+    #plt.show()
 
     rsexecute.client.cancel(tmp_vis_list)
     future_vis_list = rsexecute.scatter(vis_list)
