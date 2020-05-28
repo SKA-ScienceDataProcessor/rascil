@@ -51,7 +51,7 @@ RUN pip3 install Cython setuptools && \
     matplotlib \
     photutils\
     reproject \
-    scikit-image \
+    scikit-image==0.16.2 \
     scipy \
     seqfile \
     tabulate && \
