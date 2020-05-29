@@ -181,7 +181,8 @@ def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
     return beam
 
 
-def create_vp_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True):
+def create_vp_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True,
+                      no_cross_pol=False):
     """ Create a generic analytical model of the voltage pattern
 
     Feeed legs are ignored
@@ -220,7 +221,11 @@ def create_vp_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
             reflector = ft_disk(rr * numpy.pi * diameter / wavelength)
             blockage = ft_disk(rr * numpy.pi * blockage / wavelength)
             beam.data[chan, pol, ...] = reflector - blockage_factor * blockage
-    
+            
+        if npol == 4 and no_cross_pol:
+            beam.data[chan,1,...] = 0.0
+            beam.data[chan,2,...] = 0.0
+
     set_pb_header(beam, use_local=use_local)
     return beam
 

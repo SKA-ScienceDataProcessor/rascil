@@ -1130,7 +1130,10 @@ def apply_voltage_pattern_to_image(im: Image, vp: Image, inverse=False, min_det=
                 newim.data[chan, 0, ...][mask] /= pb[mask]
     else:
         log.debug('apply_voltage_pattern_to_image: Full Jones voltage pattern')
-        polim = convert_stokes_to_polimage(im, vp.polarisation_frame)
+        if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
+            polim = convert_stokes_to_polimage(im, vp.polarisation_frame)
+        else:
+            polim = im
         assert npol == 4
         im_t = numpy.transpose(polim.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
         vp_t = numpy.transpose(vp.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
@@ -1141,7 +1144,8 @@ def apply_voltage_pattern_to_image(im: Image, vp: Image, inverse=False, min_det=
                     newim_t[chan, y, x] = apply_jones(vp_t[chan, y, x], im_t[chan, y, x], inverse, min_det=min_det)
         
         newim.data = newim_t.reshape([nchan, ny, nx, 4]).transpose((0, 3, 1, 2))
-        newim.polarisation_frame = vp.polarisation_frame
-        newim = convert_polimage_to_stokes(newim)
+        if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
+            newim.polarisation_frame = vp.polarisation_frame
+            newim = convert_polimage_to_stokes(newim)
         
         return newim
