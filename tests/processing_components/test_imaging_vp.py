@@ -18,6 +18,7 @@ from rascil.processing_components.griddata import convert_convolutionfunction_to
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image, fft_image, copy_image
 from rascil.processing_components.imaging.dft import dft_skycomponent_visibility
 from rascil.processing_components.imaging.imaging_vp import predict_vp, invert_vp
+from rascil.processing_components.imaging.weighting import weight_blockvisibility, taper_visibility_gaussian
 from rascil.processing_components.imaging.primary_beams import create_vp_generic, create_pb_generic
 from rascil.processing_components.simulation import create_named_configuration
 from rascil.processing_components.simulation import ingest_unittest_visibility, \
@@ -40,16 +41,17 @@ class TestImagingVP(unittest.TestCase):
         self.dir = rascil_path('test_results')
         self.persist = os.getenv("RASCIL_PERSIST", True)
     
-    def actualSetUp(self, zerow=True, block=False, image_pol=PolarisationFrame("stokesIQUV"), npixel=256, rmax=750.0,
-                    scale=0.5, cellsize=0.0009):
+    def actualSetUp(self, zerow=True, block=False, image_pol=PolarisationFrame("stokesIQUV"), npixel=None, rmax=750.0,
+                    scale=0.5, cellsize=None):
         self.doplot = False
+        if npixel is None:
+            npixel = 1024
         self.npixel = npixel
-        self.cellsize = cellsize * 750.0 / rmax
         self.low = create_named_configuration('LOWBD2', rmax=rmax)
         self.freqwin = 1
         self.vis_list = list()
-        self.ntimes = 3
-        self.times = numpy.linspace(-2.0, +2.0, self.ntimes) * numpy.pi / 12.0
+        self.ntimes = 5
+        self.times = numpy.linspace(-4.0, +4.0, self.ntimes) * numpy.pi / 12.0
         
         if self.freqwin == 1:
             self.frequency = numpy.array([1e8])
@@ -76,7 +78,7 @@ class TestImagingVP(unittest.TestCase):
         
         flux = numpy.array([f * numpy.power(freq / 1e8, -0.7) for freq in self.frequency])
         
-        self.phasecentre = SkyCoord(ra=+180.0 * u.deg, dec=-60.0 * u.deg, frame='icrs', equinox='J2000')
+        self.phasecentre = SkyCoord(ra=+180.0 * u.deg, dec=-45.0 * u.deg, frame='icrs', equinox='J2000')
         self.vis = ingest_unittest_visibility(self.low,
                                               self.frequency,
                                               self.channelwidth,
@@ -86,17 +88,21 @@ class TestImagingVP(unittest.TestCase):
                                               block=block,
                                               zerow=zerow)
         
+        from rascil.processing_components import advise_wide_field
+        advice=advise_wide_field(self.vis)
+        if cellsize is None:
+            self.cellsize = advice['cellsize']
+
         self.model = create_unittest_model(self.vis, self.image_pol, cellsize=self.cellsize,
                                            npixel=self.npixel, nchan=self.freqwin)
+        
+        self.vis = weight_blockvisibility(self.vis, self.model)
+        self.vis = taper_visibility_gaussian(self.vis, 3.0 * self.cellsize)
         self.components = create_unittest_components(self.model, flux, applypb=False,
                                                      scale=scale, single=False, symmetric=False)
         
         self.diameter = 70.0
         self.pb = create_pb_generic(self.model, diameter=self.diameter, blockage=0.0, use_local=False)
-        # self.pb.data[:,0,...] = 1.0
-        # self.pb.data[:,1,...] = 0.0
-        # self.pb.data[:,2,...] = 0.0
-        # self.pb.data[:,3,...] = 0.0
         self.pb_components = apply_beam_to_skycomponent(self.components, self.pb)
         self.pb_model = copy_image(self.model)
         self.pb_model.data[...] = 0.0
@@ -109,7 +115,7 @@ class TestImagingVP(unittest.TestCase):
         export_image_to_fits(self.vp, "%s/test_imaging_vp_vp.fits" % self.dir)
 
         self.gcf, self.cf = create_vpterm_convolutionfunction(self.model, make_vp=make_vp,
-                                                              oversampling=8, maxsupport=2048,
+                                                              oversampling=8, maxsupport=512,
                                                               support=24, use_aaf=False)
         cf_image = convert_convolutionfunction_to_image(self.cf)
         cf_image.data = numpy.real(cf_image.data)
@@ -123,7 +129,6 @@ class TestImagingVP(unittest.TestCase):
         self.peak = numpy.unravel_index(numpy.argmax(numpy.abs(self.pb_cmodel.data)), self.pb_cmodel.shape)
         
     def _checkcomponents(self, dirty, fluxthreshold=0.6, positionthreshold=0.1):
-        #dirty.data *= 100.0 / numpy.max(dirty.data)
         comps = find_skycomponents(dirty, fwhm=1.0, threshold=10 * fluxthreshold, npixels=5)
         cellsize = abs(dirty.wcs.wcs.cdelt[0])
         
@@ -138,7 +143,7 @@ class TestImagingVP(unittest.TestCase):
         assert len(comps) == len(self.components), "Different number of components found: original %d, recovered %d" % \
                                                    (len(self.components), len(comps))
 
-    def _predict_base(self, fluxthreshold=1.0, name='predict_vp', **kwargs):
+    def _predict_base(self, fluxthreshold=0.05, name='predict_vp', **kwargs):
         self.vis.data['vis'][...] = 0.0
         self.vis = dft_skycomponent_visibility(self.vis, self.pb_components)
 
@@ -153,8 +158,11 @@ class TestImagingVP(unittest.TestCase):
         for pol in range(dirty[0].npol):
             assert numpy.max(numpy.abs(dirty[0].data[:, pol])), "Residual image pol {} is empty".format(pol)
         
-        maxabs = numpy.max(numpy.abs(dirty[0].data))
-        assert maxabs < fluxthreshold, "Error %.3f greater than fluxthreshold %.3f " % (maxabs, fluxthreshold)
+        for pol in range(4):
+            maxabs = numpy.max(numpy.abs(dirty[0].data[:, pol]))
+            pol_name = dirty[0].polarisation_frame.names[pol]
+            assert maxabs < fluxthreshold, \
+                "Error %.3f in pol %s greater than fluxthreshold %.3f " % (maxabs, pol_name, fluxthreshold)
     
     def _invert_base(self, fluxthreshold=0.6, positionthreshold=1.0, check_components=True,
                      name='invert_vp', **kwargs):
@@ -167,26 +175,19 @@ class TestImagingVP(unittest.TestCase):
             dirty_fft = fft_image(dirty[0])
             export_image_to_fits(dirty_fft, '%s/test_imaging_vp_%s_dirty_fft.fits' % (self.dir, name))
 
-        # for pol in range(dirty[0].npol):
-        #     assert numpy.max(numpy.abs(dirty[0].data[:, pol])), \
-        #         "Dirty image pol {} is empty".format(pol)
-        # for chan in range(dirty[0].nchan):
-        #     assert numpy.max(numpy.abs(dirty[0].data[chan])), \
-        #         "Dirty image channel {} is empty".format(chan)
-        
         if check_components:
             self._checkcomponents(dirty[0], fluxthreshold, positionthreshold)
     
     def test_predict_vp(self):
-        self.actualSetUp(zerow=True, block=True, npixel=512, rmax=600.0, scale=0.5, cellsize=0.0003)
+        self.actualSetUp(zerow=True, block=True, rmax=2400.0, scale=0.25)
         self._predict_base(name='predict_vp')
     
     def test_invert_vp(self):
-        self.actualSetUp(zerow=True, block=True, npixel=512, rmax=600.0, scale=0.5, cellsize=0.0003)
-        self._invert_base(name='invert_vp', positionthreshold=2.0, check_components=True, fluxthreshold=0.3)
+        self.actualSetUp(zerow=True, block=True, rmax=2400.0, scale=0.25)
+        self._invert_base(name='invert_vp', positionthreshold=2.0, check_components=True, fluxthreshold=1.0)
 
     def test_invert_vp_weights(self):
-        self.actualSetUp(zerow=True, block=True, npixel=512, rmax=600.0, scale=0.5, cellsize=0.0003)
+        self.actualSetUp(zerow=True, block=True, rmax=2400.0, scale=0.25)
         self._invert_base(name='invert_vp_weights', positionthreshold=2.0, check_components=False, grid_weights=True)
 
 

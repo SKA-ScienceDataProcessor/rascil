@@ -74,7 +74,7 @@ def predict_vp(vis: BlockVisibility, model: Image, vp: Image, cf: ConvolutionFun
 def invert_vp(vis: BlockVisibility, im: Image, vp: Image, cf: ConvolutionFunction, dopsf: bool = False,
               normalize: bool = True, grid_weights=False,
               **kwargs) -> (Image, numpy.ndarray):
-    """ Invert using 2D convolution function, using the specified convolution function
+    """ Invert using 2D convolution function, using the voltage pattern convolution function
 
     Use the image im as a template. Do PSF in a separate call.
 

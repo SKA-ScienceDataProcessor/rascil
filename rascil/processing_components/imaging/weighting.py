@@ -13,6 +13,8 @@ __all__ = ['weight_visibility', 'weight_blockvisibility', 'taper_visibility_gaus
 
 import numpy
 
+import astropy.constants as constants
+
 from rascil.data_models.memory_data_models import Visibility, BlockVisibility
 from rascil.processing_components.griddata.gridding import grid_visibility_weight_to_griddata, \
     griddata_visibility_reweight, grid_blockvisibility_weight_to_griddata, griddata_blockvisibility_reweight
@@ -83,17 +85,27 @@ def taper_visibility_gaussian(vis: Visibility, beam=None) -> Visibility:
     :param beam: desired resolution (Full width half maximum, radians)
     :return: visibility with imaging_weight column modified
     """
-    assert isinstance(vis, Visibility), vis
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     
     if beam is None:
         raise ValueError("Beam size not specified for Gaussian taper")
-    uvdistsq = vis.u ** 2 + vis.v ** 2
+    
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
     # See http://mathworld.wolfram.com/FourierTransformGaussian.html
     scale_factor = numpy.pi ** 2 * beam ** 2 / (4.0 * numpy.log(2.0))
-    prior = vis.flagged_imaging_weight[:, :]
-    wt = numpy.exp(-scale_factor * uvdistsq)
-    vis.data['imaging_weight'][:, :] = vis.flagged_imaging_weight[:, :] * wt[:, numpy.newaxis]
-    
+
+    if isinstance(vis, Visibility):
+        uvdistsq = vis.u ** 2 + vis.v ** 2
+        wt = numpy.exp(-scale_factor * uvdistsq)
+        vis.data['imaging_weight'][:, :] = vis.flagged_imaging_weight[:, :] * wt[:, numpy.newaxis]
+    else:
+        for chan, freq in enumerate(vis.frequency):
+            wave = constants.c.to('m s^-1').value / freq
+            uvdistsq = (vis.u ** 2 + vis.v ** 2) / wave**2
+            wt = numpy.exp(-scale_factor * uvdistsq)
+            vis.data['imaging_weight'][..., chan, :] = vis.flagged_imaging_weight[..., chan, :] * \
+                                                       wt[..., numpy.newaxis]
+
     return vis
 
 
@@ -115,13 +127,22 @@ def taper_visibility_tukey(vis: Visibility, tukey=0.1) -> Visibility:
     :return: visibility with imaging_weight column modified
     """
 
-    assert isinstance(vis, Visibility), vis
+    assert isinstance(vis, Visibility) or isinstance(vis, BlockVisibility), vis
 
-    uvdist = numpy.sqrt(vis.u ** 2 + vis.v ** 2)
-    uvdistmax = numpy.max(uvdist)
-    uvdist /= uvdistmax
-    wt = numpy.array([tukey_filter(uv, tukey) for uv in uvdist])
-    vis.data['imaging_weight'][:, :] = vis.flagged_imaging_weight[:, :] * wt[:, numpy.newaxis]
-    
+    if isinstance(vis, Visibility):
+        uvdist = numpy.sqrt(vis.u ** 2 + vis.v ** 2)
+        uvdistmax = numpy.max(uvdist)
+        uvdist /= uvdistmax
+        wt = numpy.array([tukey_filter(uv, tukey) for uv in uvdist])
+        vis.data['imaging_weight'][:, :] = vis.flagged_imaging_weight[:, :] * wt[:, numpy.newaxis]
+    else:
+        for chan, freq in enumerate(vis.frequency):
+            wave = constants.c.to('m s^-1').value / freq
+            uvdist = numpy.sqrt(vis.u ** 2 + vis.v ** 2) / wave
+            uvdistmax = numpy.max(uvdist)
+            uvdist /= uvdistmax
+            wt = numpy.array([tukey_filter(uv, tukey) for uv in uvdist])
+            vis.data['imaging_weight'][..., chan, :] = vis.flagged_imaging_weight[..., chan, :] * wt[:, numpy.newaxis]
+
     return vis
 

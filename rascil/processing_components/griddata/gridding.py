@@ -673,7 +673,7 @@ def degrid_blockvisibility_pol_from_griddata(vis, griddata, cf, **kwargs):
                     pv_offset[row],
                     pu_offset[row],
                     :, :]
-            fvist[:, :, vchan, row] += numpy.einsum("ijpq,ikpq->ik", subcf, subgrid)
+            fvist[:, :, vchan, row] += numpy.einsum("ijpq,kipq->ik", subcf, subgrid)
     
     newvis.data['vis'][...] = fvist.T.reshape([nrows, nants, nants, nvchan, nvpol])
     
