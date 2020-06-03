@@ -33,7 +33,7 @@ class TestGridDataKernels(unittest.TestCase):
                                     equinox='J2000')
         self.image = create_image(npixel=512, cellsize=0.0005, phasecentre=self.phasecentre,
                                   polarisation_frame=PolarisationFrame("stokesI"))
-        self.persist = os.getenv("RASCIL_PERSIST", False)
+        self.persist = os.getenv("RASCIL_PERSIST", True)
 
     def test_fill_vpterm_to_convolutionfunction(self):
         self.image = create_image(npixel=512, cellsize=0.0005, phasecentre=self.phasecentre,

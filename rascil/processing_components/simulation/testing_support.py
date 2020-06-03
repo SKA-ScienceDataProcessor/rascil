@@ -805,7 +805,7 @@ def create_unittest_components(model, flux, applypb=False, telescope='LOW', npix
                 centers.append([x, -x])
     model_pol = model.polarisation_frame
     # Make the list of components
-    rpix = model.wcs.wcs.crpix
+    rpix = model.wcs.wcs.crpix - 1.0
     components = []
     for center in centers:
         ix, iy = center
@@ -813,7 +813,7 @@ def create_unittest_components(model, flux, applypb=False, telescope='LOW', npix
         # components on ny // 2, nx // 2. The wcs must be defined consistently.
         p = int(round(rpix[0] + ix * spacing_pixels * numpy.sign(model.wcs.wcs.cdelt[0]))), \
             int(round(rpix[1] + iy * spacing_pixels * numpy.sign(model.wcs.wcs.cdelt[1])))
-        sc = pixel_to_skycoord(p[0], p[1], model.wcs, origin=1)
+        sc = pixel_to_skycoord(p[0], p[1], model.wcs, origin=0)
         log.info("Component at (%f, %f) [0-rel] %s" % (p[0], p[1], str(sc)))
 
         # Channel images

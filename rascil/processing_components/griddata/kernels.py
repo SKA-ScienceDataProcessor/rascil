@@ -3,8 +3,10 @@ Functions that define and manipulate kernels
 
 """
 
-__all__ = ['create_pswf_convolutionfunction', 'create_box_convolutionfunction',
-           'create_awterm_convolutionfunction', 'create_vpterm_convolutionfunction']
+__all__ = ['create_pswf_convolutionfunction',
+           'create_box_convolutionfunction',
+           'create_awterm_convolutionfunction',
+           'create_vpterm_convolutionfunction']
 
 import logging
 
@@ -253,34 +255,46 @@ def create_vpterm_convolutionfunction(im, make_vp=None, oversampling=8, support=
     nchan, npol, ony, onx = im.data.shape
     
     assert isinstance(im, Image)
-    # Calculate the template convolution kernel.
+    # Create the template convolution kernel. The kernel has axes
+    # [nchan, npol, nw, oversampling, oversampling, support, support]
+    # so the gridding always uses a kernel of size [support, support]
+    
+    # The oversampling is relative to the uv sampling needed for the specified
+    # image.
+    assert isinstance(oversampling, int)
+    assert oversampling > 0
+
     cf = create_convolutionfunction_from_image(im, oversampling=oversampling, support=support)
     
     cf_shape = list(cf.data.shape)
     cf.data = numpy.zeros(cf_shape).astype('complex')
     
-    assert isinstance(oversampling, int)
-    assert oversampling > 0
+    # nx = min(maxsupport, 2 * oversampling * support)
+    # ny = min(maxsupport, 2 * oversampling * support)
     
-    nx = max(maxsupport, 2 * oversampling * support)
-    ny = max(maxsupport, 2 * oversampling * support)
-    
-    qnx = nx // oversampling
-    qny = ny // oversampling
+    # qnx = nx // oversampling
+    # qny = ny // oversampling
     
     cf.data[...] = 0.0
     
+    # We don't need the full resolution for the voltage pattern so we create an image with much larger cellsize
+    # subim = copy_image(im)
+    # ccell = onx * numpy.abs(d2r * subim.wcs.wcs.cdelt[0]) / qnx
+    # subim.data = numpy.zeros([nchan, npol, qny, qnx])
+    # subim.wcs.wcs.cdelt[0] = -ccell / d2r
+    # subim.wcs.wcs.cdelt[1] = +ccell / d2r
+    # subim.wcs.wcs.crpix[0] = qnx // 2 + 1.0
+    # subim.wcs.wcs.crpix[1] = qny // 2 + 1.0
+    
+    # Now call the function to create a voltage pattern for this larger image
     subim = copy_image(im)
-    ccell = onx * numpy.abs(d2r * subim.wcs.wcs.cdelt[0]) / qnx
-    
-    subim.data = numpy.zeros([nchan, npol, qny, qnx])
-    subim.wcs.wcs.cdelt[0] = -ccell / d2r
-    subim.wcs.wcs.cdelt[1] = +ccell / d2r
-    subim.wcs.wcs.crpix[0] = qnx // 2 + 1.0
-    subim.wcs.wcs.crpix[1] = qny // 2 + 1.0
-    
     vp = make_vp(subim)
-    
+    from rascil.processing_components import export_image_to_fits
+    from rascil.data_models import rascil_path
+    test_dir=rascil_path("test_results")
+    export_image_to_fits(vp, "{}/vp.fits".format(test_dir))
+
+    # If the parallactic angle is specified, rotate the voltage pattern
     if pa is not None:
         rvp = convert_azelvp_to_radec(vp, subim, pa)
     else:
@@ -290,12 +304,17 @@ def create_vpterm_convolutionfunction(im, make_vp=None, oversampling=8, support=
         this_pswf_gcf, _ = create_pswf_convolutionfunction(subim, oversampling=1, support=6)
         rvp.data /= this_pswf_gcf.data
 
-    # We might need to work with a larger image
-    padded_shape = [nchan, npol, ny, nx]
+    # We are going to pad this image to the original size and then FFT it.
+    padded_shape = [nchan, npol, oversampling * ony, oversampling * onx]
     paddedplane = pad_image(rvp, padded_shape)
+    from rascil.processing_components import export_image_to_fits
+    from rascil.data_models import rascil_path
+    test_dir=rascil_path("test_results")
+    export_image_to_fits(paddedplane, "{}/paddedplane.fits".format(test_dir))
     paddedplane = fft_image(paddedplane)
-    
-    ycen, xcen = ny // 2, nx // 2
+    export_image_to_fits(paddedplane, "{}/paddedplane_fft.fits".format(test_dir))
+
+    ycen, xcen = oversampling * ony // 2, oversampling * onx // 2
     for y in range(oversampling):
         ybeg = y + ycen + (support * oversampling) // 2 - oversampling // 2
         yend = y + ycen - (support * oversampling) // 2 - oversampling // 2

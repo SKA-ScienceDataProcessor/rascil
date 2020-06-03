@@ -334,7 +334,7 @@ def apply_beam_to_skycomponent(sc: Union[Skycomponent, List[Skycomponent]], beam
     ras = [comp.direction.ra.radian for comp in sc]
     decs = [comp.direction.dec.radian for comp in sc]
     skycoords = SkyCoord(ras * u.rad, decs * u.rad, frame='icrs')
-    pixlocs = skycoord_to_pixel(skycoords, beam.wcs, origin=1, mode='wcs')
+    pixlocs = skycoord_to_pixel(skycoords, beam.wcs, origin=0, mode='wcs')
 
     newsc = []
     total_flux = numpy.zeros([nchan, npol])
@@ -397,7 +397,7 @@ def apply_voltage_pattern_to_skycomponent(sc: Union[Skycomponent, List[Skycompon
     ras = [comp.direction.ra.radian for comp in sc]
     decs = [comp.direction.dec.radian for comp in sc]
     skycoords = SkyCoord(ras * u.rad, decs * u.rad, frame='icrs')
-    pixlocs = skycoord_to_pixel(skycoords, vp.wcs, origin=1, mode='wcs')
+    pixlocs = skycoord_to_pixel(skycoords, vp.wcs, origin=0, mode='wcs')
 
     newsc = []
     total_flux = numpy.zeros([nchan, npol], dtype="complex")

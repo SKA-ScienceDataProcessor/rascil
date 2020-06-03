@@ -26,7 +26,8 @@ __all__ = ['add_image',
            'show_image',
            'smooth_image',
            "scale_and_rotate_image",
-           "apply_voltage_pattern_to_image"]
+           "apply_voltage_pattern_to_image",
+           "apply_single_voltage_pattern_to_image"]
 
 import copy
 import logging
@@ -1142,6 +1143,60 @@ def apply_voltage_pattern_to_image(im: Image, vp: Image, inverse=False, min_det=
             for y in range(ny):
                 for x in range(nx):
                     newim_t[chan, y, x] = apply_jones(vp_t[chan, y, x], im_t[chan, y, x], inverse, min_det=min_det)
+        
+        newim.data = newim_t.reshape([nchan, ny, nx, 4]).transpose((0, 3, 1, 2))
+        if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
+            newim.polarisation_frame = vp.polarisation_frame
+            newim = convert_polimage_to_stokes(newim)
+        
+        return newim
+
+
+def apply_single_voltage_pattern_to_image(im: Image, vp: Image, **kwargs) -> Image:
+    """Apply a voltage pattern to an image
+
+    For each pixel, the application is as follows:
+
+    I_{corrected}(l,m) = vp(l,m) I(l,m)
+
+    :param im: Image to have jones applied
+    :param vp: Jones image to be applied
+    :return: new Image with Jones applied
+    """
+    
+    assert image_is_canonical(im)
+    
+    assert isinstance(im, Image)
+    assert isinstance(vp, Image)
+    
+    newim = create_empty_image_like(im)
+    
+    log.debug('apply_voltage_pattern_to_image: Apply voltage pattern image')
+    
+    is_scalar = vp.shape[1] == 1
+    
+    nchan, npol, ny, nx = im.shape
+    
+    assert im.shape == vp.shape
+    
+    if is_scalar:
+        log.debug('apply_voltage_pattern_to_image: Scalar voltage pattern')
+        for chan in range(nchan):
+            newim.data[chan, 0, ...] *= vp.data[chan, 0, ...]
+    else:
+        log.debug('apply_voltage_pattern_to_image: Full Jones voltage pattern')
+        if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
+            polim = convert_stokes_to_polimage(im, vp.polarisation_frame)
+        else:
+            polim = im
+        assert npol == 4
+        im_t = numpy.transpose(polim.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
+        vp_t = numpy.transpose(vp.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
+        newim_t = numpy.zeros([nchan, ny, nx, 2, 2], dtype='complex')
+        for chan in range(nchan):
+            for y in range(ny):
+                for x in range(nx):
+                    newim_t[chan, y, x] = im_t[chan, y, x] @ vp_t[chan, y, x]
         
         newim.data = newim_t.reshape([nchan, ny, nx, 4]).transpose((0, 3, 1, 2))
         if im.polarisation_frame == PolarisationFrame("stokesIQUV"):

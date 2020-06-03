@@ -177,6 +177,7 @@ def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
     """
     beam = create_vp_generic(model, pointingcentre, diameter, blockage, use_local=use_local)
     beam.data = numpy.real(beam.data * numpy.conjugate(beam.data))
+    beam.data /= numpy.max(numpy.abs(beam.data))
     set_pb_header(beam, use_local=use_local)
     return beam
 
