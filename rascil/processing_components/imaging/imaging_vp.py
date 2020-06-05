@@ -25,7 +25,7 @@ import logging
 
 import numpy
 
-from rascil.data_models.memory_data_models import Visibility, BlockVisibility, Image, ConvolutionFunction
+from rascil.data_models import BlockVisibility, Image, ConvolutionFunction, PolarisationFrame
 from rascil.processing_components.griddata.gridding import grid_blockvisibility_pol_to_griddata, fft_griddata_to_image, \
     fft_image_to_griddata, degrid_blockvisibility_pol_from_griddata
 from rascil.processing_components.griddata.operations import create_griddata_from_image
@@ -105,10 +105,12 @@ def invert_vp(vis: BlockVisibility, im: Image, vp: Image, cf: ConvolutionFunctio
     cim = fft_griddata_to_image(griddata)
     cvp = copy_image(vp)
     cvp.data = numpy.conjugate(cvp.data)
-    cim = apply_single_voltage_pattern_to_image(cim, vp)
+    cim = apply_single_voltage_pattern_to_image(cim, cvp)
     if normalize:
         cim = normalize_sumwt(cim, sumwt)
     
-    result = convert_polimage_to_stokes(cim, **kwargs)
-    
-    return result, sumwt
+    if grid_weights:
+        cim.polarisation_frame = PolarisationFrame("stokesIQUV")
+        return cim, sumwt
+    else:
+        return convert_polimage_to_stokes(cim, **kwargs), sumwt

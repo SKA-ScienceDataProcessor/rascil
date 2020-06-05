@@ -436,7 +436,7 @@ def create_low_test_vp(model: Image, use_local=True) -> Image:
 def convert_azelvp_to_radec(vp, im, pa):
     """ Convert AZELGEO image to image coords at specific parallactic angle
     
-    :param pb: Primary beam or voltagee pattern
+    :param pb: Primary beam or voltage pattern
     :param im: Template image
     :param pa: Parallactic angle (radians)
     :return:

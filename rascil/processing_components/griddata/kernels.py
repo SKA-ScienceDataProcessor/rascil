@@ -123,9 +123,9 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
     :return: griddata correction Image, griddata kernel as GridData
     """
     if oversampling % 2 == 0:
-        oversampling +=1
+        oversampling += 1
         log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
-        
+    
     d2r = numpy.pi / 180.0
     
     # We only need the griddata correction function for the PSWF so we make
@@ -252,7 +252,7 @@ def create_vpterm_convolutionfunction(im, make_vp=None, oversampling=8, support=
     
     # We only need the griddata correction function for the PSWF so we make
     # it for the shape of the image
-    nchan, npol, ony, onx = im.data.shape
+    nchan, npol, ny, nx = im.data.shape
     
     assert isinstance(im, Image)
     # Create the template convolution kernel. The kernel has axes
@@ -268,62 +268,52 @@ def create_vpterm_convolutionfunction(im, make_vp=None, oversampling=8, support=
     
     cf_shape = list(cf.data.shape)
     cf.data = numpy.zeros(cf_shape).astype('complex')
-    
-    # nx = min(maxsupport, 2 * oversampling * support)
-    # ny = min(maxsupport, 2 * oversampling * support)
-    
-    # qnx = nx // oversampling
-    # qny = ny // oversampling
-    
+
+    snx = nx // oversampling
+    sny = ny // oversampling
+
     cf.data[...] = 0.0
-    
-    # We don't need the full resolution for the voltage pattern so we create an image with much larger cellsize
-    # subim = copy_image(im)
-    # ccell = onx * numpy.abs(d2r * subim.wcs.wcs.cdelt[0]) / qnx
-    # subim.data = numpy.zeros([nchan, npol, qny, qnx])
-    # subim.wcs.wcs.cdelt[0] = -ccell / d2r
-    # subim.wcs.wcs.cdelt[1] = +ccell / d2r
-    # subim.wcs.wcs.crpix[0] = qnx // 2 + 1.0
-    # subim.wcs.wcs.crpix[1] = qny // 2 + 1.0
-    
-    # Now call the function to create a voltage pattern for this larger image
+
     subim = copy_image(im)
+    subim.data = numpy.zeros([nchan, npol, sny, snx])
+    subim.wcs.wcs.cdelt[0] *= float(nx)/float(snx)
+    subim.wcs.wcs.cdelt[1] *= float(ny)/float(sny)
+    subim.wcs.wcs.crpix[0] = snx // 2
+    subim.wcs.wcs.crpix[1] = sny // 2
+
+    cf.data[...] = 0.0
+
     vp = make_vp(subim)
+
     from rascil.processing_components import export_image_to_fits
     from rascil.data_models import rascil_path
     test_dir=rascil_path("test_results")
     export_image_to_fits(vp, "{}/vp.fits".format(test_dir))
 
-    # If the parallactic angle is specified, rotate the voltage pattern
-    if pa is not None:
-        rvp = convert_azelvp_to_radec(vp, subim, pa)
-    else:
-        rvp = convert_azelvp_to_radec(vp, subim, 0.0)
-
     if use_aaf:
-        this_pswf_gcf, _ = create_pswf_convolutionfunction(subim, oversampling=1, support=6)
-        rvp.data /= this_pswf_gcf.data
+        this_pswf_gcf, _ = create_pswf_convolutionfunction(im, oversampling=1, support=6)
+        vp.data /= this_pswf_gcf.data
 
     # We are going to pad this image to the original size and then FFT it.
-    padded_shape = [nchan, npol, oversampling * ony, oversampling * onx]
-    paddedplane = pad_image(rvp, padded_shape)
+    
+    padded_shape = [nchan, npol, min(ny, oversampling * sny), min(oversampling * snx, nx)]
+    paddedplane = pad_image(vp, padded_shape)
     from rascil.processing_components import export_image_to_fits
     from rascil.data_models import rascil_path
     test_dir=rascil_path("test_results")
+    print("Writing padded plane")
     export_image_to_fits(paddedplane, "{}/paddedplane.fits".format(test_dir))
     paddedplane = fft_image(paddedplane)
+    print("Writing padded plane FFT")
     export_image_to_fits(paddedplane, "{}/paddedplane_fft.fits".format(test_dir))
 
-    ycen, xcen = oversampling * ony // 2, oversampling * onx // 2
+    ycen, xcen = (oversampling * sny) // 2, (oversampling * snx) // 2
     for y in range(oversampling):
         ybeg = y + ycen + (support * oversampling) // 2 - oversampling // 2
         yend = y + ycen - (support * oversampling) // 2 - oversampling // 2
-        # vv = range(ybeg, yend, -oversampling)
         for x in range(oversampling):
             xbeg = x + xcen + (support * oversampling) // 2 - oversampling // 2
             xend = x + xcen - (support * oversampling) // 2 - oversampling // 2
-            
-            # uu = range(xbeg, xend, -oversampling)
             cf.data[..., 0, y, x, :, :] = \
                 paddedplane.data[..., ybeg:yend:-oversampling, xbeg:xend:-oversampling]
     

@@ -289,7 +289,7 @@ def grid_blockvisibility_pol_to_griddata(vis, griddata, cf, grid_weights=False):
                         pwg_grid[row],
                         (pv_grid[row] - dv):(pv_grid[row] + dv), \
                         (pu_grid[row] - du):(pu_grid[row] + du)] \
-                            += numpy.einsum("ijpq,ik->kipq", subcf, fwtt[:, :, vchan, row])
+                            += numpy.einsum("ij...,jk...->ik...", fwtt[:, :, vchan, row], subcf)
             else:
                 gd22[imchan,
                         :, :,

@@ -1184,21 +1184,18 @@ def apply_single_voltage_pattern_to_image(im: Image, vp: Image, **kwargs) -> Ima
         for chan in range(nchan):
             newim.data[chan, 0, ...] *= vp.data[chan, 0, ...]
     else:
-        log.debug('apply_voltage_pattern_to_image: Full Jones voltage pattern')
+        log.debug('apply_single_voltage_pattern_to_image: Full Jones voltage pattern')
         if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
             polim = convert_stokes_to_polimage(im, vp.polarisation_frame)
         else:
             polim = im
         assert npol == 4
         im_t = numpy.transpose(polim.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
-        vp_t = numpy.transpose(vp.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
-        newim_t = numpy.zeros([nchan, ny, nx, 2, 2], dtype='complex')
-        for chan in range(nchan):
-            for y in range(ny):
-                for x in range(nx):
-                    newim_t[chan, y, x] = im_t[chan, y, x] @ vp_t[chan, y, x]
-        
+        vp_t = numpy.conjugate(numpy.transpose(vp.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2]))
+        newim_t = numpy.einsum("...ij,...jk->...ik", vp_t, im_t)
+
         newim.data = newim_t.reshape([nchan, ny, nx, 4]).transpose((0, 3, 1, 2))
+
         if im.polarisation_frame == PolarisationFrame("stokesIQUV"):
             newim.polarisation_frame = vp.polarisation_frame
             newim = convert_polimage_to_stokes(newim)
