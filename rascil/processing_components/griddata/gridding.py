@@ -189,7 +189,7 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf, grid_weights=False):
     
     # Do this in place to avoid creating a new copy. Doing the conjugation outside the loop
     # reduces run time immensely
-    cf.data = numpy.conjugate(cf.data)
+    cf_data = numpy.conjugate(cf.data)
     _, _, _, _, _, gv, gu = cf.shape
     du = gu // 2
     dv = gv // 2
@@ -202,7 +202,7 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf, grid_weights=False):
             convolution_mapping_blockvisibility(vis, griddata, vis.frequency[vchan], cf)
         for pol in range(nvpol):
             for row in range(nrows * nants * nants):
-                subcf = cf.data[imchan,
+                subcf = cf_data[imchan,
                         pol,
                         pwc_grid[row],
                         pv_offset[row],
@@ -216,7 +216,6 @@ def grid_blockvisibility_to_griddata(vis, griddata, cf, grid_weights=False):
                     += subcf * fvist[pol, vchan, row] * fwtt[pol, vchan, row]
                 sumwt[imchan, pol] += fwtt[pol, vchan, row]
     
-    cf.data = numpy.conjugate(cf.data)
     return griddata, sumwt
 
 
@@ -265,24 +264,13 @@ def grid_blockvisibility_pol_to_griddata(vis, griddata, cf, grid_weights=False):
             pv_grid[...] = ngy // 2
             pu_grid[...] = ngx // 2
         for row in range(nrows * nants * nants):
-            # subcf = cf22[imchan,
-            #         :, :,
-            #         pwc_grid[row],
-            #         pv_offset[row],
-            #         pu_offset[row],
-            #         :, :]
-            # gd22[imchan,
-            #         :, :,
-            #         pwg_grid[row],
-            #         (pv_grid[row] - dv):(pv_grid[row] + dv), \
-            #         (pu_grid[row] - du):(pu_grid[row] + du)] \
-            #     += numpy.einsum("ijpq,ik->kipq", subcf, fviswt[:, :, vchan, row])
             subcf = cf22[imchan,
                     :, :,
                     pwc_grid[row],
                     pv_offset[row],
                     pu_offset[row],
                     :, :]
+            # "ij...,jk...->ki..." gives better results than "ij...,jk...->ik..."
             if grid_weights:
                 gd22[imchan,
                         :, :,
@@ -296,7 +284,7 @@ def grid_blockvisibility_pol_to_griddata(vis, griddata, cf, grid_weights=False):
                         pwg_grid[row],
                         (pv_grid[row] - dv):(pv_grid[row] + dv), \
                         (pu_grid[row] - du):(pu_grid[row] + du)] \
-                            += numpy.einsum("ijpq,ik->kipq", subcf, fviswt[:, :, vchan, row])
+                            += numpy.einsum("ij...,jk...->ik...", fviswt[:, :, vchan, row], subcf)
 
             sumwt[imchan, :, :] += fwtt[:, :, vchan, row]
 
@@ -673,7 +661,7 @@ def degrid_blockvisibility_pol_from_griddata(vis, griddata, cf, **kwargs):
                     pv_offset[row],
                     pu_offset[row],
                     :, :]
-            fvist[:, :, vchan, row] += numpy.einsum("ijpq,kipq->ik", subcf, subgrid)
+            fvist[:, :, vchan, row] += numpy.einsum("ijpq,jkpq->ik", subgrid, subcf)
     
     newvis.data['vis'][...] = fvist.T.reshape([nrows, nants, nants, nvchan, nvpol])
     

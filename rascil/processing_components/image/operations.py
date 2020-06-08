@@ -1192,7 +1192,8 @@ def apply_single_voltage_pattern_to_image(im: Image, vp: Image, **kwargs) -> Ima
         assert npol == 4
         im_t = numpy.transpose(polim.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2])
         vp_t = numpy.conjugate(numpy.transpose(vp.data, (0, 2, 3, 1)).reshape([nchan, ny, nx, 2, 2]))
-        newim_t = numpy.einsum("...ij,...jk->...ik", vp_t, im_t)
+        # If the last index is ik instead of ki then the V flux is the wrong sign
+        newim_t = numpy.einsum("...ij,...jk->...ki", vp_t, im_t)
 
         newim.data = newim_t.reshape([nchan, ny, nx, 4]).transpose((0, 3, 1, 2))
 

@@ -11,7 +11,7 @@ import logging
 import numpy
 from astropy import constants as const
 
-from rascil.data_models.memory_data_models import Image
+from rascil.data_models.memory_data_models import Image, PolarisationFrame
 from rascil.data_models.parameters import rascil_data_path
 from rascil.processing_components.image.operations import import_image_from_fits, reproject_image, scale_and_rotate_image
 from rascil.processing_components.image.operations import create_image_from_array, create_empty_image_like, fft_image, pad_image
@@ -165,7 +165,8 @@ def mosaic_pb(model, telescope, pointingcentres, use_local=True):
     return sumpb
 
 
-def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True):
+def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True,
+                      polarisation_frame=None):
     """ Create a generic analytical model of the primary beam
 
     Feeed legs are ignored
@@ -175,7 +176,8 @@ def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
     :param blockage: Diameter of blockage
     :return:
     """
-    beam = create_vp_generic(model, pointingcentre, diameter, blockage, use_local=use_local)
+    beam = create_vp_generic(model, pointingcentre, diameter, blockage, use_local=use_local,
+                             polarisation_frame=None)
     beam.data = numpy.real(beam.data * numpy.conjugate(beam.data))
     beam.data /= numpy.max(numpy.abs(beam.data))
     set_pb_header(beam, use_local=use_local)
@@ -183,18 +185,21 @@ def create_pb_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
 
 
 def create_vp_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, use_local=True,
-                      no_cross_pol=False):
+                      no_cross_pol=False, cross_pol=None, polarisation_frame=None):
     """ Create a generic analytical model of the voltage pattern
 
-    Feeed legs are ignored
+    Feed legs are ignored
 
     :param model:
     :param diameter: Diameter of dish (m)
     :param blockage: Diameter of blockage
     :return:
     """
-
+    if polarisation_frame is None:
+        polarisation_frame = PolarisationFrame("stokesIQUV")
+        
     beam = create_empty_image_like(model)
+    beam.polarisation_frame = polarisation_frame
     beam.data = numpy.zeros(beam.data.shape, dtype='complex')
     
     nchan, npol, ny, nx = model.shape
@@ -223,7 +228,11 @@ def create_vp_generic(model, pointingcentre=None, diameter=25.0, blockage=1.8, u
             blockage = ft_disk(rr * numpy.pi * blockage / wavelength)
             beam.data[chan, pol, ...] = reflector - blockage_factor * blockage
             
-        if npol == 4 and no_cross_pol:
+        if cross_pol is not None:
+            beam.data[chan, 1, ...] *= cross_pol[0]
+            beam.data[chan, 2, ...] *= cross_pol[1]
+            
+        if no_cross_pol:
             beam.data[chan,1,...] = 0.0
             beam.data[chan,2,...] = 0.0
 

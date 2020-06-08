@@ -233,7 +233,7 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
 
 
 def create_vpterm_convolutionfunction(im, make_vp=None, oversampling=8, support=6, use_aaf=False,
-                                      maxsupport=512, pa=None, normalise=True):
+                                      maxsupport=512, pa=None, normalise=False):
     """ Fill voltage pattern kernel projection kernel into a GridData.
     
     The makes the convolution function for gridding polarised data with a voltage
@@ -317,8 +317,22 @@ def create_vpterm_convolutionfunction(im, make_vp=None, oversampling=8, support=
             cf.data[..., 0, y, x, :, :] = \
                 paddedplane.data[..., ybeg:yend:-oversampling, xbeg:xend:-oversampling]
     
+    # ycen, xcen = padded_shape[-2]//2, padded_shape[-1]//2
+    # for y in range(oversampling):
+    #     ybeg = y + ycen - (support * oversampling) // 2
+    #     yend = y + ycen + (support * oversampling) // 2
+    #     for x in range(oversampling):
+    #         xbeg = x + xcen - (support * oversampling) // 2
+    #         xend = x + xcen + (support * oversampling) // 2
+    #         cf.data[..., 0, y, x, :, :] = \
+    #             paddedplane.data[..., ybeg:yend:oversampling, xbeg:xend:oversampling]
     if normalise:
-        cf.data /= numpy.sum(numpy.real(cf.data[0, 0, 0, oversampling // 2, oversampling // 2, :, :]))
+        for chan in range(nchan):
+            for pol in range(npol):
+                sumwt = numpy.sum(numpy.real(cf.data[chan, pol, 0, oversampling // 2, oversampling // 2, :, :]))
+                if sumwt > 0.5:
+                    cf.data[chan, pol] /= sumwt
+                
     cf.data = numpy.conjugate(cf.data)
     
     if use_aaf:
