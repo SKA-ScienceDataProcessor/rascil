@@ -5,8 +5,7 @@ Functions that define and manipulate kernels
 
 __all__ = ['create_pswf_convolutionfunction',
            'create_box_convolutionfunction',
-           'create_awterm_convolutionfunction',
-           'create_vpterm_convolutionfunction']
+           'create_awterm_convolutionfunction']
 
 import logging
 
@@ -221,118 +220,6 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
             for y in range(oversampling):
                 for x in range(oversampling):
                     cf.data[:, :, z, y, x] /= norm[..., y, x][..., numpy.newaxis, numpy.newaxis]
-    cf.data = numpy.conjugate(cf.data)
-    
-    if use_aaf:
-        pswf_gcf, _ = create_pswf_convolutionfunction(im, oversampling=1, support=6)
-    else:
-        pswf_gcf = create_empty_image_like(im)
-        pswf_gcf.data[...] = 1.0
-    
-    return pswf_gcf, cf
-
-
-def create_vpterm_convolutionfunction(im, make_vp=None, oversampling=8, support=6, use_aaf=False,
-                                      maxsupport=512, pa=None, normalise=False):
-    """ Fill voltage pattern kernel projection kernel into a GridData.
-    
-    The makes the convolution function for gridding polarised data with a voltage
-    pattern.
-
-    :param im: Image template
-    :param make_vp: Function to make the voltage pattern model image (hint: use a partial)
-    :param oversampling: Oversampling of the convolution function in uv space
-    :return: griddata correction Image, griddata kernel as GridData
-    """
-    if oversampling % 2 == 0:
-        log.info("Setting oversampling to next greatest odd number {}".format(oversampling))
-        oversampling += 1
-
-    d2r = numpy.pi / 180.0
-    
-    # We only need the griddata correction function for the PSWF so we make
-    # it for the shape of the image
-    nchan, npol, ny, nx = im.data.shape
-    
-    assert isinstance(im, Image)
-    # Create the template convolution kernel. The kernel has axes
-    # [nchan, npol, nw, oversampling, oversampling, support, support]
-    # so the gridding always uses a kernel of size [support, support]
-    
-    # The oversampling is relative to the uv sampling needed for the specified
-    # image.
-    assert isinstance(oversampling, int)
-    assert oversampling > 0
-
-    cf = create_convolutionfunction_from_image(im, oversampling=oversampling, support=support)
-    
-    cf_shape = list(cf.data.shape)
-    cf.data = numpy.zeros(cf_shape).astype('complex')
-
-    snx = nx // oversampling
-    sny = ny // oversampling
-
-    cf.data[...] = 0.0
-
-    subim = copy_image(im)
-    subim.data = numpy.zeros([nchan, npol, sny, snx])
-    subim.wcs.wcs.cdelt[0] *= float(nx)/float(snx)
-    subim.wcs.wcs.cdelt[1] *= float(ny)/float(sny)
-    subim.wcs.wcs.crpix[0] = snx // 2
-    subim.wcs.wcs.crpix[1] = sny // 2
-
-    cf.data[...] = 0.0
-
-    vp = make_vp(subim)
-
-    from rascil.processing_components import export_image_to_fits
-    from rascil.data_models import rascil_path
-    test_dir=rascil_path("test_results")
-    export_image_to_fits(vp, "{}/vp.fits".format(test_dir))
-
-    if use_aaf:
-        this_pswf_gcf, _ = create_pswf_convolutionfunction(im, oversampling=1, support=6)
-        vp.data /= this_pswf_gcf.data
-
-    # We are going to pad this image to the original size and then FFT it.
-    
-    padded_shape = [nchan, npol, min(ny, oversampling * sny), min(oversampling * snx, nx)]
-    paddedplane = pad_image(vp, padded_shape)
-    from rascil.processing_components import export_image_to_fits
-    from rascil.data_models import rascil_path
-    test_dir=rascil_path("test_results")
-    print("Writing padded plane")
-    export_image_to_fits(paddedplane, "{}/paddedplane.fits".format(test_dir))
-    paddedplane = fft_image(paddedplane)
-    print("Writing padded plane FFT")
-    export_image_to_fits(paddedplane, "{}/paddedplane_fft.fits".format(test_dir))
-
-    ycen, xcen = (oversampling * sny) // 2, (oversampling * snx) // 2
-    for y in range(oversampling):
-        ybeg = y + ycen + (support * oversampling) // 2 - oversampling // 2
-        yend = y + ycen - (support * oversampling) // 2 - oversampling // 2
-        for x in range(oversampling):
-            xbeg = x + xcen + (support * oversampling) // 2 - oversampling // 2
-            xend = x + xcen - (support * oversampling) // 2 - oversampling // 2
-            cf.data[..., 0, y, x, :, :] = \
-                paddedplane.data[..., ybeg:yend:-oversampling, xbeg:xend:-oversampling]
-    
-    # ycen, xcen = padded_shape[-2]//2, padded_shape[-1]//2
-    # for y in range(oversampling):
-    #     ybeg = y + ycen - (support * oversampling) // 2
-    #     yend = y + ycen + (support * oversampling) // 2
-    #     for x in range(oversampling):
-    #         xbeg = x + xcen - (support * oversampling) // 2
-    #         xend = x + xcen + (support * oversampling) // 2
-    #         cf.data[..., 0, y, x, :, :] = \
-    #             paddedplane.data[..., ybeg:yend:oversampling, xbeg:xend:oversampling]
-    if normalise:
-        for chan in range(nchan):
-            for pol in range(npol):
-                sumwt = numpy.sum(numpy.real(cf.data[chan, pol, 0, oversampling // 2, oversampling // 2, :, :]))
-                if sumwt > 0.5:
-                    cf.data[chan, pol] /= sumwt
-                
     cf.data = numpy.conjugate(cf.data)
     
     if use_aaf:

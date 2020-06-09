@@ -17,8 +17,7 @@ from rascil.processing_components.griddata import convert_convolutionfunction_to
     create_convolutionfunction_from_image, apply_bounding_box_convolutionfunction, \
     calculate_bounding_box_convolutionfunction
 from rascil.processing_components.griddata.kernels import create_pswf_convolutionfunction, \
-    create_awterm_convolutionfunction, create_box_convolutionfunction, \
-    create_vpterm_convolutionfunction
+    create_awterm_convolutionfunction, create_box_convolutionfunction
 from rascil.processing_components.image.operations import export_image_to_fits
 from rascil.processing_components.imaging.primary_beams import create_pb_generic, create_vp_generic
 from rascil.processing_components.simulation import create_test_image
@@ -166,6 +165,7 @@ class TestGridDataKernels(unittest.TestCase):
             export_image_to_fits(gcf, "%s/test_convolutionfunction_awterm_gcf.fits" % self.dir)
         cf_image = convert_convolutionfunction_to_image(cf)
         cf_image.data = numpy.real(cf_image.data)
+        self.persist=True
         if self.persist:
             export_image_to_fits(cf_image, "%s/test_convolutionfunction_awterm_cf.fits" % self.dir)
 

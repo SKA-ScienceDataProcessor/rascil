@@ -13,7 +13,8 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame, convert_linear_to_stokes
 from rascil.processing_components import convert_azelvp_to_radec
-from rascil.processing_components.griddata.kernels import create_vpterm_convolutionfunction
+from rascil.processing_components.griddata.kernels import create_awterm_convolutionfunction, \
+    create_awterm_convolutionfunction
 from rascil.processing_components.griddata import convert_convolutionfunction_to_image
 from rascil.processing_components.image.operations import export_image_to_fits, smooth_image, fft_image, copy_image, \
     qa_image
@@ -141,11 +142,12 @@ class TestImagingVP(unittest.TestCase):
         self.model = insert_skycomponent(self.model, self.components)
         self.vis = dft_skycomponent_visibility(self.vis, self.components)
 
-        self.gcf, self.cf = create_vpterm_convolutionfunction(self.model,
-                                                              make_vp=find_vp_renormalised,
+        self.gcf, self.cf = create_awterm_convolutionfunction(self.model,
+                                                              make_pb=find_vp_renormalised,
                                                               oversampling=1,
                                                               support=16,
-                                                              use_aaf=False)
+                                                              use_aaf=False,
+                                                              normalise=False)
         cf_image = convert_convolutionfunction_to_image(self.cf)
         cf_image.data = numpy.real(cf_image.data)
         export_image_to_fits(cf_image, "%s/test_imaging_vp_%s_mid_cf.fits" % (self.dir, self.telescope))

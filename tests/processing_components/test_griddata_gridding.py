@@ -14,7 +14,7 @@ from astropy.coordinates import SkyCoord
 
 from rascil.data_models.polarisation import PolarisationFrame
 from rascil.processing_components.griddata.kernels import create_awterm_convolutionfunction, \
-    create_pswf_convolutionfunction, create_box_convolutionfunction, create_vpterm_convolutionfunction
+    create_pswf_convolutionfunction, create_box_convolutionfunction
 from rascil.processing_components.griddata import convert_convolutionfunction_to_image
 from rascil.processing_components.griddata.gridding import grid_visibility_to_griddata, \
     fft_griddata_to_image, fft_image_to_griddata, \
@@ -273,7 +273,7 @@ class TestGridDataGridding(unittest.TestCase):
         vp = make_vp(self.model)
         if self.persist:
             export_image_to_fits(vp, "%s/test_gridding_vpterm.fits" % self.dir)
-        gcf, cf = create_vpterm_convolutionfunction(self.model, make_vp=make_vp, oversampling=17, support=32,
+        gcf, cf = create_awterm_convolutionfunction(self.model, make_pb=make_vp, oversampling=17, support=32,
                                                     use_aaf=False)
         cf_image = convert_convolutionfunction_to_image(cf)
         cf_image.data = numpy.real(cf_image.data)
@@ -336,7 +336,7 @@ class TestGridDataGridding(unittest.TestCase):
 
         cim = convert_stokes_to_polimage(self.model, self.vis.polarisation_frame)
         griddata = create_griddata_from_image(cim, self.vis, nw=1)
-        gcf, cf = create_vpterm_convolutionfunction(cim, make_vp=make_vp,
+        gcf, cf = create_awterm_convolutionfunction(cim, make_pb=make_vp,
                                                     oversampling=17, support=32,
                                                     use_aaf=False)
         cim = apply_voltage_pattern_to_image(cim, vp)
