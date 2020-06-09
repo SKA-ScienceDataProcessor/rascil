@@ -271,13 +271,15 @@ def grid_blockvisibility_pol_to_griddata(vis, griddata, cf, grid_weights=False):
                     pu_offset[row],
                     :, :]
             # "ij...,jk...->ki..." gives better results than "ij...,jk...->ik..."
+            swt = numpy.einsum("ij...,jk...->ik...", fwtt[:, :, vchan, row], subcf)
+            sumwt[imchan, :, :] += numpy.sum(swt.real, axis=(-2,-1))
             if grid_weights:
                 gd22[imchan,
                         :, :,
                         pwg_grid[row],
                         (pv_grid[row] - dv):(pv_grid[row] + dv), \
                         (pu_grid[row] - du):(pu_grid[row] + du)] \
-                            += numpy.einsum("ij...,jk...->ik...", fwtt[:, :, vchan, row], subcf)
+                            += swt
             else:
                 gd22[imchan,
                         :, :,
@@ -286,7 +288,6 @@ def grid_blockvisibility_pol_to_griddata(vis, griddata, cf, grid_weights=False):
                         (pu_grid[row] - du):(pu_grid[row] + du)] \
                             += numpy.einsum("ij...,jk...->ik...", fviswt[:, :, vchan, row], subcf)
 
-            sumwt[imchan, :, :] += fwtt[:, :, vchan, row]
 
     griddata.data = gd22.reshape([ngchan, nvpol, ngz, ngy, ngx])
     sumwt = sumwt.reshape([nichan, nipol])

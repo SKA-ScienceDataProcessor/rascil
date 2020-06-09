@@ -43,7 +43,7 @@ class TestImagingVP(unittest.TestCase):
         self.persist = os.getenv("RASCIL_PERSIST", True)
     
     def actualSetUp(self, zerow=True, block=False, image_pol=PolarisationFrame("stokesIQUV"), npixel=None, rmax=300.0,
-                    scale=0.25, cellsize=None, telescope="MID_IMPERFECT"):
+                    scale=0.125, cellsize=None, telescope="MID_IMPERFECT"):
         self.telescope = telescope
         self.doplot = False
         self.npixel = npixel
@@ -92,7 +92,7 @@ class TestImagingVP(unittest.TestCase):
         advice=advise_wide_field(self.vis, guard_band_image=4)
         if npixel is None:
             self.npixel = advice['npixels23']
-            self.npixel = 512
+            self.npixel = 1024
             print("Npixel = ", self.npixel)
         if cellsize is None:
             self.cellsize = advice['cellsize']
@@ -172,9 +172,9 @@ class TestImagingVP(unittest.TestCase):
                                                    (len(self.components), len(comps))
 
     def _predict_base(self, fluxthreshold=0.05, name='predict_vp', **kwargs):
+        self.pb_components = apply_voltage_pattern_to_skycomponent(self.components, self.vp)
         self.vis.data['vis'][...] = 0.0
         self.vis = dft_skycomponent_visibility(self.vis, self.pb_components)
-
         original_vis = copy_visibility(self.vis)
         self.vis.data['vis'][...] = 0.0
         vis = predict_vp(self.vis, self.model, vp=self.vp, cf=self.cf, **kwargs)
@@ -211,10 +211,10 @@ class TestImagingVP(unittest.TestCase):
     def test_predict_vp(self):
         for telescope in ["MID_PERFECT", "MID_IMPERFECT", "MID_FEKO_B2"]:
             self.actualSetUp(zerow=True, block=True, telescope=telescope)
-            self._predict_base(name='predict_vp', fluxthreshold=0.2)
+            self._predict_base(name='predict_vp', fluxthreshold=2.0)
     
     def test_invert_vp(self):
-        for telescope in ["MID_FEKO_B2", "MID_PERFECT", "MID_IMPERFECT"]:
+        for telescope in ["MID_PERFECT", "MID_IMPERFECT", "MID_FEKO_B2"]:
             self.actualSetUp(zerow=True, block=True, telescope=telescope)
             self._invert_base(name='invert_vp', positionthreshold=2.0, check_components=True, fluxthreshold=10.0)
 
@@ -225,32 +225,32 @@ class TestImagingVP(unittest.TestCase):
                             dopsf=True)
 
     def test_invert_vp_weights(self):
-        for telescope in ["PERFECT", "IMPERFECT", "MID_FEKO_B2"]:
+        for telescope in ["MID_PERFECT", "IMPERFECT", "MID_FEKO_B2"]:
             self.actualSetUp(zerow=True, block=True, telescope=telescope)
             self._invert_base(name='invert_vp_weights', positionthreshold=2.0, check_components=False, grid_weights=True)
-        
-        maximum_ok = True
-        for pol in range(4):
-            pol_name = self.dirty[0].polarisation_frame.names[pol]
-            maxval = numpy.max(self.dirty[0].data[:, pol])
-            if abs(maxval - 1.0) > 2e-2:
-                print("Weight %.6f in pol %s peak significantly different from unity " % (maxval, pol_name))
-                maximum_ok = False
-            else:
-                print("Weight %.6f in pol %s sufficiently close to unity " % (maxval, pol_name))
-
-        minimum_ok = True
-        for pol in range(4):
-            pol_name = self.dirty[0].polarisation_frame.names[pol]
-            minval = numpy.min(self.dirty[0].data[:, pol])
-            if minval < -2e-2:
-                print("Weight %.6f in pol %s minimum signficantly negative " % (minval, pol_name))
-                minimum_ok = False
-            else:
-                print("Weight %.6f in pol %s sufficient " % (minval, pol_name))
-
-        assert maximum_ok, "Some weights have significant deviations from unit peak"
-        assert minimum_ok, "Some weights have significant minimums"
+            
+            maximum_ok = True
+            for pol in range(4):
+                pol_name = self.dirty[0].polarisation_frame.names[pol]
+                maxval = numpy.max(self.dirty[0].data[:, pol]).real
+                if abs(maxval - 1.0) > 2e-2:
+                    print("Weight %.6f in pol %s peak significantly different from unity " % (maxval, pol_name))
+                    maximum_ok = False
+                else:
+                    print("Weight %.6f in pol %s sufficiently close to unity " % (maxval, pol_name))
+    
+            minimum_ok = True
+            for pol in range(4):
+                pol_name = self.dirty[0].polarisation_frame.names[pol]
+                minval = numpy.min(self.dirty[0].data[:, pol]).real
+                if minval < -2e-2:
+                    print("Weight %.6f in pol %s minimum signficantly negative " % (minval, pol_name))
+                    minimum_ok = False
+                else:
+                    print("Weight %.6f in pol %s sufficient " % (minval, pol_name))
+    
+            assert maximum_ok, "Some weights have significant deviations from unit peak"
+            assert minimum_ok, "Some weights have significant minimums"
 
 if __name__ == '__main__':
     unittest.main()
