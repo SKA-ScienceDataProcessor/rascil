@@ -210,16 +210,16 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
                 #     for pol in range(npol):
                 #         cf.data[chan, pol, z, y, x, :, :] = paddedplane.data[chan, pol, :, :][vv, :][:, uu]
     
-    if normalise and npol == 1:
+    if normalise:
         norm = numpy.zeros([nchan, npol, oversampling, oversampling])
         for y in range(oversampling):
             for x in range(oversampling):
-                # uu = range(xbeg, xend, -oversampling)
-                norm[..., y, x] = numpy.sum(numpy.real(cf.data[:, :, 0, y, x, :, :]), axis=(-2, -1))
+                # Normalise on first pol. It only needs to be approximate
+                norm[:, 0, y, x] = numpy.sum(numpy.real(cf.data[:, 0, 0, y, x, :, :]), axis=(-2, -1))
         for z, _ in enumerate(w_list):
             for y in range(oversampling):
                 for x in range(oversampling):
-                    cf.data[:, :, z, y, x] /= norm[..., y, x][..., numpy.newaxis, numpy.newaxis]
+                    cf.data[:, :, z, y, x] /= norm[:, 0, y, x][..., numpy.newaxis, numpy.newaxis, numpy.newaxis]
     cf.data = numpy.conjugate(cf.data)
     
     if use_aaf:
