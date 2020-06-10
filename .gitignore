@@ -52,3 +52,5 @@ examples/random/
 tests/workflows/voltage_pattern_gaintable.png
 
 *.img
+
+test_results/

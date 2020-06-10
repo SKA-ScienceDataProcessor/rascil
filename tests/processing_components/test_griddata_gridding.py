@@ -20,8 +20,7 @@ from rascil.processing_components.griddata.gridding import grid_visibility_to_gr
     fft_griddata_to_image, fft_image_to_griddata, \
     degrid_visibility_from_griddata, grid_visibility_weight_to_griddata, griddata_merge_weights, griddata_visibility_reweight, \
     grid_blockvisibility_to_griddata, griddata_blockvisibility_reweight, \
-    grid_blockvisibility_weight_to_griddata, degrid_blockvisibility_from_griddata, \
-    degrid_blockvisibility_pol_from_griddata, grid_blockvisibility_pol_to_griddata
+    grid_blockvisibility_weight_to_griddata, degrid_blockvisibility_from_griddata
 from rascil.processing_components.griddata.operations import create_griddata_from_image
 from rascil.processing_components.image.operations import export_image_to_fits, convert_stokes_to_polimage, \
     convert_polimage_to_stokes
@@ -265,33 +264,6 @@ class TestGridDataGridding(unittest.TestCase):
             export_image_to_fits(im, '%s/test_gridding_dirty_awterm.fits' % self.dir)
         self.check_peaks(im, 96.73328615752739)
 
-    def test_griddata_invert_vpterm(self):
-        self.actualSetUp(zerow=True, block=True, npixel=256, rmax=300.0, scale=0.5,
-                         cellsize=0.00045)
-        make_vp = functools.partial(create_vp_generic, diameter=17.5, blockage=0.0, use_local=False,
-                                    no_cross_pol=True)
-        vp = make_vp(self.model)
-        if self.persist:
-            export_image_to_fits(vp, "%s/test_gridding_vpterm.fits" % self.dir)
-        gcf, cf = create_awterm_convolutionfunction(self.model, make_pb=make_vp, oversampling=17, support=32,
-                                                    use_aaf=False)
-        cf_image = convert_convolutionfunction_to_image(cf)
-        cf_image.data = numpy.real(cf_image.data)
-        if self.persist:
-            export_image_to_fits(cf_image, "%s/test_gridding_vpterm_cf.fits" % self.dir)
-    
-        griddata = create_griddata_from_image(self.model, self.vis, nw=1)
-        griddata, sumwt = grid_blockvisibility_pol_to_griddata(self.vis, griddata=griddata, cf=cf)
-        cim = fft_griddata_to_image(griddata, gcf)
-        cim = normalize_sumwt(cim, sumwt)
-        cim = apply_voltage_pattern_to_image(cim, vp)
-        im = convert_polimage_to_stokes(cim)
-        if self.persist:
-            fftim = fft_image(cim)
-            export_image_to_fits(im, '%s/test_gridding_dirty_vpterm.fits' % self.dir)
-            export_image_to_fits(fftim, '%s/test_gridding_dirty_vpterm_fft.fits' % self.dir)
-        self.check_peaks(im, 93.1760171274178)
-
     def test_griddata_predict_pswf(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQUV"))
         gcf, cf = create_pswf_convolutionfunction(self.model, support=8, oversampling=255)
@@ -312,7 +284,7 @@ class TestGridDataGridding(unittest.TestCase):
         newvis = degrid_visibility_from_griddata(self.vis, griddata=griddata, cf=cf)
         newvis.data['vis'][...] -= self.vis.data['vis'][...]
         qa = qa_visibility(newvis)
-        assert qa.data['rms'] < 58.0, str(qa)
+        assert qa.data['rms'] < 59.0, str(qa)
     
     def test_griddata_predict_aterm(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQUV"))
@@ -325,29 +297,6 @@ class TestGridDataGridding(unittest.TestCase):
         griddata = fft_image_to_griddata(modelIQUV, griddata, gcf)
         newvis = degrid_visibility_from_griddata(self.vis, griddata=griddata, cf=cf)
         qa = qa_visibility(newvis)
-        assert qa.data['rms'] < 160.0, str(qa)
-
-    def test_griddata_predict_vpterm_pol(self):
-        self.actualSetUp(zerow=True, block=True, npixel=256, rmax=300.0, scale=0.5,
-                         cellsize=0.00045)
-        make_vp = functools.partial(create_vp_generic, diameter=17.5, blockage=0.0, use_local=False,
-                                    no_cross_pol=True)
-        vp = make_vp(self.model)
-
-        cim = convert_stokes_to_polimage(self.model, self.vis.polarisation_frame)
-        griddata = create_griddata_from_image(cim, self.vis, nw=1)
-        gcf, cf = create_awterm_convolutionfunction(cim, make_pb=make_vp,
-                                                    oversampling=17, support=32,
-                                                    use_aaf=False)
-        cim = apply_voltage_pattern_to_image(cim, vp)
-        griddata = fft_image_to_griddata(cim, griddata, gcf)
-        newvis = degrid_blockvisibility_pol_from_griddata(self.vis, griddata=griddata, cf=cf)
-        qa = qa_visibility(newvis)
-        self.doplot = True
-        from rascil.processing_components import plot_visibility_pol
-        plot_visibility_pol([newvis])
-        from rascil.processing_components import export_blockvisibility_to_ms
-        export_blockvisibility_to_ms('{}/test_gridding_predict_vpterm.ms'.format(self.dir), [newvis])
         assert qa.data['rms'] < 160.0, str(qa)
 
     def test_griddata_predict_wterm(self):
@@ -392,7 +341,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_uniform.fits' % self.dir)
-        self.check_peaks(im, 99.40822097133994)
+        self.check_peaks(im, 99.28566829550084)
 
     def test_griddata_visibility_weight_IQ(self):
         self.actualSetUp(zerow=True, image_pol=PolarisationFrame("stokesIQUV"))
@@ -407,7 +356,7 @@ class TestGridDataGridding(unittest.TestCase):
         im = convert_polimage_to_stokes(cim)
         if self.persist:
             export_image_to_fits(im, '%s/test_gridding_dirty_2d_IQ_uniform.fits' % self.dir)
-        self.check_peaks(im, 99.40822097133994)
+        self.check_peaks(im, 99.28566829550084)
 
     def test_griddata_blockvisibility_weight(self):
         self.actualSetUp(zerow=True, block=True, image_pol=PolarisationFrame("stokesIQUV"))
