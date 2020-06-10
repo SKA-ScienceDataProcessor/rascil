@@ -51,7 +51,7 @@ class TestGridDataGridding(unittest.TestCase):
         from rascil.data_models.parameters import rascil_path, rascil_data_path
         self.dir = rascil_path('test_results')
         self.persist = os.getenv("RASCIL_PERSIST", False)
-        self.persist = True
+
     
     def actualSetUp(self, zerow=True, block=False, image_pol=PolarisationFrame("stokesIQUV"), npixel=256, rmax=750.0,
                     scale=0.5, cellsize=0.0009):

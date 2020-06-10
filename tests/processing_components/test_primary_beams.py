@@ -113,7 +113,7 @@ class TestPrimaryBeams(unittest.TestCase):
         for telescope in ['MID_FEKO_B1', 'MID_FEKO_B2', 'MID_FEKO_Ku']:
             beam = create_vp(telescope=telescope)
             beam = scale_and_rotate_image(beam, scale=[1.2, 0.8])
-            self.persist = True
+
             if self.persist: export_image_to_fits(beam,
                                                   "%s/test_voltage_pattern_real_prerotate_%s.fits" % (self.dir, telescope))
             beam_radec = convert_azelvp_to_radec(beam, model, numpy.pi/4.0)

@@ -40,7 +40,7 @@ class TestImagingVP(unittest.TestCase):
         
         from rascil.data_models.parameters import rascil_path
         self.dir = rascil_path('test_results')
-        self.persist = os.getenv("RASCIL_PERSIST", True)
+        self.persist = os.getenv("RASCIL_PERSIST", False)
     
     def actualSetUp(self, zerow=True, block=False, image_pol=PolarisationFrame("stokesIQUV"), npixel=None, rmax=300.0,
                     scale=0.125, cellsize=None, telescope="MID_IMPERFECT"):

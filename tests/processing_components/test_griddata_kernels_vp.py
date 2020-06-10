@@ -33,7 +33,7 @@ class TestGridDataKernels(unittest.TestCase):
                                     equinox='J2000')
         self.image = create_image(npixel=512, cellsize=0.0005, phasecentre=self.phasecentre,
                                   polarisation_frame=PolarisationFrame("stokesI"))
-        self.persist = os.getenv("RASCIL_PERSIST", True)
+        self.persist = os.getenv("RASCIL_PERSIST", False)
 
     def test_fill_vpterm_to_convolutionfunction(self):
         self.image = create_image(npixel=512, cellsize=0.0005, phasecentre=self.phasecentre,
@@ -45,7 +45,7 @@ class TestGridDataKernels(unittest.TestCase):
         cf_image = convert_convolutionfunction_to_image(cf)
         cf_image.data = numpy.real(cf_image.data)
         if self.persist:
-            export_image_to_fits(cf_image, "%s/test_convolutionfunction_aterm_vp_cf.fits" % self.dir)
+            export_image_to_fits(cf_image, "%s/test_convolutionfunction_vpterm_vp_cf.fits" % self.dir)
 
         # Tests for the VP convolution function are different because it does not peak
         # at the centre of the uv plane
@@ -58,7 +58,32 @@ class TestGridDataKernels(unittest.TestCase):
         assert numpy.abs(v_peak) < 1e-7, u_peak
 
         if self.persist:
-            export_image_to_fits(gcf, "%s/test_convolutionfunction_aterm_vp_gcf.fits" % self.dir)
+            export_image_to_fits(gcf, "%s/test_convolutionfunction_vpterm_vp_gcf.fits" % self.dir)
+
+    def test_fill_vpwterm_to_convolutionfunction(self):
+        self.image = create_image(npixel=512, cellsize=0.0005, phasecentre=self.phasecentre,
+                                  frequency=numpy.array([1.36e9]),
+                                  polarisation_frame=PolarisationFrame("stokesIQUV"))
+        make_vp = functools.partial(create_vp, telescope="MID_FEKO_B2")
+        gcf, cf = create_awterm_convolutionfunction(self.image, make_pb=make_vp, oversampling=16,
+                                                    support=128, nw=11, wstep=500.0, use_aaf=True)
+        cf_image = convert_convolutionfunction_to_image(cf)
+        cf_image.data = numpy.real(cf_image.data)
+        if self.persist:
+            export_image_to_fits(cf_image, "%s/test_convolutionfunction_vpwterm_vp_cf.fits" % self.dir)
+
+        # Tests for the VP convolution function are different because it does not peak
+        # at the centre of the uv plane
+        peak_location = numpy.unravel_index(numpy.argmax(numpy.abs(cf.data)), cf.shape)
+        assert numpy.abs(cf.data[peak_location] - (3.077964698043459e-05+7.907402507030572e-07j)) < 1e-7, cf.data[
+            peak_location]
+        assert peak_location == (0, 3, 3, 10, 8, 64, 64), peak_location
+        u_peak, v_peak = cf.grid_wcs.sub([1, 2]).wcs_pix2world(peak_location[-2], peak_location[-1], 0)
+        assert numpy.abs(u_peak) < 1e-7, u_peak
+        assert numpy.abs(v_peak) < 1e-7, u_peak
+
+        if self.persist:
+            export_image_to_fits(gcf, "%s/test_convolutionfunction_vpwterm_vp_gcf.fits" % self.dir)
 
 
 if __name__ == '__main__':

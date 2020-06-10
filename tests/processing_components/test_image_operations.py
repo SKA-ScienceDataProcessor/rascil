@@ -206,7 +206,7 @@ class TestImage(unittest.TestCase):
     
         vp = create_vp(telescope='MID_FEKO_B2')
         vp = scale_and_rotate_image(vp, 90.0 * numpy.pi / 180.0)
-        self.persist = True
+
         if self.persist:
             vp.data = vp.data.real
             fitsfile = '{}/test_vp_rotate_real.fits'.format(self.dir)
