@@ -170,9 +170,9 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
     
     if use_aaf:
         this_pswf_gcf, _ = create_pswf_convolutionfunction(subim, oversampling=1, support=6)
-        norm = 1.0 / this_pswf_gcf.data
+        norm = 1.0 / this_pswf_gcf.data.astype('complex')
     else:
-        norm = 1.0
+        norm = 1.0 + 0.0j
     
     if make_pb is not None:
         pb = make_pb(subim)
