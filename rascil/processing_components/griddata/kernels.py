@@ -210,7 +210,7 @@ def create_awterm_convolutionfunction(im, make_pb=None, nw=1, wstep=1e15, oversa
                 #     for pol in range(npol):
                 #         cf.data[chan, pol, z, y, x, :, :] = paddedplane.data[chan, pol, :, :][vv, :][:, uu]
     
-    if normalise:
+    if normalise and npol == 1:
         norm = numpy.zeros([nchan, npol, oversampling, oversampling])
         for y in range(oversampling):
             for x in range(oversampling):
